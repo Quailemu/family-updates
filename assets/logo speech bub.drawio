@@ -1,0 +1,31 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0" version="29.3.8">
+  <diagram name="Page-1" id="c8Gy1ETc18rPUpszmWST">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="kyvqj3HpW9rbQwK5F_bq-0" />
+        <mxCell id="kyvqj3HpW9rbQwK5F_bq-1" parent="kyvqj3HpW9rbQwK5F_bq-0" />
+        <mxCell id="2OdNj8MevuSAUAm8UFW2-2" connectable="0" parent="kyvqj3HpW9rbQwK5F_bq-1" style="group" value="" vertex="1">
+          <mxGeometry height="108.57274970424058" width="142.79643560674072" x="300.0045214644198" y="90.33999999999997" as="geometry" />
+        </mxCell>
+        <mxCell id="NoCQMpwq7iHr6oXLifqb-0" parent="2OdNj8MevuSAUAm8UFW2-2" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.oval_callout;rotation=5;strokeWidth=19;strokeColor=#FFCCE6;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="91.31" width="91.25" x="3.805478535580221" y="13.460000000000022" as="geometry" />
+        </mxCell>
+        <mxCell id="NoCQMpwq7iHr6oXLifqb-1" parent="2OdNj8MevuSAUAm8UFW2-2" style="whiteSpace=wrap;html=1;shape=mxgraph.basic.oval_callout;rotation=-175;strokeWidth=19;strokeColor=#99FFFF;fillColor=none;" value="" vertex="1">
+          <mxGeometry height="91.31" width="91.25" x="47.74095707116044" y="3.8027497042405685" as="geometry" />
+        </mxCell>
+        <mxCell id="NoCQMpwq7iHr6oXLifqb-3" parent="2OdNj8MevuSAUAm8UFW2-2" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;imageAspect=0;aspect=fixed;image=https://icons.diagrams.net/icon-cache1/Evericons_24px_Vol_2-2248/sound-wave-644.svg" value="" vertex="1">
+          <mxGeometry height="17.8" width="17.8" x="87.36547853558022" y="46.56000000000003" as="geometry" />
+        </mxCell>
+        <mxCell id="NoCQMpwq7iHr6oXLifqb-9" parent="2OdNj8MevuSAUAm8UFW2-2" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;imageAspect=0;aspect=fixed;image=https://icons.diagrams.net/icon-cache1/Evericons_24px_Vol_2-2248/sound-wave-644.svg" value="" vertex="1">
+          <mxGeometry height="24" width="24" x="19.74547853558022" y="43.460000000000036" as="geometry" />
+        </mxCell>
+        <mxCell id="2OdNj8MevuSAUAm8UFW2-0" parent="2OdNj8MevuSAUAm8UFW2-2" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;imageAspect=0;aspect=fixed;image=https://icons.diagrams.net/icon-cache1/Evericons_24px_Vol_2-2248/sound-wave-644.svg" value="" vertex="1">
+          <mxGeometry height="24" width="24" x="63.36547853558022" y="43.460000000000036" as="geometry" />
+        </mxCell>
+        <mxCell id="2OdNj8MevuSAUAm8UFW2-1" parent="2OdNj8MevuSAUAm8UFW2-2" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;imageAspect=0;aspect=fixed;image=https://icons.diagrams.net/icon-cache1/Evericons_24px_Vol_2-2248/sound-wave-644.svg" value="" vertex="1">
+          <mxGeometry height="24" width="24" x="105.16547853558018" y="43.460000000000036" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

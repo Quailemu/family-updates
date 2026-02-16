@@ -1,0 +1,2 @@
+[functions.get_audio_signed_url]
+verify_jwt = false

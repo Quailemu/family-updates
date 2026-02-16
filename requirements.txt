@@ -1,0 +1,5 @@
+streamlit==1.52.2
+streamlit-autorefresh==1.0.1
+supabase==2.4.3
+python-dotenv==1.0.1
+streamlit-audiorec==0.1.3
