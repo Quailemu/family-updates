@@ -1648,7 +1648,7 @@ def render_home(active: str) -> None:
         if logo_data:
             header_html = (
                 f'<div class="public-header">'
-                f'<img src="{logo_data}" alt="logo" style="height:32px;width:auto;display:block;" />'
+                f'<img src="{logo_data}" alt="logo" style="height:84px;width:auto;display:block;" />'
                 f'<div class="public-header-title">voice-message.com</div>'
                 f"</div>"
             )
