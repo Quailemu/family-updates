@@ -1,10 +1,12 @@
-pycache/
+__pycache__/
 *.pyc
 .venv/
 venv/
+.venv*/
 .streamlit/secrets.toml
 .env
 .env.
 .DS_Store
 Thumbs.db
 *.log
+supabase/.temp/
