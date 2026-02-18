@@ -6,22 +6,20 @@ import time
 import uuid
 import secrets
 import hashlib
+import re
 from pathlib import Path
-
-from dotenv import load_dotenv
 
 import streamlit as st
 import streamlit.components.v1 as components
 from supabase.client import create_client
 import pyotp
 import qrcode
+from config import get_supabase_config
 
 try:
     from st_audiorec import st_audiorec
 except ModuleNotFoundError:  # pragma: no cover - runtime env mismatch
     st_audiorec = None
-
-load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env", override=False)
 
 from ui_theme import TOKENS, inject_css
 
@@ -42,16 +40,31 @@ def set_route(route: str) -> None:
     st.rerun()
 
 def get_supabase_client() -> tuple[object | None, str | None]:
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_ANON_KEY")
+    url, key = get_supabase_config()
     if not url or not key:
-        if load_dotenv is None:
-            return None, (
-                "Missing SUPABASE_URL or SUPABASE_ANON_KEY. "
-                "Install python-dotenv or set env vars in the terminal."
-            )
         return None, "Missing SUPABASE_URL or SUPABASE_ANON_KEY."
     return create_client(url, key), None
+
+
+def send_password_reset_email(email: str) -> tuple[bool, str]:
+    target_email = email.strip()
+    if not target_email:
+        return False, "Enter your email first."
+    supabase, error = get_supabase_client()
+    if error:
+        return False, error
+    redirect_to = os.getenv("PASSWORD_RESET_REDIRECT_URL", "").strip()
+    try:
+        if redirect_to:
+            try:
+                supabase.auth.reset_password_email(target_email, {"redirect_to": redirect_to})
+            except TypeError:
+                supabase.auth.reset_password_email(target_email, redirect_to=redirect_to)
+        else:
+            supabase.auth.reset_password_email(target_email)
+    except Exception as exc:  # pragma: no cover - Supabase runtime error
+        return False, str(exc)
+    return True, "If this email is registered, a password reset link has been sent."
 
 
 def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | None]:
@@ -183,7 +196,10 @@ def update_care_hub_mfa_codes(
         return False
 
 def render_access_gate(message: str, login_route: str, role: str) -> None:
-    render_page_header("Family page" if role == "family" else get_care_hub_label())
+    if role == "family":
+        render_page_header("Family page")
+    else:
+        render_page_header("Access required", show_variant_subheading=False)
     st.markdown(
         f"""
 <div style="max-width:640px;margin:32px auto;">
@@ -195,18 +211,17 @@ def render_access_gate(message: str, login_route: str, role: str) -> None:
 """,
         unsafe_allow_html=True,
     )
+    if role != "family":
+        if st.button("Go to login", key=f"{role}_gate_login"):
+            set_route(get_login_route(get_app_variant()))
+        return
     cols = st.columns(3, gap="small")
     with cols[0]:
         if st.button("Go to login", key=f"{role}_gate_login"):
             set_route(login_route)
     with cols[1]:
-        back_label = (
-            "Back to Family login"
-            if role == "family"
-            else f"Back to {get_care_hub_label()}"
-        )
-        if st.button(back_label, key=f"{role}_gate_home"):
-            set_route("/family/login" if role == "family" else get_default_route(get_app_variant()))
+        if st.button("Back to Family login", key=f"{role}_gate_home"):
+            set_route(get_login_route(VARIANT_FAMILY))
     with cols[2]:
         if st.session_state.get("auth_uid"):
             if st.button("Sign out", key=f"{role}_gate_sign_out"):
@@ -289,8 +304,8 @@ def render_how_it_works_family() -> None:
     st.markdown("Links:")
     link_cols = st.columns(2, gap="small")
     with link_cols[0]:
-        if st.button("Terms & conditions", key="family_links_terms"):
-            set_route("/family/terms")
+        if st.button("Terms & Conditions", key="family_links_terms"):
+            set_route("/family/terms-use")
     with link_cols[1]:
         if st.button("Contact the care home", key="family_links_contact"):
             set_route("/family/contact")
@@ -312,7 +327,7 @@ def render_how_it_works_mobile() -> None:
     st.markdown("Messages are for non-urgent, social contact only. This service is not monitored.")
     render_safeguarding_block()
     if st.button("Back to Care Hub – Mobile", key="mobile_how_it_works_back"):
-        set_route("/care-hub/inbox")
+        set_route(get_home_route(VARIANT_MOBILE))
 
 
 def render_how_it_works_office_overview() -> None:
@@ -355,7 +370,7 @@ def render_family_document(title: str, path: str) -> None:
     render_page_header(title)
     try:
         content = Path(path).read_text(encoding="utf-8")
-        content = inject_logo_into_markdown(content)
+        content = re.sub(r"\A\s*#\s+.+?\n+", "", content, count=1)
     except OSError:
         st.error("Document not found.")
     else:
@@ -366,10 +381,41 @@ def render_family_document(title: str, path: str) -> None:
             set_route("/how-it-works/family")
     with action_cols[1]:
         if st.button("Back to Family login", key="family_doc_home"):
-            set_route("/family/login")
+            set_route(get_login_route(VARIANT_FAMILY))
     with action_cols[2]:
         if st.button("Sign out", key="family_doc_sign_out"):
             sign_out_user("family")
+
+
+def render_family_terms() -> None:
+    render_page_header("Family Terms of Use", show_variant_subheading=False)
+    st.markdown("[Summary](#summary-non-binding) | [Full terms](#full-terms-binding)")
+    st.markdown('<div id="summary-non-binding"></div>', unsafe_allow_html=True)
+    st.markdown("## Summary (Plain English - Non-binding)")
+    st.markdown(
+        "This summary is provided for convenience only. "
+        "The full Terms of Use below are legally binding and prevail in the event of any inconsistency."
+    )
+    st.markdown(
+        "- This is not a live service; messages are played when staff are available.\n"
+        "- One message in, one message out: only the latest message in each direction is kept.\n"
+        "- The service is for non-urgent social communication only.\n"
+        "- For safeguarding or care concerns, contact the care home directly."
+    )
+    render_document_content(
+        "docs/public/family_terms_summary.md", include_logo=False, strip_first_heading=True
+    )
+    st.markdown("---")
+    st.markdown('<div id="full-terms-binding"></div>', unsafe_allow_html=True)
+    st.markdown("## Full Terms of Use (Binding)")
+    render_document_content(
+        "docs/public/family_terms_of_use.md", include_logo=False, strip_first_heading=True
+    )
+    if st.button("Back to Family", key="family_terms_back"):
+        if st.session_state.get("auth_uid"):
+            set_route(get_home_route(VARIANT_FAMILY))
+        else:
+            set_route(get_login_route(VARIANT_FAMILY))
 
 
 def render_family_contact() -> None:
@@ -384,7 +430,7 @@ def render_family_contact() -> None:
             set_route("/how-it-works/family")
     with action_cols[1]:
         if st.button("Back to Family login", key="family_contact_home"):
-            set_route("/family/login")
+            set_route(get_login_route(VARIANT_FAMILY))
     with action_cols[2]:
         if st.button("Sign out", key="family_contact_sign_out"):
             sign_out_user("family")
@@ -396,7 +442,7 @@ def render_care_hub_nav() -> None:
         nav_cols = st.columns(2, gap="small")
         with nav_cols[0]:
             if st.button("Inbox", key="care_hub_nav_inbox", use_container_width=True):
-                set_route("/care-hub/inbox")
+                set_route(get_home_route(app_variant))
         with nav_cols[1]:
             if st.button("Sign out", key="care_hub_nav_sign_out", use_container_width=True):
                 sign_out_user("care_hub")
@@ -404,7 +450,7 @@ def render_care_hub_nav() -> None:
         nav_cols = st.columns(4, gap="small")
         with nav_cols[0]:
             if st.button("Inbox", key="care_hub_nav_inbox", use_container_width=True):
-                set_route("/care-hub/inbox")
+                set_route(get_home_route(app_variant))
         with nav_cols[1]:
             if st.button("Documents", key="care_hub_nav_docs", use_container_width=True):
                 set_route("/docs")
@@ -434,7 +480,7 @@ def render_care_hub_training() -> None:
 
 def require_family_access() -> None:
     if not st.session_state.get("auth_uid"):
-        render_access_gate("Please sign in to access Family.", "/family/login", "family")
+        render_access_gate("Please sign in to access Family.", get_login_route(VARIANT_FAMILY), "family")
         st.stop()
     family_found, care_found, error, family_record, _ = get_mapping_status()
     if family_found:
@@ -445,7 +491,7 @@ def require_family_access() -> None:
     if care_found:
         render_wrong_variant("Your login details are for Care Hub.")
         st.stop()
-    render_access_gate("Account not set up yet.", "/family/login", "family")
+    render_access_gate("Account not set up yet.", get_login_route(VARIANT_FAMILY), "family")
     st.stop()
 
 
@@ -453,7 +499,7 @@ def require_care_access() -> None:
     if not st.session_state.get("auth_uid"):
         render_access_gate(
             f"Please sign in to access {get_care_hub_label()}.",
-            "/care-hub/login",
+            get_login_route(get_app_variant()),
             "care_hub",
         )
         st.stop()
@@ -470,7 +516,7 @@ def require_care_access() -> None:
     if family_found:
         render_wrong_variant("Your login details are for Family.")
         st.stop()
-    render_access_gate("Account not set up yet.", "/care-hub/login", "care_hub")
+    render_access_gate("Account not set up yet.", get_login_route(get_app_variant()), "care_hub")
     st.stop()
 
 
@@ -827,17 +873,26 @@ def render_header_menu(menu_key: str) -> None:
     prev_route = st.session_state.get("prev_page") or "/"
     show_back_only = current_route.startswith("/how-it-works/") and prev_route in ("/", "", None)
     with st.popover("≡"):
-        if prev_route and prev_route != current_route:
+        if app_variant == "care_hub_office":
+            is_authed = bool(st.session_state.get("auth_uid"))
+            office_home = get_office_home_route(is_authed)
+            if not is_authed:
+                if st.button("Go to login", key=f"{menu_key}_office_login"):
+                    set_route(get_login_route(app_variant))
+                    return
+                return
+            if st.button("Back", key=f"{menu_key}_back"):
+                set_route(office_home)
+                return
+        if app_variant not in ("care_hub_office", "family") and prev_route and prev_route != current_route:
             if st.button("Back", key=f"{menu_key}_back"):
                 set_route(prev_route)
                 return
-        if show_back_only:
+        if show_back_only and app_variant != "family":
             return
-        if app_variant == "care_hub_office" and not st.session_state.get("auth_uid"):
-            return
-        if app_variant == "care_hub_office" and st.session_state.get("auth_uid"):
+        if app_variant == "care_hub_office":
             if st.button("Inbox", key=f"{menu_key}_inbox"):
-                set_route("/care-hub/inbox")
+                set_route(get_home_route(app_variant))
                 return
             if st.button("Documents", key=f"{menu_key}_docs"):
                 set_route("/docs")
@@ -855,11 +910,11 @@ def render_header_menu(menu_key: str) -> None:
                 sign_out_user("care_hub")
                 return
             return
-        if app_variant != "care_hub_office" and app_variant != "care_hub_mobile":
+        if app_variant not in ("care_hub_office", "care_hub_mobile", "family"):
             if st.button("How it works", key=f"{menu_key}_how_it_works"):
                 set_route(get_how_it_works_route(app_variant))
                 return
-        if app_variant != "care_hub_office" and app_variant != "care_hub_mobile":
+        if app_variant not in ("care_hub_office", "care_hub_mobile", "family"):
             if st.button("Public documents", key=f"{menu_key}_public_docs"):
                 set_route("/public/service-overview")
                 return
@@ -889,24 +944,35 @@ def render_header_menu(menu_key: str) -> None:
                 if st.button("Sign out", key=f"{menu_key}_mobile_sign_out"):
                     sign_out_user("care_hub")
                     return
+            else:
+                if st.button("Go to login", key=f"{menu_key}_mobile_login"):
+                    set_route(get_login_route(app_variant))
+                    return
             return
         if app_variant == "family":
-            if st.button("Family page", key=f"{menu_key}_family_page"):
-                if st.session_state.get("auth_uid"):
-                    set_route("/family/send")
-                else:
-                    set_route("/family/login")
+            back_target = prev_route if prev_route and prev_route != current_route else get_login_route(app_variant)
+            if st.button("Back", key=f"{menu_key}_family_back"):
+                set_route(back_target)
                 return
-            if st.button("Family Terms of Use", key=f"{menu_key}_terms_use"):
+            if st.button("How it works", key=f"{menu_key}_family_how"):
+                set_route(get_how_it_works_route(app_variant))
+                return
+            if st.button("Service overview", key=f"{menu_key}_family_service_overview"):
+                set_route("/public/service-overview")
+                return
+            if st.button("Family Terms of Use", key=f"{menu_key}_terms"):
                 set_route("/family/terms-use")
-                return
-            if st.button("Family Terms Summary", key=f"{menu_key}_terms_summary"):
-                set_route("/family/terms-summary")
                 return
             if st.button("Contact the care home", key=f"{menu_key}_contact"):
                 set_route("/family/contact")
                 return
-        if st.session_state.get("auth_uid"):
+            if st.button("Family login", key=f"{menu_key}_family_login"):
+                if st.session_state.get("auth_uid"):
+                    set_route(get_login_route(app_variant))
+                else:
+                    set_route(get_login_route(app_variant))
+                return
+        if st.session_state.get("auth_uid") and app_variant != "family":
             if st.button("Sign out", key=f"{menu_key}_sign_out"):
                 role = "family" if app_variant == "family" else "care_hub"
                 sign_out_user(role)
@@ -1063,30 +1129,30 @@ def render_action_row(actions: list[tuple[str, str]]) -> None:
                     st.warning("Stop recording to leave this page.")
                     return
                 if key == "care_inbox_back":
-                    set_route("/care-hub/login")
+                    set_route(get_login_route(get_app_variant()))
                     return
                 if key.endswith("_home"):
                     if key.startswith("family_"):
                         if st.session_state.get("auth_uid"):
-                            set_route("/family/send")
+                            set_route(get_home_route(VARIANT_FAMILY))
                         else:
                             st.session_state["force_family_login"] = True
-                            set_route("/family/login")
+                            set_route(get_login_route(VARIANT_FAMILY))
                     else:
-                        set_route(get_default_route(get_app_variant()))
+                        set_route(get_home_route(get_app_variant()))
                 elif key.endswith("_back"):
                     if "family_send" in key:
-                        set_route("/family/login")
+                        set_route(get_login_route(VARIANT_FAMILY))
                     elif "family_sent" in key:
-                        set_route("/family/send")
+                        set_route(get_home_route(VARIANT_FAMILY))
                     elif "family_login" in key:
-                        set_route(get_default_route(get_app_variant()))
+                        set_route(get_home_route(VARIANT_FAMILY))
                     elif "care_login" in key:
-                        set_route(get_default_route(get_app_variant()))
+                        set_route(get_login_route(get_app_variant()))
                     elif "care_inbox" in key:
-                        set_route("/care-hub/login")
+                        set_route(get_login_route(get_app_variant()))
                     elif "care_play" in key:
-                        set_route("/care-hub/inbox")
+                        set_route(get_home_route(get_app_variant()))
                 elif key.endswith("_sign_out"):
                     role = "family" if "family" in key else "care_hub"
                     sign_out_user(role)
@@ -1776,13 +1842,13 @@ def render_home(active: str) -> None:
     else:
         with button_cols[0]:
             if st.button("Family", key="tab_family", use_container_width=True):
-                set_route("/family/login")
+                set_route(get_login_route(VARIANT_FAMILY))
         with button_cols[1]:
             if st.button("Care Hub – Mobile", key="tab_care_mobile", use_container_width=True):
-                set_route("/care-hub/login")
+                set_route(get_login_route(VARIANT_MOBILE))
         with button_cols[2]:
             if st.button("Care Hub – Office", key="tab_care_office", use_container_width=True):
-                set_route("/care-hub/login")
+                set_route(get_login_route(VARIANT_OFFICE))
 
     # Homepage buttons are handled above (Family / Care Hub – Mobile / Care Hub – Office).
 
@@ -1804,19 +1870,25 @@ VARIANT_MOBILE = "care_hub_mobile"
 VARIANT_OFFICE = "care_hub_office"
 VARIANT_PUBLIC = "public"
 
+FAMILY_LOGIN_ROUTE = "/family/login"
+FAMILY_HOME_ROUTE = "/family/send"
+OFFICE_LOGIN_ROUTE = "/care-hub/login"
+OFFICE_HOME_ROUTE = "/care-hub/inbox"
+MOBILE_LOGIN_ROUTE = "/care-hub/mobile/login"
+MOBILE_HOME_ROUTE = "/care-hub/mobile/inbox"
+PUBLIC_HOME_ROUTE = "/service-overview"
+
 VARIANT_CONFIG = {
     VARIANT_FAMILY: {
         "label": "Family app",
-        "default_route": "/family/login",
+        "default_route": FAMILY_LOGIN_ROUTE,
         "how_it_works_route": "/family/how-it-works",
         "allowed_routes": {
-            "/family/login",
-            "/family/send",
+            FAMILY_LOGIN_ROUTE,
+            FAMILY_HOME_ROUTE,
             "/family/sent",
             "/family/privacy",
-            "/family/terms",
             "/family/terms-use",
-            "/family/terms-summary",
             "/family/contact",
             "/how-it-works/family",
             "/family/how-it-works",
@@ -1828,7 +1900,6 @@ VARIANT_CONFIG = {
             "/public/faq",
             "/public/privacy-notice",
             "/public/family-terms-of-use",
-            "/public/family-terms-summary",
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             "/pr-home",
@@ -1837,11 +1908,13 @@ VARIANT_CONFIG = {
     },
     VARIANT_MOBILE: {
         "label": "Care Hub – Mobile",
-        "default_route": "/care-hub/login",
+        "default_route": MOBILE_LOGIN_ROUTE,
         "how_it_works_route": "/care-hub-mobile/how-it-works",
         "allowed_routes": {
-            "/care-hub/login",
-            "/care-hub/inbox",
+            MOBILE_LOGIN_ROUTE,
+            MOBILE_HOME_ROUTE,
+            OFFICE_LOGIN_ROUTE,
+            OFFICE_HOME_ROUTE,
             "/care-hub/instructions",
             "/care-hub/training",
             "/how-it-works/mobile",
@@ -1854,7 +1927,6 @@ VARIANT_CONFIG = {
             "/public/faq",
             "/public/privacy-notice",
             "/public/family-terms-of-use",
-            "/public/family-terms-summary",
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             "/pr-home",
@@ -1863,11 +1935,11 @@ VARIANT_CONFIG = {
     },
     VARIANT_OFFICE: {
         "label": "Care Hub – Office",
-        "default_route": "/care-hub/login",
+        "default_route": OFFICE_LOGIN_ROUTE,
         "how_it_works_route": "/care-hub-office/how-it-works",
         "allowed_routes": {
-            "/care-hub/login",
-            "/care-hub/inbox",
+            OFFICE_LOGIN_ROUTE,
+            OFFICE_HOME_ROUTE,
             "/care-hub/instructions",
             "/care-hub/training",
             "/care-hub/security",
@@ -1885,7 +1957,6 @@ VARIANT_CONFIG = {
             "/public/faq",
             "/public/privacy-notice",
             "/public/family-terms-of-use",
-            "/public/family-terms-summary",
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             "/pr-home",
@@ -1894,11 +1965,11 @@ VARIANT_CONFIG = {
     },
     VARIANT_PUBLIC: {
         "label": "Public",
-        "default_route": "/service-overview",
-        "how_it_works_route": "/service-overview",
+        "default_route": PUBLIC_HOME_ROUTE,
+        "how_it_works_route": PUBLIC_HOME_ROUTE,
         "allowed_routes": {
             "/pr-home",
-            "/service-overview",
+            PUBLIC_HOME_ROUTE,
             "/public-docs",
             "/public/service-overview",
             "/public/how-it-works",
@@ -1907,7 +1978,6 @@ VARIANT_CONFIG = {
             "/public/faq",
             "/public/privacy-notice",
             "/public/family-terms-of-use",
-            "/public/family-terms-summary",
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
         },
@@ -1941,6 +2011,78 @@ def get_variant_label(app_variant: str) -> str:
 
 def get_default_route(app_variant: str) -> str:
     return VARIANT_CONFIG.get(app_variant, {}).get("default_route", "/")
+
+
+def get_login_route(app_variant: str) -> str:
+    if app_variant == VARIANT_FAMILY:
+        return FAMILY_LOGIN_ROUTE
+    if app_variant == VARIANT_MOBILE:
+        return MOBILE_LOGIN_ROUTE
+    if app_variant == VARIANT_OFFICE:
+        return OFFICE_LOGIN_ROUTE
+    return PUBLIC_HOME_ROUTE
+
+
+def get_home_route(app_variant: str) -> str:
+    if app_variant == VARIANT_FAMILY:
+        return FAMILY_HOME_ROUTE
+    if app_variant == VARIANT_MOBILE:
+        return MOBILE_HOME_ROUTE
+    if app_variant == VARIANT_OFFICE:
+        return OFFICE_HOME_ROUTE
+    return PUBLIC_HOME_ROUTE
+
+
+def variant_requires_auth(app_variant: str) -> bool:
+    return app_variant in {VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE}
+
+
+def is_login_route_for_variant(app_variant: str, route: str) -> bool:
+    if route == get_login_route(app_variant):
+        return True
+    if app_variant == VARIANT_MOBILE and route == OFFICE_LOGIN_ROUTE:
+        return True
+    return False
+
+
+def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
+    if not variant_requires_auth(app_variant):
+        return False
+    is_authed = bool(st.session_state.get("auth_uid"))
+    active_role = st.session_state.get("active_role")
+    expected_role = "family" if app_variant == VARIANT_FAMILY else "care_hub"
+    is_variant_authed = is_authed and active_role == expected_role
+    login_route = get_login_route(app_variant)
+    home_route = get_home_route(app_variant)
+    if not is_authed and not is_login_route_for_variant(app_variant, current_route):
+        set_route(login_route)
+        return True
+    if is_variant_authed and is_login_route_for_variant(app_variant, current_route):
+        set_route(home_route)
+        return True
+    return False
+
+
+def get_office_home_route(is_authed: bool) -> str:
+    return get_home_route(VARIANT_OFFICE) if is_authed else get_login_route(VARIANT_OFFICE)
+
+
+def validate_supabase_config_for_variant(app_variant: str) -> None:
+    auth_required_variants = {VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE}
+    if app_variant not in auth_required_variants:
+        return
+    url, anon_key = get_supabase_config()
+    if url and anon_key:
+        return
+    st.error(
+        "Supabase configuration is missing.\n\n"
+        "For Streamlit Community Cloud, set secrets in:\n"
+        "Settings -> Secrets\n\n"
+        'SUPABASE_URL="..."\n'
+        'SUPABASE_ANON_KEY="..."\n\n'
+        "Only the anon key is supported in Streamlit apps."
+    )
+    st.stop()
 
 
 def get_public_app_url(variant: str) -> str:
@@ -2041,7 +2183,7 @@ def render_family_login() -> None:
             if family_record:
                 st.session_state["active_role"] = "family"
                 st.session_state["active_care_home_id"] = family_record.get("care_home_id")
-            set_route("/family/send")
+            set_route(get_home_route(VARIANT_FAMILY))
         elif care_found:
             st.error("Wrong app variant")
             st.info("Your login details are for Care Hub.")
@@ -2110,7 +2252,7 @@ def render_family_login() -> None:
                             "family",
                             st.session_state.get("active_care_home_id"),
                         )
-                        set_route("/family/send")
+                        set_route(get_home_route(VARIANT_FAMILY))
                     elif care_found:
                         st.error("Wrong app variant")
                         st.info("Your login details are for Care Hub.")
@@ -2122,7 +2264,11 @@ def render_family_login() -> None:
     if sign_out_pressed:
         sign_out_user("family")
     if forgot_pressed:
-        st.info("Password reset is not available yet. Please contact support.")
+        ok, message = send_password_reset_email(email)
+        if ok:
+            st.success(message)
+        else:
+            st.error(message)
 
 
 def render_family_send() -> None:
@@ -2477,33 +2623,98 @@ def render_docs() -> None:
         active_doc = next((doc for doc in docs if doc["path"] == active_path), None)
         st.markdown("---")
         st.markdown(f"## {(active_doc['title'] if active_doc else 'Document')}")
-        try:
-            content = Path(active_path).read_text(encoding="utf-8")
-            content = inject_logo_into_markdown(content)
-            st.markdown(content)
-        except OSError:
-            st.error("Document not found.")
+        render_document_content(active_path)
         if st.button("Close", key="docs_close"):
             st.session_state["docs_active"] = ""
 
     if st.button("Back to Care Hub – Office", key="docs_home"):
-        set_route("/care-hub/inbox")
+        set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
 
 
-def render_public_document(doc_path: str, back_route: str = "/service-overview") -> None:
-    st.markdown(f"[← Back to Service overview](?route={back_route})")
-    render_page_header("Public document", show_menu=False, show_variant_subheading=False)
+def render_document_content(
+    doc_path: str, include_logo: bool = True, strip_first_heading: bool = False
+) -> None:
     try:
         content = Path(doc_path).read_text(encoding="utf-8")
-        content = inject_logo_into_markdown(content)
+        if strip_first_heading:
+            content = re.sub(r"\A\s*#\s+.+?\n+", "", content, count=1)
+        if include_logo:
+            content = inject_logo_into_markdown(content)
         st.markdown(content)
     except OSError:
         st.error("Document not found.")
 
 
+def render_public_document(doc_path: str, back_route: str = "/service-overview") -> None:
+    app_variant = get_app_variant()
+    if app_variant == VARIANT_PUBLIC:
+        st.markdown(f"[← Back to Service overview](?route={back_route})")
+        render_page_header("Public document", show_menu=False, show_variant_subheading=False)
+        render_document_content(doc_path)
+        return
+    if app_variant == VARIANT_FAMILY:
+        render_page_header("Service overview", show_variant_subheading=False)
+        if st.button("← Back to Family login", key="public_doc_back_family_login"):
+            set_route(get_login_route(VARIANT_FAMILY))
+        render_document_content(doc_path, include_logo=False, strip_first_heading=True)
+        return
+    if app_variant == VARIANT_OFFICE:
+        is_authed = bool(st.session_state.get("auth_uid"))
+        office_home_route = get_office_home_route(is_authed)
+        render_page_header("Care Hub – Office", show_variant_subheading=False)
+        if st.button("← Back to dashboard", key="public_doc_back_office_dashboard"):
+            set_route(office_home_route)
+        render_document_content(doc_path, include_logo=False)
+        return
+    if app_variant == VARIANT_MOBILE:
+        render_page_header("Public document")
+        if st.button("Back", key="public_doc_back_mobile"):
+            set_route(get_home_route(app_variant))
+        render_document_content(doc_path)
+        return
+    st.markdown(f"[← Back to Service overview](?route={back_route})")
+    render_page_header("Public document", show_menu=False, show_variant_subheading=False)
+    render_document_content(doc_path)
+
+
 def render_public_docs() -> None:
-    set_route("/public/service-overview")
-    st.stop()
+    app_variant = get_app_variant()
+    if app_variant == VARIANT_PUBLIC:
+        set_route("/public/service-overview")
+        st.stop()
+
+    render_page_header("Public Documents")
+    if app_variant == VARIANT_FAMILY:
+        if st.button("← Back to Family login", key="public_docs_back_family_login"):
+            set_route(get_login_route(VARIANT_FAMILY))
+    if app_variant == VARIANT_OFFICE:
+        if st.button("← Back to dashboard", key="public_docs_back_office_dashboard"):
+            set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
+    st.write("Select a public document to view.")
+
+    public_docs = [
+        ("Service overview", "/public/service-overview"),
+        ("How it works", "/public/how-it-works"),
+        ("Resident participation", "/public/resident-participation"),
+        ("Family guide", "/public/family-guide"),
+        ("FAQ", "/public/faq"),
+        ("Privacy notice", "/public/privacy-notice"),
+        ("Family terms of use", "/public/family-terms-of-use"),
+        ("Complaints and concerns", "/public/complaints-and-concerns"),
+        ("Safeguarding and consent", "/public/safeguarding-and-consent"),
+    ]
+
+    for idx, (label, route) in enumerate(public_docs):
+        if st.button(label, key=f"public_docs_open_{idx}", use_container_width=True):
+            set_route(route)
+
+    if app_variant == VARIANT_OFFICE:
+        is_authed = bool(st.session_state.get("auth_uid"))
+        if st.button("Back to Care Hub – Office", key="public_docs_back_office"):
+            set_route(get_office_home_route(is_authed))
+    elif app_variant == VARIANT_MOBILE:
+        if st.button("Back to Care Hub – Mobile", key="public_docs_back_mobile"):
+            set_route(get_home_route(app_variant))
 
 
 def render_public_page(page_title: str, heading: str) -> None:
@@ -2753,7 +2964,7 @@ def render_care_hub_security() -> None:
                 st.session_state.pop("mfa_show_codes", None)
 
     if st.button("Back to Care Hub – Office", key="mfa_back_office"):
-        set_route("/care-hub/inbox")
+        set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
 
 
 def render_care_hub_mfa() -> None:
@@ -2761,13 +2972,17 @@ def render_care_hub_mfa() -> None:
     access_token = st.session_state.get("access_token")
     auth_uid = st.session_state.get("auth_uid")
     if not auth_uid:
-        render_access_gate("Please sign in to access Care Hub – Office.", "/care-hub/login", "care_hub")
+        render_access_gate(
+            "Please sign in to access Care Hub – Office.",
+            get_login_route(get_app_variant()),
+            "care_hub",
+        )
         return
     record = get_care_hub_mfa_record(access_token, auth_uid)
     if not record or not record.get("enabled"):
         st.info("Two-factor authentication is not enabled for this account.")
         if st.button("Continue", key="mfa_not_enabled_continue"):
-            set_route("/care-hub/inbox")
+            set_route(get_home_route(get_app_variant()))
         return
 
     st.write("Enter your authenticator code.")
@@ -2788,7 +3003,7 @@ def render_care_hub_mfa() -> None:
                 verified = True
         if verified:
             st.session_state["mfa_verified"] = True
-            set_route("/care-hub/inbox")
+            set_route(get_home_route(get_app_variant()))
         else:
             st.error("Invalid code.")
     if st.button("Sign out", key="mfa_login_sign_out"):
@@ -2859,7 +3074,7 @@ def render_contracts() -> None:
             st.session_state["contracts_active"] = ""
 
     if st.button("Back to Care Hub – Office", key="contracts_home"):
-        set_route("/care-hub/inbox")
+        set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
 
 
 def render_subscription_billing() -> None:
@@ -2906,7 +3121,7 @@ def render_subscription_billing() -> None:
     st.write("Invoice download functionality will be available here.")
 
     if st.button("Back to Care Hub – Office", key="billing_home"):
-        set_route("/care-hub/inbox")
+        set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
 
 
 def render_care_login() -> None:
@@ -2953,7 +3168,7 @@ def render_care_login() -> None:
             if app_variant == "care_hub_office" and is_office_mfa_required():
                 set_route("/care-hub/mfa")
             else:
-                set_route("/care-hub/inbox")
+                set_route(get_home_route(app_variant))
         elif family_found:
             st.error("Wrong app variant")
             st.info("Your login details are for Family.")
@@ -3020,7 +3235,7 @@ def render_care_login() -> None:
                         if app_variant == "care_hub_office" and is_office_mfa_required():
                             set_route("/care-hub/mfa")
                         else:
-                            set_route("/care-hub/inbox")
+                            set_route(get_home_route(app_variant))
                     elif family_found:
                         st.error("Wrong app variant")
                         st.info("Your login details are for Family.")
@@ -3030,11 +3245,15 @@ def render_care_login() -> None:
                         st.error("Account not set up yet.")
 
     if back_pressed:
-        set_route("/care-hub/login")
+        set_route(get_login_route(app_variant))
     if sign_out_pressed:
         sign_out_user("care_hub")
     if forgot_pressed:
-        st.info("Password reset is not available yet. Please contact support.")
+        ok, message = send_password_reset_email(email)
+        if ok:
+            st.success(message)
+        else:
+            st.error(message)
 
 
 def render_care_hub() -> None:
@@ -3080,7 +3299,7 @@ def render_care_hub() -> None:
         nav_cols = st.columns(3, gap="small")
         with nav_cols[0]:
             if st.button("Inbox", key="care_hub_inbox_top", use_container_width=True):
-                set_route("/care-hub/inbox")
+                set_route(get_home_route(app_variant))
         with nav_cols[1]:
             if st.button("How it works", key="care_hub_how_it_works_top", use_container_width=True):
                 set_route(get_how_it_works_route(app_variant))
@@ -3091,7 +3310,7 @@ def render_care_hub() -> None:
         nav_cols = st.columns(7, gap="small")
         with nav_cols[0]:
             if st.button("Inbox", key="care_hub_inbox_top", use_container_width=True):
-                set_route("/care-hub/inbox")
+                set_route(get_home_route(app_variant))
         with nav_cols[1]:
             if st.button("Documents", key="care_hub_docs_top", use_container_width=True):
                 set_route("/docs")
@@ -3449,6 +3668,7 @@ def main() -> None:
         unsafe_allow_html=True,
     )
     app_variant = get_app_variant()
+    validate_supabase_config_for_variant(app_variant)
     # No raw variant banner in UI.
     init_state()
     if app_variant == "care_hub_mobile":
@@ -3483,6 +3703,8 @@ def main() -> None:
     if route in ("/", ""):
         set_route(default_route)
         route = default_route
+    if redirect_if_not_authenticated(app_variant, route):
+        return
     if not is_route_allowed(app_variant, route):
         expected_variants = get_expected_variants_for_route(route)
         render_wrong_variant(f"Route `{route}` is not available in this app.", expected_variants)
@@ -3490,7 +3712,7 @@ def main() -> None:
     if (
         app_variant == "care_hub_office"
         and is_office_mfa_required()
-        and route not in ("/care-hub/mfa", "/care-hub/login")
+        and route not in ("/care-hub/mfa", get_login_route(VARIANT_OFFICE))
     ):
         set_route("/care-hub/mfa")
         return
@@ -3498,8 +3720,8 @@ def main() -> None:
     st.session_state["prev_page"] = prev_page
     st.session_state["current_page"] = route
     if (
-        prev_page == "/family/send"
-        and route != "/family/send"
+        prev_page == FAMILY_HOME_ROUTE
+        and route != FAMILY_HOME_ROUTE
         and st.session_state.get("rec_state") == "recording"
     ):
         st.session_state["rec_state"] = "idle"
@@ -3510,9 +3732,9 @@ def main() -> None:
             st.session_state.get("active_care_home_id"),
         )
     st.session_state.route = route
-    if route == "/family/login":
+    if route == FAMILY_LOGIN_ROUTE:
         render_family_login()
-    elif route == "/family/send":
+    elif route == FAMILY_HOME_ROUTE:
         render_family_send()
     elif route == "/family/sent":
         render_family_sent()
@@ -3525,11 +3747,9 @@ def main() -> None:
     elif route == "/family/privacy":
         render_family_document("Privacy Notice", "docs/public/privacy_policy.md")
     elif route == "/family/terms":
-        set_route("/family/terms-summary")
+        set_route("/family/terms-use")
     elif route == "/family/terms-use":
-        render_family_document("Family Terms of Use", "docs/public/family_terms_of_use.md")
-    elif route == "/family/terms-summary":
-        render_family_document("Family Terms Summary", "docs/public/family_terms_summary.md")
+        render_family_terms()
     elif route == "/family/contact":
         render_family_contact()
     elif route == "/pr-home":
@@ -3548,9 +3768,9 @@ def main() -> None:
         render_how_it_works_office_overview()
     elif route == "/how-it-works/office":
         render_how_it_works_office_overview()
-    elif route == "/care-hub/login":
+    elif route in (OFFICE_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE):
         render_care_login()
-    elif route == "/care-hub/inbox":
+    elif route in (OFFICE_HOME_ROUTE, MOBILE_HOME_ROUTE):
         render_care_hub()
     elif route == "/care-hub/instructions":
         render_care_hub_instructions()
@@ -3576,8 +3796,6 @@ def main() -> None:
         render_public_document("docs/public/privacy_policy.md")
     elif route == "/public/family-terms-of-use":
         render_public_document("docs/public/family_terms_of_use.md")
-    elif route == "/public/family-terms-summary":
-        render_public_document("docs/public/family_terms_summary.md")
     elif route == "/public/complaints-and-concerns":
         render_public_document("docs/public/complaints_and_concerns.md")
     elif route == "/public/safeguarding-and-consent":
