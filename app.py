@@ -2787,7 +2787,22 @@ def render_family_send() -> None:
             )
 
         st.markdown('<div class="vm-section-title">Send</div>', unsafe_allow_html=True)
-        if st_audiorec is None:
+        recorded_from_native = None
+        if hasattr(st, "audio_input"):
+            recorded_from_native = st.audio_input(
+                "Record voice message",
+                key=f"family_audio_input_{resident_id}",
+            )
+        if recorded_from_native is not None:
+            native_bytes = recorded_from_native.getvalue()
+            if native_bytes and native_bytes != state.get("recording_bytes"):
+                state["recording_bytes"] = native_bytes
+                state["recording_mime_type"] = (
+                    getattr(recorded_from_native, "type", None) or "audio/wav"
+                )
+                state["preview_confirmed"] = False
+                state["last_message"] = None
+        elif st_audiorec is None:
             st.error(
                 "Audio recorder not available. Install with "
                 "`python -m pip install streamlit-audiorec` "
@@ -4012,7 +4027,22 @@ def render_care_hub() -> None:
             state["selected_contact_id"] = None
             state["selected_contact_user_id"] = None
 
-        if st_audiorec is None:
+        recorded_from_native = None
+        if hasattr(st, "audio_input"):
+            recorded_from_native = st.audio_input(
+                "Record voice message",
+                key=f"care_audio_input_{resident_id}",
+            )
+        if recorded_from_native is not None:
+            native_bytes = recorded_from_native.getvalue()
+            if native_bytes and native_bytes != state.get("recording_bytes"):
+                state["recording_bytes"] = native_bytes
+                state["recording_mime_type"] = (
+                    getattr(recorded_from_native, "type", None) or "audio/wav"
+                )
+                state["preview_confirmed"] = False
+                state["last_message"] = None
+        elif st_audiorec is None:
             st.error(
                 "Audio recorder not available. Install with "
                 "`python -m pip install streamlit-audiorec` "
