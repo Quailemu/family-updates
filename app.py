@@ -110,6 +110,14 @@ def set_route(route: str) -> None:
         st.session_state.pop("_route_transition_until", None)
         st.rerun()
 
+
+def render_route_link(label: str, route: str, key: str, use_container_width: bool = True) -> None:
+    target = normalize_route(route) or "/"
+    if hasattr(st, "link_button"):
+        st.link_button(label, f"?route={target}", use_container_width=use_container_width)
+    else:
+        st.markdown(f"[{label}](?route={target})")
+
 def get_supabase_client() -> tuple[object | None, str | None]:
     url, key = get_supabase_config()
     if not url or not key:
@@ -291,8 +299,11 @@ def render_access_gate(message: str, login_route: str, role: str) -> None:
         if st.button("Go to login", key=f"{role}_gate_login"):
             set_route(login_route)
     with cols[1]:
-        if st.button("Back to Family login", key=f"{role}_gate_home"):
-            set_route(get_login_route(VARIANT_FAMILY))
+        render_route_link(
+            "Back to Family login",
+            get_login_route(VARIANT_FAMILY),
+            key=f"{role}_gate_home_link",
+        )
     with cols[2]:
         if st.session_state.get("auth_uid"):
             if st.button("Sign out", key=f"{role}_gate_sign_out"):
@@ -307,8 +318,7 @@ def render_wrong_variant(
     if app_variant == "public":
         render_page_header("Wrong app variant", show_menu=False, show_variant_subheading=False)
         st.markdown("This page belongs to a different app.")
-        if st.button("Back to service overview", key="public_wrong_back"):
-            set_route("/service-overview")
+        render_route_link("Back to service overview", "/service-overview", key="public_wrong_back_link")
         if expected_variants:
             for variant in expected_variants:
                 url = get_public_app_url(variant)
@@ -414,8 +424,11 @@ def render_how_it_works_mobile() -> None:
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
-    if st.button("Back to Care Hub – Mobile", key="mobile_how_it_works_back"):
-        set_route(get_home_route(VARIANT_MOBILE))
+    render_route_link(
+        "Back to Care Hub – Mobile",
+        get_home_route(VARIANT_MOBILE),
+        key="mobile_how_it_works_back_link",
+    )
 
 
 def render_how_it_works_office_overview() -> None:
@@ -462,11 +475,13 @@ def render_family_document(title: str, path: str) -> None:
         st.markdown(content)
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
-        if st.button("Back", key="family_doc_back"):
-            set_route("/how-it-works/family")
+        render_route_link("Back", "/how-it-works/family", key="family_doc_back_link")
     with action_cols[1]:
-        if st.button("Back to Family login", key="family_doc_home"):
-            set_route(get_login_route(VARIANT_FAMILY))
+        render_route_link(
+            "Back to Family login",
+            get_login_route(VARIANT_FAMILY),
+            key="family_doc_home_link",
+        )
     with action_cols[2]:
         if st.button("Sign out", key="family_doc_sign_out"):
             sign_out_user("family")
@@ -504,11 +519,12 @@ def render_family_terms() -> None:
     st.markdown('<div id="full-terms-binding"></div>', unsafe_allow_html=True)
     st.markdown("## Full Terms of Use (Binding)")
     render_document_boxes("docs/public/family_terms_of_use.md", strip_first_heading=True)
-    if st.button("Back to Family", key="family_terms_back"):
-        if st.session_state.get("auth_uid"):
-            set_route(get_home_route(VARIANT_FAMILY))
-        else:
-            set_route(get_login_route(VARIANT_FAMILY))
+    family_back_route = (
+        get_home_route(VARIANT_FAMILY)
+        if st.session_state.get("auth_uid")
+        else get_login_route(VARIANT_FAMILY)
+    )
+    render_route_link("Back to Family", family_back_route, key="family_terms_back_link")
 
 
 def render_family_contact() -> None:
@@ -540,11 +556,13 @@ def render_family_contact() -> None:
     )
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
-        if st.button("Back", key="family_contact_back"):
-            set_route("/how-it-works/family")
+        render_route_link("Back", "/how-it-works/family", key="family_contact_back_link")
     with action_cols[1]:
-        if st.button("Back to Family login", key="family_contact_home"):
-            set_route(get_login_route(VARIANT_FAMILY))
+        render_route_link(
+            "Back to Family login",
+            get_login_route(VARIANT_FAMILY),
+            key="family_contact_home_link",
+        )
     with action_cols[2]:
         if st.button("Sign out", key="family_contact_sign_out"):
             sign_out_user("family")
@@ -1089,9 +1107,8 @@ def render_header_menu(menu_key: str) -> None:
                     return
                 return
         if app_variant not in ("care_hub_office", "family") and prev_route and prev_route != current_route:
-            if st.button("Back", key=f"{menu_key}_back"):
-                set_route(prev_route)
-                return
+            render_route_link("Back", prev_route, key=f"{menu_key}_back_link")
+            return
         if show_back_only and app_variant not in ("family", "care_hub_mobile", "care_hub_office"):
             return
         if app_variant == "care_hub_office":
@@ -1186,30 +1203,34 @@ def render_header_menu(menu_key: str) -> None:
             back_target = (
                 prev_route if is_authed and prev_route and prev_route != current_route else get_login_route(app_variant)
             )
-            if st.button("Back", key=f"{menu_key}_family_back"):
-                set_route(back_target)
-                return
-            if st.button("How it works", key=f"{menu_key}_family_how"):
-                set_route(get_how_it_works_route(app_variant))
-                return
-            if st.button("Service overview", key=f"{menu_key}_family_service_overview"):
-                set_route("/public/service-overview")
-                return
-            if st.button("Family Q&A", key=f"{menu_key}_family_qa"):
-                set_route("/family/qa")
-                return
-            if st.button("Family Terms of Use", key=f"{menu_key}_terms"):
-                set_route("/family/terms-use")
-                return
-            if st.button("Contact the care home", key=f"{menu_key}_contact"):
-                set_route("/family/contact")
-                return
-            if st.button("Family login", key=f"{menu_key}_family_login"):
-                if st.session_state.get("auth_uid"):
-                    set_route(get_login_route(app_variant))
-                else:
-                    set_route(get_login_route(app_variant))
-                return
+            render_route_link("Back", back_target, key=f"{menu_key}_family_back_link")
+            render_route_link(
+                "How it works",
+                get_how_it_works_route(app_variant),
+                key=f"{menu_key}_family_how_link",
+            )
+            render_route_link(
+                "Service overview",
+                "/public/service-overview",
+                key=f"{menu_key}_family_service_overview_link",
+            )
+            render_route_link("Family Q&A", "/family/qa", key=f"{menu_key}_family_qa_link")
+            render_route_link(
+                "Family Terms of Use",
+                "/family/terms-use",
+                key=f"{menu_key}_family_terms_link",
+            )
+            render_route_link(
+                "Contact the care home",
+                "/family/contact",
+                key=f"{menu_key}_family_contact_link",
+            )
+            render_route_link(
+                "Family login",
+                get_login_route(app_variant),
+                key=f"{menu_key}_family_login_link",
+            )
+            return
         if st.session_state.get("auth_uid") and app_variant != "family":
             if st.button("Sign out", key=f"{menu_key}_sign_out"):
                 role = "family" if app_variant == "family" else "care_hub"
@@ -2734,7 +2755,12 @@ def render_family_send() -> None:
         resident_id = resident["id"]
         state = send_state.setdefault(
             resident_id,
-            {"recording_bytes": None, "preview_confirmed": False, "last_message": None},
+            {
+                "recording_bytes": None,
+                "recording_mime_type": "audio/wav",
+                "preview_confirmed": False,
+                "last_message": None,
+            },
         )
         full_name = f"{resident['preferred_name']} {resident['surname']}"
         room_label = f"Room {resident['room']}" if resident.get("room") else ""
@@ -2771,6 +2797,25 @@ def render_family_send() -> None:
             wav_audio_data = st_audiorec()
             if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
                 state["recording_bytes"] = wav_audio_data
+                state["recording_mime_type"] = "audio/wav"
+                state["preview_confirmed"] = False
+                state["last_message"] = None
+        st.caption(
+            "If Start recording does not work on mobile, upload a voice file below (m4a, mp3, wav)."
+        )
+        uploaded_audio = st.file_uploader(
+            "Upload voice message",
+            type=["m4a", "mp3", "wav", "ogg"],
+            key=f"family_upload_{resident_id}",
+            accept_multiple_files=False,
+        )
+        if uploaded_audio is not None:
+            uploaded_bytes = uploaded_audio.getvalue()
+            if uploaded_bytes and uploaded_bytes != state.get("recording_bytes"):
+                state["recording_bytes"] = uploaded_bytes
+                state["recording_mime_type"] = (
+                    uploaded_audio.type or "audio/wav"
+                )
                 state["preview_confirmed"] = False
                 state["last_message"] = None
 
@@ -2805,6 +2850,7 @@ def render_family_send() -> None:
                     st.error(error)
                 else:
                     audio_bytes = state["recording_bytes"] or b""
+                    audio_mime_type = state.get("recording_mime_type") or "audio/wav"
                     audio_b64 = base64.b64encode(audio_bytes).decode("ascii")
                     now_iso = __import__("datetime").datetime.utcnow().isoformat()
                     payload = {
@@ -2812,7 +2858,7 @@ def render_family_send() -> None:
                         "contact_user_id": st.session_state.get("auth_uid"),
                         "direction": "to_resident",
                         "audio_storage_path": audio_b64,
-                        "audio_mime_type": "audio/wav",
+                        "audio_mime_type": audio_mime_type,
                         "audio_bytes": len(audio_bytes),
                         "recorded_at": now_iso,
                     }
@@ -2823,7 +2869,7 @@ def render_family_send() -> None:
                                 {
                                     "p_resident_id": resident_id,
                                     "p_audio_storage_path": audio_b64,
-                                    "p_audio_mime_type": "audio/wav",
+                                    "p_audio_mime_type": audio_mime_type,
                                     "p_audio_bytes": len(audio_bytes),
                                     "p_recorded_at": now_iso,
                                 },
@@ -2840,6 +2886,7 @@ def render_family_send() -> None:
                             message_id,
                         )
                         state["recording_bytes"] = None
+                        state["recording_mime_type"] = "audio/wav"
                         state["preview_confirmed"] = False
                         set_route("/family/sent")
 
@@ -2875,13 +2922,18 @@ def render_family_sent() -> None:
     )
     render_page_header("Message sent")
     st.write("Your voice-message has been sent.")
-    render_action_row(
-        [
-            ("Back", "family_sent_back"),
-            ("Back to Family login", "family_sent_home"),
-            ("Sign out", "family_sent_sign_out"),
-        ]
-    )
+    action_cols = st.columns(3, gap="small")
+    with action_cols[0]:
+        render_route_link("Back", get_home_route(VARIANT_FAMILY), key="family_sent_back_link")
+    with action_cols[1]:
+        render_route_link(
+            "Back to Family login",
+            get_login_route(VARIANT_FAMILY),
+            key="family_sent_home_link",
+        )
+    with action_cols[2]:
+        if st.button("Sign out", key="family_sent_sign_out"):
+            sign_out_user("family")
 
 
 def render_docs() -> None:
@@ -2967,8 +3019,11 @@ def render_docs() -> None:
             st.write("")
             st.write("")
 
-    if st.button("Back to Care Hub – Office", key="docs_home"):
-        set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
+    render_route_link(
+        "Back to Care Hub – Office",
+        get_office_home_route(bool(st.session_state.get("auth_uid"))),
+        key="docs_home_link",
+    )
 
 
 def render_document_content(
@@ -3122,8 +3177,11 @@ def render_public_document(doc_path: str, back_route: str = "/service-overview")
         return
     if app_variant == VARIANT_FAMILY:
         render_page_header(get_public_document_title(doc_path), show_variant_subheading=False)
-        if st.button("← Back to Family login", key="public_doc_back_family_login"):
-            set_route(get_login_route(VARIANT_FAMILY))
+        render_route_link(
+            "← Back to Family login",
+            get_login_route(VARIANT_FAMILY),
+            key="public_doc_back_family_login_link",
+        )
         if use_qa_search:
             render_qa_document(doc_path, search_key="family_faq_search")
         elif use_boxes:
@@ -3135,8 +3193,11 @@ def render_public_document(doc_path: str, back_route: str = "/service-overview")
         is_authed = bool(st.session_state.get("auth_uid"))
         office_home_route = get_office_home_route(is_authed)
         render_page_header(get_public_document_title(doc_path), show_variant_subheading=False)
-        if st.button("← Back to dashboard", key="public_doc_back_office_dashboard"):
-            set_route(office_home_route)
+        render_route_link(
+            "← Back to dashboard",
+            office_home_route,
+            key="public_doc_back_office_dashboard_link",
+        )
         if use_qa_search:
             render_qa_document(doc_path, search_key="office_faq_search")
         elif use_boxes:
@@ -3146,8 +3207,11 @@ def render_public_document(doc_path: str, back_route: str = "/service-overview")
         return
     if app_variant == VARIANT_MOBILE:
         render_page_header(get_public_document_title(doc_path))
-        if st.button("Back", key="public_doc_back_mobile"):
-            set_route(get_home_route(app_variant))
+        render_route_link(
+            "Back",
+            get_home_route(app_variant),
+            key="public_doc_back_mobile_link",
+        )
         if use_qa_search:
             render_qa_document(doc_path, search_key="mobile_faq_search")
         elif use_boxes:
@@ -3173,11 +3237,17 @@ def render_public_docs() -> None:
 
     render_page_header("Public Documents")
     if app_variant == VARIANT_FAMILY:
-        if st.button("← Back to Family login", key="public_docs_back_family_login"):
-            set_route(get_login_route(VARIANT_FAMILY))
+        render_route_link(
+            "← Back to Family login",
+            get_login_route(VARIANT_FAMILY),
+            key="public_docs_back_family_login_link",
+        )
     if app_variant == VARIANT_OFFICE:
-        if st.button("← Back to dashboard", key="public_docs_back_office_dashboard"):
-            set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
+        render_route_link(
+            "← Back to dashboard",
+            get_office_home_route(bool(st.session_state.get("auth_uid"))),
+            key="public_docs_back_office_dashboard_link",
+        )
     st.write("Select a public document to view.")
 
     public_docs = [
@@ -3198,11 +3268,17 @@ def render_public_docs() -> None:
 
     if app_variant == VARIANT_OFFICE:
         is_authed = bool(st.session_state.get("auth_uid"))
-        if st.button("Back to Care Hub – Office", key="public_docs_back_office"):
-            set_route(get_office_home_route(is_authed))
+        render_route_link(
+            "Back to Care Hub – Office",
+            get_office_home_route(is_authed),
+            key="public_docs_back_office_link",
+        )
     elif app_variant == VARIANT_MOBILE:
-        if st.button("Back to Care Hub – Mobile", key="public_docs_back_mobile"):
-            set_route(get_home_route(app_variant))
+        render_route_link(
+            "Back to Care Hub – Mobile",
+            get_home_route(app_variant),
+            key="public_docs_back_mobile_link",
+        )
 
 
 def render_public_page(page_title: str, heading: str) -> None:
@@ -3452,8 +3528,11 @@ def render_care_hub_security() -> None:
             if st.button("I have saved these codes", key="mfa_codes_saved"):
                 st.session_state.pop("mfa_show_codes", None)
 
-    if st.button("Back to Care Hub – Office", key="mfa_back_office"):
-        set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
+    render_route_link(
+        "Back to Care Hub – Office",
+        get_office_home_route(bool(st.session_state.get("auth_uid"))),
+        key="mfa_back_office_link",
+    )
 
 
 def render_care_hub_mfa() -> None:
@@ -3557,8 +3636,11 @@ def render_contracts() -> None:
         if st.button("Close", key="contracts_close"):
             st.session_state["contracts_active"] = ""
 
-    if st.button("Back to Care Hub – Office", key="contracts_home"):
-        set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
+    render_route_link(
+        "Back to Care Hub – Office",
+        get_office_home_route(bool(st.session_state.get("auth_uid"))),
+        key="contracts_home_link",
+    )
 
 
 def render_subscription_billing() -> None:
@@ -3617,8 +3699,11 @@ def render_subscription_billing() -> None:
     billing_box("Invoice reference: [placeholder]")
     billing_box("Invoice download functionality will be available here.")
 
-    if st.button("Back to Care Hub – Office", key="billing_home"):
-        set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
+    render_route_link(
+        "Back to Care Hub – Office",
+        get_office_home_route(bool(st.session_state.get("auth_uid"))),
+        key="billing_home_link",
+    )
 
 
 def render_care_login() -> None:
@@ -3848,12 +3933,15 @@ def render_care_hub() -> None:
                 only_id,
                 {
                     "recording_bytes": None,
+                    "recording_mime_type": "audio/wav",
                     "preview_confirmed": False,
                     "selected_contact_id": None,
+                    "selected_contact_user_id": None,
                     "last_message": None,
                 },
             )
             send_state[only_id]["recording_bytes"] = None
+            send_state[only_id]["recording_mime_type"] = "audio/wav"
             send_state[only_id]["preview_confirmed"] = False
     else:
         if manual_active and active_rec_id and active_rec_id not in resident_ids:
@@ -3868,8 +3956,10 @@ def render_care_hub() -> None:
             resident_id,
             {
                 "recording_bytes": None,
+                "recording_mime_type": "audio/wav",
                 "preview_confirmed": False,
                 "selected_contact_id": None,
+                "selected_contact_user_id": None,
                 "last_message": None,
             },
         )
@@ -3911,6 +4001,7 @@ def render_care_hub() -> None:
                 state["selected_contact_id"] = selected_contact["id"]
                 state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
                 state["recording_bytes"] = None
+                state["recording_mime_type"] = "audio/wav"
                 state["preview_confirmed"] = False
                 state["last_message"] = None
         else:
@@ -3931,6 +4022,25 @@ def render_care_hub() -> None:
             wav_audio_data = st_audiorec()
             if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
                 state["recording_bytes"] = wav_audio_data
+                state["recording_mime_type"] = "audio/wav"
+                state["preview_confirmed"] = False
+                state["last_message"] = None
+        st.caption(
+            "If Start recording does not work on mobile, upload a voice file below (m4a, mp3, wav)."
+        )
+        uploaded_audio = st.file_uploader(
+            "Upload voice message",
+            type=["m4a", "mp3", "wav", "ogg"],
+            key=f"care_upload_{resident_id}",
+            accept_multiple_files=False,
+        )
+        if uploaded_audio is not None:
+            uploaded_bytes = uploaded_audio.getvalue()
+            if uploaded_bytes and uploaded_bytes != state.get("recording_bytes"):
+                state["recording_bytes"] = uploaded_bytes
+                state["recording_mime_type"] = (
+                    uploaded_audio.type or "audio/wav"
+                )
                 state["preview_confirmed"] = False
                 state["last_message"] = None
 
@@ -3984,6 +4094,7 @@ def render_care_hub() -> None:
                     st.error(error)
                 else:
                     audio_bytes = state.get("recording_bytes") or b""
+                    audio_mime_type = state.get("recording_mime_type") or "audio/wav"
                     audio_b64 = base64.b64encode(audio_bytes).decode("ascii")
                     now_iso = __import__("datetime").datetime.utcnow().isoformat()
                     payload = {
@@ -3991,7 +4102,7 @@ def render_care_hub() -> None:
                         "contact_user_id": state.get("selected_contact_user_id"),
                         "direction": "from_resident",
                         "audio_storage_path": audio_b64,
-                        "audio_mime_type": "audio/wav",
+                        "audio_mime_type": audio_mime_type,
                         "audio_bytes": len(audio_bytes),
                         "recorded_at": now_iso,
                     }
@@ -4005,7 +4116,7 @@ def render_care_hub() -> None:
                                         "selected_contact_user_id"
                                     ),
                                     "p_audio_storage_path": audio_b64,
-                                    "p_audio_mime_type": "audio/wav",
+                                    "p_audio_mime_type": audio_mime_type,
                                     "p_audio_bytes": len(audio_bytes),
                                     "p_recorded_at": now_iso,
                                 },
@@ -4022,6 +4133,7 @@ def render_care_hub() -> None:
                             message_id,
                         )
                         state["recording_bytes"] = None
+                        state["recording_mime_type"] = "audio/wav"
                         state["preview_confirmed"] = False
                         sent_now = True
                         st.session_state["care_last_sent"] = {
@@ -4295,18 +4407,19 @@ def main() -> None:
         render_care_hub_security()
     elif route == "/care-hub/office/qa":
         render_page_header("Office Q&A", show_variant_subheading=False)
-        if st.button("← Back to dashboard", key="office_qa_back_dashboard"):
-            set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
+        render_route_link(
+            "← Back to dashboard",
+            get_office_home_route(bool(st.session_state.get("auth_uid"))),
+            key="office_qa_back_dashboard_link",
+        )
         render_qa_document("docs/office/common_questions_qa.md", search_key="office_qa_search")
     elif route == "/care-hub/mobile/qa":
         render_page_header("Mobile Q&A", show_variant_subheading=False)
-        if st.button("Back", key="mobile_qa_back"):
-            set_route(get_home_route(VARIANT_MOBILE))
+        render_route_link("Back", get_home_route(VARIANT_MOBILE), key="mobile_qa_back_link")
         render_qa_document("docs/public/12_mobile_qa.md", search_key="mobile_qa_search")
     elif route == "/family/qa":
         render_page_header("Family Q&A", show_variant_subheading=False)
-        if st.button("Back", key="family_qa_back"):
-            set_route(get_home_route(VARIANT_FAMILY))
+        render_route_link("Back", get_home_route(VARIANT_FAMILY), key="family_qa_back_link")
         render_qa_document("docs/public/11_family_qa.md", search_key="family_qa_search")
     elif route == "/docs":
         render_docs()
