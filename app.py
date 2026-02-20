@@ -2741,9 +2741,6 @@ def render_family_send() -> None:
                 only_id,
                 {"recording_bytes": None, "preview_confirmed": False, "last_message": None},
             )
-            send_state[only_id]["recording_bytes"] = None
-            send_state[only_id]["preview_confirmed"] = False
-            send_state[only_id]["last_message"] = None
     else:
         if manual_active and active_rec_id and active_rec_id not in resident_ids:
             active_rec_id = None
@@ -2803,6 +2800,14 @@ def render_family_send() -> None:
                     state["last_message"] = None
         else:
             st.warning("Native microphone recording is unavailable in this environment.")
+        if st_audiorec is not None:
+            st.caption("Alternate recorder (if native control is missing):")
+            wav_audio_data = st_audiorec()
+            if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
+                state["recording_bytes"] = wav_audio_data
+                state["recording_mime_type"] = "audio/wav"
+                state["preview_confirmed"] = False
+                state["last_message"] = None
 
         st.caption(
             "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
@@ -2827,6 +2832,11 @@ def render_family_send() -> None:
                 state["last_message"] = None
 
         if state.get("recording_bytes"):
+            st.caption("Captured message preview:")
+            st.audio(
+                state["recording_bytes"],
+                format=state.get("recording_mime_type") or "audio/wav",
+            )
             state["preview_confirmed"] = st.checkbox(
                 "I have listened to this message.",
                 value=state.get("preview_confirmed", False),
@@ -3947,9 +3957,6 @@ def render_care_hub() -> None:
                     "last_message": None,
                 },
             )
-            send_state[only_id]["recording_bytes"] = None
-            send_state[only_id]["recording_mime_type"] = "audio/wav"
-            send_state[only_id]["preview_confirmed"] = False
     else:
         if manual_active and active_rec_id and active_rec_id not in resident_ids:
             active_rec_id = None
@@ -4035,6 +4042,14 @@ def render_care_hub() -> None:
                     state["last_message"] = None
         else:
             st.warning("Native microphone recording is unavailable in this environment.")
+        if st_audiorec is not None:
+            st.caption("Alternate recorder (if native control is missing):")
+            wav_audio_data = st_audiorec()
+            if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
+                state["recording_bytes"] = wav_audio_data
+                state["recording_mime_type"] = "audio/wav"
+                state["preview_confirmed"] = False
+                state["last_message"] = None
 
         st.caption(
             "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
@@ -4059,6 +4074,11 @@ def render_care_hub() -> None:
                 state["last_message"] = None
 
         if state.get("recording_bytes"):
+            st.caption("Captured message preview:")
+            st.audio(
+                state["recording_bytes"],
+                format=state.get("recording_mime_type") or "audio/wav",
+            )
             state["preview_confirmed"] = st.checkbox(
                 "I have listened to this message.",
                 value=state.get("preview_confirmed", False),
