@@ -2784,7 +2784,37 @@ def render_family_send() -> None:
             )
 
         st.markdown('<div class="vm-section-title">Send</div>', unsafe_allow_html=True)
-        if hasattr(st, "audio_input"):
+        last_message = state.get("last_message") or {}
+        if last_message and not state.get("recording_bytes"):
+            sent_at = last_message.get("sent_at")
+            sent_display = sent_at or "Unknown time"
+            if sent_at:
+                try:
+                    sent_display = (
+                        __import__("datetime")
+                        .datetime.fromisoformat(sent_at.replace("Z", ""))
+                        .strftime("%Y-%m-%d %H:%M")
+                    )
+                except Exception:
+                    sent_display = sent_at
+            st.success("Message sent")
+            st.caption(f"Sent at: {sent_display}")
+            if st.button(
+                "Record new message (replaces previous)",
+                key=f"family_record_new_{resident_id}",
+            ):
+                state["recording_bytes"] = None
+                state["recording_mime_type"] = "audio/wav"
+                state["preview_confirmed"] = False
+                state["last_message"] = None
+                st.session_state.pop(f"family_upload_{resident_id}", None)
+                st.session_state.pop(f"family_audio_input_{resident_id}", None)
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
+            continue
+
+        native_recording_available = hasattr(st, "audio_input")
+        if native_recording_available:
             recorded_from_native = st.audio_input(
                 "Record voice message",
                 key=f"family_audio_input_{resident_id}",
@@ -2799,22 +2829,10 @@ def render_family_send() -> None:
                     state["preview_confirmed"] = False
                     state["last_message"] = None
         else:
-            st.warning("Native microphone recording is unavailable in this environment.")
-        if st_audiorec is not None:
-            st.caption("Alternate recorder (if native control is missing):")
-            wav_audio_data = st_audiorec()
-            if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
-                state["recording_bytes"] = wav_audio_data
-                state["recording_mime_type"] = "audio/wav"
-                state["preview_confirmed"] = False
-                state["last_message"] = None
-
-        st.caption(
-            "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
-        )
-        st.caption(
-            "If recording is blocked on your phone browser, use Upload voice message below (you can record from there on most phones)."
-        )
+            st.warning(
+                "Recording is unavailable in this browser. Please allow microphone access "
+                "or use Upload voice message below."
+            )
         uploaded_audio = st.file_uploader(
             "Upload voice message",
             type=["m4a", "mp3", "wav", "ogg"],
@@ -2855,7 +2873,7 @@ def render_family_send() -> None:
 
         can_send = bool(state.get("recording_bytes") and state.get("preview_confirmed"))
         if st.button(
-            f"Send to {full_name}",
+            "Send message",
             key=f"family_send_{resident_id}",
             disabled=not can_send,
         ):
@@ -2905,7 +2923,10 @@ def render_family_send() -> None:
                         state["recording_bytes"] = None
                         state["recording_mime_type"] = "audio/wav"
                         state["preview_confirmed"] = False
-                        set_route("/family/sent")
+                        state["last_message"] = {"sent_at": now_iso}
+                        st.session_state.pop(f"family_upload_{resident_id}", None)
+                        st.session_state.pop(f"family_audio_input_{resident_id}", None)
+                        st.rerun()
 
 
     render_action_row(
