@@ -2,7 +2,7 @@
 
 # Care home onboarding script
 
-Audience: care home manager, care staff, families, residents.
+Audience: care home manager, care staff, family members and friends, residents.
 
 Scope reference: `docs/support/scope_statement.md`
 
@@ -10,14 +10,14 @@ Scope reference: `docs/support/scope_statement.md`
 
 ## 1) What this service is
 
-This is a simple way for families and residents to exchange non-urgent, social voice messages.  
+This is a simple way for family members or friends and residents to exchange non-urgent, social voice messages.  
 Messages are audio only. There is one current message at a time in each direction.  
 New messages replace the previous one.
 
 Care staff operate the system and decide when messages are recorded and played back.
 
 This service has three distinct app versions:
-- Family app (families only)
+- Family app (approved family members or other authorised contacts only)
 - Care Hub – Mobile (carers on a shared lanyard device)
 - Care Hub – Office (senior staff/admin for documents and oversight)
 
@@ -34,11 +34,11 @@ This service is not for care updates, health information, or safeguarding concer
 It is not a monitoring tool and it does not provide assessments.  
 It does not keep a history of messages.
 
-If something is urgent, families should contact the care home using normal channels.
+If something is urgent, family members or friends should contact the care home using normal channels.
 
 ---
 
-## 3) What staff should say to families
+## 3) What staff should say to family members or friends
 
 Suggested script:
 
@@ -46,7 +46,7 @@ Suggested script:
 Messages are social only, and only one message is kept at a time.  
 When you send a new message, it replaces your previous one.  
 Care staff choose when messages are played.  
-Families use the Family app only; carers use Care Hub – Mobile; office staff use Care Hub – Office.  
+Approved family members or other authorised contacts use the Family app only; carers use Care Hub – Mobile; office staff use Care Hub – Office.  
 Treat messages as shared within the care home. Staff may play messages in shared spaces.  
 If something is urgent or about care, please contact us directly using our usual phone or email."
 

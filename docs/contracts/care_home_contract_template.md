@@ -27,7 +27,7 @@ The care home is responsible for:
 - consent and authority, including LPA where applicable
 - supervision of recordings and playback
 - managing access and contacts
-- handling family disputes and complaints
+- handling disputes and complaints raised by family members, friends, or other authorised contacts
 - safeguarding under its existing procedures
 
 ## 4. Platform limitations
@@ -39,7 +39,7 @@ The platform does not provide care updates or health information. It does not mo
 The service is for non-urgent, social voice messages only. It is not intended for care updates, health information, or safeguarding concerns. The care home decides how the service is used in practice.
 
 Role separation applies:
-- Families use the Family app only.
+- Approved family members or other authorised contacts use the Family app only.
 - Carers use Care Hub – Mobile only.
 - Office staff use Care Hub – Office only.
 

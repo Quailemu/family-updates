@@ -24,6 +24,65 @@ except ModuleNotFoundError:  # pragma: no cover - runtime env mismatch
 from ui_theme import TOKENS, inject_css
 
 SESSION_TIMEOUT_SECONDS = 1800
+APP_DEBUG = os.getenv("APP_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def normalize_route(route: str | None) -> str:
+    value = (route or "").strip()
+    if not value:
+        return ""
+    if not value.startswith("/"):
+        value = f"/{value}"
+    if len(value) > 1 and value.endswith("/"):
+        value = value[:-1]
+    return value
+
+
+def is_family_authenticated() -> bool:
+    return (
+        bool(st.session_state.get("auth_uid"))
+        and bool(st.session_state.get("access_token"))
+        and bool(st.session_state.get("refresh_token"))
+        and st.session_state.get("active_role") == "family"
+    )
+
+
+def is_care_authenticated() -> bool:
+    return (
+        bool(st.session_state.get("auth_uid"))
+        and bool(st.session_state.get("access_token"))
+        and bool(st.session_state.get("refresh_token"))
+        and st.session_state.get("active_role") == "care_hub"
+    )
+
+
+def get_query_route_debug() -> str:
+    if hasattr(st, "query_params"):
+        route = st.query_params.get("route", "")
+    else:
+        route = st.experimental_get_query_params().get("route", [""])[0]
+    if isinstance(route, list):
+        route = route[0] if route else ""
+    return normalize_route(route) or "(empty)"
+
+
+def render_debug_panel(stage: str, app_variant: str, redirect_decision: str = "None") -> None:
+    if not APP_DEBUG:
+        return
+    auth_state = is_family_authenticated() if app_variant == VARIANT_FAMILY else bool(st.session_state.get("auth_uid"))
+    st.markdown(
+        f"""
+<div style="border:1px solid #d6d6d6;background:#fff9d9;border-radius:8px;padding:8px 10px;margin:6px 0 10px;">
+  <div style="font-weight:700;">DEBUG: Reached top of app</div>
+  <div>stage: <code>{stage}</code></div>
+  <div>variant: <code>{app_variant or '(missing)'}</code></div>
+  <div>logged_in: <code>{auth_state}</code></div>
+  <div>query route: <code>{get_query_route_debug()}</code></div>
+  <div>redirect decision: <code>{redirect_decision}</code></div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
 
 
 def init_state() -> None:
@@ -32,12 +91,24 @@ def init_state() -> None:
 
 
 def set_route(route: str) -> None:
-    st.session_state.route = route
+    target = normalize_route(route) or "/"
+    st.session_state.route = target
+    route_changed = False
     if hasattr(st, "query_params"):
-        st.query_params["route"] = route
+        current = st.query_params.get("route", "")
+        if isinstance(current, list):
+            current = current[0] if current else ""
+        current = normalize_route(current)
+        if current != target:
+            st.query_params["route"] = target
+            route_changed = True
     else:
-        st.experimental_set_query_params(route=route)
-    st.rerun()
+        current = normalize_route(st.experimental_get_query_params().get("route", [""])[0])
+        route_changed = current != target
+        st.experimental_set_query_params(route=target)
+    if route_changed:
+        st.session_state.pop("_route_transition_until", None)
+        st.rerun()
 
 def get_supabase_client() -> tuple[object | None, str | None]:
     url, key = get_supabase_config()
@@ -294,76 +365,90 @@ def render_safeguarding_block() -> None:
 def render_how_it_works_family() -> None:
     render_page_header("How it works — Family")
     st.markdown(
-        "Log in using your email access provided by the care home.\n\n"
-        "Record and send a short voice message.\n\n"
-        "This is not a live service. Messages are played and replies are recorded when staff are available.\n\n"
-        "Only the most recent message is kept (one message in, one message out). There is no message history.\n\n"
-        "The service is for non-urgent social contact only.\n\n"
-        "For care or safeguarding concerns, contact the care home directly. The platform is not monitored in real time."
+        """
+<style>
+  .family-how-box {
+    width: 100%;
+    background: #f8f3e8;
+    border: 1px solid #b7ddd7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 12px 0;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }
+</style>
+""",
+        unsafe_allow_html=True,
     )
-    st.markdown("Links:")
-    link_cols = st.columns(2, gap="small")
-    with link_cols[0]:
-        if st.button("Terms & Conditions", key="family_links_terms"):
-            set_route("/family/terms-use")
-    with link_cols[1]:
-        if st.button("Contact the care home", key="family_links_contact"):
-            set_route("/family/contact")
+    info_boxes = [
+        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident.",
+        "One message kept at a time in each direction, i.e resident to approved family member or friend and approved family member or friend to resident. No threads.",
+    ]
+    for box in info_boxes:
+        st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
 
 
 def render_how_it_works_mobile() -> None:
     render_page_header("How it works — Care Hub – Mobile")
     st.markdown(
-        "Only one message is kept between each family member and each resident, in each direction, with no threads."
+        """
+<style>
+  .family-how-box {
+    width: 100%;
+    background: #f8f3e8;
+    border: 1px solid #b7ddd7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 12px 0;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }
+</style>
+""",
+        unsafe_allow_html=True,
     )
-    st.markdown("An authorised contact is a person approved by the care home to send and receive messages.")
-    st.markdown(
-        "1. Log in using the shared PIN or password provided by the care home.\n"
-        "2. Select a resident from the list.\n"
-        "3. Select a family member and play their latest message to the resident.\n"
-        "4. If appropriate, assist the resident to send a reply to that family member.\n"
-        "5. The next message sent in either direction replaces the previous one."
-    )
-    st.markdown("Messages are for non-urgent, social contact only. This service is not monitored.")
-    render_safeguarding_block()
+    info_boxes = [
+        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident.",
+        "One message kept at a time in each direction, i.e resident to approved family member or friend and approved family member or friend to resident. No threads.",
+    ]
+    for box in info_boxes:
+        st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     if st.button("Back to Care Hub – Mobile", key="mobile_how_it_works_back"):
         set_route(get_home_route(VARIANT_MOBILE))
 
 
 def render_how_it_works_office_overview() -> None:
     render_page_header("How it works — Care Hub – Office")
-    try:
-        content = Path("docs/public/02_how_it_works.md").read_text(encoding="utf-8")
-        content = inject_logo_into_markdown(content)
-        st.markdown(content)
-    except OSError:
-        st.error("Document not found.")
+    st.markdown(
+        """
+<style>
+  .family-how-box {
+    width: 100%;
+    background: #f8f3e8;
+    border: 1px solid #b7ddd7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 12px 0;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+    info_boxes = [
+        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident.",
+        "One message kept at a time in each direction, i.e resident to approved family member or friend and approved family member or friend to resident. No threads.",
+        "Care Hub – Office provides full access and includes Care Hub – Mobile functionality.",
+        "Office users may carry out Mobile tasks as part of supervision or care delivery.",
+    ]
+    for box in info_boxes:
+        st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
 
 
 def render_how_it_works_office() -> None:
-    render_page_header("How it works — Care Hub – Office")
-    st.markdown(
-        "Only one message is kept between each family member and each resident, in each direction, with no threads."
-    )
-    st.markdown(
-        "1. Log in using the care home’s office credentials.\n"
-        "2. View residents and messages for oversight purposes where required.\n"
-        "3. Confirm that the system is operating correctly:\n"
-        "   - one message per family member → resident\n"
-        "   - one message per resident → family member\n"
-        "4. Manage documents and compliance."
-    )
-    st.markdown(
-        "Documents available in Care Hub – Office only:\n"
-        "- Care home responsibilities\n"
-        "- Care home guide\n"
-        "- Safeguarding & consent\n"
-        "- Care Hub access summary\n"
-        "- Care home onboarding script\n"
-        "- Handover checklist"
-    )
-    st.markdown("Messages are for non-urgent, social contact only. This service is not monitored.")
-    render_safeguarding_block()
+    render_how_it_works_office_overview()
 
 
 def render_family_document(title: str, path: str) -> None:
@@ -390,27 +475,35 @@ def render_family_document(title: str, path: str) -> None:
 def render_family_terms() -> None:
     render_page_header("Family Terms of Use", show_variant_subheading=False)
     st.markdown("[Summary](#summary-non-binding) | [Full terms](#full-terms-binding)")
+    st.markdown(
+        """
+<style>
+  .family-terms-box {
+    width: 100%;
+    background: #f8f3e8;
+    border: 1px solid #b7ddd7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 12px 0;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }
+</style>
+""",
+        unsafe_allow_html=True,
+    )
     st.markdown('<div id="summary-non-binding"></div>', unsafe_allow_html=True)
     st.markdown("## Summary (Plain English - Non-binding)")
     st.markdown(
-        "This summary is provided for convenience only. "
-        "The full Terms of Use below are legally binding and prevail in the event of any inconsistency."
+        '<div class="family-terms-box">This summary is provided for convenience only. '
+        "The full Terms of Use below are legally binding and prevail in the event of any inconsistency.</div>",
+        unsafe_allow_html=True,
     )
-    st.markdown(
-        "- This is not a live service; messages are played when staff are available.\n"
-        "- One message in, one message out: only the latest message in each direction is kept.\n"
-        "- The service is for non-urgent social communication only.\n"
-        "- For safeguarding or care concerns, contact the care home directly."
-    )
-    render_document_content(
-        "docs/public/family_terms_summary.md", include_logo=False, strip_first_heading=True
-    )
+    render_document_boxes("docs/public/family_terms_summary.md", strip_first_heading=True)
     st.markdown("---")
     st.markdown('<div id="full-terms-binding"></div>', unsafe_allow_html=True)
     st.markdown("## Full Terms of Use (Binding)")
-    render_document_content(
-        "docs/public/family_terms_of_use.md", include_logo=False, strip_first_heading=True
-    )
+    render_document_boxes("docs/public/family_terms_of_use.md", strip_first_heading=True)
     if st.button("Back to Family", key="family_terms_back"):
         if st.session_state.get("auth_uid"):
             set_route(get_home_route(VARIANT_FAMILY))
@@ -420,9 +513,30 @@ def render_family_terms() -> None:
 
 def render_family_contact() -> None:
     render_page_header("Contact the care home")
-    st.markdown("For access, questions, or support, contact the care home directly.")
     st.markdown(
-        "For safeguarding concerns, contact the care home directly; the platform is not monitored in real time."
+        """
+<style>
+  .family-contact-box {
+    width: 100%;
+    background: #f8f3e8;
+    border: 1px solid #b7ddd7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 12px 0;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="family-contact-box">For access, questions, or support, contact the care home directly.</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="family-contact-box">For safeguarding concerns, contact the care home directly; the platform is not monitored in real time.</div>',
+        unsafe_allow_html=True,
     )
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
@@ -452,8 +566,8 @@ def render_care_hub_nav() -> None:
             if st.button("Inbox", key="care_hub_nav_inbox", use_container_width=True):
                 set_route(get_home_route(app_variant))
         with nav_cols[1]:
-            if st.button("Documents", key="care_hub_nav_docs", use_container_width=True):
-                set_route("/docs")
+            if st.button("Service overview", key="care_hub_nav_service_overview", use_container_width=True):
+                set_route("/public/service-overview")
         with nav_cols[2]:
             if st.button("Contracts", key="care_hub_nav_contracts", use_container_width=True):
                 set_route("/contracts")
@@ -591,6 +705,9 @@ def sign_out_user(role: str | None = None) -> None:
 def enforce_session_timeout() -> None:
     last_active = st.session_state.get("last_active_at")
     now = time.time()
+    if not st.session_state.get("auth_uid"):
+        st.session_state["last_active_at"] = now
+        return
     if last_active and (now - last_active) > SESSION_TIMEOUT_SECONDS:
         role = st.session_state.get("active_role")
         if role:
@@ -827,7 +944,46 @@ def render_logo_row() -> None:
         st.write("Logo missing")
         return
     try:
-        st.image(logo_path.read_bytes(), width=64)
+        logo_b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
+        st.markdown(
+            f"""
+<style>
+  .vm-logo-row {{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }}
+  .vm-logo-row img {{
+    width: 70px;
+    height: auto;
+  }}
+  .vm-logo-row .vm-logo-text {{
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-left: 8px;
+    white-space: nowrap;
+  }}
+  @media (max-width: 768px) {{
+    .vm-logo-row {{
+      gap: 8px;
+    }}
+    .vm-logo-row img {{
+      width: 56px;
+    }}
+    .vm-logo-row .vm-logo-text {{
+      font-size: 0.78rem;
+      margin-left: 0;
+    }}
+  }}
+</style>
+<div class="vm-logo-row">
+  <img src="data:image/png;base64,{logo_b64}" alt="logo" />
+  <span class="vm-logo-text">voice-message.com</span>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
     except OSError:
         st.write("Logo missing")
 
@@ -839,6 +995,49 @@ def get_logo_data_uri() -> str:
     except OSError:
         return ""
     return f"data:image/png;base64,{logo_b64}"
+
+
+def render_route_transition_loader(duration_ms: int = 700) -> None:
+    logo_data = get_logo_data_uri()
+    logo_html = (
+        f'<img class="vm-wait-logo" src="{logo_data}" alt="logo" />' if logo_data else ""
+    )
+    st.markdown(
+        f"""
+<style>
+  .vm-wait-overlay {{
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    background: rgba(255,255,255,0.97);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }}
+  .vm-wait-logo {{
+    width: 92px;
+    height: auto;
+    display: block;
+    animation: vm-logo-fade 2.4s ease-in-out infinite;
+  }}
+  @keyframes vm-logo-fade {{
+    0%, 100% {{ opacity: 0.28; transform: scale(0.98); }}
+    50% {{ opacity: 1; transform: scale(1.02); }}
+  }}
+</style>
+<div class="vm-wait-overlay" id="vmWaitOverlay">
+  {logo_html}
+</div>
+<script>
+  setTimeout(function() {{
+    const el = document.getElementById('vmWaitOverlay');
+    if (el) el.remove();
+  }}, {max(180, duration_ms)});
+</script>
+""",
+        unsafe_allow_html=True,
+    )
 
 
 def inject_logo_into_markdown(content: str) -> str:
@@ -875,39 +1074,72 @@ def render_header_menu(menu_key: str) -> None:
     with st.popover("≡"):
         if app_variant == "care_hub_office":
             is_authed = bool(st.session_state.get("auth_uid"))
-            office_home = get_office_home_route(is_authed)
             if not is_authed:
+                if st.button("Complaints & Concerns", key=f"{menu_key}_office_complaints_public"):
+                    set_route("/public/complaints-and-concerns")
+                    return
                 if st.button("Go to login", key=f"{menu_key}_office_login"):
                     set_route(get_login_route(app_variant))
                     return
-                return
-            if st.button("Back", key=f"{menu_key}_back"):
-                set_route(office_home)
+                if st.button("Privacy Notice", key=f"{menu_key}_office_privacy_public"):
+                    set_route("/public/privacy-notice")
+                    return
+                if st.button("Service overview", key=f"{menu_key}_office_service_overview_public"):
+                    set_route("/public/service-overview")
+                    return
                 return
         if app_variant not in ("care_hub_office", "family") and prev_route and prev_route != current_route:
             if st.button("Back", key=f"{menu_key}_back"):
                 set_route(prev_route)
                 return
-        if show_back_only and app_variant != "family":
+        if show_back_only and app_variant not in ("family", "care_hub_mobile", "care_hub_office"):
             return
         if app_variant == "care_hub_office":
+            st.markdown("**Care Hub – Office**")
+            clicked_action = None
             if st.button("Inbox", key=f"{menu_key}_inbox"):
-                set_route(get_home_route(app_variant))
-                return
-            if st.button("Documents", key=f"{menu_key}_docs"):
-                set_route("/docs")
-                return
-            if st.button("Contracts", key=f"{menu_key}_contracts"):
-                set_route("/contracts")
-                return
-            if st.button("Subscription & Billing", key=f"{menu_key}_billing"):
-                set_route("/billing")
-                return
+                clicked_action = ("route", get_home_route(app_variant))
             if st.button("Account & Security", key=f"{menu_key}_security"):
-                set_route("/care-hub/security")
-                return
+                clicked_action = ("route", "/care-hub/security")
+            if st.button("Subscription & Billing", key=f"{menu_key}_billing"):
+                clicked_action = ("route", "/billing")
             if st.button("Sign out", key=f"{menu_key}_office_sign_out"):
-                sign_out_user("care_hub")
+                clicked_action = ("sign_out", "care_hub")
+
+            st.markdown("— Daily Use —")
+            if st.button("Care Hub handbook", key=f"{menu_key}_office_doc_handbook"):
+                clicked_action = ("doc", "docs/office/05_care_home_guide.md")
+            if st.button("Access summary (1 page)", key=f"{menu_key}_office_doc_access_summary"):
+                clicked_action = ("doc", "docs/office/08_care_hub_access_summary.md")
+            if st.button("Handover checklist", key=f"{menu_key}_office_doc_handover"):
+                clicked_action = ("doc", "docs/office/care_home_handover_checklist.md")
+            if st.button("Office Q&A", key=f"{menu_key}_office_doc_qa"):
+                clicked_action = ("route", "/care-hub/office/qa")
+
+            st.markdown("— Governance —")
+            if st.button("Service overview", key=f"{menu_key}_office_service_overview"):
+                clicked_action = ("route", "/public/service-overview")
+            if st.button("Care home responsibilities", key=f"{menu_key}_office_doc_responsibilities"):
+                clicked_action = ("doc", "docs/office/04_care_home_responsibilities.md")
+            if st.button("Safeguarding & consent", key=f"{menu_key}_office_doc_safeguarding"):
+                clicked_action = ("doc", "docs/office/09_safeguarding_consent.md")
+            if st.button("Privacy notice", key=f"{menu_key}_office_privacy"):
+                clicked_action = ("route", "/public/privacy-notice")
+
+            st.markdown("— Formal —")
+            if st.button("Complaints & concerns", key=f"{menu_key}_office_complaints"):
+                clicked_action = ("route", "/public/complaints-and-concerns")
+            if st.button("Contracts & templates", key=f"{menu_key}_contracts"):
+                clicked_action = ("route", "/contracts")
+            if clicked_action:
+                action_type, payload = clicked_action
+                if action_type == "route":
+                    set_route(payload)
+                elif action_type == "doc":
+                    st.session_state["docs_active"] = payload
+                    set_route("/docs")
+                elif action_type == "sign_out":
+                    sign_out_user(payload)
                 return
             return
         if app_variant not in ("care_hub_office", "care_hub_mobile", "family"):
@@ -919,11 +1151,11 @@ def render_header_menu(menu_key: str) -> None:
                 set_route("/public/service-overview")
                 return
         if app_variant == "care_hub_mobile":
-            if st.button("How it works", key=f"{menu_key}_mobile_how"):
-                set_route(get_how_it_works_route(app_variant))
-                return
             if st.button("Public documents", key=f"{menu_key}_mobile_public_docs"):
                 set_route("/public/service-overview")
+                return
+            if st.button("Mobile Q&A", key=f"{menu_key}_mobile_qa"):
+                set_route("/care-hub/mobile/qa")
                 return
             if st.button(
                 "Safeguarding and Consent",
@@ -950,7 +1182,10 @@ def render_header_menu(menu_key: str) -> None:
                     return
             return
         if app_variant == "family":
-            back_target = prev_route if prev_route and prev_route != current_route else get_login_route(app_variant)
+            is_authed = bool(st.session_state.get("auth_uid"))
+            back_target = (
+                prev_route if is_authed and prev_route and prev_route != current_route else get_login_route(app_variant)
+            )
             if st.button("Back", key=f"{menu_key}_family_back"):
                 set_route(back_target)
                 return
@@ -959,6 +1194,9 @@ def render_header_menu(menu_key: str) -> None:
                 return
             if st.button("Service overview", key=f"{menu_key}_family_service_overview"):
                 set_route("/public/service-overview")
+                return
+            if st.button("Family Q&A", key=f"{menu_key}_family_qa"):
+                set_route("/family/qa")
                 return
             if st.button("Family Terms of Use", key=f"{menu_key}_terms"):
                 set_route("/family/terms-use")
@@ -984,6 +1222,10 @@ def render_page_header(
     show_variant_subheading: bool = True,
     show_menu: bool = True,
 ) -> None:
+    if get_app_variant() == "family" and not is_family_authenticated():
+        show_menu = False
+    if get_app_variant() == "care_hub_mobile" and not is_care_authenticated():
+        show_menu = False
     st.markdown(
         f"""
 <style>
@@ -1005,72 +1247,79 @@ def render_page_header(
     font-weight: 800;
     line-height: 1.1;
   }}
-  .vm-header-title {{
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 1.2;
-    color: rgba(31,31,31,0.75);
-  }}
   .vm-header-menu button {{
     font-size: 26px !important;
     line-height: 1 !important;
     padding: 0 6px !important;
+  }}
+  .vm-page-title {{
+    margin: 12px 0 10px;
+    font-size: 1.65rem !important;
+    line-height: 1.2;
+    font-weight: 700 !important;
+  }}
+  @media (max-width: 768px) {{
+    .vm-header-strip {{
+      padding: 4px 0 6px;
+    }}
+    .vm-header-menu button {{
+      font-size: 22px !important;
+      padding: 0 3px !important;
+    }}
+    .vm-page-title {{
+      margin: 10px 0 8px;
+      font-size: 1.22rem !important;
+    }}
   }}
 </style>
 """,
         unsafe_allow_html=True,
     )
     st.markdown('<div class="vm-header-strip">', unsafe_allow_html=True)
-    cols = st.columns([0.18, 0.72, 0.1], gap="small")
+    cols = st.columns([0.82, 0.18], gap="small")
     with cols[0]:
         render_logo_row()
     with cols[1]:
-        app_variant = get_app_variant()
-        if app_variant in ("care_hub_mobile", "family"):
-            show_variant_subheading = False
-        variant_label = get_variant_label(app_variant)
-        if variant_label and not variant_label.endswith("app"):
-            variant_label = f"{variant_label} app"
-        variant_line = (
-            f'<div class="vm-header-title">{variant_label}</div>'
-            if show_variant_subheading and variant_label
-            else ""
-        )
-        if brand_title:
-            st.markdown(
-                f"""
-<div class="vm-header-brand">{brand_title}</div>
-<div class="vm-header-title">{page_title}</div>
-{variant_line}
-""",
-                unsafe_allow_html=True,
-            )
-        else:
-            st.markdown(
-                f'<div class="vm-header-brand">{page_title}</div>{variant_line}',
-                unsafe_allow_html=True,
-            )
-    with cols[2]:
         if show_menu:
             st.markdown('<div class="vm-header-menu">', unsafe_allow_html=True)
             menu_key = page_title.lower().replace(" ", "_")
             render_header_menu(menu_key)
             st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(f'<h2 class="vm-page-title">{page_title}</h2>', unsafe_allow_html=True)
 
 
 def render_front_page_descriptor() -> None:
     st.markdown(
-        "voice-message.com — for non-urgent social voice messages.  \n"
-        "One message kept at a time in each direction, with no threads.\n\n"
-        "Only one message is kept between each family member and each resident, in each direction.  \n"
-        "Each new message deletes the previous message, to keep communication simple and up to date."
+        """
+<style>
+  .front-page-info-box {
+    width: 100%;
+    background: #f8f3e8;
+    border: 1px solid #b7ddd7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 12px 0;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="front-page-info-box">voice-message.com — for non-urgent social voice messages.</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="front-page-info-box">One message kept at a time in each direction (between each family member and each resident), with no threads.</div>',
+        unsafe_allow_html=True,
     )
 
 
 def render_how_it_works_general() -> None:
     st.markdown(
-        "Only one message is kept between each family member and each resident, in each direction, with no threads.  \n"
+        "Only one message is kept between each approved family member or friend and each resident, in each direction, with no threads.  \n"
         "Each new message deletes the previous message.\n\n"
         "Messages are not private within the care home.  \n"
         "Care staff and office staff may read messages where required.  \n"
@@ -1830,7 +2079,7 @@ def render_home(active: str) -> None:
         "voice-message.com  \n"
         "One message in. One message out.  \n"
         "No threads. No pressure.\n\n"
-        "Only the most recent message from a family member and the most recent reply from the resident are kept.  \n"
+        "Only the most recent message from an approved family member or friend and the most recent reply from the resident are kept.  \n"
         "When a new message is sent, the previous message from that sender is replaced.  \n"
         "This structure helps keep communication simple and manageable within care settings.\n\n"
         "This is not a live service. Messages are played and replies are recorded when staff are available, to fit around care routines."
@@ -1862,7 +2111,7 @@ def get_route() -> str:
         route = st.experimental_get_query_params().get("route", [""])[0]
     if isinstance(route, list):
         route = route[0] if route else ""
-    return route or st.session_state.get("route", "/")
+    return normalize_route(route) or "/"
 
 
 VARIANT_FAMILY = "family"
@@ -1877,6 +2126,39 @@ OFFICE_HOME_ROUTE = "/care-hub/inbox"
 MOBILE_LOGIN_ROUTE = "/care-hub/mobile/login"
 MOBILE_HOME_ROUTE = "/care-hub/mobile/inbox"
 PUBLIC_HOME_ROUTE = "/service-overview"
+FAMILY_PUBLIC_ROUTES = {
+    "/family/login",
+}
+OFFICE_PUBLIC_ROUTES = {
+    "/care-hub/login",
+    "/public/service-overview",
+    "/public/how-it-works",
+    "/public/resident-participation",
+    "/public/family-guide",
+    "/public/qa",
+    "/public/faq",
+    "/public/privacy-notice",
+    "/public/family-terms-of-use",
+    "/public/complaints-and-concerns",
+    "/public/safeguarding-and-consent",
+    "/care-hub/mobile/qa",
+}
+MOBILE_PUBLIC_ROUTES = {
+    "/care-hub/mobile/login",
+    "/care-hub/login",
+    "/care-hub-mobile/how-it-works",
+    "/how-it-works/mobile",
+    "/public/service-overview",
+    "/public/how-it-works",
+    "/public/resident-participation",
+    "/public/family-guide",
+    "/public/qa",
+    "/public/faq",
+    "/public/privacy-notice",
+    "/public/family-terms-of-use",
+    "/public/complaints-and-concerns",
+    "/public/safeguarding-and-consent",
+}
 
 VARIANT_CONFIG = {
     VARIANT_FAMILY: {
@@ -1890,6 +2172,7 @@ VARIANT_CONFIG = {
             "/family/privacy",
             "/family/terms-use",
             "/family/contact",
+            "/family/qa",
             "/how-it-works/family",
             "/family/how-it-works",
             "/public-docs",
@@ -1897,6 +2180,7 @@ VARIANT_CONFIG = {
             "/public/how-it-works",
             "/public/resident-participation",
             "/public/family-guide",
+            "/public/qa",
             "/public/faq",
             "/public/privacy-notice",
             "/public/family-terms-of-use",
@@ -1919,11 +2203,13 @@ VARIANT_CONFIG = {
             "/care-hub/training",
             "/how-it-works/mobile",
             "/care-hub-mobile/how-it-works",
+            "/care-hub/mobile/qa",
             "/public-docs",
             "/public/service-overview",
             "/public/how-it-works",
             "/public/resident-participation",
             "/public/family-guide",
+            "/public/qa",
             "/public/faq",
             "/public/privacy-notice",
             "/public/family-terms-of-use",
@@ -1944,6 +2230,7 @@ VARIANT_CONFIG = {
             "/care-hub/training",
             "/care-hub/security",
             "/care-hub/mfa",
+            "/care-hub/office/qa",
             "/how-it-works/office",
             "/care-hub-office/how-it-works",
             "/docs",
@@ -1954,6 +2241,7 @@ VARIANT_CONFIG = {
             "/public/how-it-works",
             "/public/resident-participation",
             "/public/family-guide",
+            "/public/qa",
             "/public/faq",
             "/public/privacy-notice",
             "/public/family-terms-of-use",
@@ -1975,6 +2263,7 @@ VARIANT_CONFIG = {
             "/public/how-it-works",
             "/public/resident-participation",
             "/public/family-guide",
+            "/public/qa",
             "/public/faq",
             "/public/privacy-notice",
             "/public/family-terms-of-use",
@@ -2045,7 +2334,22 @@ def is_login_route_for_variant(app_variant: str, route: str) -> bool:
     return False
 
 
+def is_public_route_for_variant(app_variant: str, route: str) -> bool:
+    route = normalize_route(route)
+    if app_variant == VARIANT_FAMILY:
+        return route in FAMILY_PUBLIC_ROUTES
+    if app_variant == VARIANT_OFFICE:
+        return route in OFFICE_PUBLIC_ROUTES
+    if app_variant == VARIANT_MOBILE:
+        return route in MOBILE_PUBLIC_ROUTES
+    if app_variant == VARIANT_PUBLIC:
+        return True
+    return False
+
+
 def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
+    if app_variant == VARIANT_FAMILY:
+        return False
     if not variant_requires_auth(app_variant):
         return False
     is_authed = bool(st.session_state.get("auth_uid"))
@@ -2054,11 +2358,17 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
     is_variant_authed = is_authed and active_role == expected_role
     login_route = get_login_route(app_variant)
     home_route = get_home_route(app_variant)
-    if not is_authed and not is_login_route_for_variant(app_variant, current_route):
+    if (
+        not is_authed
+        and not is_login_route_for_variant(app_variant, current_route)
+        and not is_public_route_for_variant(app_variant, current_route)
+    ):
         set_route(login_route)
+        st.stop()
         return True
     if is_variant_authed and is_login_route_for_variant(app_variant, current_route):
         set_route(home_route)
+        st.stop()
         return True
     return False
 
@@ -2145,7 +2455,7 @@ def get_care_hub_label() -> str:
     return "Care Hub"
 
 
-def render_family_login() -> None:
+def render_family_login_hub() -> None:
     inject_login_css()
     st.markdown(
         f"""
@@ -2162,6 +2472,27 @@ def render_family_login() -> None:
   [data-testid="stHeader"] {{
     background: #FFFFFF !important;
   }}
+  [data-testid="collapsedControl"] {{
+    display: none !important;
+  }}
+  [data-testid="stSidebarCollapsedControl"] {{
+    display: none !important;
+  }}
+  [data-testid="stSidebar"] {{
+    display: none !important;
+  }}
+  [data-testid="stSidebarNav"] {{
+    display: none !important;
+  }}
+  [data-testid="stPopover"] {{
+    display: none !important;
+  }}
+  .vm-header-menu {{
+    display: none !important;
+  }}
+  button[kind="header"] {{
+    display: none !important;
+  }}
   a[download], button[title="Download"] {{
     display: none !important;
   }}
@@ -2170,29 +2501,38 @@ def render_family_login() -> None:
         unsafe_allow_html=True,
     )
     render_page_header(
-        "Family login",
+        "Voice Message — Family",
         brand_title="voice-message.com",
         show_variant_subheading=False,
+        show_menu=False,
     )
-    st.markdown("Non-urgent social voice messages. Not a live service.")
+    st.markdown(
+        """
+<style>
+  .family-login-box {
+    width: 100%;
+    background: #f8f3e8;
+    border: 1px solid #b7ddd7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 12px 0;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+    login_info_boxes = [
+        "Send one social voice message to a resident. The care team manages playback and support.",
+        "Only the latest message is kept.",
+        "For urgent matters or safeguarding concerns, contact the care home directly.",
+    ]
+    for box in login_info_boxes:
+        st.markdown(f'<div class="family-login-box">{box}</div>', unsafe_allow_html=True)
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
-    force_login = st.session_state.pop("force_family_login", False)
-    if st.session_state.get("auth_uid") and not force_login:
-        family_found, care_found, error, family_record, care_record = get_mapping_status()
-        if family_found:
-            if family_record:
-                st.session_state["active_role"] = "family"
-                st.session_state["active_care_home_id"] = family_record.get("care_home_id")
-            set_route(get_home_route(VARIANT_FAMILY))
-        elif care_found:
-            st.error("Wrong app variant")
-            st.info("Your login details are for Care Hub.")
-            if st.button("Log out", key="family_login_wrong_logout"):
-                sign_out_user("family")
-        else:
-            st.error("Account not set up yet.")
-        return
 
+    st.markdown("### Login")
     email = st.text_input("Email", key="family_login_email")
     password = st.text_input("Password", type="password", key="family_login_password")
     st.markdown('<div id="vm-login-actions"></div>', unsafe_allow_html=True)
@@ -2270,6 +2610,28 @@ def render_family_login() -> None:
         else:
             st.error(message)
 
+    # Logged-out Family view is intentionally login-only to avoid pre-login routing issues.
+
+
+def render_family_login() -> None:
+    force_login = st.session_state.pop("force_family_login", False)
+    if st.session_state.get("auth_uid") and not force_login:
+        family_found, care_found, error, family_record, care_record = get_mapping_status()
+        if family_found:
+            if family_record:
+                st.session_state["active_role"] = "family"
+                st.session_state["active_care_home_id"] = family_record.get("care_home_id")
+            set_route(get_home_route(VARIANT_FAMILY))
+        elif care_found:
+            st.error("Wrong app variant")
+            st.info("Your login details are for Care Hub.")
+            if st.button("Log out", key="family_login_wrong_logout"):
+                sign_out_user("family")
+        else:
+            st.error("Account not set up yet.")
+        return
+    render_family_login_hub()
+
 
 def render_family_send() -> None:
     require_family_access()
@@ -2311,7 +2673,6 @@ def render_family_send() -> None:
         unsafe_allow_html=True,
     )
     render_page_header("Family page")
-    render_front_page_descriptor()
     render_how_it_works_button("family_send_how_it_works")
     family_display_name = st.session_state.get("family_display_name", "Family member")
     st.markdown(f"**Hello {family_display_name}**")
@@ -2369,7 +2730,6 @@ def render_family_send() -> None:
         if not manual_active:
             active_rec_id = None
             st.session_state["family_active_rec_resident"] = None
-    recorder_rendered = False
     for resident in residents:
         resident_id = resident["id"]
         state = send_state.setdefault(
@@ -2401,37 +2761,18 @@ def render_family_send() -> None:
             )
 
         st.markdown('<div class="vm-section-title">Send</div>', unsafe_allow_html=True)
-        if st.button(
-            "Record for this resident",
-            key=f"family_record_for_{resident_id}",
-        ):
-            prev_active = st.session_state.get("family_active_rec_resident")
-            if prev_active and prev_active in send_state:
-                send_state[prev_active]["recording_bytes"] = None
-                send_state[prev_active]["preview_confirmed"] = False
-            st.session_state["family_active_rec_resident"] = resident_id
-            st.session_state["family_active_rec_manual"] = True
-            active_rec_id = resident_id
-
-        if resident_id == active_rec_id and not recorder_rendered:
-            if st_audiorec is None:
-                st.error(
-                    "Audio recorder not available. Install with "
-                    "`python -m pip install streamlit-audiorec` "
-                    "in the same environment you run Streamlit."
-                )
-            else:
-                wav_audio_data = st_audiorec()
-                if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
-                    state["recording_bytes"] = wav_audio_data
-                    state["preview_confirmed"] = False
-                    state["last_message"] = None
-            recorder_rendered = True
-        else:
-            st.markdown(
-                '<div class="vm-muted-line">Recorder active on another resident.</div>',
-                unsafe_allow_html=True,
+        if st_audiorec is None:
+            st.error(
+                "Audio recorder not available. Install with "
+                "`python -m pip install streamlit-audiorec` "
+                "in the same environment you run Streamlit."
             )
+        else:
+            wav_audio_data = st_audiorec()
+            if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
+                state["recording_bytes"] = wav_audio_data
+                state["preview_confirmed"] = False
+                state["last_message"] = None
 
         if state.get("recording_bytes"):
             state["preview_confirmed"] = st.checkbox(
@@ -2569,8 +2910,6 @@ def render_docs() -> None:
     )
     require_care_access()
     render_page_header("Documents")
-    st.write("Select a document to view.")
-    st.write("Scroll to the end to read selected document.")
 
     docs = [
         {
@@ -2608,24 +2947,25 @@ def render_docs() -> None:
     if "docs_active" not in st.session_state:
         st.session_state["docs_active"] = ""
 
-    for idx, doc in enumerate(docs):
-        cols = st.columns([4, 1], gap="small")
-        with cols[0]:
-            st.markdown(f"**{doc['title']}**\n\n{doc['summary']}")
-        with cols[1]:
-            if st.button("Open", key=f"docs_open_{idx}"):
-                st.session_state["docs_active"] = doc["path"]
-        st.write("")
-        st.write("")
-
     active_path = st.session_state.get("docs_active")
     if active_path:
         active_doc = next((doc for doc in docs if doc["path"] == active_path), None)
-        st.markdown("---")
         st.markdown(f"## {(active_doc['title'] if active_doc else 'Document')}")
-        render_document_content(active_path)
-        if st.button("Close", key="docs_close"):
-            st.session_state["docs_active"] = ""
+        if active_path.endswith("common_questions_qa.md"):
+            render_qa_document(active_path, search_key="office_common_qa_search")
+        else:
+            render_document_boxes(active_path, strip_first_heading=True)
+    else:
+        for idx, doc in enumerate(docs):
+            cols = st.columns([4, 1], gap="small")
+            with cols[0]:
+                st.markdown(f"**{doc['title']}**\n\n{doc['summary']}")
+            with cols[1]:
+                if st.button("Open", key=f"docs_open_{idx}"):
+                    st.session_state["docs_active"] = doc["path"]
+                    st.rerun()
+            st.write("")
+            st.write("")
 
     if st.button("Back to Care Hub – Office", key="docs_home"):
         set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
@@ -2636,6 +2976,8 @@ def render_document_content(
 ) -> None:
     try:
         content = Path(doc_path).read_text(encoding="utf-8")
+        # Remove one or more leading markdown logo image lines.
+        content = re.sub(r"\A(?:\s*!\[[^\]]*\]\([^)]+\)\s*\n+)+", "", content, count=1)
         if strip_first_heading:
             content = re.sub(r"\A\s*#\s+.+?\n+", "", content, count=1)
         if include_logo:
@@ -2645,36 +2987,182 @@ def render_document_content(
         st.error("Document not found.")
 
 
+def render_document_boxes(doc_path: str, strip_first_heading: bool = True) -> None:
+    try:
+        content = Path(doc_path).read_text(encoding="utf-8")
+    except OSError:
+        st.error("Document not found.")
+        return
+    content = re.sub(r"\A(?:\s*!\[[^\]]*\]\([^)]+\)\s*\n+)+", "", content, count=1)
+    if strip_first_heading:
+        content = re.sub(r"\A\s*#\s+.+?\n+", "", content, count=1)
+    blocks = [block.strip() for block in re.split(r"\n\s*\n", content) if block.strip()]
+    st.markdown(
+        """
+<style>
+  .service-overview-box {
+    width: 100%;
+    background: #f8f3e8;
+    border: 1px solid #b7ddd7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 12px 0;
+    box-sizing: border-box;
+    line-height: 1.5;
+    white-space: pre-line;
+  }
+  .service-overview-box input[type="checkbox"] {
+    transform: scale(1.35);
+    margin-right: 10px;
+    accent-color: #4aa7a0;
+    vertical-align: middle;
+  }
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+    def _render_box(markdown_text: str) -> None:
+        raw_text = markdown_text.strip()
+        if re.fullmatch(r"[-*_]{3,}", raw_text):
+            return
+        text = re.sub(r"^\s*[-*]\s+", "• ", raw_text, flags=re.M).strip()
+        if re.fullmatch(r"[•\-\*\s]+", text):
+            return
+        if not text:
+            return
+        st.markdown(f'<div class="service-overview-box">{text}</div>', unsafe_allow_html=True)
+
+    for block in blocks:
+        lines = block.splitlines()
+        if lines and re.match(r"^\s{0,3}#{1,6}\s+", lines[0]):
+            st.markdown(lines[0])
+            _render_box("\n".join(lines[1:]))
+            continue
+        _render_box(block)
+
+
+def render_qa_document(doc_path: str, search_key: str, strip_first_heading: bool = True) -> None:
+    try:
+        content = Path(doc_path).read_text(encoding="utf-8")
+    except OSError:
+        st.error("Document not found.")
+        return
+
+    content = re.sub(r"\A(?:\s*!\[[^\]]*\]\([^)]+\)\s*\n+)+", "", content, count=1)
+    if strip_first_heading:
+        content = re.sub(r"\A\s*#\s+.+?\n+", "", content, count=1)
+
+    qa_pairs = re.findall(r"(?ms)^Q:\s*(.+?)\nA:\s*(.+?)(?=\nQ:\s*|\Z)", content)
+    if not qa_pairs:
+        render_document_boxes(doc_path, strip_first_heading=strip_first_heading)
+        return
+
+    query = st.text_input(
+        "Search questions and answers",
+        key=search_key,
+        placeholder="Type a keyword (e.g. urgent, privacy, consent)",
+    ).strip()
+    query_lower = query.lower()
+    effective_query = query_lower
+    if "urgent" in query_lower:
+        # Treat all urgent-related search phrases the same as "urgent".
+        effective_query = "urgent"
+
+    if effective_query:
+        filtered_pairs = [
+            (question, answer)
+            for question, answer in qa_pairs
+            if effective_query in question.lower() or effective_query in answer.lower()
+        ]
+    else:
+        filtered_pairs = qa_pairs
+
+    st.caption(f"Showing {len(filtered_pairs)} of {len(qa_pairs)} questions")
+    if not filtered_pairs:
+        st.info("No matching questions found.")
+        return
+
+    for idx, (question, answer) in enumerate(filtered_pairs, start=1):
+        with st.expander(f"{idx}. {question.strip()}"):
+            st.markdown(answer.strip())
+
+
+def get_public_document_title(doc_path: str) -> str:
+    mapping = {
+        "03_service_overview.md": "Service overview",
+        "02_how_it_works.md": "How it works",
+        "07_resident_participation.md": "Resident participation",
+        "06_family_guide.md": "Family guide",
+        "10_faq.md": "Public Q&A",
+        "privacy_policy.md": "Privacy notice",
+        "family_terms_of_use.md": "Family Terms of Use",
+        "complaints_and_concerns.md": "Complaints & Concerns",
+        "safeguarding_and_consent.md": "Safeguarding and Consent",
+    }
+    for suffix, title in mapping.items():
+        if doc_path.endswith(suffix):
+            return title
+    return "Service overview"
+
+
 def render_public_document(doc_path: str, back_route: str = "/service-overview") -> None:
+    # Render all public documents in the boxed style for consistency.
+    use_boxes = True
+    use_qa_search = doc_path.endswith("10_faq.md")
     app_variant = get_app_variant()
     if app_variant == VARIANT_PUBLIC:
         st.markdown(f"[← Back to Service overview](?route={back_route})")
-        render_page_header("Public document", show_menu=False, show_variant_subheading=False)
-        render_document_content(doc_path)
+        render_page_header(get_public_document_title(doc_path), show_menu=False, show_variant_subheading=False)
+        if use_qa_search:
+            render_qa_document(doc_path, search_key="public_faq_search")
+        elif use_boxes:
+            render_document_boxes(doc_path, strip_first_heading=True)
+        else:
+            render_document_content(doc_path)
         return
     if app_variant == VARIANT_FAMILY:
-        render_page_header("Service overview", show_variant_subheading=False)
+        render_page_header(get_public_document_title(doc_path), show_variant_subheading=False)
         if st.button("← Back to Family login", key="public_doc_back_family_login"):
             set_route(get_login_route(VARIANT_FAMILY))
-        render_document_content(doc_path, include_logo=False, strip_first_heading=True)
+        if use_qa_search:
+            render_qa_document(doc_path, search_key="family_faq_search")
+        elif use_boxes:
+            render_document_boxes(doc_path, strip_first_heading=True)
+        else:
+            render_document_content(doc_path, include_logo=False, strip_first_heading=True)
         return
     if app_variant == VARIANT_OFFICE:
         is_authed = bool(st.session_state.get("auth_uid"))
         office_home_route = get_office_home_route(is_authed)
-        render_page_header("Care Hub – Office", show_variant_subheading=False)
+        render_page_header(get_public_document_title(doc_path), show_variant_subheading=False)
         if st.button("← Back to dashboard", key="public_doc_back_office_dashboard"):
             set_route(office_home_route)
-        render_document_content(doc_path, include_logo=False)
+        if use_qa_search:
+            render_qa_document(doc_path, search_key="office_faq_search")
+        elif use_boxes:
+            render_document_boxes(doc_path, strip_first_heading=True)
+        else:
+            render_document_content(doc_path, include_logo=False)
         return
     if app_variant == VARIANT_MOBILE:
-        render_page_header("Public document")
+        render_page_header(get_public_document_title(doc_path))
         if st.button("Back", key="public_doc_back_mobile"):
             set_route(get_home_route(app_variant))
-        render_document_content(doc_path)
+        if use_qa_search:
+            render_qa_document(doc_path, search_key="mobile_faq_search")
+        elif use_boxes:
+            render_document_boxes(doc_path, strip_first_heading=True)
+        else:
+            render_document_content(doc_path)
         return
     st.markdown(f"[← Back to Service overview](?route={back_route})")
-    render_page_header("Public document", show_menu=False, show_variant_subheading=False)
-    render_document_content(doc_path)
+    render_page_header(get_public_document_title(doc_path), show_menu=False, show_variant_subheading=False)
+    if use_qa_search:
+        render_qa_document(doc_path, search_key="fallback_faq_search")
+    elif use_boxes:
+        render_document_boxes(doc_path, strip_first_heading=True)
+    else:
+        render_document_content(doc_path)
 
 
 def render_public_docs() -> None:
@@ -2697,7 +3185,7 @@ def render_public_docs() -> None:
         ("How it works", "/public/how-it-works"),
         ("Resident participation", "/public/resident-participation"),
         ("Family guide", "/public/family-guide"),
-        ("FAQ", "/public/faq"),
+        ("Public Q&A", "/public/qa"),
         ("Privacy notice", "/public/privacy-notice"),
         ("Family terms of use", "/public/family-terms-of-use"),
         ("Complaints and concerns", "/public/complaints-and-concerns"),
@@ -2937,7 +3425,8 @@ def render_care_hub_security() -> None:
                 issuer_name="voice-message.com",
             )
             qr = qrcode.make(provisioning_uri)
-            st.image(qr, caption="Scan this QR code with your authenticator app.")
+            qr_image = qr.get_image() if hasattr(qr, "get_image") else qr
+            st.image(qr_image, caption="Scan this QR code with your authenticator app.")
             st.code(secret, language=None)
             st.write("Enter the 6-digit code from your authenticator to activate 2FA.")
             code_input = st.text_input("Authenticator code", key="mfa_enroll_code")
@@ -3035,7 +3524,7 @@ def render_contracts() -> None:
         unsafe_allow_html=True,
     )
     require_care_access()
-    render_page_header("Contracts")
+    render_page_header("Contracts & templates")
     st.write("Templates are available here. Signed contracts are stored securely outside this app.")
 
     docs = [
@@ -3064,12 +3553,7 @@ def render_contracts() -> None:
         active_doc = next((doc for doc in docs if doc["path"] == active_path), None)
         st.markdown("---")
         st.markdown(f"## {(active_doc['title'] if active_doc else 'Document')}")
-        try:
-            content = Path(active_path).read_text(encoding="utf-8")
-            content = inject_logo_into_markdown(content)
-            st.markdown(content)
-        except OSError:
-            st.error("Document not found.")
+        render_document_boxes(active_path, strip_first_heading=True)
         if st.button("Close", key="contracts_close"):
             st.session_state["contracts_active"] = ""
 
@@ -3094,31 +3578,44 @@ def render_subscription_billing() -> None:
   [data-testid="stHeader"] {{
     background: #FFFFFF !important;
   }}
+  .billing-box {{
+    width: 100%;
+    background: #f8f3e8;
+    border: 1px solid #b7ddd7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 12px 0;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }}
 </style>
 """,
         unsafe_allow_html=True,
     )
     render_page_header("Subscription & Billing")
 
+    def billing_box(text: str) -> None:
+        st.markdown(f'<div class="billing-box">{text}</div>', unsafe_allow_html=True)
+
     st.markdown("## Current Status")
-    st.write("Status: Pilot (example)")
+    billing_box("Status: Pilot (example)")
 
     st.markdown("## Current Plan")
-    st.write("Up to 50 residents: £195 + VAT per month")
-    st.write("51+ residents: £295 + VAT per month")
+    billing_box("Up to 50 residents: £195 + VAT per month")
+    billing_box("51+ residents: £295 + VAT per month")
 
     st.markdown("## Pilot Details (if applicable)")
-    st.write("£75 + VAT one-time pilot fee")
-    st.write("Credited against first month if continuing")
+    billing_box("£75 + VAT one-time pilot fee")
+    billing_box("Credited against first month if continuing")
 
     st.markdown("## Billing Terms")
-    st.write("Invoiced monthly in advance")
-    st.write("Activation only after payment is received")
-    st.write("Minimum 3-month commitment following pilot")
+    billing_box("Invoiced monthly in advance")
+    billing_box("Activation only after payment is received")
+    billing_box("Minimum 3-month commitment following pilot")
 
     st.markdown("## Invoices")
-    st.write("Invoice reference: [placeholder]")
-    st.write("Invoice download functionality will be available here.")
+    billing_box("Invoice reference: [placeholder]")
+    billing_box("Invoice download functionality will be available here.")
 
     if st.button("Back to Care Hub – Office", key="billing_home"):
         set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
@@ -3153,11 +3650,31 @@ def render_care_login() -> None:
         show_menu=app_variant != "care_hub_office",
     )
     if app_variant == "care_hub_mobile":
-        st.markdown("Non-urgent social voice messages. Not a live service.")
+        st.markdown(
+            """
+<style>
+  .care-login-box {
+    width: 100%;
+    background: #f8f3e8;
+    border: 1px solid #b7ddd7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 0 0 12px 0;
+    box-sizing: border-box;
+    line-height: 1.5;
+  }
+</style>
+""",
+            unsafe_allow_html=True,
+        )
+        mobile_login_boxes = [
+            "Care Hub - Mobile supports non-urgent social voice messages between residents and families.",
+            "Not a live service. Messages are played and recorded when staff are available.",
+        ]
+        for box in mobile_login_boxes:
+            st.markdown(f'<div class="care-login-box">{box}</div>', unsafe_allow_html=True)
     elif app_variant == "care_hub_office":
-        render_front_page_descriptor()
-        st.markdown("Care Hub – Office provides full access and includes Care Hub – Mobile functionality.")
-        st.markdown("Office users may carry out Mobile tasks as part of supervision or care delivery.")
+        pass
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
     if st.session_state.get("auth_uid"):
         family_found, care_found, error, family_record, care_record = get_mapping_status()
@@ -3192,12 +3709,6 @@ def render_care_login() -> None:
     with action_cols[2]:
         sign_out_pressed = st.button("Sign out", key="care_login_sign_out") if show_sign_out else False
     back_pressed = False
-
-    if app_variant == "care_hub_office":
-        st.markdown("### Information (no login required)")
-        st.markdown("[Public documents](?route=/public/service-overview)")
-        st.markdown("[Privacy Notice](?route=/public/privacy-notice)")
-        st.markdown("[Complaints & Concerns](?route=/public/complaints-and-concerns)")
 
     if submit_login:
         supabase, error = get_supabase_client()
@@ -3293,49 +3804,7 @@ def render_care_hub() -> None:
         unsafe_allow_html=True,
     )
     render_page_header(f"{get_care_hub_label()} voice messages")
-    render_front_page_descriptor()
-    app_variant = get_app_variant()
-    if app_variant == "care_hub_mobile":
-        nav_cols = st.columns(3, gap="small")
-        with nav_cols[0]:
-            if st.button("Inbox", key="care_hub_inbox_top", use_container_width=True):
-                set_route(get_home_route(app_variant))
-        with nav_cols[1]:
-            if st.button("How it works", key="care_hub_how_it_works_top", use_container_width=True):
-                set_route(get_how_it_works_route(app_variant))
-        with nav_cols[2]:
-            if st.button("Sign out", key="care_hub_sign_out_top", use_container_width=True):
-                sign_out_user("care_hub")
-    else:
-        nav_cols = st.columns(7, gap="small")
-        with nav_cols[0]:
-            if st.button("Inbox", key="care_hub_inbox_top", use_container_width=True):
-                set_route(get_home_route(app_variant))
-        with nav_cols[1]:
-            if st.button("Documents", key="care_hub_docs_top", use_container_width=True):
-                set_route("/docs")
-        with nav_cols[2]:
-            if st.button("Contracts", key="care_hub_contracts_top", use_container_width=True):
-                set_route("/contracts")
-        with nav_cols[3]:
-            if st.button(
-                "Subscription & Billing",
-                key="care_hub_billing_top",
-                use_container_width=True,
-            ):
-                set_route("/billing")
-        with nav_cols[4]:
-            if st.button("How it works", key="care_hub_how_it_works_top", use_container_width=True):
-                set_route(get_how_it_works_route(app_variant))
-        with nav_cols[5]:
-            if st.button("Account & Security", key="care_hub_security_top", use_container_width=True):
-                set_route("/care-hub/security")
-        with nav_cols[6]:
-            if st.button("Sign out", key="care_hub_sign_out_top", use_container_width=True):
-                sign_out_user("care_hub")
-    st.markdown(
-        "**Messages are for non-urgent, social contact only. This is not a messaging service to carers or the care home.**"
-    )
+    # Top action buttons removed; navigation is handled through the header menu.
     # Action row already rendered at the top of the page.
 
     access_token = st.session_state.get("access_token")
@@ -3393,7 +3862,6 @@ def render_care_hub() -> None:
         if not manual_active:
             active_rec_id = None
             st.session_state["care_active_rec_resident"] = None
-    recorder_rendered = False
     for resident in residents:
         resident_id = resident["id"]
         state = send_state.setdefault(
@@ -3453,37 +3921,18 @@ def render_care_hub() -> None:
             state["selected_contact_id"] = None
             state["selected_contact_user_id"] = None
 
-        if st.button(
-            "Record for this resident",
-            key=f"care_record_for_{resident_id}",
-        ):
-            prev_active = st.session_state.get("care_active_rec_resident")
-            if prev_active and prev_active in send_state:
-                send_state[prev_active]["recording_bytes"] = None
-                send_state[prev_active]["preview_confirmed"] = False
-            st.session_state["care_active_rec_resident"] = resident_id
-            st.session_state["care_active_rec_manual"] = True
-            active_rec_id = resident_id
-
-        if resident_id == active_rec_id and not recorder_rendered:
-            if st_audiorec is None:
-                st.error(
-                    "Audio recorder not available. Install with "
-                    "`python -m pip install streamlit-audiorec` "
-                    "in the same environment you run Streamlit."
-                )
-            else:
-                wav_audio_data = st_audiorec()
-                if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
-                    state["recording_bytes"] = wav_audio_data
-                    state["preview_confirmed"] = False
-                    state["last_message"] = None
-            recorder_rendered = True
-        else:
-            st.markdown(
-                '<div class="vm-muted-line">Recorder active on another resident.</div>',
-                unsafe_allow_html=True,
+        if st_audiorec is None:
+            st.error(
+                "Audio recorder not available. Install with "
+                "`python -m pip install streamlit-audiorec` "
+                "in the same environment you run Streamlit."
             )
+        else:
+            wav_audio_data = st_audiorec()
+            if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
+                state["recording_bytes"] = wav_audio_data
+                state["preview_confirmed"] = False
+                state["last_message"] = None
 
         if state.get("recording_bytes"):
             state["preview_confirmed"] = st.checkbox(
@@ -3594,6 +4043,19 @@ def main() -> None:
     )
     st.markdown(
         """
+<style>
+[data-testid="stSidebar"],
+[data-testid="stSidebarNav"],
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"] {
+  display: none !important;
+}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        """
         <style>
         /* --- HARD FIX: REMOVE STREAMLIT TOP OFFSET --- */
         div[data-testid="stAppViewContainer"] {
@@ -3649,28 +4111,77 @@ def main() -> None:
             font-size: 26px;
             cursor: pointer;
         }
-        /* Ensure hamburger popover is fully clickable */
-        div[data-testid="stPopover"] {
-            z-index: 20000 !important;
-        }
-        div[data-testid="stPopover"] > div {
-            margin-top: 6px !important;
-            padding-top: 6px !important;
-        }
-        div[data-testid="stPopoverBody"] {
-            padding-top: 6px !important;
-        }
+        /* Keep Streamlit popover defaults to avoid clipping/truncation issues. */
         .hero-logo {
             margin-top: -40px;
+        }
+        section.main h2,
+        section.main div[data-testid="stMarkdownContainer"] h2 {
+            font-size: 0.92rem !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+            margin: 0.35rem 0 0.2rem !important;
+        }
+        section.main h3,
+        section.main div[data-testid="stMarkdownContainer"] h3 {
+            font-size: 0.88rem !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+            margin: 0.3rem 0 0.2rem !important;
+        }
+        section.main h4,
+        section.main div[data-testid="stMarkdownContainer"] h4 {
+            font-size: 0.84rem !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+            margin: 0.25rem 0 0.15rem !important;
+        }
+        @media (max-width: 768px) {
+            .block-container {
+                padding-left: 0.7rem !important;
+                padding-right: 0.7rem !important;
+                padding-top: 0.35rem !important;
+            }
+            div[data-testid="stHorizontalBlock"] {
+                gap: 0.45rem !important;
+            }
+            .front-page-info-box,
+            .family-how-box,
+            .family-login-box,
+            .care-login-box,
+            .family-terms-box,
+            .family-contact-box,
+            .service-overview-box {
+                padding: 11px 12px !important;
+                margin: 0 0 9px 0 !important;
+                border-radius: 7px !important;
+                line-height: 1.42 !important;
+            }
+            .stButton > button,
+            button[kind="primary"],
+            button[kind="secondary"],
+            button[kind="tertiary"] {
+                min-height: 42px !important;
+                font-size: 0.96rem !important;
+            }
+            .stTextInput input,
+            .stTextArea textarea {
+                font-size: 0.98rem !important;
+            }
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
     app_variant = get_app_variant()
+    init_state()
+    render_debug_panel("top", app_variant, "none")
+    if app_variant == VARIANT_FAMILY and not is_family_authenticated():
+        render_debug_panel("family_unauth", app_variant, "render_family_login_hub + st.stop")
+        render_family_login_hub()
+        st.stop()
     validate_supabase_config_for_variant(app_variant)
     # No raw variant banner in UI.
-    init_state()
     if app_variant == "care_hub_mobile":
         st.markdown(
             """
@@ -3695,15 +4206,19 @@ def main() -> None:
         )
     enforce_session_timeout()
     route = get_route()
+    st.session_state.route = route
     if not app_variant:
         expected_variants = get_expected_variants_for_route(route)
         render_wrong_variant("App variant is missing or invalid.", expected_variants)
         return
-    default_route = get_default_route(app_variant)
+    default_route = normalize_route(get_default_route(app_variant)) or "/"
     if route in ("/", ""):
-        set_route(default_route)
-        route = default_route
+        target_route = FAMILY_LOGIN_ROUTE if app_variant == VARIANT_FAMILY else default_route
+        render_debug_panel("default_route", app_variant, f"set_route({target_route})")
+        set_route(target_route)
+        return
     if redirect_if_not_authenticated(app_variant, route):
+        render_debug_panel("auth_redirect", app_variant, "redirect_if_not_authenticated -> return")
         return
     if not is_route_allowed(app_variant, route):
         expected_variants = get_expected_variants_for_route(route)
@@ -3778,6 +4293,21 @@ def main() -> None:
         render_care_hub_training()
     elif route == "/care-hub/security":
         render_care_hub_security()
+    elif route == "/care-hub/office/qa":
+        render_page_header("Office Q&A", show_variant_subheading=False)
+        if st.button("← Back to dashboard", key="office_qa_back_dashboard"):
+            set_route(get_office_home_route(bool(st.session_state.get("auth_uid"))))
+        render_qa_document("docs/office/common_questions_qa.md", search_key="office_qa_search")
+    elif route == "/care-hub/mobile/qa":
+        render_page_header("Mobile Q&A", show_variant_subheading=False)
+        if st.button("Back", key="mobile_qa_back"):
+            set_route(get_home_route(VARIANT_MOBILE))
+        render_qa_document("docs/public/12_mobile_qa.md", search_key="mobile_qa_search")
+    elif route == "/family/qa":
+        render_page_header("Family Q&A", show_variant_subheading=False)
+        if st.button("Back", key="family_qa_back"):
+            set_route(get_home_route(VARIANT_FAMILY))
+        render_qa_document("docs/public/11_family_qa.md", search_key="family_qa_search")
     elif route == "/docs":
         render_docs()
     elif route == "/public-docs":
@@ -3790,6 +4320,8 @@ def main() -> None:
         render_public_document("docs/public/07_resident_participation.md")
     elif route == "/public/family-guide":
         render_public_document("docs/public/06_family_guide.md")
+    elif route == "/public/qa":
+        render_public_document("docs/public/10_faq.md")
     elif route == "/public/faq":
         render_public_document("docs/public/10_faq.md")
     elif route == "/public/privacy-notice":
@@ -3818,4 +4350,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:  # pragma: no cover - runtime safety net
+        st.error("Application error while rendering.")
+        st.error(str(exc))
+        st.exception(exc)

@@ -4,7 +4,7 @@
 
 ## Purpose
 
-These terms apply to family access to the Family app for voice-message.com. It is written in plain English for families and care homes.
+These terms apply to access to the Family app by approved family members or other authorised contacts for voice-message.com. It is written in plain English for family members, friends, and care homes.
 
 ## Scope and use
 
@@ -14,7 +14,7 @@ Messages are for non-urgent, social contact only. This service must not be used 
 
 ## Role separation
 
-Families use the Family app only. Families do not use Care Hub – Mobile or Care Hub – Office.
+Approved family members or other authorised contacts use the Family app only. They do not use Care Hub – Mobile or Care Hub – Office.
 
 ## Message handling
 

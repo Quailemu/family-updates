@@ -23,7 +23,7 @@ Any safeguarding concern must be handled through the care home’s established p
 The care home is responsible for managing the use of the platform within its service. This includes:
 • Determining whether messages are appropriate  
 • Addressing inappropriate, distressing, or unsuitable content  
-• Managing or restricting family access where necessary  
+• Managing or restricting access for approved family members or other authorised contacts where necessary  
 • Taking action in accordance with internal policies  
 
 voice-message.com does not moderate, screen, or approve message content.
@@ -33,7 +33,7 @@ The care home is responsible for determining whether a resident is suitable to p
 This includes:
 • Assessing capacity where required  
 • Obtaining appropriate consent  
-• Involving family or representatives where applicable  
+• Involving approved family members, friends, or representatives where applicable  
 • Reviewing participation where circumstances change  
 
 voice-message.com does not assess resident capacity or consent.
@@ -49,5 +49,5 @@ Messages are not guaranteed to be private.
 The care home is responsible for managing privacy within its environment.
 
 ## Reporting Concerns
-If a family member has a safeguarding concern, they should contact the care home directly.
+If an approved family member, friend, or other authorised contact has a safeguarding concern, they should contact the care home directly.
 Platform-related issues may be directed to voice-message.com.

@@ -10,7 +10,7 @@ This notice explains, in plain English, what personal data is used by voice-mess
 
 The care home is the Data Controller. voice-message.com is the Data Processor and acts only on the care home’s instructions.
 
-The care home decides how the service is used, who has access, and how resident and family contact details are managed. Families should contact the care home directly for care-related or access questions.
+The care home decides how the service is used, who has access, and how resident and approved contact details are managed. Family members or friends should contact the care home directly for care-related or access questions.
 
 ## What data is used
 

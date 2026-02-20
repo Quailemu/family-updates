@@ -8,7 +8,7 @@ This guide explains how voice-message.com is used for simple, non-urgent social 
 
 ## App version
 
-Families use the Family app only. The Family app does not include any care hub features.
+Family members and friends use the Family app only. The Family app does not include any care hub features.
 An authorised contact is a person approved by the care home to use the service — usually a family member or friend.
 
 ## How to use the service

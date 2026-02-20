@@ -1,6 +1,6 @@
 ![logo](../../assets/logo.png)
 
-# FAQ
+# Public Q&A
 
 ## What is voice-message.com for?
 
@@ -8,7 +8,7 @@ It is intended for non-urgent, social voice messages between residents and their
 
 ## Which app should I use?
 
-- Families use the Family app only.
+- Family members and friends use the Family app only.
 - Carers use Care Hub – Mobile only.
 - Office staff use Care Hub – Office only.
 
@@ -45,3 +45,43 @@ Only the current message is kept for each direction and contact. New messages re
 ## Where can I read more about roles and responsibilities?
 
 See the Service overview and Care home responsibilities sections. For consent and safeguarding, see the Safeguarding and Consent section.
+
+## Is this a live chat?
+
+No. This is not a live service. Messages are played and recorded when staff are available.
+
+## Do I get a notification when staff play my message?
+
+No. The service does not provide read receipts, delivery confirmations, or live status.
+
+## Can I send multiple messages one after another?
+
+You can send a new message, but each new message replaces your previous one for that resident.
+
+## Can I contact several residents?
+
+Only if the care home has approved and linked your account to those residents.
+
+## Can I share my login with another relative or friend?
+
+No. Each approved family member or friend should use their own access.
+
+## Can staff change who is allowed to message a resident?
+
+Yes. The care home controls approved contacts and can add or remove access.
+
+## What if I accidentally send the wrong message?
+
+Send a corrected message. Your new message will replace your previous one.
+
+## Why is there no message timeline?
+
+The service is intentionally simple and uses data minimisation: one current message each way, no archive.
+
+## Can this service be used for complaints?
+
+Formal complaints should follow the care home's complaints process. See Complaints & Concerns for more detail.
+
+## Can I use this to report safeguarding concerns?
+
+No. Contact the care home directly through its safeguarding channels.

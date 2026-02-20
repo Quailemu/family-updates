@@ -8,11 +8,11 @@ This summary is for Care Hub – Office users. It outlines the separation of app
 
 - Care Hub – Mobile: operational tools for carers only.
 - Care Hub – Office: oversight, documents, and access management.
-- Family app: family-only access with no care hub tools.
+- Family app: access for approved family members or other authorised contacts only, with no care hub tools.
 
 ## Office responsibilities
 
-- Control access for staff and family contacts.
+- Control access for staff and approved family members or other authorised contacts.
 - The care home is responsible for determining who is an authorised contact and managing access accordingly.
 - Maintain documents and operational oversight.
 - Supervise device use and login custody as part of normal care-home practice.

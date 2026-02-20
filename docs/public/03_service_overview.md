@@ -10,11 +10,11 @@ voice-message.com is a simple tool for exchanging non-urgent, social voice messa
 
 Care Hub – Mobile is a restricted operational view for carers. Care Hub – Office provides full access and includes Care Hub – Mobile functionality.
 
-- Family app: used by families and friends only.
+- Family app: used by family members and friends only.
 - Care Hub – Mobile: used by carers on a shared lanyard device.
 - Care Hub – Office: includes Care Hub – Mobile tasks plus admin documents and compliance.
 
-Families use the Family app only.  
+Family members and friends use the Family app only.  
 Carers use Care Hub – Mobile only.  
 Office staff use Care Hub – Office only.  
 
@@ -27,7 +27,7 @@ The care home operates the service in practice and is responsible for day-to-day
 - controlling access to the service
 - supervising how the service is used
 - managing devices used for recording and playback
-- managing resident and family or friend contacts
+- managing resident and approved family member or friend contacts
 
 The care home is responsible for identifying residents, confirming consent or authority, and deciding who can send and receive messages.
 

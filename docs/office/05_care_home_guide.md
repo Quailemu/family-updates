@@ -27,7 +27,7 @@ Office staff use Care Hub – Office only.
 
 ### Setting up residents and contacts
 
-Managers and staff may add residents and their family or friend contacts to the service. The care home decides how residents are identified and which contacts are included.
+Managers and staff may add residents and their approved family members, friends, or other authorised contacts to the service. The care home decides how residents are identified and which contacts are included.
 
 These admin tasks are handled in Care Hub – Office, not on Care Hub – Mobile.
 
@@ -41,7 +41,7 @@ Staff can record an outgoing message for that resident from the Send section. Th
 
 - a single recorder/player
 - a "I have listened to this message." checkbox before sending
-- a recipient selector listing the resident's linked family contacts
+- a recipient selector listing the resident's linked approved contacts
 
 ### Assisting residents to record messages
 

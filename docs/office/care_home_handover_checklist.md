@@ -14,7 +14,7 @@ Shared operator login email:
 - [ ] Desk devices have a visible "Lock session" step and staff use it when stepping away.
 - [ ] Care Hub – Mobile devices are set to lock after inactivity (15-20 minutes).
 - [ ] Only approved staff devices are used for the service.
-- [ ] Role separation confirmed: Families use Family app only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
+- [ ] Role separation confirmed: approved family members or other authorised contacts use Family app only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
 
 ## Residents and consent
 
@@ -22,12 +22,12 @@ Shared operator login email:
 - [ ] Consent and authority checks (including LPA if applicable) are recorded by the care home.
 - [ ] Participation is supervised by staff.
 
-## Family access
+## Contact access
 
-- [ ] Family access is granted only to approved contacts.
-- [ ] Family access removal is tested (contact loses access immediately).
-- [ ] Families are told the service is non-urgent and social only.
-- [ ] Families are told to contact the care home for any care-related matters.
+- [ ] Access is granted only to approved family members or other authorised contacts.
+- [ ] Access removal is tested (contact loses access immediately).
+- [ ] Family members and friends are told the service is non-urgent and social only.
+- [ ] Family members and friends are told to contact the care home for any care-related matters.
 
 ## Message handling (scope controls)
 
