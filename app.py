@@ -2804,15 +2804,6 @@ def render_family_send() -> None:
         else:
             st.warning("Native microphone recording is unavailable in this environment.")
 
-        app_variant = get_app_variant()
-        if app_variant in {VARIANT_FAMILY, VARIANT_MOBILE} and st_audiorec is not None:
-            st.caption("If native recording does not work, try alternate recorder:")
-            wav_audio_data = st_audiorec()
-            if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
-                state["recording_bytes"] = wav_audio_data
-                state["recording_mime_type"] = "audio/wav"
-                state["preview_confirmed"] = False
-                state["last_message"] = None
         st.caption(
             "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
         )
@@ -4045,15 +4036,6 @@ def render_care_hub() -> None:
         else:
             st.warning("Native microphone recording is unavailable in this environment.")
 
-        app_variant = get_app_variant()
-        if app_variant in {VARIANT_FAMILY, VARIANT_MOBILE} and st_audiorec is not None:
-            st.caption("If native recording does not work, try alternate recorder:")
-            wav_audio_data = st_audiorec()
-            if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
-                state["recording_bytes"] = wav_audio_data
-                state["recording_mime_type"] = "audio/wav"
-                state["preview_confirmed"] = False
-                state["last_message"] = None
         st.caption(
             "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
         )
