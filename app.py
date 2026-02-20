@@ -2787,7 +2787,9 @@ def render_family_send() -> None:
             )
 
         st.markdown('<div class="vm-section-title">Send</div>', unsafe_allow_html=True)
-        if hasattr(st, "audio_input"):
+        app_variant = get_app_variant()
+        use_native_audio_input = hasattr(st, "audio_input") and app_variant == VARIANT_OFFICE
+        if use_native_audio_input:
             recorded_from_native = st.audio_input(
                 "Record voice message",
                 key=f"family_audio_input_{resident_id}",
@@ -2802,16 +2804,13 @@ def render_family_send() -> None:
                     state["preview_confirmed"] = False
                     state["last_message"] = None
         else:
-            st.warning(
-                "Direct microphone recording is unavailable in this environment. "
-                "Use Upload voice message below."
+            st.info(
+                "Mobile-safe mode: use Upload voice message below to record or select audio."
             )
         st.caption(
             "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
         )
-        st.caption(
-            "If Start recording does not work on mobile, upload a voice file below (m4a, mp3, wav)."
-        )
+        st.caption("Upload a voice file below (m4a, mp3, wav, ogg).")
         uploaded_audio = st.file_uploader(
             "Upload voice message",
             type=["m4a", "mp3", "wav", "ogg"],
@@ -4021,7 +4020,9 @@ def render_care_hub() -> None:
             state["selected_contact_id"] = None
             state["selected_contact_user_id"] = None
 
-        if hasattr(st, "audio_input"):
+        app_variant = get_app_variant()
+        use_native_audio_input = hasattr(st, "audio_input") and app_variant == VARIANT_OFFICE
+        if use_native_audio_input:
             recorded_from_native = st.audio_input(
                 "Record voice message",
                 key=f"care_audio_input_{resident_id}",
@@ -4036,16 +4037,13 @@ def render_care_hub() -> None:
                     state["preview_confirmed"] = False
                     state["last_message"] = None
         else:
-            st.warning(
-                "Direct microphone recording is unavailable in this environment. "
-                "Use Upload voice message below."
+            st.info(
+                "Mobile-safe mode: use Upload voice message below to record or select audio."
             )
         st.caption(
             "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
         )
-        st.caption(
-            "If Start recording does not work on mobile, upload a voice file below (m4a, mp3, wav)."
-        )
+        st.caption("Upload a voice file below (m4a, mp3, wav, ogg).")
         uploaded_audio = st.file_uploader(
             "Upload voice message",
             type=["m4a", "mp3", "wav", "ogg"],
