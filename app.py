@@ -2787,25 +2787,43 @@ def render_family_send() -> None:
             )
 
         st.markdown('<div class="vm-section-title">Send</div>', unsafe_allow_html=True)
-        if hasattr(st, "audio_input"):
-            recorded_from_native = st.audio_input(
-                "Record voice message",
-                key=f"family_audio_input_{resident_id}",
-            )
-            if recorded_from_native is not None:
-                native_bytes = recorded_from_native.getvalue()
-                if native_bytes and native_bytes != state.get("recording_bytes"):
-                    state["recording_bytes"] = native_bytes
-                    state["recording_mime_type"] = (
-                        getattr(recorded_from_native, "type", None) or "audio/wav"
-                    )
-                    state["preview_confirmed"] = False
-                    state["last_message"] = None
-        else:
-            st.warning(
-                "Direct microphone recording is unavailable in this environment. "
-                "Use Upload voice message below."
-            )
+        app_variant = get_app_variant()
+        recorder_options = ["Phone mic (native)"]
+        if app_variant in {VARIANT_FAMILY, VARIANT_MOBILE} and st_audiorec is not None:
+            recorder_options.append("Phone mic (alternate)")
+        recorder_options.append("Upload only")
+        recorder_choice = st.radio(
+            "Recording method",
+            recorder_options,
+            horizontal=True,
+            key=f"family_recorder_method_{resident_id}",
+        )
+        if recorder_choice == "Phone mic (native)":
+            if hasattr(st, "audio_input"):
+                recorded_from_native = st.audio_input(
+                    "Record voice message",
+                    key=f"family_audio_input_{resident_id}",
+                )
+                if recorded_from_native is not None:
+                    native_bytes = recorded_from_native.getvalue()
+                    if native_bytes and native_bytes != state.get("recording_bytes"):
+                        state["recording_bytes"] = native_bytes
+                        state["recording_mime_type"] = (
+                            getattr(recorded_from_native, "type", None) or "audio/wav"
+                        )
+                        state["preview_confirmed"] = False
+                        state["last_message"] = None
+            else:
+                st.warning(
+                    "Native microphone recording is unavailable in this environment."
+                )
+        elif recorder_choice == "Phone mic (alternate)":
+            wav_audio_data = st_audiorec()
+            if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
+                state["recording_bytes"] = wav_audio_data
+                state["recording_mime_type"] = "audio/wav"
+                state["preview_confirmed"] = False
+                state["last_message"] = None
         st.caption(
             "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
         )
@@ -4021,25 +4039,43 @@ def render_care_hub() -> None:
             state["selected_contact_id"] = None
             state["selected_contact_user_id"] = None
 
-        if hasattr(st, "audio_input"):
-            recorded_from_native = st.audio_input(
-                "Record voice message",
-                key=f"care_audio_input_{resident_id}",
-            )
-            if recorded_from_native is not None:
-                native_bytes = recorded_from_native.getvalue()
-                if native_bytes and native_bytes != state.get("recording_bytes"):
-                    state["recording_bytes"] = native_bytes
-                    state["recording_mime_type"] = (
-                        getattr(recorded_from_native, "type", None) or "audio/wav"
-                    )
-                    state["preview_confirmed"] = False
-                    state["last_message"] = None
-        else:
-            st.warning(
-                "Direct microphone recording is unavailable in this environment. "
-                "Use Upload voice message below."
-            )
+        app_variant = get_app_variant()
+        recorder_options = ["Phone mic (native)"]
+        if app_variant in {VARIANT_FAMILY, VARIANT_MOBILE} and st_audiorec is not None:
+            recorder_options.append("Phone mic (alternate)")
+        recorder_options.append("Upload only")
+        recorder_choice = st.radio(
+            "Recording method",
+            recorder_options,
+            horizontal=True,
+            key=f"care_recorder_method_{resident_id}",
+        )
+        if recorder_choice == "Phone mic (native)":
+            if hasattr(st, "audio_input"):
+                recorded_from_native = st.audio_input(
+                    "Record voice message",
+                    key=f"care_audio_input_{resident_id}",
+                )
+                if recorded_from_native is not None:
+                    native_bytes = recorded_from_native.getvalue()
+                    if native_bytes and native_bytes != state.get("recording_bytes"):
+                        state["recording_bytes"] = native_bytes
+                        state["recording_mime_type"] = (
+                            getattr(recorded_from_native, "type", None) or "audio/wav"
+                        )
+                        state["preview_confirmed"] = False
+                        state["last_message"] = None
+            else:
+                st.warning(
+                    "Native microphone recording is unavailable in this environment."
+                )
+        elif recorder_choice == "Phone mic (alternate)":
+            wav_audio_data = st_audiorec()
+            if wav_audio_data and wav_audio_data != state.get("recording_bytes"):
+                state["recording_bytes"] = wav_audio_data
+                state["recording_mime_type"] = "audio/wav"
+                state["preview_confirmed"] = False
+                state["last_message"] = None
         st.caption(
             "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
         )
