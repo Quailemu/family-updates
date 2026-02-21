@@ -2914,14 +2914,41 @@ def render_family_send() -> None:
                         "recorded_at": now_iso,
                     }
                     try:
-                        resp = (
-                            supabase.table("messages")
-                            .upsert(
-                                payload,
-                                on_conflict="resident_id,contact_user_id,direction",
+                        try:
+                            resp = (
+                                supabase.rpc(
+                                    "insert_family_message",
+                                    {
+                                        "p_resident_id": resident_id,
+                                        "p_audio_storage_path": audio_b64,
+                                        "p_audio_mime_type": audio_mime_type,
+                                        "p_audio_bytes": len(audio_bytes),
+                                        "p_recorded_at": now_iso,
+                                    },
+                                ).execute()
                             )
-                            .execute()
-                        )
+                        except Exception as rpc_exc:
+                            rpc_msg = str(rpc_exc)
+                            rpc_msg_l = rpc_msg.lower()
+                            rpc_missing = (
+                                "insert_family_message" in rpc_msg
+                                and (
+                                    "pgrst202" in rpc_msg_l
+                                    or "not found" in rpc_msg_l
+                                    or "does not exist" in rpc_msg_l
+                                    or "could not find the function" in rpc_msg_l
+                                )
+                            )
+                            if not rpc_missing:
+                                raise
+                            resp = (
+                                supabase.table("messages")
+                                .upsert(
+                                    payload,
+                                    on_conflict="resident_id,contact_user_id,direction",
+                                )
+                                .execute()
+                            )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
                     else:
@@ -4190,14 +4217,44 @@ def render_care_hub() -> None:
                         "recorded_at": now_iso,
                     }
                     try:
-                        resp = (
-                            supabase.table("messages")
-                            .upsert(
-                                payload,
-                                on_conflict="resident_id,contact_user_id,direction",
+                        try:
+                            resp = (
+                                supabase.rpc(
+                                    "insert_care_hub_message",
+                                    {
+                                        "p_resident_id": resident_id,
+                                        "p_contact_user_id": state.get(
+                                            "selected_contact_user_id"
+                                        ),
+                                        "p_audio_storage_path": audio_b64,
+                                        "p_audio_mime_type": audio_mime_type,
+                                        "p_audio_bytes": len(audio_bytes),
+                                        "p_recorded_at": now_iso,
+                                    },
+                                ).execute()
                             )
-                            .execute()
-                        )
+                        except Exception as rpc_exc:
+                            rpc_msg = str(rpc_exc)
+                            rpc_msg_l = rpc_msg.lower()
+                            rpc_missing = (
+                                "insert_care_hub_message" in rpc_msg
+                                and (
+                                    "pgrst202" in rpc_msg_l
+                                    or "not found" in rpc_msg_l
+                                    or "does not exist" in rpc_msg_l
+                                    or "could not find the function" in rpc_msg_l
+                                )
+                            )
+                            if not rpc_missing:
+                                raise
+                            resp = (
+                                supabase.table("messages")
+                                .upsert(
+                                    payload,
+                                    on_conflict="resident_id,contact_user_id,direction",
+                                )
+                                .execute()
+                            )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
                     else:
