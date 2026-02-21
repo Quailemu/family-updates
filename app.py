@@ -2915,21 +2915,21 @@ def render_family_send() -> None:
                     }
                     try:
                         resp = (
-                            supabase.rpc(
-                                "insert_family_message",
-                                {
-                                    "p_resident_id": resident_id,
-                                    "p_audio_storage_path": audio_b64,
-                                    "p_audio_mime_type": audio_mime_type,
-                                    "p_audio_bytes": len(audio_bytes),
-                                    "p_recorded_at": now_iso,
-                                },
-                            ).execute()
+                            supabase.table("messages")
+                            .upsert(
+                                payload,
+                                on_conflict="resident_id,contact_user_id,direction",
+                            )
+                            .execute()
                         )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
                     else:
-                        message_id = resp.data if resp.data else None
+                        message_id = (
+                            (resp.data[0].get("id") if isinstance(resp.data, list) and resp.data else None)
+                            if resp is not None
+                            else None
+                        )
                         log_audit_event(
                             "message_sent",
                             "family",
@@ -4191,24 +4191,21 @@ def render_care_hub() -> None:
                     }
                     try:
                         resp = (
-                            supabase.rpc(
-                                "insert_care_hub_message",
-                                {
-                                    "p_resident_id": resident_id,
-                                    "p_contact_user_id": state.get(
-                                        "selected_contact_user_id"
-                                    ),
-                                    "p_audio_storage_path": audio_b64,
-                                    "p_audio_mime_type": audio_mime_type,
-                                    "p_audio_bytes": len(audio_bytes),
-                                    "p_recorded_at": now_iso,
-                                },
-                            ).execute()
+                            supabase.table("messages")
+                            .upsert(
+                                payload,
+                                on_conflict="resident_id,contact_user_id,direction",
+                            )
+                            .execute()
                         )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
                     else:
-                        message_id = resp.data if resp.data else None
+                        message_id = (
+                            (resp.data[0].get("id") if isinstance(resp.data, list) and resp.data else None)
+                            if resp is not None
+                            else None
+                        )
                         log_audit_event(
                             "message_sent",
                             "care_hub",
