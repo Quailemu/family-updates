@@ -2784,6 +2784,22 @@ def render_family_send() -> None:
             )
 
         st.markdown('<div class="vm-section-title">Send</div>', unsafe_allow_html=True)
+        latest_sent = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            contact_user_id=st.session_state.get("auth_uid"),
+        )
+        latest_sent_audio = decode_audio_payload(latest_sent)
+        if latest_sent_audio and not state.get("recording_bytes"):
+            st.caption("Latest sent message:")
+            st.audio(
+                latest_sent_audio,
+                format=latest_sent.get("audio_mime_type") or "audio/wav",
+            )
+            latest_sent_at = latest_sent.get("recorded_at")
+            if latest_sent_at:
+                st.caption(f"Sent at: {latest_sent_at}")
         last_message = state.get("last_message") or {}
         if last_message and not state.get("recording_bytes"):
             sent_at = last_message.get("sent_at")
@@ -4046,6 +4062,26 @@ def render_care_hub() -> None:
             )
             state["selected_contact_id"] = None
             state["selected_contact_user_id"] = None
+
+        latest_sent = None
+        latest_sent_audio = None
+        if state.get("selected_contact_user_id"):
+            latest_sent = fetch_latest_message(
+                resident_id,
+                "from_resident",
+                access_token,
+                contact_user_id=state.get("selected_contact_user_id"),
+            )
+            latest_sent_audio = decode_audio_payload(latest_sent)
+        if latest_sent_audio and not state.get("recording_bytes"):
+            st.caption("Latest sent message:")
+            st.audio(
+                latest_sent_audio,
+                format=latest_sent.get("audio_mime_type") or "audio/wav",
+            )
+            latest_sent_at = latest_sent.get("recorded_at")
+            if latest_sent_at:
+                st.caption(f"Sent at: {latest_sent_at}")
 
         if hasattr(st, "audio_input"):
             recorded_from_native = st.audio_input(
