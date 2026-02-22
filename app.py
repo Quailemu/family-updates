@@ -127,7 +127,29 @@ def get_supabase_client() -> tuple[object | None, str | None]:
     url, key = get_supabase_config()
     if not url or not key:
         return None, "Missing SUPABASE_URL or SUPABASE_ANON_KEY."
-    return create_client(url, key), None
+    cached_bundle = st.session_state.get("_supabase_client_bundle")
+    if (
+        isinstance(cached_bundle, tuple)
+        and len(cached_bundle) == 3
+        and cached_bundle[0] == url
+        and cached_bundle[1] == key
+        and cached_bundle[2] is not None
+    ):
+        return cached_bundle[2], None
+    try:
+        client = create_client(url, key)
+        st.session_state["_supabase_client_bundle"] = (url, key, client)
+        return client, None
+    except Exception as exc:  # pragma: no cover - environment/runtime mismatch
+        message = str(exc) or exc.__class__.__name__
+        if isinstance(exc, OSError):
+            return (
+                None,
+                "Supabase client initialization failed (SSL setup error). "
+                "Check Streamlit Cloud secrets and remove invalid SSL cert path overrides "
+                "(for example SSL_CERT_FILE / SSL_CERT_DIR).",
+            )
+        return None, f"Supabase client initialization failed: {message}"
 
 
 def send_password_reset_email(email: str) -> tuple[bool, str]:
@@ -748,7 +770,7 @@ def enforce_session_timeout() -> None:
 def trigger_live_message_refresh(key: str, disabled: bool) -> None:
     if disabled or st_autorefresh is None:
         return
-    st_autorefresh(interval=3000, key=key)
+    st_autorefresh(interval=7000, key=key)
 
 
 def get_linked_residents() -> list[dict]:
