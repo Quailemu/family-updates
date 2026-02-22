@@ -648,6 +648,18 @@ def require_family_access() -> None:
         render_access_gate("Please sign in to access Family.", get_login_route(VARIANT_FAMILY), "family")
         st.stop()
     family_found, care_found, error, family_record, _ = get_mapping_status()
+    if error:
+        if (
+            st.session_state.get("active_role") == "family"
+            and st.session_state.get("access_token")
+        ):
+            return
+        render_access_gate(
+            "Session check failed. Please sign in again.",
+            get_login_route(VARIANT_FAMILY),
+            "family",
+        )
+        st.stop()
     if family_found:
         if family_record:
             st.session_state["active_role"] = "family"
@@ -669,6 +681,18 @@ def require_care_access() -> None:
         )
         st.stop()
     family_found, care_found, error, _, care_record = get_mapping_status()
+    if error:
+        if (
+            st.session_state.get("active_role") == "care_hub"
+            and st.session_state.get("access_token")
+        ):
+            return
+        render_access_gate(
+            f"Session check failed. Please sign in to access {get_care_hub_label()}.",
+            get_login_route(get_app_variant()),
+            "care_hub",
+        )
+        st.stop()
     if care_found:
         if care_record:
             st.session_state["active_role"] = "care_hub"
@@ -2659,7 +2683,11 @@ def render_family_login_hub() -> None:
                         if st.button("Log out", key="family_login_wrong_logout_after"):
                             sign_out_user("family")
                     else:
-                        st.error("Account not set up yet.")
+                        if mapping_error:
+                            st.error(mapping_error)
+                            st.info("Please sign in again.")
+                        else:
+                            st.error("Account not set up yet.")
 
     if sign_out_pressed:
         sign_out_user("family")
@@ -2688,7 +2716,11 @@ def render_family_login() -> None:
             if st.button("Log out", key="family_login_wrong_logout"):
                 sign_out_user("family")
         else:
-            st.error("Account not set up yet.")
+            if error:
+                st.error(error)
+                st.info("Please sign in again.")
+            else:
+                st.error("Account not set up yet.")
         return
     render_family_login_hub()
 
@@ -3895,7 +3927,11 @@ def render_care_login() -> None:
             if st.button("Log out", key="care_login_wrong_logout"):
                 sign_out_user("care_hub")
         else:
-            st.error("Account not set up yet.")
+            if error:
+                st.error(error)
+                st.info("Please sign in again.")
+            else:
+                st.error("Account not set up yet.")
         return
 
     email = st.text_input("Email", key="care_login_email")
@@ -3956,7 +3992,11 @@ def render_care_login() -> None:
                         if st.button("Log out", key="care_login_wrong_logout_after"):
                             sign_out_user("care_hub")
                     else:
-                        st.error("Account not set up yet.")
+                        if mapping_error:
+                            st.error(mapping_error)
+                            st.info("Please sign in again.")
+                        else:
+                            st.error("Account not set up yet.")
 
     if back_pressed:
         set_route(get_login_route(app_variant))
