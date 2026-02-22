@@ -4091,13 +4091,22 @@ def render_care_hub() -> None:
                 access_token,
                 contact_user_id=state.get("selected_contact_user_id"),
             )
-            latest_sent_audio = decode_audio_payload(latest_sent)
-        if latest_sent_audio and not state.get("recording_bytes"):
-            st.caption("Latest sent message:")
-            st.audio(
-                latest_sent_audio,
-                format=latest_sent.get("audio_mime_type") or "audio/wav",
+        if not latest_sent:
+            latest_sent = fetch_latest_message(
+                resident_id,
+                "from_resident",
+                access_token,
             )
+        latest_sent_audio = decode_audio_payload(latest_sent)
+        if latest_sent and not state.get("recording_bytes"):
+            st.caption("Latest sent message:")
+            if latest_sent_audio:
+                st.audio(
+                    latest_sent_audio,
+                    format=latest_sent.get("audio_mime_type") or "audio/wav",
+                )
+            else:
+                st.success("Latest sent message is saved.")
             latest_sent_at = latest_sent.get("recorded_at")
             if latest_sent_at:
                 st.caption(f"Sent at: {latest_sent_at}")
