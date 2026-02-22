@@ -30,6 +30,12 @@ from ui_theme import TOKENS, inject_css
 
 SESSION_TIMEOUT_SECONDS = 1800
 APP_DEBUG = os.getenv("APP_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
+APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 
 
 def normalize_route(route: str | None) -> str:
@@ -768,7 +774,7 @@ def enforce_session_timeout() -> None:
 
 
 def trigger_live_message_refresh(key: str, disabled: bool) -> None:
-    if disabled or st_autorefresh is None:
+    if disabled or st_autorefresh is None or not APP_LIVE_REFRESH:
         return
     st_autorefresh(interval=7000, key=key)
 
