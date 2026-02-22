@@ -21,6 +21,11 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - runtime env mismatch
     st_audiorec = None
 
+try:
+    from streamlit_autorefresh import st_autorefresh
+except ModuleNotFoundError:  # pragma: no cover - runtime env mismatch
+    st_autorefresh = None
+
 from ui_theme import TOKENS, inject_css
 
 SESSION_TIMEOUT_SECONDS = 1800
@@ -738,6 +743,12 @@ def enforce_session_timeout() -> None:
         set_route(get_default_route(get_app_variant()))
         st.stop()
     st.session_state["last_active_at"] = now
+
+
+def trigger_live_message_refresh(key: str, disabled: bool) -> None:
+    if disabled or st_autorefresh is None:
+        return
+    st_autorefresh(interval=3000, key=key)
 
 
 def get_linked_residents() -> list[dict]:
@@ -2723,6 +2734,12 @@ def render_family_send() -> None:
         return
 
     send_state = st.session_state.setdefault("family_send_state", {})
+    has_pending_recording = any(
+        bool((entry or {}).get("recording_bytes"))
+        for entry in send_state.values()
+        if isinstance(entry, dict)
+    )
+    trigger_live_message_refresh("family_live_refresh", disabled=has_pending_recording)
     active_rec_id = st.session_state.get("family_active_rec_resident")
     manual_active = st.session_state.get("family_active_rec_manual", False)
     resident_ids = {resident["id"] for resident in residents}
@@ -3989,6 +4006,12 @@ def render_care_hub() -> None:
         return
 
     send_state = st.session_state.setdefault("care_send_state", {})
+    has_pending_recording = any(
+        bool((entry or {}).get("recording_bytes"))
+        for entry in send_state.values()
+        if isinstance(entry, dict)
+    )
+    trigger_live_message_refresh("care_live_refresh", disabled=has_pending_recording)
     active_rec_id = st.session_state.get("care_active_rec_resident")
     manual_active = st.session_state.get("care_active_rec_manual", False)
     resident_ids = {resident["id"] for resident in residents}
