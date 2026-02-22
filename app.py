@@ -4122,24 +4122,6 @@ def render_care_hub() -> None:
         st.caption(
             "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
         )
-        st.caption(
-            "If recording is blocked on your phone browser, use Upload voice message below (you can record from there on most phones)."
-        )
-        uploaded_audio = st.file_uploader(
-            "Upload voice message",
-            type=["m4a", "mp3", "wav", "ogg"],
-            key=f"care_upload_{resident_id}",
-            accept_multiple_files=False,
-        )
-        if uploaded_audio is not None:
-            uploaded_bytes = uploaded_audio.getvalue()
-            if uploaded_bytes and uploaded_bytes != state.get("recording_bytes"):
-                state["recording_bytes"] = uploaded_bytes
-                state["recording_mime_type"] = (
-                    uploaded_audio.type or "audio/wav"
-                )
-                state["preview_confirmed"] = False
-                state["last_message"] = None
 
         if state.get("recording_bytes"):
             st.caption("Captured message preview:")
