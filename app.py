@@ -2790,13 +2790,22 @@ def render_family_send() -> None:
             access_token,
             contact_user_id=st.session_state.get("auth_uid"),
         )
-        latest_sent_audio = decode_audio_payload(latest_sent)
-        if latest_sent_audio and not state.get("recording_bytes"):
-            st.caption("Latest sent message:")
-            st.audio(
-                latest_sent_audio,
-                format=latest_sent.get("audio_mime_type") or "audio/wav",
+        if not latest_sent:
+            latest_sent = fetch_latest_message(
+                resident_id,
+                "to_resident",
+                access_token,
             )
+        latest_sent_audio = decode_audio_payload(latest_sent)
+        if latest_sent and not state.get("recording_bytes"):
+            st.caption("Latest sent message:")
+            if latest_sent_audio:
+                st.audio(
+                    latest_sent_audio,
+                    format=latest_sent.get("audio_mime_type") or "audio/wav",
+                )
+            else:
+                st.success("Latest sent message is saved.")
             latest_sent_at = latest_sent.get("recorded_at")
             if latest_sent_at:
                 st.caption(f"Sent at: {latest_sent_at}")
@@ -2846,25 +2855,8 @@ def render_family_send() -> None:
                     state["last_message"] = None
         else:
             st.warning(
-                "Recording is unavailable in this browser. Please allow microphone access "
-                "or use Upload voice message below."
+                "Recording is unavailable in this browser. Please allow microphone access."
             )
-        uploaded_audio = st.file_uploader(
-            "Upload voice message",
-            type=["m4a", "mp3", "wav", "ogg"],
-            key=f"family_upload_{resident_id}",
-            accept_multiple_files=False,
-        )
-        if uploaded_audio is not None:
-            uploaded_bytes = uploaded_audio.getvalue()
-            if uploaded_bytes and uploaded_bytes != state.get("recording_bytes"):
-                state["recording_bytes"] = uploaded_bytes
-                state["recording_mime_type"] = (
-                    uploaded_audio.type or "audio/wav"
-                )
-                state["preview_confirmed"] = False
-                state["last_message"] = None
-
         if state.get("recording_bytes"):
             st.caption("Captured message preview:")
             st.audio(
