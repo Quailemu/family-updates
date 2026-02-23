@@ -735,8 +735,9 @@ def log_audit_event(
     if not actor_user_id:
         return
     access_token = st.session_state.get("access_token")
-    if access_token:
-        supabase.postgrest.auth(access_token)
+    if not access_token:
+        return
+    supabase.postgrest.auth(access_token)
     payload = {
         "actor_user_id": actor_user_id,
         "actor_role": role,
@@ -2436,10 +2437,12 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
         return False
     if not variant_requires_auth(app_variant):
         return False
+    is_variant_authed = (
+        is_family_authenticated()
+        if app_variant == VARIANT_FAMILY
+        else is_care_authenticated()
+    )
     is_authed = bool(st.session_state.get("auth_uid"))
-    active_role = st.session_state.get("active_role")
-    expected_role = "family" if app_variant == VARIANT_FAMILY else "care_hub"
-    is_variant_authed = is_authed and active_role == expected_role
     login_route = get_login_route(app_variant)
     home_route = get_home_route(app_variant)
     if (
@@ -3016,6 +3019,7 @@ def render_family_send() -> None:
                                     payload,
                                     on_conflict="resident_id,contact_user_id,direction",
                                 )
+                                .select("*")
                                 .execute()
                             )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
@@ -4327,6 +4331,7 @@ def render_care_hub() -> None:
                                     payload,
                                     on_conflict="resident_id,contact_user_id,direction",
                                 )
+                                .select("*")
                                 .execute()
                             )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
