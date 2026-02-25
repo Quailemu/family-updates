@@ -1,5 +1,7 @@
 # PLANS.md — Canonical Copy (source of truth)
 
+Reference: `docs/security/SECURITY_MODEL.md` (final security/login model)
+
 ## Homepage banner (public)
 voice-message.com  
 One message in. One message out.  

@@ -1,6 +1,7 @@
 import os
 
-os.environ["APP_VARIANT"] = "care_hub_mobile"
+os.environ["APP_VARIANT"] = "mobile"
+os.environ.setdefault("STREAMLIT_SERVER_FILE_WATCHER_TYPE", "none")
 
 from app import main
 

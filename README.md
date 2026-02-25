@@ -30,3 +30,10 @@ Ports:
 - Family: http://localhost:8501
 - Care Hub – Mobile: http://localhost:8502
 - Care Hub – Office: http://localhost:8503
+
+## Documentation
+
+- `docs/SYSTEM_OVERVIEW.md`
+- `docs/VOICE_MESSAGE_MASTER_PLAN.md`
+- `docs/security/SECURITY_MODEL.md`
+- `docs/registration/FAMILY_REGISTRATION.md`
