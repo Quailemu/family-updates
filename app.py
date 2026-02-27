@@ -2890,7 +2890,6 @@ VARIANT_CONFIG = {
             MOBILE_HOME_ROUTE,
             OFFICE_LOGIN_ROUTE,
             OFFICE_HOME_ROUTE,
-            "/care-hub/register-family",
             "/care-hub/instructions",
             "/care-hub/training",
             "/how-it-works/mobile",
@@ -2918,6 +2917,7 @@ VARIANT_CONFIG = {
         "allowed_routes": {
             OFFICE_LOGIN_ROUTE,
             OFFICE_HOME_ROUTE,
+            "/care-hub/register-family",
             "/care-hub/instructions",
             "/care-hub/training",
             "/care-hub/security",
