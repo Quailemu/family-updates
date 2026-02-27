@@ -6,6 +6,8 @@ import time
 import uuid
 import secrets
 import hashlib
+import hmac
+import json
 import re
 from pathlib import Path
 
@@ -36,6 +38,23 @@ APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "").strip().lower() in {
     "yes",
     "on",
 }
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+
+ALLOWED_VARIANT_VALUES_TEXT = "public, family, mobile, office"
+AUTH_COOKIE_NAME = "vm_auth_rt"
+AUTH_COOKIE_MAX_AGE_SECONDS = int(os.getenv("AUTH_COOKIE_MAX_AGE_SECONDS", str(60 * 60 * 24 * 14)))
+AUTH_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "1").strip().lower() in {"1", "true", "yes", "on"}
+AUTH_COOKIE_SIGNING_KEY = os.getenv("AUTH_COOKIE_SIGNING_KEY", "").strip()
+AUTH_COOKIE_PERSISTENCE_ENABLED = os.getenv("AUTH_COOKIE_PERSISTENCE_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+AUTH_STATE_KEYS = (
+    "auth_uid",
+    "access_token",
+    "refresh_token",
+    "auth_email",
+    "active_role",
+    "active_care_home_id",
+    "mfa_verified",
+)
 
 
 def normalize_route(route: str | None) -> str:
@@ -47,6 +66,167 @@ def normalize_route(route: str | None) -> str:
     if len(value) > 1 and value.endswith("/"):
         value = value[:-1]
     return value
+
+
+def _sign_cookie_payload(payload: str) -> str:
+    secret = AUTH_COOKIE_SIGNING_KEY.encode("utf-8")
+    digest = hmac.new(secret, payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    return digest
+
+
+def _encode_refresh_token_cookie(refresh_token: str) -> str:
+    payload = base64.urlsafe_b64encode(refresh_token.encode("utf-8")).decode("ascii")
+    signature = _sign_cookie_payload(payload)
+    return f"{payload}.{signature}"
+
+
+def _decode_refresh_token_cookie(cookie_value: str) -> str | None:
+    if not cookie_value or "." not in cookie_value:
+        return None
+    payload, signature = cookie_value.rsplit(".", 1)
+    expected = _sign_cookie_payload(payload)
+    if not hmac.compare_digest(signature, expected):
+        return None
+    try:
+        return base64.urlsafe_b64decode(payload.encode("ascii")).decode("utf-8")
+    except Exception:
+        return None
+
+
+def _get_request_cookie(name: str) -> str:
+    try:
+        context = getattr(st, "context", None)
+        cookies = getattr(context, "cookies", {}) if context is not None else {}
+        value = cookies.get(name, "")
+        return str(value or "")
+    except Exception:
+        return ""
+
+
+def _set_browser_cookie(name: str, value: str, max_age_seconds: int) -> None:
+    # Streamlit exposes request cookies but not a native setter, so we set via client-side JS.
+    cookie_parts = [
+        f"{name}={value}",
+        "path=/",
+        f"max-age={max_age_seconds}",
+        "SameSite=Lax",
+    ]
+    if AUTH_COOKIE_SECURE:
+        cookie_parts.append("Secure")
+    cookie_string = "; ".join(cookie_parts)
+    components.html(
+        f"""
+<script>
+document.cookie = {json.dumps(cookie_string)};
+</script>
+""",
+        height=0,
+        width=0,
+    )
+
+
+def persist_auth_cookie(refresh_token: str | None) -> None:
+    if not AUTH_COOKIE_PERSISTENCE_ENABLED or not AUTH_COOKIE_SIGNING_KEY:
+        return
+    if not refresh_token:
+        clear_auth_cookie()
+        return
+    encoded = _encode_refresh_token_cookie(refresh_token)
+    _set_browser_cookie(AUTH_COOKIE_NAME, encoded, AUTH_COOKIE_MAX_AGE_SECONDS)
+
+
+def clear_auth_cookie() -> None:
+    if not AUTH_COOKIE_PERSISTENCE_ENABLED:
+        return
+    _set_browser_cookie(AUTH_COOKIE_NAME, "", 0)
+
+
+def clear_auth_session_state() -> None:
+    for key in AUTH_STATE_KEYS:
+        st.session_state.pop(key, None)
+
+
+def restore_auth_session_from_cookie() -> None:
+    if not AUTH_COOKIE_PERSISTENCE_ENABLED:
+        return
+    if st.session_state.get("_auth_cookie_restored"):
+        return
+    st.session_state["_auth_cookie_restored"] = True
+    # Keep a currently valid in-memory session; do not overwrite it on startup.
+    if (
+        st.session_state.get("auth_uid")
+        and st.session_state.get("access_token")
+        and st.session_state.get("refresh_token")
+    ):
+        return
+    if not AUTH_COOKIE_SIGNING_KEY:
+        return
+    raw_cookie = _get_request_cookie(AUTH_COOKIE_NAME)
+    refresh_token = _decode_refresh_token_cookie(raw_cookie)
+    if not refresh_token:
+        if raw_cookie:
+            clear_auth_cookie()
+        return
+    supabase, error = get_supabase_client()
+    if error:
+        return
+    try:
+        try:
+            auth_result = supabase.auth.refresh_session(refresh_token)
+        except TypeError:
+            auth_result = supabase.auth.refresh_session()
+        session = getattr(auth_result, "session", None)
+        user = getattr(auth_result, "user", None)
+        if not session:
+            clear_auth_cookie()
+            return
+        st.session_state["access_token"] = getattr(session, "access_token", "")
+        st.session_state["refresh_token"] = getattr(session, "refresh_token", "")
+        if user is None:
+            user = getattr(session, "user", None)
+        st.session_state["auth_uid"] = getattr(user, "id", "") if user is not None else ""
+        email_value = getattr(user, "email", "") if user is not None else ""
+        st.session_state["auth_email"] = email_value or ""
+        if not st.session_state.get("access_token") or not st.session_state.get("refresh_token"):
+            clear_auth_session_state()
+            clear_auth_cookie()
+            return
+        # Rebuild role state from authoritative DB mappings.
+        try:
+            supabase.postgrest.auth(st.session_state["access_token"])
+            auth_uid = st.session_state.get("auth_uid")
+            family_resp = (
+                supabase.table("family_contacts")
+                .select("care_home_id")
+                .eq("auth_user_id", auth_uid)
+                .eq("active", True)
+                .limit(1)
+                .execute()
+            )
+            care_resp = (
+                supabase.table("care_home_users")
+                .select("care_home_id")
+                .eq("auth_user_id", auth_uid)
+                .eq("active", True)
+                .limit(1)
+                .execute()
+            )
+            family_row = family_resp.data[0] if family_resp.data else None
+            care_row = care_resp.data[0] if care_resp.data else None
+            if family_row:
+                st.session_state["active_role"] = "family"
+                st.session_state["active_care_home_id"] = family_row.get("care_home_id")
+            elif care_row:
+                st.session_state["active_role"] = "care_hub"
+                st.session_state["active_care_home_id"] = care_row.get("care_home_id")
+        except Exception:
+            # Keep auth tokens; route-level access checks still fail closed if mapping is missing.
+            pass
+        # Rotate cookie to the latest refresh token to keep long-running sessions durable.
+        persist_auth_cookie(st.session_state["refresh_token"])
+    except Exception:
+        clear_auth_session_state()
+        clear_auth_cookie()
 
 
 def is_family_authenticated() -> bool:
@@ -156,20 +336,382 @@ def get_supabase_client() -> tuple[object | None, str | None]:
         return None, f"Supabase client initialization failed: {message}"
 
 
-def send_password_reset_email(email: str) -> tuple[bool, str]:
+def get_admin_client() -> tuple[object | None, str | None]:
+    url, _ = get_supabase_config()
+    if not url:
+        return None, "Missing SUPABASE_URL."
+    if not SUPABASE_SERVICE_ROLE_KEY:
+        return None, "Missing SUPABASE_SERVICE_ROLE_KEY for Office family registration."
+    cached_bundle = st.session_state.get("_supabase_admin_client_bundle")
+    if (
+        isinstance(cached_bundle, tuple)
+        and len(cached_bundle) == 2
+        and cached_bundle[0] == url
+        and cached_bundle[1] is not None
+    ):
+        return cached_bundle[1], None
+    try:
+        client = create_client(url, SUPABASE_SERVICE_ROLE_KEY)
+        # Cache the client without persisting the service key in session state.
+        st.session_state["_supabase_admin_client_bundle"] = (url, client)
+        return client, None
+    except Exception as exc:  # pragma: no cover - runtime/config mismatch
+        return None, f"Supabase admin client initialization failed: {exc}"
+
+
+def _extract_auth_user_id(auth_result: object) -> str:
+    if auth_result is None:
+        return ""
+    user = getattr(auth_result, "user", None)
+    if user is not None:
+        user_id = getattr(user, "id", "") or ""
+        if user_id:
+            return str(user_id)
+    direct_id = getattr(auth_result, "id", "") or ""
+    if direct_id:
+        return str(direct_id)
+    if isinstance(auth_result, dict):
+        payload_user = auth_result.get("user")
+        if isinstance(payload_user, dict):
+            payload_id = payload_user.get("id") or ""
+            if payload_id:
+                return str(payload_id)
+        payload_id = auth_result.get("id") or ""
+        if payload_id:
+            return str(payload_id)
+    return ""
+
+
+def _resolve_auth_user_id_by_email(admin_client: object, email: str) -> str:
+    try:
+        users_response = admin_client.auth.admin.list_users()
+    except Exception:
+        return ""
+    payload = getattr(users_response, "data", None)
+    if payload is None and isinstance(users_response, dict):
+        payload = users_response.get("data")
+    users = []
+    if isinstance(payload, dict):
+        users = payload.get("users") or []
+    elif isinstance(payload, list):
+        users = payload
+    for user in users:
+        user_email = ""
+        user_id = ""
+        if isinstance(user, dict):
+            user_email = str(user.get("email") or "").strip().lower()
+            user_id = str(user.get("id") or "")
+        else:
+            user_email = str(getattr(user, "email", "") or "").strip().lower()
+            user_id = str(getattr(user, "id", "") or "")
+        if user_email == email and user_id:
+            return user_id
+    return ""
+
+
+def invite_user(admin_client: object, email: str) -> tuple[bool, str | None, str | None]:
+    normalized_email = email.strip().lower()
+    if not normalized_email:
+        return False, None, "Email is required."
+    try:
+        try:
+            invite_result = admin_client.auth.admin.invite_user_by_email(normalized_email)
+        except TypeError:
+            invite_result = admin_client.auth.admin.invite_user_by_email(
+                normalized_email, {}
+            )
+    except Exception as exc:
+        return False, None, str(exc)
+    auth_user_id = _extract_auth_user_id(invite_result)
+    if not auth_user_id:
+        auth_user_id = _resolve_auth_user_id_by_email(admin_client, normalized_email)
+    if not auth_user_id:
+        return False, None, "Invite sent but auth user ID could not be resolved."
+    return True, auth_user_id, None
+
+
+def upsert_family_contact(
+    access_token: str | None,
+    *,
+    care_home_id: str,
+    auth_user_id: str,
+    email: str,
+    first_name: str,
+    last_name: str,
+) -> tuple[dict | None, str | None]:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return None, error
+    display_name = f"{first_name.strip()} {last_name.strip()}".strip()
+    payload = {
+        "care_home_id": care_home_id,
+        "auth_user_id": auth_user_id,
+        "email": email.strip().lower(),
+        "display_name": display_name or "Family contact",
+        "active": True,
+    }
+    try:
+        resp = (
+            supabase.table("family_contacts")
+            .upsert(payload, on_conflict="auth_user_id")
+            .select("id, auth_user_id, care_home_id, email, display_name, active")
+            .execute()
+        )
+    except Exception as exc:  # pragma: no cover - Supabase runtime error
+        return None, str(exc)
+    if not resp.data:
+        return None, "Could not create family contact mapping."
+    return resp.data[0], None
+
+
+def grant_resident_access(
+    access_token: str | None,
+    *,
+    resident_id: str,
+    family_contact_id: str,
+) -> tuple[dict | None, str | None]:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return None, error
+    payload = {
+        "resident_id": resident_id,
+        "family_contact_id": family_contact_id,
+        "active": True,
+    }
+    try:
+        resp = (
+            supabase.table("family_contact_access")
+            .upsert(payload, on_conflict="resident_id,family_contact_id")
+            .select("id, resident_id, family_contact_id, active")
+            .execute()
+        )
+    except Exception as exc:  # pragma: no cover - Supabase runtime error
+        return None, str(exc)
+    if not resp.data:
+        return None, "Could not create resident access mapping."
+    return resp.data[0], None
+
+
+def _apply_family_registration_mapping(
+    access_token: str | None, payload: dict
+) -> tuple[bool, str | None]:
+    contact_row, contact_error = upsert_family_contact(
+        access_token,
+        care_home_id=str(payload.get("care_home_id") or ""),
+        auth_user_id=str(payload.get("auth_user_id") or ""),
+        email=str(payload.get("email") or ""),
+        first_name=str(payload.get("first_name") or ""),
+        last_name=str(payload.get("last_name") or ""),
+    )
+    if contact_error or not contact_row:
+        return False, contact_error or "Failed to upsert family contact."
+    _, access_error = grant_resident_access(
+        access_token,
+        resident_id=str(payload.get("resident_id") or ""),
+        family_contact_id=str(contact_row.get("id") or ""),
+    )
+    if access_error:
+        return False, access_error
+    return True, None
+
+
+def render_office_family_registration_form(
+    access_token: str | None, residents: list[dict]
+) -> None:
+    if get_app_variant() != VARIANT_OFFICE:
+        return
+    care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
+    auth_uid = str(st.session_state.get("auth_uid") or "").strip()
+    if not care_home_id or not auth_uid:
+        st.error("Office mapping is required before registering family members.")
+        return
+    supabase, auth_error = get_authed_supabase(access_token)
+    if auth_error:
+        st.error(auth_error)
+        return
+    try:
+        mapping_resp = (
+            supabase.table("care_home_users")
+            .select("id")
+            .eq("auth_user_id", auth_uid)
+            .eq("care_home_id", care_home_id)
+            .eq("active", True)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:  # pragma: no cover - Supabase runtime error
+        st.error(str(exc))
+        return
+    if not mapping_resp.data:
+        st.error("Your Office account is not mapped to an active care home.")
+        return
+
+    office_residents = [
+        resident
+        for resident in residents
+        if str(resident.get("care_home_id") or "") == care_home_id
+    ]
+    if not office_residents:
+        st.info("No active residents are available for family registration.")
+        return
+
+    pending_key = "office_family_registration_pending"
+    pending_payload = st.session_state.get(pending_key)
+    if isinstance(pending_payload, dict) and pending_payload.get("care_home_id") == care_home_id:
+        st.warning(
+            "Invite already sent. Retry mapping below without sending another invite."
+        )
+        if st.button(
+            "Retry mapping without re-invite",
+            key="office_family_register_retry_mapping",
+        ):
+            ok, mapping_error = _apply_family_registration_mapping(
+                access_token, pending_payload
+            )
+            if ok:
+                st.session_state.pop(pending_key, None)
+                st.success(
+                    f"Family member linked: {pending_payload.get('email', 'contact')}."
+                )
+                st.rerun()
+            else:
+                st.error(mapping_error or "Retry failed. Please try again.")
+
+    st.markdown("### Register a Family Member")
+    st.caption(
+        "Register an authorised family contact for a resident. We will send them an email invitation to set up their account."
+    )
+    resident_options = []
+    resident_by_id = {}
+    resident_label_by_id = {}
+    for resident in office_residents:
+        resident_id = str(resident.get("id") or "")
+        if not resident_id:
+            continue
+        label = resident.get("preferred_name", "Resident")
+        room = str(resident.get("room") or "").strip()
+        if room:
+            label = f"{label} ({room})"
+        resident_options.append(resident_id)
+        resident_by_id[resident_id] = resident
+        resident_label_by_id[resident_id] = label
+    if not resident_options:
+        st.info("No valid residents are available for family registration.")
+        return
+
+    with st.form("office_register_family_member_form"):
+        st.markdown("#### Section 1 — Family Contact Details")
+        first_name = st.text_input("First name", key="office_family_first_name")
+        last_name = st.text_input("Last name", key="office_family_last_name")
+        email = st.text_input("Email", key="office_family_email")
+        relationship = st.text_input(
+            "Relationship (optional)",
+            key="office_family_relationship",
+        )
+        st.caption("Relationship is recorded for local workflow guidance only.")
+        st.markdown("#### Section 2 — Link to Resident")
+        resident_id = st.selectbox(
+            "Resident",
+            resident_options,
+            format_func=lambda rid: resident_label_by_id.get(rid, "Resident"),
+            key="office_family_resident_select",
+        )
+        st.markdown("#### Section 3 — Confirmation")
+        authorised_confirmed = st.checkbox(
+            "I confirm this person is authorised by the resident (or their representative) to receive and send social voice messages.",
+            key="office_family_authorisation_confirm",
+        )
+        submitted = st.form_submit_button("Send invitation")
+
+    if not submitted:
+        return
+
+    first_value = first_name.strip()
+    last_value = last_name.strip()
+    normalized_email = email.strip().lower()
+    if not first_value or not last_value or not normalized_email:
+        st.error("First name, last name, and email are required.")
+        return
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", normalized_email):
+        st.error("Enter a valid email address.")
+        return
+    if not authorised_confirmed:
+        st.error("Please confirm authorisation before sending the invitation.")
+        return
+
+    resident = resident_by_id.get(resident_id)
+    if not resident:
+        st.error("Select a resident.")
+        return
+
+    try:
+        existing_contact_resp = (
+            supabase.table("family_contacts")
+            .select("id")
+            .eq("care_home_id", care_home_id)
+            .eq("email", normalized_email)
+            .eq("active", True)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:  # pragma: no cover - Supabase runtime error
+        st.error(str(exc))
+        return
+    if existing_contact_resp.data:
+        st.error("That email is already registered for this care home.")
+        return
+
+    admin_client, admin_error = get_admin_client()
+    if admin_error:
+        st.error(admin_error)
+        return
+    invited, auth_user_id, invite_error = invite_user(admin_client, normalized_email)
+    if not invited or not auth_user_id:
+        st.error(invite_error or "Invite failed.")
+        return
+
+    payload = {
+        "care_home_id": care_home_id,
+        "resident_id": resident_id,
+        "auth_user_id": auth_user_id,
+        "email": normalized_email,
+        "first_name": first_value,
+        "last_name": last_value,
+        "relationship": relationship.strip(),
+    }
+    mapping_ok, mapping_error = _apply_family_registration_mapping(access_token, payload)
+    if mapping_ok:
+        st.session_state.pop(pending_key, None)
+        st.success(
+            "Invitation sent\n"
+            f"We've emailed {normalized_email} with instructions to set up their account.\n"
+            "Ask them to check spam/junk if they don't receive it."
+        )
+        return
+
+    st.session_state[pending_key] = payload
+    st.error(
+        "Invite sent but mapping failed. Use 'Retry mapping without re-invite'."
+    )
+    if mapping_error:
+        st.error(mapping_error)
+
+
+def send_password_reset_email(email: str, app_variant: str = "") -> tuple[bool, str]:
     target_email = email.strip()
     if not target_email:
         return False, "Enter your email first."
     supabase, error = get_supabase_client()
     if error:
         return False, error
-    redirect_to = os.getenv("PASSWORD_RESET_REDIRECT_URL", "").strip()
     try:
-        if redirect_to:
-            try:
-                supabase.auth.reset_password_email(target_email, {"redirect_to": redirect_to})
-            except TypeError:
-                supabase.auth.reset_password_email(target_email, redirect_to=redirect_to)
+        if app_variant == VARIANT_FAMILY:
+            redirect_to = os.getenv("PASSWORD_RESET_REDIRECT_URL", "").strip()
+            debug = os.getenv("APP_DEBUG", "").strip() in ("1", "true", "True", "yes", "YES")
+            if debug:
+                st.info(f"Reset redirect_to: {redirect_to}")
+            print(f"[auth] Family forgot-password redirect_to={redirect_to!r}")
+            supabase.auth.reset_password_email(target_email, {"redirect_to": redirect_to})
         else:
             supabase.auth.reset_password_email(target_email)
     except Exception as exc:  # pragma: no cover - Supabase runtime error
@@ -374,6 +916,33 @@ def render_wrong_variant(
         st.markdown(detail)
     if st.button("Go to login", key="wrong_variant_login"):
         set_route(get_default_route(get_app_variant()))
+
+
+def wrong_variant_screen(route: str, detail: str | None = None) -> None:
+    """
+    Reusable wrong-variant screen used by route/page guards.
+    Always stops execution after rendering to prevent partial page renders.
+    """
+    normalized_route = normalize_route(route) or "/"
+    st.error("Wrong app variant")
+    st.markdown("This page is not available in the current app configuration.")
+    if detail:
+        st.markdown(detail)
+    st.caption(f"Blocked route: {normalized_route}")
+    if st.button("Return to Public", key=f"wrong_variant_public_{normalized_route.replace('/', '_')}"):
+        set_route(PUBLIC_HOME_ROUTE)
+    st.stop()
+
+
+def guard_route_access(route: str, app_variant: str | None = None) -> None:
+    """
+    Central route guard for app-level variant isolation.
+    Every rendered route must be explicitly allowlisted for the active variant.
+    """
+    normalized_route = normalize_route(route) or "/"
+    active_variant = app_variant or get_app_variant()
+    if not is_route_allowed(active_variant, normalized_route):
+        wrong_variant_screen(normalized_route)
 
 
 def render_family_info_nav() -> None:
@@ -642,6 +1211,11 @@ def render_care_hub_training() -> None:
 
 
 def require_family_access() -> None:
+    if get_app_variant() != VARIANT_FAMILY:
+        wrong_variant_screen(get_route(), "Family pages are not available in this app.")
+    active_role = st.session_state.get("active_role")
+    if st.session_state.get("auth_uid") and active_role and active_role != "family":
+        wrong_variant_screen(get_route(), "This signed-in session belongs to Care Hub.")
     if not st.session_state.get("auth_uid"):
         render_access_gate("Please sign in to access Family.", get_login_route(VARIANT_FAMILY), "family")
         st.stop()
@@ -671,6 +1245,11 @@ def require_family_access() -> None:
 
 
 def require_care_access() -> None:
+    if get_app_variant() not in {VARIANT_MOBILE, VARIANT_OFFICE}:
+        wrong_variant_screen(get_route(), "Care Hub pages are not available in this app.")
+    active_role = st.session_state.get("active_role")
+    if st.session_state.get("auth_uid") and active_role and active_role != "care_hub":
+        wrong_variant_screen(get_route(), "This signed-in session belongs to Family.")
     if not st.session_state.get("auth_uid"):
         render_access_gate(
             f"Please sign in to access {get_care_hub_label()}.",
@@ -772,6 +1351,7 @@ def sign_out_user(role: str | None = None) -> None:
             role,
             st.session_state.get("active_care_home_id"),
         )
+    clear_auth_cookie()
     clear_session_state()
     set_route(get_default_route(get_app_variant()))
 
@@ -1168,7 +1748,7 @@ def render_header_menu(menu_key: str) -> None:
                     set_route("/public/service-overview")
                     return
                 return
-        if app_variant not in (VARIANT_OFFICE, VARIANT_FAMILY) and prev_route and prev_route != current_route:
+        if app_variant not in (VARIANT_OFFICE, VARIANT_FAMILY, VARIANT_MOBILE) and prev_route and prev_route != current_route:
             render_route_link("Back", prev_route, key=f"{menu_key}_back_link")
             return
         if show_back_only and app_variant not in (VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE):
@@ -1178,6 +1758,8 @@ def render_header_menu(menu_key: str) -> None:
             clicked_action = None
             if st.button("Inbox", key=f"{menu_key}_inbox"):
                 clicked_action = ("route", get_home_route(app_variant))
+            if st.button("Register family member", key=f"{menu_key}_register_family"):
+                clicked_action = ("route", "/care-hub/register-family")
             if st.button("Account & Security", key=f"{menu_key}_security"):
                 clicked_action = ("route", "/care-hub/security")
             if st.button("Subscription & Billing", key=f"{menu_key}_billing"):
@@ -1188,6 +1770,8 @@ def render_header_menu(menu_key: str) -> None:
             st.markdown("— Daily Use —")
             if st.button("Care Hub handbook", key=f"{menu_key}_office_doc_handbook"):
                 clicked_action = ("doc", "docs/office/05_care_home_guide.md")
+            if st.button("Registering a family member", key=f"{menu_key}_office_doc_register_family"):
+                clicked_action = ("doc", "docs/office/10_registering_family_member.md")
             if st.button("Access summary (1 page)", key=f"{menu_key}_office_doc_access_summary"):
                 clicked_action = ("doc", "docs/office/08_care_hub_access_summary.md")
             if st.button("Handover checklist", key=f"{menu_key}_office_doc_handover"):
@@ -2306,6 +2890,7 @@ VARIANT_CONFIG = {
             MOBILE_HOME_ROUTE,
             OFFICE_LOGIN_ROUTE,
             OFFICE_HOME_ROUTE,
+            "/care-hub/register-family",
             "/care-hub/instructions",
             "/care-hub/training",
             "/how-it-works/mobile",
@@ -2667,6 +3252,7 @@ def render_family_login_hub() -> None:
                     st.session_state["auth_uid"] = auth.user.id
                     st.session_state["access_token"] = auth.session.access_token
                     st.session_state["refresh_token"] = auth.session.refresh_token
+                    persist_auth_cookie(st.session_state.get("refresh_token"))
                     st.session_state["auth_email"] = normalized_email
                     if normalized_email and "@" in normalized_email:
                         st.session_state["family_display_name"] = (
@@ -2710,7 +3296,7 @@ def render_family_login_hub() -> None:
     if sign_out_pressed:
         sign_out_user("family")
     if forgot_pressed:
-        ok, message = send_password_reset_email(normalized_email)
+        ok, message = send_password_reset_email(normalized_email, app_variant=VARIANT_FAMILY)
         if ok:
             st.success(message)
         else:
@@ -3142,6 +3728,11 @@ def render_docs() -> None:
             "title": "Care home guide",
             "path": "docs/office/05_care_home_guide.md",
             "summary": "Day-to-day Care Hub use (Office and Mobile).",
+        },
+        {
+            "title": "Registering a family member",
+            "path": "docs/office/10_registering_family_member.md",
+            "summary": "How to invite and link an authorised family contact.",
         },
         {
             "title": "Safeguarding and consent",
@@ -4000,6 +4591,7 @@ def render_care_login() -> None:
                     st.session_state["auth_uid"] = auth.user.id
                     st.session_state["access_token"] = auth.session.access_token
                     st.session_state["refresh_token"] = auth.session.refresh_token
+                    persist_auth_cookie(st.session_state.get("refresh_token"))
                     st.session_state["auth_email"] = normalized_email
                     family_found, care_found, mapping_error, family_record, care_record = (
                         get_mapping_status()
@@ -4391,6 +4983,19 @@ def render_care_hub() -> None:
     # Navigation rendered at the top of the page.
 
 
+def render_care_hub_register_family() -> None:
+    require_care_access()
+    if get_app_variant() != VARIANT_OFFICE:
+        render_wrong_variant(
+            "Family registration is only available in Care Hub – Office."
+        )
+        return
+    render_page_header("Register a Family Member")
+    access_token = st.session_state.get("access_token")
+    residents = fetch_care_home_residents(access_token)
+    render_office_family_registration_form(access_token, residents)
+
+
 def main() -> None:
     st.set_page_config(
         page_title="voice-message.com",
@@ -4398,6 +5003,41 @@ def main() -> None:
         layout="centered",
         initial_sidebar_state="collapsed",
     )
+    raw_variant = get_raw_app_variant()
+    if not raw_variant:
+        st.error(
+            "Configuration error: APP_VARIANT is required.\n\n"
+            f"Allowed values: {ALLOWED_VARIANT_VALUES_TEXT}."
+        )
+        st.stop()
+    try:
+        app_variant = get_app_variant()
+    except ValueError as exc:
+        st.error(str(exc))
+        st.stop()
+    if variant_requires_auth(app_variant) and AUTH_COOKIE_PERSISTENCE_ENABLED:
+        if not AUTH_COOKIE_SIGNING_KEY:
+            st.error("Configuration error: AUTH_COOKIE_SIGNING_KEY is required for secure session cookies.")
+            st.stop()
+        restore_auth_session_from_cookie()
+    init_state()
+    route = get_route()
+    st.session_state.route = route
+    default_route = normalize_route(get_default_route(app_variant)) or "/"
+    if route in ("/", ""):
+        target_route = FAMILY_LOGIN_ROUTE if app_variant == VARIANT_FAMILY else default_route
+        set_route(target_route)
+        return
+    route_allowlisted = is_route_allowed(app_variant, route)
+    print(
+        f"[startup] variant={app_variant} route={route} allowlisted={route_allowlisted}",
+        flush=True,
+    )
+    guard_route_access(route, app_variant)
+    if APP_DEBUG:
+        st.info(
+            f"DEBUG startup: variant={app_variant}, route={route}, allowlisted={route_allowlisted}"
+        )
     st.markdown(
         """
 <style>
@@ -4526,16 +5166,10 @@ def main() -> None:
                 font-size: 0.98rem !important;
             }
         }
-        </style>
-        """,
+</style>
+""",
         unsafe_allow_html=True,
     )
-    try:
-        app_variant = get_app_variant()
-    except ValueError as exc:
-        st.error(str(exc))
-        st.stop()
-    init_state()
     render_debug_panel("top", app_variant, "none")
     if app_variant == VARIANT_FAMILY and not is_family_authenticated():
         render_debug_panel("family_unauth", app_variant, "render_family_login_hub + st.stop")
@@ -4566,20 +5200,8 @@ def main() -> None:
             unsafe_allow_html=True,
         )
     enforce_session_timeout()
-    route = get_route()
-    st.session_state.route = route
-    default_route = normalize_route(get_default_route(app_variant)) or "/"
-    if route in ("/", ""):
-        target_route = FAMILY_LOGIN_ROUTE if app_variant == VARIANT_FAMILY else default_route
-        render_debug_panel("default_route", app_variant, f"set_route({target_route})")
-        set_route(target_route)
-        return
     if redirect_if_not_authenticated(app_variant, route):
         render_debug_panel("auth_redirect", app_variant, "redirect_if_not_authenticated -> return")
-        return
-    if not is_route_allowed(app_variant, route):
-        expected_variants = get_expected_variants_for_route(route)
-        render_wrong_variant(f"Route `{route}` is not available in this app.", expected_variants)
         return
     if (
         app_variant == VARIANT_OFFICE
@@ -4644,6 +5266,8 @@ def main() -> None:
         render_care_login()
     elif route in (OFFICE_HOME_ROUTE, MOBILE_HOME_ROUTE):
         render_care_hub()
+    elif route == "/care-hub/register-family":
+        render_care_hub_register_family()
     elif route == "/care-hub/instructions":
         render_care_hub_instructions()
     elif route == "/care-hub/training":

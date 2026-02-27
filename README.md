@@ -31,6 +31,11 @@ Ports:
 - Care Hub – Mobile: http://localhost:8502
 - Care Hub – Office: http://localhost:8503
 
+## Supabase auth setup
+
+- Set `PASSWORD_RESET_REDIRECT_URL` to your Family login URL (for example `https://family.voice-message.com/family/login`).
+- In Supabase Dashboard, add the same Family URL to Auth -> URL Configuration -> Redirect URLs.
+
 ## Documentation
 
 - `docs/SYSTEM_OVERVIEW.md`
