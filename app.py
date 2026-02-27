@@ -451,10 +451,16 @@ def upsert_family_contact(
         "active": True,
     }
     try:
+        # Older supabase-py versions do not support `.select()` chained after `.upsert()`.
+        supabase.table("family_contacts").upsert(
+            payload, on_conflict="auth_user_id"
+        ).execute()
         resp = (
             supabase.table("family_contacts")
-            .upsert(payload, on_conflict="auth_user_id")
             .select("id, auth_user_id, care_home_id, email, display_name, active")
+            .eq("auth_user_id", auth_user_id)
+            .eq("care_home_id", care_home_id)
+            .limit(1)
             .execute()
         )
     except Exception as exc:  # pragma: no cover - Supabase runtime error
@@ -479,10 +485,16 @@ def grant_resident_access(
         "active": True,
     }
     try:
+        # Older supabase-py versions do not support `.select()` chained after `.upsert()`.
+        supabase.table("family_contact_access").upsert(
+            payload, on_conflict="resident_id,family_contact_id"
+        ).execute()
         resp = (
             supabase.table("family_contact_access")
-            .upsert(payload, on_conflict="resident_id,family_contact_id")
             .select("id, resident_id, family_contact_id, active")
+            .eq("resident_id", resident_id)
+            .eq("family_contact_id", family_contact_id)
+            .limit(1)
             .execute()
         )
     except Exception as exc:  # pragma: no cover - Supabase runtime error
