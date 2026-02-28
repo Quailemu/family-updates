@@ -3645,28 +3645,20 @@ def render_family_send() -> None:
                                 ).execute()
                             )
                         except Exception as rpc_exc:
-                            rpc_msg = str(rpc_exc)
-                            rpc_msg_l = rpc_msg.lower()
-                            rpc_missing = (
-                                "insert_family_message" in rpc_msg
-                                and (
-                                    "pgrst202" in rpc_msg_l
-                                    or "not found" in rpc_msg_l
-                                    or "does not exist" in rpc_msg_l
-                                    or "could not find the function" in rpc_msg_l
+                            # If RPC is unavailable or fails in this environment,
+                            # fall back to direct upsert so Family->Resident writes still succeed.
+                            try:
+                                resp = (
+                                    supabase.table("messages")
+                                    .upsert(
+                                        payload,
+                                        on_conflict="resident_id,contact_user_id,direction",
+                                    )
+                                    .select("*")
+                                    .execute()
                                 )
-                            )
-                            if not rpc_missing:
-                                raise
-                            resp = (
-                                supabase.table("messages")
-                                .upsert(
-                                    payload,
-                                    on_conflict="resident_id,contact_user_id,direction",
-                                )
-                                .select("*")
-                                .execute()
-                            )
+                            except Exception:
+                                raise rpc_exc
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
                     else:
