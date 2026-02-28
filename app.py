@@ -30,7 +30,12 @@ except ModuleNotFoundError:  # pragma: no cover - runtime env mismatch
 
 from ui_theme import TOKENS, inject_css
 
-SESSION_TIMEOUT_SECONDS = 1800
+FAMILY_SESSION_TIMEOUT_SECONDS = int(
+    os.getenv("FAMILY_SESSION_TIMEOUT_SECONDS", str(60 * 60 * 4))
+)
+CARE_HUB_SESSION_TIMEOUT_SECONDS = int(
+    os.getenv("CARE_HUB_SESSION_TIMEOUT_SECONDS", str(60 * 30))
+)
 APP_DEBUG = os.getenv("APP_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
 APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "").strip().lower() in {
     "1",
@@ -1399,7 +1404,13 @@ def enforce_session_timeout() -> None:
     if not st.session_state.get("auth_uid"):
         st.session_state["last_active_at"] = now
         return
-    if last_active and (now - last_active) > SESSION_TIMEOUT_SECONDS:
+    active_role = st.session_state.get("active_role")
+    timeout_seconds = (
+        FAMILY_SESSION_TIMEOUT_SECONDS
+        if active_role == "family"
+        else CARE_HUB_SESSION_TIMEOUT_SECONDS
+    )
+    if last_active and (now - last_active) > timeout_seconds:
         role = st.session_state.get("active_role")
         if role:
             log_audit_event(
