@@ -3631,34 +3631,16 @@ def render_family_send() -> None:
                         "recorded_at": now_iso,
                     }
                     try:
-                        try:
-                            resp = (
-                                supabase.rpc(
-                                    "insert_family_message",
-                                    {
-                                        "p_resident_id": resident_id,
-                                        "p_audio_storage_path": audio_b64,
-                                        "p_audio_mime_type": audio_mime_type,
-                                        "p_audio_bytes": len(audio_bytes),
-                                        "p_recorded_at": now_iso,
-                                    },
-                                ).execute()
+                        # Write directly to messages to avoid environment-specific RPC drift.
+                        resp = (
+                            supabase.table("messages")
+                            .upsert(
+                                payload,
+                                on_conflict="resident_id,contact_user_id,direction",
                             )
-                        except Exception as rpc_exc:
-                            # If RPC is unavailable or fails in this environment,
-                            # fall back to direct upsert so Family->Resident writes still succeed.
-                            try:
-                                resp = (
-                                    supabase.table("messages")
-                                    .upsert(
-                                        payload,
-                                        on_conflict="resident_id,contact_user_id,direction",
-                                    )
-                                    .select("*")
-                                    .execute()
-                                )
-                            except Exception:
-                                raise rpc_exc
+                            .select("*")
+                            .execute()
+                        )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
                     else:
