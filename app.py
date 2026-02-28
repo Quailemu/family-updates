@@ -765,7 +765,7 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
         auth_uid = st.session_state.get("auth_uid")
         family_resp = (
             supabase.table("family_contacts")
-            .select("id, care_home_id")
+            .select("id, care_home_id, display_name")
             .eq("auth_user_id", auth_uid)
             .eq("active", True)
             .limit(1)
@@ -3295,12 +3295,6 @@ def render_family_login_hub() -> None:
                     st.session_state["refresh_token"] = auth.session.refresh_token
                     persist_auth_cookie(st.session_state.get("refresh_token"))
                     st.session_state["auth_email"] = normalized_email
-                    if normalized_email and "@" in normalized_email:
-                        st.session_state["family_display_name"] = (
-                            normalized_email.split("@", 1)[0].strip() or "Family member"
-                        )
-                    else:
-                        st.session_state["family_display_name"] = "Family member"
                     family_found, care_found, mapping_error, family_record, care_record = (
                         get_mapping_status()
                     )
@@ -3309,6 +3303,10 @@ def render_family_login_hub() -> None:
                             st.session_state["active_role"] = "family"
                             st.session_state["active_care_home_id"] = family_record.get(
                                 "care_home_id"
+                            )
+                            st.session_state["family_display_name"] = (
+                                (family_record.get("display_name") or "").strip()
+                                or "Family member"
                             )
                         residents = get_linked_residents()
                         st.session_state["linked_residents"] = residents
@@ -3354,6 +3352,11 @@ def render_family_login() -> None:
             if family_record:
                 st.session_state["active_role"] = "family"
                 st.session_state["active_care_home_id"] = family_record.get("care_home_id")
+                st.session_state["family_display_name"] = (
+                    (family_record.get("display_name") or "").strip()
+                    or st.session_state.get("family_display_name")
+                    or "Family member"
+                )
             set_route(get_home_route(VARIANT_FAMILY))
         elif care_found:
             st.error("Wrong app variant")
