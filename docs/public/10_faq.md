@@ -4,7 +4,7 @@
 
 ## What is voice-message.com for?
 
-It is intended for non-urgent, social voice messages between residents and their family members or friends. It is not intended for care updates, health information, or safeguarding concerns.
+It is intended for non-urgent, social voice messages between residents in care homes and their family members or friends. It is not intended for care updates, health information, or safeguarding concerns.
 
 ## Which app should I use?
 

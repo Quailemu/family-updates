@@ -24,7 +24,7 @@ The service uses only the data needed to provide non-urgent social voice message
 
 ## Why the data is used
 
-Data is used only to enable residents and their family or friends to exchange non-urgent social voice messages. The service is not used for care, health, or safeguarding communication.
+Data is used only to enable residents in care homes and their family or friends to exchange non-urgent social voice messages. The service is not used for care, health, or safeguarding communication.
 
 ## Message storage
 

@@ -6,7 +6,7 @@ Q: Is this a live messaging service?
 A: No. It is not live. Messages are played when staff are available.
 
 Q: What is this service for?  
-A: Non-urgent, social voice messages between residents and approved family members or friends.
+A: Non-urgent, social voice messages between residents in care homes and approved family members or friends.
 
 Q: Can I send urgent updates here?  
 A: No. For urgent, care, or safeguarding matters, contact the care home directly.
@@ -37,4 +37,3 @@ A: No. Replies are not guaranteed and depend on resident wellbeing and staff wor
 
 Q: Can I use this for complaints?  
 A: Use the care home's formal complaints process for care concerns.
-

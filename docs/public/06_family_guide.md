@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This guide explains how voice-message.com is used for simple, non-urgent social messages between residents and their family or friends. It sets expectations so everyone is clear about what the service does and does not do.
+This guide explains how voice-message.com is used for simple, non-urgent social messages between residents in care homes and their family or friends. It sets expectations so everyone is clear about what the service does and does not do.
 
 ## App version
 

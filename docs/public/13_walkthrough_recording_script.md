@@ -2,7 +2,7 @@
 
 voice-message.com. One message in. One message out.
 
-This service is for non-urgent social voice messages between residents and authorised family members.
+This service is for non-urgent social voice messages between residents in care homes and authorised family members.
 It is not live messaging.
 
 The model is simple and clear.

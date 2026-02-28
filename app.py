@@ -1026,7 +1026,7 @@ def render_how_it_works_family() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident.",
+        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident in a care home.",
         "One message kept at a time in each direction, i.e resident to approved family member or friend and approved family member or friend to resident. No threads.",
     ]
     for box in info_boxes:
@@ -1053,7 +1053,7 @@ def render_how_it_works_mobile() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident.",
+        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident in a care home.",
         "One message kept at a time in each direction, i.e resident to approved family member or friend and approved family member or friend to resident. No threads.",
     ]
     for box in info_boxes:
@@ -1085,7 +1085,7 @@ def render_how_it_works_office_overview() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident.",
+        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident in a care home.",
         "One message kept at a time in each direction, i.e resident to approved family member or friend and approved family member or friend to resident. No threads.",
         "Care Hub – Office provides full access and includes Care Hub – Mobile functionality.",
         "Office users may carry out Mobile tasks as part of supervision or care delivery.",
@@ -2689,7 +2689,7 @@ def render_home(active: str) -> None:
             <h1 class="hero-headline">
             One message in. One message out.
             </h1>
-            <p>Non-urgent voice messaging between residents and authorised family members.</p>
+            <p>Non-urgent voice messaging between residents in care homes and their authorised family members.</p>
             <p>Each authorised family member has a separate 1:1 channel with the resident. This is not a shared family thread.</p>
             <p>Within each channel, only two messages are kept: the latest in each direction.</p>
             <p>No archive, no message history, and no scrolling thread.</p>
@@ -4197,7 +4197,7 @@ def render_pr_homepage() -> None:
     st.markdown('<div class="pr-hero">', unsafe_allow_html=True)
     st.markdown("<h1>One message in. One message out.</h1>", unsafe_allow_html=True)
     st.markdown(
-        '<div class="pr-subheading">Non-urgent social voice messages in care settings.</div>',
+        '<div class="pr-subheading">Non-urgent social voice messages between residents in care homes and their family members or friends.</div>',
         unsafe_allow_html=True,
     )
     st.markdown('<div class="pr-calm">No threads. No pressure.</div>', unsafe_allow_html=True)
