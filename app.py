@@ -2481,13 +2481,13 @@ def inject_login_css() -> None:
     margin: 0 auto;
   }}
   .vm-login .stTextInput input {{
-    background: {TOKENS["primary"]} !important;
-    color: {TOKENS["cream"]} !important;
+    background: {TOKENS["tab_pale"]} !important;
+    color: {TOKENS["text"]} !important;
     border: 1px solid rgba(31,31,31,0.2) !important;
     border-radius: 10px !important;
   }}
   .vm-login .stTextInput input::placeholder {{
-    color: rgba(254,255,246,0.85) !important;
+    color: rgba(31,31,31,0.55) !important;
   }}
   .vm-login label {{
     color: {TOKENS["cream"]} !important;
