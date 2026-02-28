@@ -1013,7 +1013,7 @@ def render_how_it_works_family() -> None:
 <style>
   .family-how-box {
     width: 100%;
-    background: #eaf6fb;
+    background: #99FFFF;
     border: 1px solid #b7ddd7;
     border-radius: 8px;
     padding: 14px 16px;
@@ -1041,7 +1041,7 @@ def render_how_it_works_mobile() -> None:
 <style>
   .family-how-box {
     width: 100%;
-    background: #eaf6fb;
+    background: #99FFFF;
     border: 1px solid #b7ddd7;
     border-radius: 8px;
     padding: 14px 16px;
@@ -1074,7 +1074,7 @@ def render_how_it_works_office_overview() -> None:
 <style>
   .family-how-box {
     width: 100%;
-    background: #eaf6fb;
+    background: #99FFFF;
     border: 1px solid #b7ddd7;
     border-radius: 8px;
     padding: 14px 16px;
@@ -1132,7 +1132,7 @@ def render_family_terms() -> None:
 <style>
   .family-terms-box {
     width: 100%;
-    background: #eaf6fb;
+    background: #99FFFF;
     border: 1px solid #b7ddd7;
     border-radius: 8px;
     padding: 14px 16px;
@@ -1171,7 +1171,7 @@ def render_family_contact() -> None:
 <style>
   .family-contact-box {
     width: 100%;
-    background: #eaf6fb;
+    background: #99FFFF;
     border: 1px solid #b7ddd7;
     border-radius: 8px;
     padding: 14px 16px;
@@ -2006,7 +2006,7 @@ def render_front_page_descriptor() -> None:
 <style>
   .front-page-info-box {
     width: 100%;
-    background: #eaf6fb;
+    background: #99FFFF;
     border: 1px solid #b7ddd7;
     border-radius: 8px;
     padding: 14px 16px;
@@ -2481,7 +2481,7 @@ def inject_login_css() -> None:
     margin: 0 auto;
   }}
   .vm-login .stTextInput input {{
-    background: {TOKENS["tab_pale"]} !important;
+    background: #FFCCE6 !important;
     color: {TOKENS["text"]} !important;
     border: 1px solid rgba(31,31,31,0.2) !important;
     border-radius: 10px !important;
@@ -3234,7 +3234,7 @@ def render_family_login_hub() -> None:
 <style>
   .family-login-box {
     width: 100%;
-    background: #eaf6fb;
+    background: #99FFFF;
     border: 1px solid #b7ddd7;
     border-radius: 8px;
     padding: 14px 16px;
@@ -3861,7 +3861,7 @@ def render_document_boxes(doc_path: str, strip_first_heading: bool = True) -> No
 <style>
   .service-overview-box {
     width: 100%;
-    background: #eaf6fb;
+    background: #99FFFF;
     border: 1px solid #b7ddd7;
     border-radius: 8px;
     padding: 14px 16px;
@@ -4475,7 +4475,7 @@ def render_subscription_billing() -> None:
   }}
   .billing-box {{
     width: 100%;
-    background: #eaf6fb;
+    background: #99FFFF;
     border: 1px solid #b7ddd7;
     border-radius: 8px;
     padding: 14px 16px;
@@ -4553,7 +4553,7 @@ def render_care_login() -> None:
 <style>
   .care-login-box {
     width: 100%;
-    background: #eaf6fb;
+    background: #99FFFF;
     border: 1px solid #b7ddd7;
     border-radius: 8px;
     padding: 14px 16px;
