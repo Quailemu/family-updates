@@ -13,7 +13,7 @@ on conflict (care_home_id) do nothing;
 
 -- Resident
 insert into public.residents (id, care_home_id, preferred_display_name, care_home_reference)
-values ('<RESIDENT_ID>', '<CARE_HOME_ID>', 'Margaret', 'Room 25')
+values ('<RESIDENT_ID>', '<CARE_HOME_ID>', 'Margaret Smith', 'Room 25')
 on conflict (id) do nothing;
 
 -- Note:
