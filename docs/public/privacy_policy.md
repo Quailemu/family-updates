@@ -18,13 +18,13 @@ The service uses only the data needed to provide non-urgent social voice message
 
 - care home account details
 - resident identifiers defined by the care home (display name and internal reference)
-- family or friend contact details (email address and display name)
+- authorised contact details (email address and display name)
 - voice message recordings (latest only, with no archive)
 - limited security and operational logs needed to run the service safely (for example, sign-in events)
 
 ## Why the data is used
 
-Data is used only to enable residents in care homes and their family or friends to exchange non-urgent social voice messages. The service is not used for care, health, or safeguarding communication.
+Data is used only to enable residents in care homes and their authorised contacts to exchange non-urgent social voice messages. The service is not used for care, health, or safeguarding communication.
 
 ## Message storage
 

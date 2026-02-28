@@ -2,16 +2,16 @@
 
 voice-message.com. One message in. One message out.
 
-This service is for non-urgent social voice messages between residents in care homes and authorised family members.
+This service is for non-urgent social voice messages between residents in care homes and their authorised contacts (such as family members or close friends).
 It is not live messaging.
 
 The model is simple and clear.
-Each authorised family member has their own one-to-one channel with the resident.
+Each authorised contact has their own one-to-one channel with the resident.
 It is not a shared whole-family thread.
 
 Within each one-to-one channel, only two messages are stored at any one time:
-first, the latest message from that family member to the resident;
-second, the latest reply from the resident to that family member.
+first, the latest message from that authorised contact to the resident;
+second, the latest reply from the resident to that authorised contact.
 
 When a new message is recorded, it replaces the previous message in that same direction.
 There is no archive, no message history, and no scrolling thread.

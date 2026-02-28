@@ -4,12 +4,12 @@
 
 ## Purpose
 
-This guide explains how voice-message.com is used for simple, non-urgent social messages between residents in care homes and their family or friends. It sets expectations so everyone is clear about what the service does and does not do.
+This guide explains how voice-message.com is used for simple, non-urgent social messages between residents in care homes and their authorised contacts. It sets expectations so everyone is clear about what the service does and does not do.
 
 ## App version
 
-Family members and friends use the Family app only. The Family app does not include any care hub features.
-An authorised contact is a person approved by the care home to use the service — usually a family member or friend.
+Authorised contacts use the Family app only. The Family app does not include any care hub features.
+Family users are authorised contacts (such as family members or close friends) approved by the care home.
 
 ## How to use the service
 
@@ -34,7 +34,7 @@ The service is for non-urgent, social messages. It is not designed for care upda
 - The service is not monitored or responded to by staff as care communication.
 - The service is not intended for care, health, or safeguarding matters. Please contact the care home directly for those topics.
 - Access is managed by the care home, including who can send or receive messages.
-- Each family member or friend uses their own access. One person’s access is not shared with others.
+- Each authorised contact uses their own access. One person’s access is not shared with others.
 - This is a social, non-urgent service, not a care channel.
 
 ## Privacy and setting

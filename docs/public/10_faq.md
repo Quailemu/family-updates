@@ -4,11 +4,11 @@
 
 ## What is voice-message.com for?
 
-It is intended for non-urgent, social voice messages between residents in care homes and their family members or friends. It is not intended for care updates, health information, or safeguarding concerns.
+It is intended for non-urgent, social voice messages between residents in care homes and their authorised contacts. It is not intended for care updates, health information, or safeguarding concerns.
 
 ## Which app should I use?
 
-- Family members and friends use the Family app only.
+- Authorised contacts use the Family app only.
 - Carers use Care Hub – Mobile only.
 - Office staff use Care Hub – Office only.
 
@@ -64,7 +64,11 @@ Only if the care home has approved and linked your account to those residents.
 
 ## Can I share my login with another relative or friend?
 
-No. Each approved family member or friend should use their own access.
+No. Each authorised contact should use their own access.
+
+## Is this service only for family members?
+
+No. It is for authorised contacts approved by the care home. This may include family members, close friends, or other appropriate contacts. Access is managed by the care home.
 
 ## Can staff change who is allowed to message a resident?
 

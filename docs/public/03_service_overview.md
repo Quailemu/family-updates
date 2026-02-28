@@ -4,17 +4,17 @@
 
 ## Purpose
 
-voice-message.com is a simple tool for exchanging non-urgent, social voice messages between residents in care homes and their family or friends. It supports staying in touch and is not intended for care updates, health information, or safeguarding communication.
+voice-message.com is a simple tool for exchanging non-urgent, social voice messages between residents in care homes and their authorised contacts. It supports staying in touch and is not intended for care updates, health information, or safeguarding communication.
 
 ## Channel model (clear and simple)
 
-Each authorised family member has their own 1:1 channel with the resident.
+Each authorised contact (such as family members or close friends) has their own 1:1 channel with the resident.
 This is not a shared whole-family thread.
 
 Within each 1:1 channel, only two messages are kept at any one time:
 
-- the latest message from that family member to the resident
-- the latest reply from the resident to that family member
+- the latest message from that authorised contact to the resident
+- the latest reply from the resident to that authorised contact
 
 When a new message is recorded, it replaces the previous message in that direction.
 There is no archive, no message history, and no scrolling thread.
@@ -26,11 +26,11 @@ Staff play and record messages when available within normal care routines.
 
 Care Hub – Mobile is a restricted operational view for carers. Care Hub – Office provides full access and includes Care Hub – Mobile functionality.
 
-- Family app: used by family members and friends only.
+- Family app: used by authorised contacts only.
 - Care Hub – Mobile: used by carers on a shared lanyard device.
 - Care Hub – Office: includes Care Hub – Mobile tasks plus admin documents and compliance.
 
-Family members and friends use the Family app only.  
+Authorised contacts use the Family app only.  
 Carers use Care Hub – Mobile only.  
 Office staff use Care Hub – Office only.  
 Family and Care Hub are separate role-based experiences.
@@ -44,7 +44,7 @@ The care home operates the service in practice and is responsible for day-to-day
 - controlling access to the service
 - supervising how the service is used
 - managing devices used for recording and playback
-- managing resident and approved family member or friend contacts
+- managing resident and authorised contacts
 
 The care home is responsible for identifying residents, confirming consent or authority, and deciding who can send and receive messages.
 
@@ -52,9 +52,9 @@ The care home is responsible for identifying residents, confirming consent or au
 
 Residents use the service to receive and send social voice messages with support from the care home as needed. The service is not a channel for care or health updates.
 
-### Family and friends
+### Authorised contacts
 
-Family and friends use the service to send and receive social messages only. They should not rely on it for care information, health updates, or safeguarding concerns. Those matters should be directed to the care home using its usual channels.
+Authorised contacts use the service to send and receive social messages only. They should not rely on it for care information, health updates, or safeguarding concerns. Those matters should be directed to the care home using its usual channels.
 
 ### Service provider (voice-message.com)
 

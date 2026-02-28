@@ -1026,8 +1026,9 @@ def render_how_it_works_family() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident in a care home.",
-        "One message kept at a time in each direction, i.e resident to approved family member or friend and approved family member or friend to resident. No threads.",
+        "voice-message.com — for non-urgent social voice messages. One channel between each authorised contact (such as family members or close friends) and each resident in a care home.",
+        "One message kept at a time in each direction, i.e resident to authorised contact and authorised contact to resident. No threads.",
+        "Family users are authorised contacts (such as family members or close friends) approved by the care home.",
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
@@ -1053,8 +1054,9 @@ def render_how_it_works_mobile() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident in a care home.",
-        "One message kept at a time in each direction, i.e resident to approved family member or friend and approved family member or friend to resident. No threads.",
+        "voice-message.com — for non-urgent social voice messages. One channel between each authorised contact (such as family members or close friends) and each resident in a care home.",
+        "One message kept at a time in each direction, i.e resident to authorised contact and authorised contact to resident. No threads.",
+        "Authorised contacts may include family members or close friends, approved by the care home.",
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
@@ -1085,8 +1087,9 @@ def render_how_it_works_office_overview() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages. One channel between each family member and each resident in a care home.",
-        "One message kept at a time in each direction, i.e resident to approved family member or friend and approved family member or friend to resident. No threads.",
+        "voice-message.com — for non-urgent social voice messages. One channel between each authorised contact (such as family members or close friends) and each resident in a care home.",
+        "One message kept at a time in each direction, i.e resident to authorised contact and authorised contact to resident. No threads.",
+        "Authorised contacts may include family members or close friends, approved by the care home.",
         "Care Hub – Office provides full access and includes Care Hub – Mobile functionality.",
         "Office users may carry out Mobile tasks as part of supervision or care delivery.",
     ]
@@ -2020,14 +2023,14 @@ def render_front_page_descriptor() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="front-page-info-box">One message kept at a time in each direction (between each family member and each resident), with no threads.</div>',
+        '<div class="front-page-info-box">One message kept at a time in each direction (between each authorised contact and each resident), with no threads.</div>',
         unsafe_allow_html=True,
     )
 
 
 def render_how_it_works_general() -> None:
     st.markdown(
-        "Only one message is kept between each approved family member or friend and each resident, in each direction, with no threads.  \n"
+        "Only one message is kept between each authorised contact and each resident, in each direction, with no threads.  \n"
         "Each new message deletes the previous message.\n\n"
         "Messages are not private within the care home.  \n"
         "Care staff and office staff may read messages where required.  \n"
@@ -2689,8 +2692,8 @@ def render_home(active: str) -> None:
             <h1 class="hero-headline">
             One message in. One message out.
             </h1>
-            <p>Non-urgent voice messaging between residents in care homes and their authorised family members.</p>
-            <p>Each authorised family member has a separate 1:1 channel with the resident. This is not a shared family thread.</p>
+            <p>Non-urgent voice messaging between residents in care homes and their authorised contacts (such as family members or close friends).</p>
+            <p>Each authorised contact has a separate 1:1 channel with the resident. This is not a shared thread.</p>
             <p>Within each channel, only two messages are kept: the latest in each direction.</p>
             <p>No archive, no message history, and no scrolling thread.</p>
             <p>Not live messaging. Staff play and record messages when available within normal care routines.</p>
@@ -2704,11 +2707,11 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>1:1 channels</h3>
-              <div>Each authorised family member has a separate channel with the resident.</div>
+              <div>Each authorised contact has a separate channel with the resident.</div>
             </div>
             <div class="public-card pink">
               <h3>Two messages kept</h3>
-              <div>Only the latest family message and latest resident reply are stored in each channel.</div>
+              <div>Only the latest authorised contact message and latest resident reply are stored in each channel.</div>
             </div>
             <div class="public-card">
               <h3>Role-based access</h3>
@@ -2724,7 +2727,7 @@ def render_home(active: str) -> None:
         st.markdown(
             """
             <div class="public-steps">
-              <div class="public-step">1) An authorised family member records a short message for the resident.</div>
+              <div class="public-step">1) An authorised contact records a short message for the resident.</div>
               <div class="public-step">2) Staff play the message when available within normal routines.</div>
               <div class="public-step">3) A resident reply is recorded with staff support.</div>
               <div class="public-step">4) A new message replaces the previous message in that direction.</div>
@@ -3243,6 +3246,7 @@ def render_family_login_hub() -> None:
         unsafe_allow_html=True,
     )
     login_info_boxes = [
+        "Family users are authorised contacts (such as family members or close friends) approved by the care home.",
         "Send one social voice message to a resident. The care team manages playback and support.",
         "Only the latest message is kept.",
         "For urgent matters or safeguarding concerns, contact the care home directly.",
@@ -4197,7 +4201,7 @@ def render_pr_homepage() -> None:
     st.markdown('<div class="pr-hero">', unsafe_allow_html=True)
     st.markdown("<h1>One message in. One message out.</h1>", unsafe_allow_html=True)
     st.markdown(
-        '<div class="pr-subheading">Non-urgent social voice messages between residents in care homes and their family members or friends.</div>',
+        '<div class="pr-subheading">Non-urgent social voice messages between residents in care homes and their authorised contacts (such as family members or close friends).</div>',
         unsafe_allow_html=True,
     )
     st.markdown('<div class="pr-calm">No threads. No pressure.</div>', unsafe_allow_html=True)
@@ -4233,7 +4237,7 @@ This structure helps keep communication simple and manageable within care settin
     st.markdown('<div class="pr-content">', unsafe_allow_html=True)
     if active_tab == "family":
         st.markdown(
-            "Authorised contacts use the Family app to record short voice messages for residents. "
+            "Authorised contacts (such as family members or close friends) use the Family app to record short voice messages for residents. "
             "This is not a live service, and replies are not immediate. "
             "Only the most recent message and reply are kept. "
             "The service is for non-urgent social contact only. "

@@ -6,7 +6,7 @@ Q: Is this a live messaging service?
 A: No. It is not live. Messages are played when staff are available.
 
 Q: What is this service for?  
-A: Non-urgent, social voice messages between residents in care homes and approved family members or friends.
+A: Non-urgent, social voice messages between residents in care homes and authorised contacts.
 
 Q: Can I send urgent updates here?  
 A: No. For urgent, care, or safeguarding matters, contact the care home directly.
@@ -19,6 +19,9 @@ A: No. There is no archive or message timeline.
 
 Q: Can I share my login with another relative or friend?  
 A: No. Each approved contact should use their own access.
+
+Q: Is this service only for family members?  
+A: No. It is for authorised contacts approved by the care home. This may include family members, close friends, or other appropriate contacts. Access is managed by the care home.
 
 Q: How do I get access to a resident?  
 A: The care home decides approved contacts and manages access.
