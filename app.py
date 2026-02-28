@@ -3638,14 +3638,19 @@ def render_family_send() -> None:
                                 payload,
                                 on_conflict="resident_id,contact_user_id,direction",
                             )
-                            .select("*")
                             .execute()
                         )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
                     else:
                         message_id = (
-                            (resp.data[0].get("id") if isinstance(resp.data, list) and resp.data else None)
+                            (
+                                resp.data[0].get("id")
+                                if hasattr(resp, "data")
+                                and isinstance(resp.data, list)
+                                and resp.data
+                                else None
+                            )
                             if resp is not None
                             else None
                         )
@@ -4970,14 +4975,19 @@ def render_care_hub() -> None:
                                     payload,
                                     on_conflict="resident_id,contact_user_id,direction",
                                 )
-                                .select("*")
                                 .execute()
                             )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
                     else:
                         message_id = (
-                            (resp.data[0].get("id") if isinstance(resp.data, list) and resp.data else None)
+                            (
+                                resp.data[0].get("id")
+                                if hasattr(resp, "data")
+                                and isinstance(resp.data, list)
+                                and resp.data
+                                else None
+                            )
                             if resp is not None
                             else None
                         )
