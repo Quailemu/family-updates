@@ -6,6 +6,22 @@
 
 voice-message.com is a simple tool for exchanging non-urgent, social voice messages between residents and their family or friends. It supports staying in touch and is not intended for care updates, health information, or safeguarding communication.
 
+## Channel model (clear and simple)
+
+Each authorised family member has their own 1:1 channel with the resident.
+This is not a shared whole-family thread.
+
+Within each 1:1 channel, only two messages are kept at any one time:
+
+- the latest message from that family member to the resident
+- the latest reply from the resident to that family member
+
+When a new message is recorded, it replaces the previous message in that direction.
+There is no archive, no message history, and no scrolling thread.
+
+This is non-urgent and not live messaging.
+Staff play and record messages when available within normal care routines.
+
 ## App versions (three distinct experiences)
 
 Care Hub – Mobile is a restricted operational view for carers. Care Hub – Office provides full access and includes Care Hub – Mobile functionality.
@@ -17,6 +33,7 @@ Care Hub – Mobile is a restricted operational view for carers. Care Hub – Of
 Family members and friends use the Family app only.  
 Carers use Care Hub – Mobile only.  
 Office staff use Care Hub – Office only.  
+Family and Care Hub are separate role-based experiences.
 
 ## Roles
 

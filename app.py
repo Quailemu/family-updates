@@ -413,12 +413,27 @@ def invite_user(admin_client: object, email: str) -> tuple[bool, str | None, str
     normalized_email = email.strip().lower()
     if not normalized_email:
         return False, None, "Email is required."
+    redirect_to = (
+        os.getenv("FAMILY_INVITE_REDIRECT_URL", "").strip()
+        or os.getenv("PASSWORD_RESET_REDIRECT_URL", "").strip()
+    )
+    if not redirect_to:
+        return (
+            False,
+            None,
+            "Missing FAMILY_INVITE_REDIRECT_URL (or PASSWORD_RESET_REDIRECT_URL) for invite redirect.",
+        )
     try:
         try:
-            invite_result = admin_client.auth.admin.invite_user_by_email(normalized_email)
-        except TypeError:
             invite_result = admin_client.auth.admin.invite_user_by_email(
-                normalized_email, {}
+                normalized_email,
+                {"redirect_to": redirect_to},
+            )
+        except TypeError:
+            return (
+                False,
+                None,
+                "Supabase client does not support invite redirect options. Upgrade supabase-py.",
             )
     except Exception as exc:
         return False, None, str(exc)
@@ -677,6 +692,13 @@ def render_office_family_registration_form(
     if admin_error:
         st.error(admin_error)
         return
+    invite_redirect_to = (
+        os.getenv("FAMILY_INVITE_REDIRECT_URL", "").strip()
+        or os.getenv("PASSWORD_RESET_REDIRECT_URL", "").strip()
+    )
+    debug = os.getenv("APP_DEBUG", "").strip() in ("1", "true", "True", "yes", "YES")
+    if debug:
+        st.info(f"Invite redirect_to: {invite_redirect_to}")
     invited, auth_user_id, invite_error = invite_user(admin_client, normalized_email)
     if not invited or not auth_user_id:
         st.error(invite_error or "Invite failed.")
@@ -2667,8 +2689,11 @@ def render_home(active: str) -> None:
             <h1 class="hero-headline">
             One message in. One message out.
             </h1>
-            <p>Simple voice messages between families and residents in care homes.</p>
-            <p>A calm way to stay connected — without pressure or urgency.</p>
+            <p>Non-urgent voice messaging between residents and authorised family members.</p>
+            <p>Each authorised family member has a separate 1:1 channel with the resident. This is not a shared family thread.</p>
+            <p>Within each channel, only two messages are kept: the latest in each direction.</p>
+            <p>No archive, no message history, and no scrolling thread.</p>
+            <p>Not live messaging. Staff play and record messages when available within normal care routines.</p>
             """,
             unsafe_allow_html=True,
         )
@@ -2678,16 +2703,16 @@ def render_home(active: str) -> None:
         st.markdown(
             """
             <div class="public-card">
-              <h3>One message only</h3>
-              <div>Only the latest message and reply are kept.</div>
+              <h3>1:1 channels</h3>
+              <div>Each authorised family member has a separate channel with the resident.</div>
             </div>
             <div class="public-card pink">
-              <h3>Not live</h3>
-              <div>Messages are played and recorded when staff are available.</div>
+              <h3>Two messages kept</h3>
+              <div>Only the latest family message and latest resident reply are stored in each channel.</div>
             </div>
             <div class="public-card">
-              <h3>Not for care updates</h3>
-              <div>For non-urgent social contact only.</div>
+              <h3>Role-based access</h3>
+              <div>Family and Care Hub are separate role-based experiences.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -2699,10 +2724,10 @@ def render_home(active: str) -> None:
         st.markdown(
             """
             <div class="public-steps">
-              <div class="public-step">1) Family records a short voice message.</div>
-              <div class="public-step">2) Staff play the message when convenient.</div>
-              <div class="public-step">3) A reply is recorded with staff support.</div>
-              <div class="public-step">4) The new message replaces the previous one.</div>
+              <div class="public-step">1) An authorised family member records a short message for the resident.</div>
+              <div class="public-step">2) Staff play the message when available within normal routines.</div>
+              <div class="public-step">3) A resident reply is recorded with staff support.</div>
+              <div class="public-step">4) A new message replaces the previous message in that direction.</div>
             </div>
             """,
             unsafe_allow_html=True,

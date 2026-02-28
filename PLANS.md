@@ -13,15 +13,22 @@ Homepage buttons (only):
 - Care Hub – Office
 
 Short Explanation (homepage section):
-Only the most recent message from a family member and the most recent reply from the resident are kept.  
-When a new message is sent, the previous message from that sender is replaced.  
-This structure helps keep communication simple and manageable within care settings.
+Each authorised family member has a separate 1:1 channel with the resident.  
+It is not a shared whole-family thread.  
+Within each 1:1 channel, only two messages are kept at any one time:  
+1) the latest message from that family member to the resident  
+2) the latest reply from the resident to that family member  
+When a new message is recorded, it replaces the previous message in that direction.  
+No archive. No message history. No scrolling thread.
 
 Non-real-time reinforcement (homepage or family entry page, short):
-This is not a live service. Messages are played and replies are recorded when staff are available, to fit around care routines.
+This is non-urgent and not live messaging. Messages are played and replies are recorded when staff are available, to fit around care routines.
 
 No notifications / no timestamps statement (family-facing, short):
 The service does not send live notifications or show system timestamps.
+
+Role-based access (Family vs Care Hub):
+Family and Care Hub are separate, role-based experiences.
 
 ---
 
