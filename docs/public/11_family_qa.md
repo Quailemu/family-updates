@@ -21,7 +21,7 @@ Q: Can I share my login with another relative or friend?
 A: No. Each approved contact should use their own access.
 
 Q: Is this service only for family members?  
-A: No. It is for authorised contacts approved by the care home. This may include family members, close friends, or other appropriate contacts. Access is managed by the care home.
+A: No. 'Family' here means authorised contacts approved by the care home, such as family members or close friends. Access is managed by the care home.
 
 Q: How do I get access to a resident?  
 A: The care home decides approved contacts and manages access.

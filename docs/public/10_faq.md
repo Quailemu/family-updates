@@ -68,7 +68,7 @@ No. Each authorised contact should use their own access.
 
 ## Is this service only for family members?
 
-No. It is for authorised contacts approved by the care home. This may include family members, close friends, or other appropriate contacts. Access is managed by the care home.
+No. 'Family' here means authorised contacts approved by the care home, such as family members or close friends. Access is managed by the care home.
 
 ## Can staff change who is allowed to message a resident?
 
