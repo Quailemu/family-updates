@@ -1346,6 +1346,7 @@ def log_audit_event(
     role: str,
     care_home_id: str | None = None,
     target_id: str | None = None,
+    resident_id: str | None = None,
 ) -> None:
     supabase, error = get_supabase_client()
     if error:
@@ -1364,8 +1365,95 @@ def log_audit_event(
         "action": action,
         "target_id": target_id,
     }
+    if resident_id:
+        payload["resident_id"] = resident_id
     try:
         supabase.table("audit_log").insert(payload).execute()
+    except Exception:
+        return
+
+
+def audit_event_exists(
+    action: str,
+    *,
+    target_id: str | None = None,
+    resident_id: str | None = None,
+    care_home_id: str | None = None,
+) -> bool:
+    supabase, error = get_supabase_client()
+    if error:
+        return False
+    actor_user_id = st.session_state.get("auth_uid")
+    if not actor_user_id:
+        return False
+    access_token = st.session_state.get("access_token")
+    if not access_token:
+        return False
+    try:
+        supabase.postgrest.auth(access_token)
+        query = (
+            supabase.table("audit_log")
+            .select("id")
+            .eq("action", action)
+            .eq("actor_user_id", actor_user_id)
+            .limit(1)
+        )
+        if target_id:
+            query = query.eq("target_id", target_id)
+        if resident_id:
+            query = query.eq("resident_id", resident_id)
+        if care_home_id:
+            query = query.eq("care_home_id", care_home_id)
+        resp = query.execute()
+        return bool(resp.data)
+    except Exception:
+        return False
+
+
+def run_daily_audit_log_retention_purge() -> None:
+    if st.session_state.get("active_role") != "care_hub":
+        return
+    care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
+    if not care_home_id:
+        return
+    today = __import__("datetime").datetime.utcnow().date().isoformat()
+    session_key = f"audit_purge_checked_{care_home_id}"
+    if st.session_state.get(session_key) == today:
+        return
+    st.session_state[session_key] = today
+
+    supabase, error = get_supabase_client()
+    if error:
+        return
+    actor_user_id = st.session_state.get("auth_uid")
+    access_token = st.session_state.get("access_token")
+    if not actor_user_id or not access_token:
+        return
+    try:
+        supabase.postgrest.auth(access_token)
+        today_start_iso = f"{today}T00:00:00"
+        already_ran = (
+            supabase.table("audit_log")
+            .select("id")
+            .eq("action", "maintenance_purge")
+            .eq("care_home_id", care_home_id)
+            .gte("created_at", today_start_iso)
+            .limit(1)
+            .execute()
+        )
+        if already_ran.data:
+            return
+        cutoff_iso = (
+            __import__("datetime").datetime.utcnow()
+            - __import__("datetime").timedelta(days=90)
+        ).isoformat()
+        supabase.table("audit_log").delete().eq("care_home_id", care_home_id).eq(
+            "action", "message_played"
+        ).lt("created_at", cutoff_iso).execute()
+        supabase.table("audit_log").delete().eq("care_home_id", care_home_id).eq(
+            "action", "message_sent"
+        ).lt("created_at", cutoff_iso).execute()
+        log_audit_event("maintenance_purge", "care_hub", care_home_id)
     except Exception:
         return
 
@@ -4671,6 +4759,7 @@ def render_care_login() -> None:
 
 def render_care_hub() -> None:
     require_care_access()
+    run_daily_audit_log_retention_purge()
     st.markdown(
         f"""
 <style>
@@ -4796,6 +4885,29 @@ def render_care_hub() -> None:
         audio_bytes = decode_audio_payload(latest)
         if audio_bytes:
             st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
+            latest_message_id = str(latest.get("id") or "").strip()
+            if latest_message_id:
+                already_logged = audit_event_exists(
+                    "message_played",
+                    target_id=latest_message_id,
+                    resident_id=resident_id,
+                    care_home_id=resident["care_home_id"],
+                )
+                if already_logged:
+                    st.caption("Playback logged for this message.")
+                elif st.button(
+                    "Mark as played",
+                    key=f"care_mark_played_{resident_id}_{latest_message_id}",
+                ):
+                    log_audit_event(
+                        "message_played",
+                        "care_hub",
+                        resident["care_home_id"],
+                        latest_message_id,
+                        resident_id=resident_id,
+                    )
+                    st.success("Playback logged.")
+                    st.rerun()
         else:
             st.markdown(
                 '<div class="vm-muted-line">No new messages.</div>',
