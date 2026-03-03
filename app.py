@@ -1379,12 +1379,13 @@ def audit_event_exists(
     target_id: str | None = None,
     resident_id: str | None = None,
     care_home_id: str | None = None,
+    actor_user_id: str | None = None,
 ) -> bool:
     supabase, error = get_supabase_client()
     if error:
         return False
-    actor_user_id = st.session_state.get("auth_uid")
-    if not actor_user_id:
+    effective_actor_user_id = actor_user_id or st.session_state.get("auth_uid")
+    if not effective_actor_user_id:
         return False
     access_token = st.session_state.get("access_token")
     if not access_token:
@@ -1395,7 +1396,7 @@ def audit_event_exists(
             supabase.table("audit_log")
             .select("id")
             .eq("action", action)
-            .eq("actor_user_id", actor_user_id)
+            .eq("actor_user_id", effective_actor_user_id)
             .limit(1)
         )
         if target_id:
@@ -3277,6 +3278,41 @@ def get_care_hub_label() -> str:
     return "Care Hub"
 
 
+def get_channel_label_and_icon(channel_role: str) -> tuple[str, str]:
+    role = (channel_role or "").strip().lower()
+    if role == "family":
+        return "Family", "👥"
+    if role == "care_hub":
+        return "Care Hub", "🏥"
+    if role == "resident":
+        return "Resident", "🧓"
+    return "System", "⚙️"
+
+
+def render_message_direction_header(
+    from_channel_role: str,
+    to_channel_role: str,
+    recorded_by: str | None = None,
+) -> None:
+    from_label, from_icon = get_channel_label_and_icon(from_channel_role)
+    to_label, to_icon = get_channel_label_and_icon(to_channel_role)
+    st.markdown(
+        f'<div class="vm-section-title">{from_icon} {from_label} &rarr; {to_icon} {to_label}</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        (
+            '<div class="vm-direction-chips">'
+            f'<span class="vm-direction-chip">From: {from_icon} {from_label}</span>'
+            f'<span class="vm-direction-chip">To: {to_icon} {to_label}</span>'
+            "</div>"
+        ),
+        unsafe_allow_html=True,
+    )
+    if recorded_by:
+        st.caption(f"Recorded by: {recorded_by}")
+
+
 def render_family_login_hub() -> None:
     inject_login_css()
     st.markdown(
@@ -3507,6 +3543,20 @@ def render_family_send() -> None:
     color: rgba(31,31,31,0.6);
     font-size: 0.9rem;
   }}
+  .vm-direction-chips {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 2px 0 8px;
+  }}
+  .vm-direction-chip {{
+    border: 1px solid rgba(31,31,31,0.16);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    background: rgba(255,255,255,0.6);
+  }}
 </style>
 """,
         unsafe_allow_html=True,
@@ -3591,7 +3641,7 @@ def render_family_send() -> None:
         if room_label:
             st.markdown(f"*{room_label}*")
 
-        st.markdown('<div class="vm-section-title">Received</div>', unsafe_allow_html=True)
+        render_message_direction_header("resident", "family")
         latest = fetch_latest_message(
             resident_id,
             "from_resident",
@@ -3607,7 +3657,7 @@ def render_family_send() -> None:
                 unsafe_allow_html=True,
             )
 
-        st.markdown('<div class="vm-section-title">Send</div>', unsafe_allow_html=True)
+        render_message_direction_header("family", "resident")
         latest_sent = fetch_latest_message(
             resident_id,
             "to_resident",
@@ -3622,14 +3672,13 @@ def render_family_send() -> None:
             )
         latest_sent_audio = decode_audio_payload(latest_sent)
         if latest_sent and not state.get("recording_bytes"):
-            st.caption("Latest sent message:")
             if latest_sent_audio:
                 st.audio(
                     latest_sent_audio,
                     format=latest_sent.get("audio_mime_type") or "audio/wav",
                 )
             else:
-                st.success("Latest sent message is saved.")
+                st.success("Latest Family → Resident message is saved.")
             latest_sent_at = latest_sent.get("recorded_at")
             if latest_sent_at:
                 st.caption(f"Sent at: {latest_sent_at}")
@@ -4790,6 +4839,20 @@ def render_care_hub() -> None:
     color: rgba(31,31,31,0.6);
     font-size: 0.9rem;
   }}
+  .vm-direction-chips {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 2px 0 8px;
+  }}
+  .vm-direction-chip {{
+    border: 1px solid rgba(31,31,31,0.16);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    background: rgba(255,255,255,0.6);
+  }}
 </style>
 """,
         unsafe_allow_html=True,
@@ -4880,41 +4943,68 @@ def render_care_hub() -> None:
         if room_label:
             st.markdown(f"*{room_label}*")
 
-        st.markdown('<div class="vm-section-title">Received</div>', unsafe_allow_html=True)
+        render_message_direction_header("family", "resident")
         latest = fetch_latest_message(resident_id, "to_resident", access_token)
         audio_bytes = decode_audio_payload(latest)
         if audio_bytes:
             st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
             latest_message_id = str(latest.get("id") or "").strip()
-            if latest_message_id:
-                already_logged = audit_event_exists(
-                    "message_played",
-                    target_id=latest_message_id,
-                    resident_id=resident_id,
-                    care_home_id=resident["care_home_id"],
+            if get_app_variant() == VARIANT_MOBILE:
+                played_state_key = (
+                    f"care_played_logged_{resident_id}_{latest_message_id}"
                 )
-                if already_logged:
-                    st.caption("Playback logged for this message.")
-                elif st.button(
-                    "Mark as played",
-                    key=f"care_mark_played_{resident_id}_{latest_message_id}",
-                ):
-                    log_audit_event(
+                played_confirm_key = (
+                    f"care_played_confirm_{resident_id}_{latest_message_id}"
+                )
+                already_logged = bool(
+                    latest_message_id and st.session_state.get(played_state_key, False)
+                )
+                if latest_message_id and not already_logged:
+                    already_logged = audit_event_exists(
                         "message_played",
-                        "care_hub",
-                        resident["care_home_id"],
-                        latest_message_id,
+                        target_id=latest_message_id,
                         resident_id=resident_id,
+                        care_home_id=resident["care_home_id"],
+                        actor_user_id=st.session_state.get("auth_uid"),
                     )
-                    st.success("Playback logged.")
-                    st.rerun()
+                    if already_logged:
+                        st.session_state[played_state_key] = True
+                status_line = (
+                    "Playback status: ✅ Played logged"
+                    if already_logged
+                    else "Playback status: Not yet marked as played"
+                )
+                st.caption(status_line)
+                if already_logged:
+                    pass
+                else:
+                    played_confirmed = st.checkbox(
+                        "I have played this message.",
+                        value=bool(st.session_state.get(played_confirm_key, False)),
+                        key=played_confirm_key,
+                    )
+                    if st.button(
+                        "Mark as played",
+                        key=f"care_mark_played_{resident_id}_{latest_message_id}",
+                        disabled=(not played_confirmed) or (not latest_message_id),
+                    ):
+                        log_audit_event(
+                            "message_played",
+                            "care_hub",
+                            resident["care_home_id"],
+                            latest_message_id,
+                            resident_id=resident_id,
+                        )
+                        st.session_state[played_state_key] = True
+                        st.session_state[played_confirm_key] = False
+                        st.rerun()
         else:
             st.markdown(
                 '<div class="vm-muted-line">No new messages.</div>',
                 unsafe_allow_html=True,
             )
 
-        st.markdown('<div class="vm-section-title">Send</div>', unsafe_allow_html=True)
+        render_message_direction_header("resident", "family")
         contacts = contacts_by_resident.get(resident_id, [])
         if contacts:
             contact_labels = [
@@ -4961,14 +5051,13 @@ def render_care_hub() -> None:
             )
         latest_sent_audio = decode_audio_payload(latest_sent)
         if latest_sent and not state.get("recording_bytes"):
-            st.caption("Latest sent message:")
             if latest_sent_audio:
                 st.audio(
                     latest_sent_audio,
                     format=latest_sent.get("audio_mime_type") or "audio/wav",
                 )
             else:
-                st.success("Latest sent message is saved.")
+                st.success("Latest Resident → Family message is saved.")
             latest_sent_at = latest_sent.get("recorded_at")
             if latest_sent_at:
                 st.caption(f"Sent at: {latest_sent_at}")
