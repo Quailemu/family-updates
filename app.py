@@ -37,7 +37,7 @@ CARE_HUB_SESSION_TIMEOUT_SECONDS = int(
     os.getenv("CARE_HUB_SESSION_TIMEOUT_SECONDS", str(60 * 30))
 )
 APP_DEBUG = os.getenv("APP_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
-APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "").strip().lower() in {
+APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
     "1",
     "true",
     "yes",
@@ -1608,6 +1608,34 @@ def fetch_care_home_residents(access_token: str) -> list[dict]:
         return residents
     except Exception:
         return []
+
+
+def fetch_active_care_home_name(access_token: str | None) -> str:
+    care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
+    if not care_home_id or not access_token:
+        return ""
+    cache_key = f"care_home_name_{care_home_id}"
+    cached_name = st.session_state.get(cache_key)
+    if isinstance(cached_name, str) and cached_name.strip():
+        return cached_name.strip()
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return ""
+    try:
+        resp = (
+            supabase.table("care_homes")
+            .select("name")
+            .eq("id", care_home_id)
+            .eq("active", True)
+            .limit(1)
+            .execute()
+        )
+        name = ((resp.data or [{}])[0].get("name") or "").strip()
+        if name:
+            st.session_state[cache_key] = name
+        return name
+    except Exception:
+        return ""
 
 
 def fetch_family_contacts_for_resident(
@@ -3585,6 +3613,7 @@ def render_family_send() -> None:
     )
 
     access_token = st.session_state.get("access_token")
+    care_home_name = fetch_active_care_home_name(access_token)
     residents = fetch_family_residents(
         st.session_state.get("auth_uid", ""), access_token
     )
@@ -3653,6 +3682,8 @@ def render_family_send() -> None:
 
         st.markdown('<div class="vm-resident-card">', unsafe_allow_html=True)
         st.markdown(f"**{full_name}**")
+        if care_home_name:
+            st.markdown(f"*Care home: {care_home_name}*")
         if room_label:
             st.markdown(f"*{room_label}*")
 
@@ -4877,6 +4908,9 @@ def render_care_hub() -> None:
     # Action row already rendered at the top of the page.
 
     access_token = st.session_state.get("access_token")
+    care_home_name = fetch_active_care_home_name(access_token)
+    if care_home_name:
+        st.caption(f"Care home: {care_home_name}")
     residents = fetch_care_home_residents(access_token)
     contacts_by_resident = {
         resident["id"]: fetch_family_contacts_for_resident(resident["id"], access_token)
