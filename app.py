@@ -5169,20 +5169,6 @@ def render_care_hub() -> None:
                     try:
                         try:
                             resp = (
-                                supabase.table("messages")
-                                .upsert(
-                                    payload,
-                                    on_conflict="resident_id,contact_user_id,direction",
-                                )
-                                .execute()
-                            )
-                        except Exception as upsert_exc:
-                            # Some environments enforce stricter RLS on direct writes.
-                            # Fall back to the DB helper function when direct upsert is denied.
-                            upsert_msg = str(upsert_exc)
-                            if "42501" not in upsert_msg and "row-level security" not in upsert_msg.lower():
-                                raise
-                            resp = (
                                 supabase.rpc(
                                     "insert_care_hub_message",
                                     {
@@ -5195,7 +5181,32 @@ def render_care_hub() -> None:
                                         "p_audio_bytes": len(audio_bytes),
                                         "p_recorded_at": now_iso,
                                     },
-                                ).execute()
+                                )
+                                .execute()
+                            )
+                        except Exception as rpc_exc:
+                            # Prefer DB helper function to avoid client-side RLS variance.
+                            # Only fall back to direct upsert when RPC is unavailable.
+                            rpc_msg = str(rpc_exc)
+                            rpc_msg_l = rpc_msg.lower()
+                            rpc_missing = (
+                                "insert_care_hub_message" in rpc_msg
+                                and (
+                                    "pgrst202" in rpc_msg_l
+                                    or "not found" in rpc_msg_l
+                                    or "does not exist" in rpc_msg_l
+                                    or "could not find the function" in rpc_msg_l
+                                )
+                            )
+                            if not rpc_missing:
+                                raise
+                            resp = (
+                                supabase.table("messages")
+                                .upsert(
+                                    payload,
+                                    on_conflict="resident_id,contact_user_id,direction",
+                                )
+                                .execute()
                             )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
