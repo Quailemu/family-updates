@@ -1519,6 +1519,25 @@ def trigger_live_message_refresh(key: str, disabled: bool) -> None:
     st_autorefresh(interval=7000, key=key)
 
 
+def reset_outbox_state_on_new_recording(
+    state: dict | None,
+    ack_widget_key: str | None = None,
+    clear_care_last_sent_for_resident: str | None = None,
+) -> None:
+    if isinstance(state, dict):
+        state["preview_confirmed"] = False
+        state["last_message"] = None
+    if ack_widget_key:
+        st.session_state[ack_widget_key] = False
+    if clear_care_last_sent_for_resident:
+        last_sent = st.session_state.get("care_last_sent")
+        if (
+            isinstance(last_sent, dict)
+            and last_sent.get("resident_id") == clear_care_last_sent_for_resident
+        ):
+            st.session_state.pop("care_last_sent", None)
+
+
 def get_linked_residents() -> list[dict]:
     return []
 
@@ -3657,7 +3676,12 @@ def render_family_send() -> None:
             st.session_state["family_active_rec_manual"] = False
             send_state.setdefault(
                 only_id,
-                {"recording_bytes": None, "preview_confirmed": False, "last_message": None},
+                {
+                    "recording_bytes": None,
+                    "preview_confirmed": False,
+                    "last_message": None,
+                    "recording_fingerprint": None,
+                },
             )
     else:
         if manual_active and active_rec_id and active_rec_id not in resident_ids:
@@ -3675,6 +3699,7 @@ def render_family_send() -> None:
                 "recording_mime_type": "audio/wav",
                 "preview_confirmed": False,
                 "last_message": None,
+                "recording_fingerprint": None,
             },
         )
         full_name = f"{resident['preferred_name']} {resident['surname']}"
@@ -3749,8 +3774,11 @@ def render_family_send() -> None:
             ):
                 state["recording_bytes"] = None
                 state["recording_mime_type"] = "audio/wav"
-                state["preview_confirmed"] = False
-                state["last_message"] = None
+                state["recording_fingerprint"] = None
+                reset_outbox_state_on_new_recording(
+                    state,
+                    ack_widget_key=f"family_listened_{resident_id}",
+                )
                 st.session_state.pop(f"family_upload_{resident_id}", None)
                 st.session_state.pop(f"family_audio_input_{resident_id}", None)
                 st.rerun()
@@ -3765,13 +3793,20 @@ def render_family_send() -> None:
             )
             if recorded_from_native is not None:
                 native_bytes = recorded_from_native.getvalue()
-                if native_bytes and native_bytes != state.get("recording_bytes"):
+                if native_bytes:
+                    native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
+                else:
+                    native_fp = None
+                if native_bytes and native_fp != state.get("recording_fingerprint"):
+                    reset_outbox_state_on_new_recording(
+                        state,
+                        ack_widget_key=f"family_listened_{resident_id}",
+                    )
                     state["recording_bytes"] = native_bytes
+                    state["recording_fingerprint"] = native_fp
                     state["recording_mime_type"] = (
                         getattr(recorded_from_native, "type", None) or "audio/wav"
                     )
-                    state["preview_confirmed"] = False
-                    state["last_message"] = None
         else:
             st.warning(
                 "Recording is unavailable in this browser. Please allow microphone access."
@@ -4962,6 +4997,7 @@ def render_care_hub() -> None:
                     "selected_contact_id": None,
                     "selected_contact_user_id": None,
                     "last_message": None,
+                    "recording_fingerprint": None,
                 },
             )
     else:
@@ -4982,6 +5018,7 @@ def render_care_hub() -> None:
                 "selected_contact_id": None,
                 "selected_contact_user_id": None,
                 "last_message": None,
+                "recording_fingerprint": None,
             },
         )
         full_name = f"{resident['preferred_name']} {resident['surname']}"
@@ -5073,8 +5110,12 @@ def render_care_hub() -> None:
                 state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
                 state["recording_bytes"] = None
                 state["recording_mime_type"] = "audio/wav"
-                state["preview_confirmed"] = False
-                state["last_message"] = None
+                state["recording_fingerprint"] = None
+                reset_outbox_state_on_new_recording(
+                    state,
+                    ack_widget_key=f"care_listened_{resident_id}",
+                    clear_care_last_sent_for_resident=resident_id,
+                )
         else:
             st.markdown(
                 '<div class="vm-muted-line">No linked family contacts.</div>',
@@ -5118,13 +5159,21 @@ def render_care_hub() -> None:
             )
             if recorded_from_native is not None:
                 native_bytes = recorded_from_native.getvalue()
-                if native_bytes and native_bytes != state.get("recording_bytes"):
+                if native_bytes:
+                    native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
+                else:
+                    native_fp = None
+                if native_bytes and native_fp != state.get("recording_fingerprint"):
+                    reset_outbox_state_on_new_recording(
+                        state,
+                        ack_widget_key=f"care_listened_{resident_id}",
+                        clear_care_last_sent_for_resident=resident_id,
+                    )
                     state["recording_bytes"] = native_bytes
+                    state["recording_fingerprint"] = native_fp
                     state["recording_mime_type"] = (
                         getattr(recorded_from_native, "type", None) or "audio/wav"
                     )
-                    state["preview_confirmed"] = False
-                    state["last_message"] = None
         else:
             st.warning("Native microphone recording is unavailable in this environment.")
 
