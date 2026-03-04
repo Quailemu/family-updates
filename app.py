@@ -1667,7 +1667,22 @@ def fetch_latest_message(
         if contact_user_id:
             query = query.eq("contact_user_id", contact_user_id)
         resp = query.execute()
-        return resp.data[0] if resp.data else None
+        latest = resp.data[0] if resp.data else None
+        if APP_DEBUG and direction == "from_resident":
+            if latest:
+                print(
+                    "Loading Resident→Family message:",
+                    latest.get("id"),
+                    latest.get("recorded_at"),
+                    latest.get("contact_user_id"),
+                )
+            else:
+                print(
+                    "Loading Resident→Family message: none",
+                    resident_id,
+                    contact_user_id,
+                )
+        return latest
     except Exception:
         return None
 
@@ -5124,6 +5139,7 @@ def render_care_hub() -> None:
             state.get("recording_bytes")
             and state.get("preview_confirmed")
             and state.get("selected_contact_id")
+            and state.get("selected_contact_user_id")
         )
         if st.button(
             f"Send for {full_name}",
@@ -5131,7 +5147,7 @@ def render_care_hub() -> None:
             disabled=not can_send,
         ):
             if not can_send:
-                st.info("Please select a recipient and record before sending.")
+                st.info("Please select a linked recipient and record before sending.")
             else:
                 supabase, error = get_authed_supabase(access_token)
                 if error:
@@ -5151,44 +5167,14 @@ def render_care_hub() -> None:
                         "recorded_at": now_iso,
                     }
                     try:
-                        try:
-                            resp = (
-                                supabase.rpc(
-                                    "insert_care_hub_message",
-                                    {
-                                        "p_resident_id": resident_id,
-                                        "p_contact_user_id": state.get(
-                                            "selected_contact_user_id"
-                                        ),
-                                        "p_audio_storage_path": audio_b64,
-                                        "p_audio_mime_type": audio_mime_type,
-                                        "p_audio_bytes": len(audio_bytes),
-                                        "p_recorded_at": now_iso,
-                                    },
-                                ).execute()
+                        resp = (
+                            supabase.table("messages")
+                            .upsert(
+                                payload,
+                                on_conflict="resident_id,contact_user_id,direction",
                             )
-                        except Exception as rpc_exc:
-                            rpc_msg = str(rpc_exc)
-                            rpc_msg_l = rpc_msg.lower()
-                            rpc_missing = (
-                                "insert_care_hub_message" in rpc_msg
-                                and (
-                                    "pgrst202" in rpc_msg_l
-                                    or "not found" in rpc_msg_l
-                                    or "does not exist" in rpc_msg_l
-                                    or "could not find the function" in rpc_msg_l
-                                )
-                            )
-                            if not rpc_missing:
-                                raise
-                            resp = (
-                                supabase.table("messages")
-                                .upsert(
-                                    payload,
-                                    on_conflict="resident_id,contact_user_id,direction",
-                                )
-                                .execute()
-                            )
+                            .execute()
+                        )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
                     else:
@@ -5209,6 +5195,13 @@ def render_care_hub() -> None:
                             resident["care_home_id"],
                             message_id,
                         )
+                        if APP_DEBUG:
+                            print(
+                                "Saving Resident→Family message:",
+                                message_id,
+                                now_iso,
+                                state.get("selected_contact_user_id"),
+                            )
                         state["recording_bytes"] = None
                         state["recording_mime_type"] = "audio/wav"
                         state["preview_confirmed"] = False
