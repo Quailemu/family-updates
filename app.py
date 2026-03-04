@@ -5167,14 +5167,36 @@ def render_care_hub() -> None:
                         "recorded_at": now_iso,
                     }
                     try:
-                        resp = (
-                            supabase.table("messages")
-                            .upsert(
-                                payload,
-                                on_conflict="resident_id,contact_user_id,direction",
+                        try:
+                            resp = (
+                                supabase.table("messages")
+                                .upsert(
+                                    payload,
+                                    on_conflict="resident_id,contact_user_id,direction",
+                                )
+                                .execute()
                             )
-                            .execute()
-                        )
+                        except Exception as upsert_exc:
+                            # Some environments enforce stricter RLS on direct writes.
+                            # Fall back to the DB helper function when direct upsert is denied.
+                            upsert_msg = str(upsert_exc)
+                            if "42501" not in upsert_msg and "row-level security" not in upsert_msg.lower():
+                                raise
+                            resp = (
+                                supabase.rpc(
+                                    "insert_care_hub_message",
+                                    {
+                                        "p_resident_id": resident_id,
+                                        "p_contact_user_id": state.get(
+                                            "selected_contact_user_id"
+                                        ),
+                                        "p_audio_storage_path": audio_b64,
+                                        "p_audio_mime_type": audio_mime_type,
+                                        "p_audio_bytes": len(audio_bytes),
+                                        "p_recorded_at": now_iso,
+                                    },
+                                ).execute()
+                            )
                     except Exception as exc:  # pragma: no cover - Supabase runtime error
                         st.error(str(exc))
                     else:
