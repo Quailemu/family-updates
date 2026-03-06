@@ -5590,7 +5590,6 @@ def render_care_hub() -> None:
                             state["office_recording_mime_type"] = "audio/wav"
                             state["office_preview_confirmed"] = False
                             state["office_recording_fingerprint"] = None
-                            st.session_state[f"care_office_listened_{resident_id}"] = False
                             st.success("Care hub update sent.")
 
 
