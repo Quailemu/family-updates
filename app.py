@@ -5059,6 +5059,7 @@ def render_care_hub() -> None:
                     "selected_contact_user_id": None,
                     "last_message": None,
                     "recording_fingerprint": None,
+                    "recording_input_nonce": 0,
                     "office_recording_bytes": None,
                     "office_recording_mime_type": "audio/wav",
                     "office_preview_confirmed": False,
@@ -5084,6 +5085,7 @@ def render_care_hub() -> None:
                 "selected_contact_user_id": None,
                 "last_message": None,
                 "recording_fingerprint": None,
+                "recording_input_nonce": 0,
                 "office_recording_bytes": None,
                 "office_recording_mime_type": "audio/wav",
                 "office_preview_confirmed": False,
@@ -5250,7 +5252,7 @@ def render_care_hub() -> None:
             if hasattr(st, "audio_input"):
                 recorded_from_native = st.audio_input(
                     f"Record voice message from {full_name} to {selected_contact_name}",
-                    key=f"care_audio_input_{resident_id}",
+                    key=f"care_audio_input_{resident_id}_{state.get('recording_input_nonce', 0)}",
                 )
                 if recorded_from_native is not None:
                     native_bytes = recorded_from_native.getvalue()
@@ -5417,7 +5419,9 @@ def render_care_hub() -> None:
                                 "contact_id": state.get("selected_contact_id"),
                                 "message": "Message sent.",
                             }
-                            st.session_state.pop(f"care_audio_input_{resident_id}", None)
+                            state["recording_input_nonce"] = (
+                                int(state.get("recording_input_nonce", 0)) + 1
+                            )
                             st.rerun()
 
         if get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE}:
