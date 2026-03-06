@@ -5399,12 +5399,7 @@ def render_care_hub() -> None:
                         }
 
         if get_app_variant() == VARIANT_OFFICE:
-            render_message_direction_header(
-                "care_hub",
-                "family",
-                show_chips=False,
-                use_from_to_heading=True,
-            )
+            st.markdown("**Care Hub Update (Office) → Family**")
             latest_office_update = fetch_latest_message(
                 resident_id,
                 "office_to_family",
