@@ -5245,177 +5245,178 @@ def render_care_hub() -> None:
             latest_sent_at = latest_sent.get("recorded_at")
             if latest_sent_at:
                 st.caption(f"Sent at: {latest_sent_at}")
-
-        if hasattr(st, "audio_input"):
-            recorded_from_native = st.audio_input(
-                f"Record voice message from {full_name} to {selected_contact_name}",
-                key=f"care_audio_input_{resident_id}",
-            )
-            if recorded_from_native is not None:
-                native_bytes = recorded_from_native.getvalue()
-                if native_bytes:
-                    native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
-                else:
-                    native_fp = None
-                if native_bytes and native_fp != state.get("recording_fingerprint"):
-                    reset_outbox_state_on_new_recording(
-                        state,
-                        ack_widget_key=f"care_listened_{resident_id}",
-                        clear_care_last_sent_for_resident=resident_id,
-                    )
-                    state["recording_bytes"] = native_bytes
-                    state["recording_fingerprint"] = native_fp
-                    state["recording_mime_type"] = (
-                        getattr(recorded_from_native, "type", None) or "audio/wav"
-                    )
-        else:
-            st.warning("Native microphone recording is unavailable in this environment.")
-
-        st.caption(
-            "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
-        )
-
-        if state.get("recording_bytes"):
-            st.caption("Captured message preview:")
-            st.audio(
-                state["recording_bytes"],
-                format=state.get("recording_mime_type") or "audio/wav",
-            )
-            state["preview_confirmed"] = st.checkbox(
-                "I have listened to this message.",
-                value=state.get("preview_confirmed", False),
-                key=f"care_listened_{resident_id}",
-            )
-        else:
-            state["preview_confirmed"] = False
-
-        sent_now = False
-        room_display = f"Room {resident.get('room')}" if resident.get("room") else "Room not set"
-        confirmation_line = (
-            "Sending on behalf of:<br/>"
-            f"{full_name} — {room_display} \u2192 {selected_contact_display}"
-        )
-        st.markdown(
-            f'<div class="vm-muted-line">{confirmation_line}</div>',
-            unsafe_allow_html=True,
-        )
-        last_sent = st.session_state.get("care_last_sent")
-        if sent_now:
-            st.success("Message sent.")
-        elif last_sent and last_sent.get("resident_id") == resident_id:
-            st.success(last_sent.get("message", "Message sent."))
-
-        can_send = bool(
-            state.get("recording_bytes")
-            and state.get("preview_confirmed")
-            and state.get("selected_contact_id")
-            and state.get("selected_contact_user_id")
-        )
-        if st.button(
-            f"Send for {full_name}",
-            key=f"care_send_{resident_id}",
-            disabled=not can_send,
-        ):
-            if not can_send:
-                st.info("Please select a linked recipient and record before sending.")
-            else:
-                supabase, error = get_authed_supabase(access_token)
-                if error:
-                    st.error(error)
-                else:
-                    audio_bytes = state.get("recording_bytes") or b""
-                    audio_mime_type = state.get("recording_mime_type") or "audio/wav"
-                    audio_b64 = base64.b64encode(audio_bytes).decode("ascii")
-                    now_iso = __import__("datetime").datetime.utcnow().isoformat()
-                    payload = {
-                        "resident_id": resident_id,
-                        "contact_user_id": state.get("selected_contact_user_id"),
-                        "family_id": resident.get("family_id") or resident_id,
-                        "channel": "resident_family",
-                        "direction": "from_resident",
-                        "audio_storage_path": audio_b64,
-                        "audio_mime_type": audio_mime_type,
-                        "audio_bytes": len(audio_bytes),
-                        "recorded_at": now_iso,
-                    }
-                    try:
-                        try:
-                            resp = (
-                                supabase.rpc(
-                                    "insert_care_hub_message",
-                                    {
-                                        "p_resident_id": resident_id,
-                                        "p_contact_user_id": state.get(
-                                            "selected_contact_user_id"
-                                        ),
-                                        "p_audio_storage_path": audio_b64,
-                                        "p_audio_mime_type": audio_mime_type,
-                                        "p_audio_bytes": len(audio_bytes),
-                                        "p_recorded_at": now_iso,
-                                    },
-                                )
-                                .execute()
-                            )
-                        except Exception as rpc_exc:
-                            # Prefer DB helper function to avoid client-side RLS variance.
-                            # Only fall back to direct upsert when RPC is unavailable.
-                            rpc_msg = str(rpc_exc)
-                            rpc_msg_l = rpc_msg.lower()
-                            rpc_missing = (
-                                "insert_care_hub_message" in rpc_msg
-                                and (
-                                    "pgrst202" in rpc_msg_l
-                                    or "not found" in rpc_msg_l
-                                    or "does not exist" in rpc_msg_l
-                                    or "could not find the function" in rpc_msg_l
-                                )
-                            )
-                            if not rpc_missing:
-                                raise
-                            resp = (
-                                supabase.table("messages")
-                                .upsert(
-                                    payload,
-                                    on_conflict="resident_id,contact_user_id,direction,channel",
-                                )
-                                .execute()
-                            )
-                    except Exception as exc:  # pragma: no cover - Supabase runtime error
-                        st.error(str(exc))
+        is_mobile_variant = get_app_variant() == VARIANT_MOBILE
+        if is_mobile_variant:
+            if hasattr(st, "audio_input"):
+                recorded_from_native = st.audio_input(
+                    f"Record voice message from {full_name} to {selected_contact_name}",
+                    key=f"care_audio_input_{resident_id}",
+                )
+                if recorded_from_native is not None:
+                    native_bytes = recorded_from_native.getvalue()
+                    if native_bytes:
+                        native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
                     else:
-                        message_id = (
-                            (
-                                resp.data[0].get("id")
-                                if hasattr(resp, "data")
-                                and isinstance(resp.data, list)
-                                and resp.data
+                        native_fp = None
+                    if native_bytes and native_fp != state.get("recording_fingerprint"):
+                        reset_outbox_state_on_new_recording(
+                            state,
+                            ack_widget_key=f"care_listened_{resident_id}",
+                            clear_care_last_sent_for_resident=resident_id,
+                        )
+                        state["recording_bytes"] = native_bytes
+                        state["recording_fingerprint"] = native_fp
+                        state["recording_mime_type"] = (
+                            getattr(recorded_from_native, "type", None) or "audio/wav"
+                        )
+            else:
+                st.warning("Native microphone recording is unavailable in this environment.")
+
+            st.caption(
+                "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
+            )
+
+            if state.get("recording_bytes"):
+                st.caption("Captured message preview:")
+                st.audio(
+                    state["recording_bytes"],
+                    format=state.get("recording_mime_type") or "audio/wav",
+                )
+                state["preview_confirmed"] = st.checkbox(
+                    "I have listened to this message.",
+                    value=state.get("preview_confirmed", False),
+                    key=f"care_listened_{resident_id}",
+                )
+            else:
+                state["preview_confirmed"] = False
+
+            sent_now = False
+            room_display = f"Room {resident.get('room')}" if resident.get("room") else "Room not set"
+            confirmation_line = (
+                "Sending on behalf of:<br/>"
+                f"{full_name} — {room_display} \u2192 {selected_contact_display}"
+            )
+            st.markdown(
+                f'<div class="vm-muted-line">{confirmation_line}</div>',
+                unsafe_allow_html=True,
+            )
+            last_sent = st.session_state.get("care_last_sent")
+            if sent_now:
+                st.success("Message sent.")
+            elif last_sent and last_sent.get("resident_id") == resident_id:
+                st.success(last_sent.get("message", "Message sent."))
+
+            can_send = bool(
+                state.get("recording_bytes")
+                and state.get("preview_confirmed")
+                and state.get("selected_contact_id")
+                and state.get("selected_contact_user_id")
+            )
+            if st.button(
+                f"Send for {full_name}",
+                key=f"care_send_{resident_id}",
+                disabled=not can_send,
+            ):
+                if not can_send:
+                    st.info("Please select a linked recipient and record before sending.")
+                else:
+                    supabase, error = get_authed_supabase(access_token)
+                    if error:
+                        st.error(error)
+                    else:
+                        audio_bytes = state.get("recording_bytes") or b""
+                        audio_mime_type = state.get("recording_mime_type") or "audio/wav"
+                        audio_b64 = base64.b64encode(audio_bytes).decode("ascii")
+                        now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                        payload = {
+                            "resident_id": resident_id,
+                            "contact_user_id": state.get("selected_contact_user_id"),
+                            "family_id": resident.get("family_id") or resident_id,
+                            "channel": "resident_family",
+                            "direction": "from_resident",
+                            "audio_storage_path": audio_b64,
+                            "audio_mime_type": audio_mime_type,
+                            "audio_bytes": len(audio_bytes),
+                            "recorded_at": now_iso,
+                        }
+                        try:
+                            try:
+                                resp = (
+                                    supabase.rpc(
+                                        "insert_care_hub_message",
+                                        {
+                                            "p_resident_id": resident_id,
+                                            "p_contact_user_id": state.get(
+                                                "selected_contact_user_id"
+                                            ),
+                                            "p_audio_storage_path": audio_b64,
+                                            "p_audio_mime_type": audio_mime_type,
+                                            "p_audio_bytes": len(audio_bytes),
+                                            "p_recorded_at": now_iso,
+                                        },
+                                    )
+                                    .execute()
+                                )
+                            except Exception as rpc_exc:
+                                # Prefer DB helper function to avoid client-side RLS variance.
+                                # Only fall back to direct upsert when RPC is unavailable.
+                                rpc_msg = str(rpc_exc)
+                                rpc_msg_l = rpc_msg.lower()
+                                rpc_missing = (
+                                    "insert_care_hub_message" in rpc_msg
+                                    and (
+                                        "pgrst202" in rpc_msg_l
+                                        or "not found" in rpc_msg_l
+                                        or "does not exist" in rpc_msg_l
+                                        or "could not find the function" in rpc_msg_l
+                                    )
+                                )
+                                if not rpc_missing:
+                                    raise
+                                resp = (
+                                    supabase.table("messages")
+                                    .upsert(
+                                        payload,
+                                        on_conflict="resident_id,contact_user_id,direction,channel",
+                                    )
+                                    .execute()
+                                )
+                        except Exception as exc:  # pragma: no cover - Supabase runtime error
+                            st.error(str(exc))
+                        else:
+                            message_id = (
+                                (
+                                    resp.data[0].get("id")
+                                    if hasattr(resp, "data")
+                                    and isinstance(resp.data, list)
+                                    and resp.data
+                                    else None
+                                )
+                                if resp is not None
                                 else None
                             )
-                            if resp is not None
-                            else None
-                        )
-                        log_audit_event(
-                            "message_sent",
-                            "care_hub",
-                            resident["care_home_id"],
-                            message_id,
-                        )
-                        if APP_DEBUG:
-                            print(
-                                "Saving Resident→Family message:",
+                            log_audit_event(
+                                "message_sent",
+                                "care_hub",
+                                resident["care_home_id"],
                                 message_id,
-                                now_iso,
-                                state.get("selected_contact_user_id"),
                             )
-                        state["recording_bytes"] = None
-                        state["recording_mime_type"] = "audio/wav"
-                        state["preview_confirmed"] = False
-                        sent_now = True
-                        st.session_state["care_last_sent"] = {
-                            "resident_id": resident_id,
-                            "contact_id": state.get("selected_contact_id"),
-                            "message": "Message sent.",
-                        }
+                            if APP_DEBUG:
+                                print(
+                                    "Saving Resident→Family message:",
+                                    message_id,
+                                    now_iso,
+                                    state.get("selected_contact_user_id"),
+                                )
+                            state["recording_bytes"] = None
+                            state["recording_mime_type"] = "audio/wav"
+                            state["preview_confirmed"] = False
+                            sent_now = True
+                            st.session_state["care_last_sent"] = {
+                                "resident_id": resident_id,
+                                "contact_id": state.get("selected_contact_id"),
+                                "message": "Message sent.",
+                            }
 
         if get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE}:
             st.markdown("**Care Hub ↔ Family**")
