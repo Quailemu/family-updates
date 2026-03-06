@@ -5417,6 +5417,8 @@ def render_care_hub() -> None:
                                 "contact_id": state.get("selected_contact_id"),
                                 "message": "Message sent.",
                             }
+                            st.session_state.pop(f"care_audio_input_{resident_id}", None)
+                            st.rerun()
 
         if get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE}:
             st.markdown("**Care Hub ↔ Family**")
