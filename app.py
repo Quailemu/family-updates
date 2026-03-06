@@ -5151,6 +5151,7 @@ def render_care_hub() -> None:
                 unsafe_allow_html=True,
             )
 
+        is_office_variant = get_app_variant() == VARIANT_OFFICE
         render_message_direction_header(
             "resident",
             "family",
