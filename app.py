@@ -5513,14 +5513,59 @@ def render_care_hub() -> None:
                             "recorded_at": office_now_iso,
                         }
                         try:
-                            office_resp = (
-                                supabase.table("messages")
-                                .upsert(
-                                    office_payload,
-                                    on_conflict="resident_id,family_id,direction,channel",
+                            try:
+                                office_resp = (
+                                    supabase.table("messages")
+                                    .upsert(
+                                        office_payload,
+                                        on_conflict="resident_id,family_id,direction,channel",
+                                    )
+                                    .execute()
                                 )
-                                .execute()
-                            )
+                            except Exception as office_upsert_exc:
+                                # Some deployments may not yet have the exact unique constraint
+                                # for on_conflict; fall back to update-or-insert without showing
+                                # a transient error popup to staff.
+                                office_upsert_msg = str(office_upsert_exc)
+                                office_upsert_msg_l = office_upsert_msg.lower()
+                                missing_conflict_constraint = (
+                                    "42p10" in office_upsert_msg_l
+                                    or "no unique or exclusion constraint matching the on conflict specification"
+                                    in office_upsert_msg_l
+                                )
+                                if not missing_conflict_constraint:
+                                    raise
+                                existing_office = (
+                                    supabase.table("messages")
+                                    .select("id")
+                                    .eq("resident_id", resident_id)
+                                    .eq("family_id", resident.get("family_id") or resident_id)
+                                    .eq("channel", "office_family")
+                                    .eq("direction", "office_to_family")
+                                    .order("recorded_at", desc=True)
+                                    .limit(1)
+                                    .execute()
+                                )
+                                existing_office_id = (
+                                    existing_office.data[0].get("id")
+                                    if hasattr(existing_office, "data")
+                                    and isinstance(existing_office.data, list)
+                                    and existing_office.data
+                                    else None
+                                )
+                                if existing_office_id:
+                                    office_resp = (
+                                        supabase.table("messages")
+                                        .update(office_payload)
+                                        .eq("id", existing_office_id)
+                                        .execute()
+                                    )
+                                else:
+                                    office_resp = (
+                                        supabase.table("messages")
+                                        .insert(office_payload)
+                                        .execute()
+                                    )
                         except Exception as exc:  # pragma: no cover - Supabase runtime error
                             st.error(str(exc))
                         else:
