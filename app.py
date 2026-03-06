@@ -1577,6 +1577,7 @@ def fetch_family_residents(user_id: str, access_token: str) -> list[dict]:
                     "preferred_name": display_name,
                     "surname": "",
                     "room": resident.get("care_home_reference", ""),
+                    "family_id": resident.get("id"),
                     "care_home_id": resident.get("care_home_id"),
                 }
             )
@@ -1621,6 +1622,7 @@ def fetch_care_home_residents(access_token: str) -> list[dict]:
                     "surname": "",
                     "room": resident.get("care_home_reference", ""),
                     "care_home": "",
+                    "family_id": resident.get("id"),
                     "care_home_id": resident.get("care_home_id"),
                 }
             )
@@ -1696,6 +1698,8 @@ def fetch_latest_message(
     direction: str,
     access_token: str,
     contact_user_id: str | None = None,
+    family_id: str | None = None,
+    channel: str = "resident_family",
 ) -> dict | None:
     supabase, error = get_authed_supabase(access_token)
     if error:
@@ -1704,15 +1708,18 @@ def fetch_latest_message(
         query = (
             supabase.table("messages")
             .select(
-                "id, resident_id, contact_user_id, direction, audio_storage_path, audio_mime_type, audio_bytes, recorded_at"
+                "id, resident_id, contact_user_id, family_id, channel, direction, audio_storage_path, audio_mime_type, audio_bytes, recorded_at"
             )
             .eq("resident_id", resident_id)
             .eq("direction", direction)
+            .eq("channel", channel)
             .order("recorded_at", desc=True)
             .limit(1)
         )
-        if contact_user_id:
+        if contact_user_id is not None:
             query = query.eq("contact_user_id", contact_user_id)
+        if family_id is not None:
+            query = query.eq("family_id", family_id)
         resp = query.execute()
         latest = resp.data[0] if resp.data else None
         if APP_DEBUG and direction == "from_resident":
@@ -3355,22 +3362,31 @@ def render_message_direction_header(
     from_channel_role: str,
     to_channel_role: str,
     recorded_by: str | None = None,
+    *,
+    show_chips: bool = True,
+    use_from_to_heading: bool = False,
 ) -> None:
     from_label, from_icon = get_channel_label_and_icon(from_channel_role)
     to_label, to_icon = get_channel_label_and_icon(to_channel_role)
-    st.markdown(
-        f'<div class="vm-section-title">{from_icon} {from_label} &rarr; {to_icon} {to_label}</div>',
-        unsafe_allow_html=True,
+    heading_text = (
+        f"From: {from_icon} {from_label} &rarr; To: {to_icon} {to_label}"
+        if use_from_to_heading
+        else f"{from_icon} {from_label} &rarr; {to_icon} {to_label}"
     )
     st.markdown(
-        (
-            '<div class="vm-direction-chips">'
-            f'<span class="vm-direction-chip">From: {from_icon} {from_label}</span>'
-            f'<span class="vm-direction-chip">To: {to_icon} {to_label}</span>'
-            "</div>"
-        ),
+        f'<div class="vm-section-title">{heading_text}</div>',
         unsafe_allow_html=True,
     )
+    if show_chips:
+        st.markdown(
+            (
+                '<div class="vm-direction-chips">'
+                f'<span class="vm-direction-chip">From: {from_icon} {from_label}</span>'
+                f'<span class="vm-direction-chip">To: {to_icon} {to_label}</span>'
+                "</div>"
+            ),
+            unsafe_allow_html=True,
+        )
     if recorded_by:
         st.caption(f"Recorded by: {recorded_by}")
 
@@ -3718,6 +3734,7 @@ def render_family_send() -> None:
             "from_resident",
             access_token,
             contact_user_id=st.session_state.get("auth_uid"),
+            channel="resident_family",
         )
         audio_bytes = decode_audio_payload(latest)
         if audio_bytes:
@@ -3728,18 +3745,47 @@ def render_family_send() -> None:
                 unsafe_allow_html=True,
             )
 
-        render_message_direction_header("family", "resident")
+        st.markdown("**Care Hub Update (Office) → Family**")
+        render_message_direction_header("care_hub", "family")
+        latest_office_update = fetch_latest_message(
+            resident_id,
+            "office_to_family",
+            access_token,
+            family_id=resident.get("family_id") or resident_id,
+            channel="office_family",
+        )
+        latest_office_audio = decode_audio_payload(latest_office_update)
+        if latest_office_audio:
+            st.audio(
+                latest_office_audio,
+                format=latest_office_update.get("audio_mime_type") or "audio/wav",
+            )
+        else:
+            st.markdown(
+                '<div class="vm-muted-line">No care hub updates.</div>',
+                unsafe_allow_html=True,
+            )
+
+        is_office_variant = get_app_variant() == VARIANT_OFFICE
+        render_message_direction_header(
+            "family",
+            "resident",
+            show_chips=not is_office_variant,
+            use_from_to_heading=is_office_variant,
+        )
         latest_sent = fetch_latest_message(
             resident_id,
             "to_resident",
             access_token,
             contact_user_id=st.session_state.get("auth_uid"),
+            channel="resident_family",
         )
         if not latest_sent:
             latest_sent = fetch_latest_message(
                 resident_id,
                 "to_resident",
                 access_token,
+                channel="resident_family",
             )
         latest_sent_audio = decode_audio_payload(latest_sent)
         if latest_sent and not state.get("recording_bytes"):
@@ -3853,6 +3899,8 @@ def render_family_send() -> None:
                     payload = {
                         "resident_id": resident_id,
                         "contact_user_id": st.session_state.get("auth_uid"),
+                        "family_id": resident.get("family_id") or resident_id,
+                        "channel": "resident_family",
                         "direction": "to_resident",
                         "audio_storage_path": audio_b64,
                         "audio_mime_type": audio_mime_type,
@@ -3865,7 +3913,7 @@ def render_family_send() -> None:
                             supabase.table("messages")
                             .upsert(
                                 payload,
-                                on_conflict="resident_id,contact_user_id,direction",
+                                on_conflict="resident_id,contact_user_id,direction,channel",
                             )
                             .execute()
                         )
@@ -4998,6 +5046,10 @@ def render_care_hub() -> None:
                     "selected_contact_user_id": None,
                     "last_message": None,
                     "recording_fingerprint": None,
+                    "office_recording_bytes": None,
+                    "office_recording_mime_type": "audio/wav",
+                    "office_preview_confirmed": False,
+                    "office_recording_fingerprint": None,
                 },
             )
     else:
@@ -5019,6 +5071,10 @@ def render_care_hub() -> None:
                 "selected_contact_user_id": None,
                 "last_message": None,
                 "recording_fingerprint": None,
+                "office_recording_bytes": None,
+                "office_recording_mime_type": "audio/wav",
+                "office_preview_confirmed": False,
+                "office_recording_fingerprint": None,
             },
         )
         full_name = f"{resident['preferred_name']} {resident['surname']}"
@@ -5030,7 +5086,12 @@ def render_care_hub() -> None:
             st.markdown(f"*{room_label}*")
 
         render_message_direction_header("family", "resident")
-        latest = fetch_latest_message(resident_id, "to_resident", access_token)
+        latest = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            channel="resident_family",
+        )
         audio_bytes = decode_audio_payload(latest)
         if audio_bytes:
             st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
@@ -5090,7 +5151,12 @@ def render_care_hub() -> None:
                 unsafe_allow_html=True,
             )
 
-        render_message_direction_header("resident", "family")
+        render_message_direction_header(
+            "resident",
+            "family",
+            show_chips=not is_office_variant,
+            use_from_to_heading=is_office_variant,
+        )
         contacts = contacts_by_resident.get(resident_id, [])
         if contacts:
             contact_labels = [
@@ -5132,12 +5198,14 @@ def render_care_hub() -> None:
                 "from_resident",
                 access_token,
                 contact_user_id=state.get("selected_contact_user_id"),
+                channel="resident_family",
             )
         if not latest_sent:
             latest_sent = fetch_latest_message(
                 resident_id,
                 "from_resident",
                 access_token,
+                channel="resident_family",
             )
         latest_sent_audio = decode_audio_payload(latest_sent)
         if latest_sent and not state.get("recording_bytes"):
@@ -5243,6 +5311,8 @@ def render_care_hub() -> None:
                     payload = {
                         "resident_id": resident_id,
                         "contact_user_id": state.get("selected_contact_user_id"),
+                        "family_id": resident.get("family_id") or resident_id,
+                        "channel": "resident_family",
                         "direction": "from_resident",
                         "audio_storage_path": audio_b64,
                         "audio_mime_type": audio_mime_type,
@@ -5287,7 +5357,7 @@ def render_care_hub() -> None:
                                 supabase.table("messages")
                                 .upsert(
                                     payload,
-                                    on_conflict="resident_id,contact_user_id,direction",
+                                    on_conflict="resident_id,contact_user_id,direction,channel",
                                 )
                                 .execute()
                             )
@@ -5327,6 +5397,134 @@ def render_care_hub() -> None:
                             "contact_id": state.get("selected_contact_id"),
                             "message": "Message sent.",
                         }
+
+        if get_app_variant() == VARIANT_OFFICE:
+            render_message_direction_header(
+                "care_hub",
+                "family",
+                show_chips=False,
+                use_from_to_heading=True,
+            )
+            latest_office_update = fetch_latest_message(
+                resident_id,
+                "office_to_family",
+                access_token,
+                family_id=resident.get("family_id") or resident_id,
+                channel="office_family",
+            )
+            latest_office_audio = decode_audio_payload(latest_office_update)
+            if latest_office_audio:
+                st.audio(
+                    latest_office_audio,
+                    format=latest_office_update.get("audio_mime_type") or "audio/wav",
+                )
+            else:
+                st.markdown(
+                    '<div class="vm-muted-line">No care hub updates.</div>',
+                    unsafe_allow_html=True,
+                )
+
+            if hasattr(st, "audio_input"):
+                recorded_office = st.audio_input(
+                    "Record care hub update",
+                    key=f"care_office_audio_input_{resident_id}",
+                )
+                if recorded_office is not None:
+                    office_bytes = recorded_office.getvalue()
+                    office_fp = (
+                        __import__("hashlib").sha1(office_bytes).hexdigest()
+                        if office_bytes
+                        else None
+                    )
+                    if office_bytes and office_fp != state.get("office_recording_fingerprint"):
+                        state["office_recording_bytes"] = office_bytes
+                        state["office_recording_fingerprint"] = office_fp
+                        state["office_recording_mime_type"] = (
+                            getattr(recorded_office, "type", None) or "audio/wav"
+                        )
+                        state["office_preview_confirmed"] = False
+                        st.session_state[f"care_office_listened_{resident_id}"] = False
+            else:
+                st.warning("Native microphone recording is unavailable in this environment.")
+
+            if state.get("office_recording_bytes"):
+                st.caption("Captured care hub update preview:")
+                st.audio(
+                    state["office_recording_bytes"],
+                    format=state.get("office_recording_mime_type") or "audio/wav",
+                )
+                state["office_preview_confirmed"] = st.checkbox(
+                    "I have listened to this care hub update.",
+                    value=state.get("office_preview_confirmed", False),
+                    key=f"care_office_listened_{resident_id}",
+                )
+            else:
+                state["office_preview_confirmed"] = False
+
+            office_can_send = bool(
+                state.get("office_recording_bytes") and state.get("office_preview_confirmed")
+            )
+            if st.button(
+                f"Send care hub update for {full_name}",
+                key=f"care_send_office_update_{resident_id}",
+                disabled=not office_can_send,
+            ):
+                if not office_can_send:
+                    st.info("Please record and listen before sending the care hub update.")
+                else:
+                    supabase, error = get_authed_supabase(access_token)
+                    if error:
+                        st.error(error)
+                    else:
+                        office_audio_bytes = state.get("office_recording_bytes") or b""
+                        office_audio_mime = state.get("office_recording_mime_type") or "audio/wav"
+                        office_audio_b64 = base64.b64encode(office_audio_bytes).decode("ascii")
+                        office_now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                        office_payload = {
+                            "resident_id": resident_id,
+                            "family_id": resident.get("family_id") or resident_id,
+                            "channel": "office_family",
+                            "direction": "office_to_family",
+                            "audio_storage_path": office_audio_b64,
+                            "audio_mime_type": office_audio_mime,
+                            "audio_bytes": len(office_audio_bytes),
+                            "recorded_at": office_now_iso,
+                        }
+                        try:
+                            office_resp = (
+                                supabase.table("messages")
+                                .upsert(
+                                    office_payload,
+                                    on_conflict="resident_id,family_id,direction,channel",
+                                )
+                                .execute()
+                            )
+                        except Exception as exc:  # pragma: no cover - Supabase runtime error
+                            st.error(str(exc))
+                        else:
+                            office_message_id = (
+                                (
+                                    office_resp.data[0].get("id")
+                                    if hasattr(office_resp, "data")
+                                    and isinstance(office_resp.data, list)
+                                    and office_resp.data
+                                    else None
+                                )
+                                if office_resp is not None
+                                else None
+                            )
+                            log_audit_event(
+                                "message_sent",
+                                "care_hub",
+                                resident["care_home_id"],
+                                office_message_id,
+                            )
+                            state["office_recording_bytes"] = None
+                            state["office_recording_mime_type"] = "audio/wav"
+                            state["office_preview_confirmed"] = False
+                            state["office_recording_fingerprint"] = None
+                            st.session_state[f"care_office_listened_{resident_id}"] = False
+                            st.success("Care hub update sent.")
 
 
     # Navigation rendered at the top of the page.
