@@ -5094,16 +5094,72 @@ def render_care_hub() -> None:
         room_label = f"Room {resident['room']}" if resident.get("room") else ""
 
         st.markdown('<div class="vm-resident-card">', unsafe_allow_html=True)
+        st.markdown("**Resident:**")
         st.markdown(f"**{full_name}**")
         if room_label:
-            st.markdown(f"*{room_label}*")
+            st.markdown(f"Room {resident.get('room')}")
 
-        st.markdown("**Resident ↔ Family**")
-        st.caption("Latest from Family")
+        contacts = contacts_by_resident.get(resident_id, [])
+        selected_contact = None
+        if contacts:
+            contact_options: list[str] = []
+            for contact in contacts:
+                relationship = (contact.get("relationship") or "").strip()
+                if relationship:
+                    contact_options.append(f"{contact['full_name']} — {relationship.title()}")
+                else:
+                    contact_options.append(f"{contact['full_name']} — Family contact")
+
+            selected_label = st.selectbox(
+                "Select family contact",
+                contact_options,
+                key=f"care_recipient_{resident_id}",
+            )
+            selected_contact = contacts[contact_options.index(selected_label)]
+            if selected_contact["id"] != state.get("selected_contact_id"):
+                state["selected_contact_id"] = selected_contact["id"]
+                state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
+                state["recording_bytes"] = None
+                state["recording_mime_type"] = "audio/wav"
+                state["recording_fingerprint"] = None
+                reset_outbox_state_on_new_recording(
+                    state,
+                    ack_widget_key=f"care_listened_{resident_id}",
+                    clear_care_last_sent_for_resident=resident_id,
+                )
+        else:
+            st.markdown(
+                '<div class="vm-muted-line">No linked family contacts.</div>',
+                unsafe_allow_html=True,
+            )
+            state["selected_contact_id"] = None
+            state["selected_contact_user_id"] = None
+
+        if selected_contact is None and state.get("selected_contact_id"):
+            selected_contact = next(
+                (c for c in contacts if c["id"] == state.get("selected_contact_id")),
+                None,
+            )
+
+        selected_contact_name = (
+            (selected_contact or {}).get("full_name") or "family contact"
+        )
+        selected_contact_relationship = (
+            ((selected_contact or {}).get("relationship") or "").strip()
+        )
+        selected_contact_display = (
+            f"{selected_contact_name} ({selected_contact_relationship.title()})"
+            if selected_contact_relationship
+            else f"{selected_contact_name} (Family contact)"
+        )
+        st.caption(f"Family contact selected: {selected_contact_display}")
+
+        st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
         latest = fetch_latest_message(
             resident_id,
             "to_resident",
             access_token,
+            contact_user_id=state.get("selected_contact_user_id"),
             channel="resident_family",
         )
         audio_bytes = decode_audio_payload(latest)
@@ -5165,40 +5221,7 @@ def render_care_hub() -> None:
                 unsafe_allow_html=True,
             )
 
-        is_office_variant = get_app_variant() == VARIANT_OFFICE
-        st.caption("Latest from Resident")
-        contacts = contacts_by_resident.get(resident_id, [])
-        if contacts:
-            contact_labels = [
-                f"{contact['full_name']} ({contact['relationship']})"
-                if contact.get("relationship")
-                else contact["full_name"]
-                for contact in contacts
-            ]
-            selected_label = st.selectbox(
-                "Recipient",
-                contact_labels,
-                key=f"care_recipient_{resident_id}",
-            )
-            selected_contact = contacts[contact_labels.index(selected_label)]
-            if selected_contact["id"] != state.get("selected_contact_id"):
-                state["selected_contact_id"] = selected_contact["id"]
-                state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
-                state["recording_bytes"] = None
-                state["recording_mime_type"] = "audio/wav"
-                state["recording_fingerprint"] = None
-                reset_outbox_state_on_new_recording(
-                    state,
-                    ack_widget_key=f"care_listened_{resident_id}",
-                    clear_care_last_sent_for_resident=resident_id,
-                )
-        else:
-            st.markdown(
-                '<div class="vm-muted-line">No linked family contacts.</div>',
-                unsafe_allow_html=True,
-            )
-            state["selected_contact_id"] = None
-            state["selected_contact_user_id"] = None
+        st.markdown(f"**Latest message from {full_name} to {selected_contact_name}**")
 
         latest_sent = None
         latest_sent_audio = None
@@ -5208,13 +5231,6 @@ def render_care_hub() -> None:
                 "from_resident",
                 access_token,
                 contact_user_id=state.get("selected_contact_user_id"),
-                channel="resident_family",
-            )
-        if not latest_sent:
-            latest_sent = fetch_latest_message(
-                resident_id,
-                "from_resident",
-                access_token,
                 channel="resident_family",
             )
         latest_sent_audio = decode_audio_payload(latest_sent)
@@ -5232,7 +5248,7 @@ def render_care_hub() -> None:
 
         if hasattr(st, "audio_input"):
             recorded_from_native = st.audio_input(
-                "Record voice message",
+                f"Record voice message from {full_name} to {selected_contact_name}",
                 key=f"care_audio_input_{resident_id}",
             )
             if recorded_from_native is not None:
@@ -5274,18 +5290,11 @@ def render_care_hub() -> None:
             state["preview_confirmed"] = False
 
         sent_now = False
-        confirmation_line = f"Sending on behalf of: {full_name}"
-        if room_label:
-            confirmation_line = f"{confirmation_line}, {room_label}"
-        if state.get("selected_contact_id"):
-            selected_contact = next(
-                (c for c in contacts if c["id"] == state["selected_contact_id"]),
-                None,
-            )
-            if selected_contact:
-                confirmation_line = (
-                    f"{confirmation_line} → {selected_contact['full_name']}"
-                )
+        room_display = f"Room {resident.get('room')}" if resident.get("room") else "Room not set"
+        confirmation_line = (
+            "Sending on behalf of:<br/>"
+            f"{full_name} — {room_display} \u2192 {selected_contact_display}"
+        )
         st.markdown(
             f'<div class="vm-muted-line">{confirmation_line}</div>',
             unsafe_allow_html=True,
