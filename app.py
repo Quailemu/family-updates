@@ -3352,7 +3352,7 @@ def get_channel_label_and_icon(channel_role: str) -> tuple[str, str]:
     if role == "family":
         return "Family", "👥"
     if role == "care_hub":
-        return "Care Hub", "🏥"
+        return "Care Hub", "🏠"
     if role == "resident":
         return "Resident", "🧓"
     return "System", "⚙️"
@@ -3363,7 +3363,7 @@ def render_message_direction_header(
     to_channel_role: str,
     recorded_by: str | None = None,
     *,
-    show_chips: bool = True,
+    show_chips: bool = False,
     use_from_to_heading: bool = False,
 ) -> None:
     from_label, from_icon = get_channel_label_and_icon(from_channel_role)
@@ -3377,18 +3377,31 @@ def render_message_direction_header(
         f'<div class="vm-section-title">{heading_text}</div>',
         unsafe_allow_html=True,
     )
-    if show_chips:
-        st.markdown(
-            (
-                '<div class="vm-direction-chips">'
-                f'<span class="vm-direction-chip">From: {from_icon} {from_label}</span>'
-                f'<span class="vm-direction-chip">To: {to_icon} {to_label}</span>'
-                "</div>"
-            ),
-            unsafe_allow_html=True,
-        )
+    _ = show_chips
     if recorded_by:
         st.caption(f"Recorded by: {recorded_by}")
+
+
+def format_soft_message_period_label(recorded_at_value: str | None) -> str | None:
+    if not recorded_at_value:
+        return None
+    try:
+        dt_mod = __import__("datetime")
+        parsed = dt_mod.datetime.fromisoformat(str(recorded_at_value).replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=dt_mod.timezone.utc)
+        local_dt = parsed.astimezone()
+        now_local = dt_mod.datetime.now(local_dt.tzinfo)
+        period = "AM" if local_dt.hour < 12 else "PM"
+        if local_dt.date() == now_local.date():
+            return f"Sent today {period}"
+        if local_dt.date() == (now_local.date() - dt_mod.timedelta(days=1)):
+            return f"Sent yesterday {period}"
+        if local_dt.year == now_local.year:
+            return f"Sent {local_dt.day} {local_dt.strftime('%b')} {period}"
+        return f"Sent {local_dt.day} {local_dt.strftime('%b %Y')} {period}"
+    except Exception:
+        return None
 
 
 def render_family_login_hub() -> None:
@@ -5085,7 +5098,8 @@ def render_care_hub() -> None:
         if room_label:
             st.markdown(f"*{room_label}*")
 
-        render_message_direction_header("family", "resident")
+        st.markdown("**Resident ↔ Family**")
+        st.caption("Latest from Family")
         latest = fetch_latest_message(
             resident_id,
             "to_resident",
@@ -5152,13 +5166,7 @@ def render_care_hub() -> None:
             )
 
         is_office_variant = get_app_variant() == VARIANT_OFFICE
-        is_office_variant = get_app_variant() == VARIANT_OFFICE
-        render_message_direction_header(
-            "resident",
-            "family",
-            show_chips=not is_office_variant,
-            use_from_to_heading=is_office_variant,
-        )
+        st.caption("Latest from Resident")
         contacts = contacts_by_resident.get(resident_id, [])
         if contacts:
             contact_labels = [
@@ -5400,8 +5408,9 @@ def render_care_hub() -> None:
                             "message": "Message sent.",
                         }
 
-        if get_app_variant() == VARIANT_OFFICE:
-            st.markdown("**Care Hub Update (Office) → Family**")
+        if get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE}:
+            st.markdown("**Care Hub ↔ Family**")
+            st.caption("Office update to Family")
             latest_office_update = fetch_latest_message(
                 resident_id,
                 "office_to_family",
@@ -5415,13 +5424,19 @@ def render_care_hub() -> None:
                     latest_office_audio,
                     format=latest_office_update.get("audio_mime_type") or "audio/wav",
                 )
+                if get_app_variant() == VARIANT_MOBILE:
+                    soft_label = format_soft_message_period_label(
+                        latest_office_update.get("recorded_at")
+                    )
+                    if soft_label:
+                        st.caption(soft_label)
             else:
                 st.markdown(
                     '<div class="vm-muted-line">No care hub updates.</div>',
                     unsafe_allow_html=True,
                 )
 
-            if hasattr(st, "audio_input"):
+            if get_app_variant() == VARIANT_OFFICE and hasattr(st, "audio_input"):
                 recorded_office = st.audio_input(
                     "Record care hub update",
                     key=f"care_office_audio_input_{resident_id}",
@@ -5441,10 +5456,10 @@ def render_care_hub() -> None:
                         )
                         state["office_preview_confirmed"] = False
                         st.session_state[f"care_office_listened_{resident_id}"] = False
-            else:
+            elif get_app_variant() == VARIANT_OFFICE:
                 st.warning("Native microphone recording is unavailable in this environment.")
 
-            if state.get("office_recording_bytes"):
+            if get_app_variant() == VARIANT_OFFICE and state.get("office_recording_bytes"):
                 st.caption("Captured care hub update preview:")
                 st.audio(
                     state["office_recording_bytes"],
@@ -5455,13 +5470,13 @@ def render_care_hub() -> None:
                     value=state.get("office_preview_confirmed", False),
                     key=f"care_office_listened_{resident_id}",
                 )
-            else:
+            elif get_app_variant() == VARIANT_OFFICE:
                 state["office_preview_confirmed"] = False
 
             office_can_send = bool(
                 state.get("office_recording_bytes") and state.get("office_preview_confirmed")
             )
-            if st.button(
+            if get_app_variant() == VARIANT_OFFICE and st.button(
                 f"Send care hub update for {full_name}",
                 key=f"care_send_office_update_{resident_id}",
                 disabled=not office_can_send,
