@@ -5215,7 +5215,6 @@ def render_care_hub() -> None:
                             resident_id=resident_id,
                         )
                         st.session_state[played_state_key] = True
-                        st.session_state[played_confirm_key] = False
                         st.rerun()
         else:
             st.markdown(
