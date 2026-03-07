@@ -11,19 +11,42 @@ This guide explains how voice-message.com is used for simple, non-urgent social 
 Authorised contacts use the Family app only. The Family app does not include any care hub features.
 Family users are authorised contacts (such as family members or close friends) approved by the care home.
 
-## How to use the service
+## How the three interfaces work together
 
-### Sending a voice message
+- Care Hub – Mobile supports resident playback and resident replies.
+- Care Hub – Office supports oversight and Office-originated updates.
+- Family App supports authorised contacts sending and playing messages.
+
+All current messages for the resident may be played by authorised users across these groups.
+
+No group can alter another group's message directly.  
+Each message lane may only be replaced by the interface that created it.
+
+## Message lanes (simple summary)
+
+| Message lane | Created by | Playable by | Replaceable by |
+| --- | --- | --- | --- |
+| Family/Friend -> Resident | Family App | Family App, Care Hub – Mobile, Care Hub – Office | Family App |
+| Resident -> Family/Friend | Care Hub – Mobile | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Mobile |
+| Office -> Family/Friend | Care Hub – Office | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Office |
+
+## How to use the Family App
+
+### Sending your message
 
 You can record a short voice message for the resident. Messages are audio-only and are intended for friendly, social contact.
 
-### Listening to a resident’s reply
+### Playing current messages
 
-Residents can record a reply. When a reply is available, you can listen to it in the service.
+You may play the current resident reply, and where applicable the current Office update for that resident.
 
 ### Message replacement
 
-Only your latest message and the latest reply are kept. When a new message is sent, it replaces the previous one. There is no message history.
+Only the latest message in each lane is kept. A new message replaces the previous message in that lane. There is no message history.
+
+### Time display
+
+The service uses simple AM/PM timing language where timing is shown (for example, Today AM / Today PM / Yesterday AM / Yesterday PM). Exact clock times are intentionally not shown in the main communication views.
 
 ## What the service is for
 
@@ -39,7 +62,7 @@ The service is for non-urgent, social messages. It is not designed for care upda
 
 ## Privacy and setting
 
-Messages are intended for the resident, but they are used within a care home setting. Treat messages as shared within the care home. Staff may play messages in shared spaces and may assist with recording or playback. Messages are not guaranteed to be private.
+Playback access is limited to authorised users in the resident's care circle. Messages may be played in normal care environments where staff support residents. Messages are not guaranteed to be private.
 
 ## Further information
 

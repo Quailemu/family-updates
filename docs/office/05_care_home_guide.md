@@ -5,16 +5,30 @@
 This guide is for care home managers and staff.
 It explains how the Care Hub is used day to day across the Care Hub – Mobile and Care Hub – Office, in line with the agreed scope for non-urgent, social voice messages, and not for safeguarding matters.
 
-## Care Hub – Mobile and Care Hub – Office
+## System structure
 
-- Care Hub – Mobile: shared lanyard device for carers to record and play messages.
-- Care Hub – Office: desk device for senior staff/admin, documents, and compliance tasks.
+The service has three interfaces linked to the resident's care circle:
 
-Care Hub – Office provides full access and includes Care Hub – Mobile functionality.
-Care Hub – Mobile is a restricted operational view used by carers.
-Carers using Care Hub – Mobile cannot access Office/admin functions.
-Office users may carry out Mobile tasks as part of supervision or care delivery.
-The care home requires visibility of messages coming in and going out for oversight.
+- Care Hub – Mobile (carer operational interface)
+- Care Hub – Office (office/admin interface)
+- Family App (family members, friends, and other authorised contacts)
+
+Each interface has separate controls for the lanes it creates.
+
+## Message playback and control
+
+All current messages for a resident may be played by authorised users across Mobile, Office, and Family.
+
+No group can alter another group's message directly.
+Each lane may only be replaced by the interface that created it.
+
+| Message lane | Created by | Playable by | Replaceable by |
+| --- | --- | --- | --- |
+| Family/Friend -> Resident | Family App | Family App, Care Hub – Mobile, Care Hub – Office | Family App |
+| Resident -> Family/Friend | Care Hub – Mobile | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Mobile |
+| Office -> Family/Friend | Care Hub – Office | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Office |
+
+This includes the Office lane: Office can send one current update per resident lane, and a new Office message replaces the previous Office message in that lane.
 
 ## Day-to-day use
 
@@ -41,7 +55,7 @@ Steps
 
 1. Open Care Hub – Office.
 2. Go to "Register a Family Member".
-3. Enter contact details.
+3. Enter contact details, including relationship to the resident where known (for example: daughter, son, spouse, friend).
 4. Select resident.
 5. Confirm authorisation.
 6. Click "Send invitation".
@@ -58,18 +72,25 @@ Important Notes
 This service is for non-urgent social communication only.
 Only authorised contacts should be registered.
 Duplicate registrations are prevented automatically.
+Relationship labels help staff identify the right contact in daily workflows.
 
 ### Resident list and cards (Care Hub)
 
-Care Hub users see a scrollable list of residents. Each resident has a single card that contains both Received and Send sections. This keeps a resident's incoming and outgoing messages together in one place.
+Care Hub users see a scrollable list of residents. Each resident has one communication area showing the current lane messages relevant to that role.
 
-### Send section
+### Mobile send section
 
 Staff can record an outgoing message for that resident from the Send section. The card includes:
 
 - a single recorder/player
 - a "I have listened to this message." checkbox before sending
 - a recipient selector listing the resident's linked approved contacts
+
+### Office update lane
+
+Office can record a current Office -> Family/Friend update for that resident.
+This update is playable in Office, Mobile, and Family.
+Mobile users can play this Office message but cannot replace it.
 
 ### Assisting residents to record messages
 
@@ -110,3 +131,7 @@ Staff act on behalf of the care home when using the service. The care home decid
 Care homes support staff, through normal training and supervision, to follow in-app guidance, such as listening to messages before they are sent.
 
 For consent, authority, and safeguarding governance, refer to the Safeguarding and Consent section.
+
+## Time display
+
+Where timing labels are shown in care communication views, the system uses simple AM/PM language (for example: Today AM, Today PM, Yesterday AM, Yesterday PM, or a simple older date + AM/PM). Exact clock times are intentionally not shown in these views.

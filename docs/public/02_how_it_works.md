@@ -2,85 +2,61 @@
 
 # Voice messages — how it works
 
-## General
+## System structure
 
-Only one message is kept between each authorised contact (such as family members or close friends) and each resident, in each direction, with no threads.  
-Each new message deletes the previous message.
+The system has three application interfaces for different groups of people associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, and other authorised contacts).
 
-Messages are not private within the care home.  
-Care staff and office staff may read messages where required.  
-Security is in place to prevent access by members of the public.
+Each interface has its own role in the resident's care circle. The product is role-based and non-urgent.
 
-Messages are for non-urgent, social contact only. This service is not monitored.
+## One-message-only model
 
-## Family app
+The service uses a one-message-only principle in each message lane.  
+When a new message is sent in a lane, the previous message in that lane is automatically deleted.
 
-Authorised contacts:
+Only the latest message remains in each lane.
 
-1. You register with the care home where your relative is a resident.
-2. Each authorised contact has their own voice-message channel with a resident.
-3. You receive a magic link by email and log in to the Family app.
-4. You send a gentle, calm voice message to the resident.  
-   Messages are not private within the care home and may not be routinely checked before playback.
-5. When convenient, a carer plays your message to the resident.
-6. The resident may reply if they are able and it is appropriate, but replies are not guaranteed.
-7. You may choose whether to receive notifications.
-8. Your next message to the resident deletes your previous message.
-9. The resident’s next message to you deletes their previous message.
-10. Your messages are not affected by other approved contacts’ messages.
+## Message lanes
 
-Links:
-- Privacy & data
-- Terms & conditions
-- Contact the care home
+| Message lane | Created by | Playable by | Replaceable by |
+| --- | --- | --- | --- |
+| Family/Friend -> Resident | Family App | Family App, Care Hub – Mobile, Care Hub – Office | Family App |
+| Resident -> Family/Friend | Care Hub – Mobile | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Mobile |
+| Office -> Family/Friend | Care Hub – Office | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Office |
 
-### Safeguarding
+All current messages for that resident may be played by authorised users across these groups, but no group can alter another group's message. Each message lane may only be replaced by the interface that created it.
 
-Safeguarding duties remain with the care home.  
-This service is not a safeguarding system and is not designed to provide alerts, monitoring, or risk detection.
+## Playback and care setting
 
-## Care Hub – Mobile
+Playback access is limited to authorised users in the resident's care circle.  
+Messages may be played in normal care environments where staff are supporting residents.
 
-Only one message is kept between each authorised contact and each resident, in each direction, with no threads.
-Authorised contacts may include family members or close friends, approved by the care home.
+This is non-urgent and not live messaging. Messages are played and replies are recorded when staff are available.
 
-1. Log in using the shared PIN or password provided by the care home.
-2. Select a resident from the list.
-3. Select an authorised contact and play their latest message to the resident.
-4. If appropriate, assist the resident to send a reply to that approved contact.
-5. The next message sent in either direction replaces the previous one.
+## Time display
 
-Messages are for non-urgent, social contact only. This service is not monitored.
+The interface uses simple timing language rather than exact clock times, for example:
 
-### Safeguarding
+- Today AM / Today PM
+- Yesterday AM / Yesterday PM
+- A simple older date with AM/PM
 
-Safeguarding duties remain with the care home.  
-This service is not a safeguarding system and is not designed to provide alerts, monitoring, or risk detection.
+Exact times are intentionally not shown in the main care communication views.
 
-## Care Hub – Office
+## Interface roles
 
-Only one message is kept between each authorised contact and each resident, in each direction, with no threads.
-Authorised contacts may include family members or close friends, approved by the care home.
+### Family App
 
-1. Log in using the care home’s office credentials.
-2. View residents and messages for oversight purposes where required.
-3. Confirm that the system is operating correctly:  
-   - one message per authorised contact -> resident  
-   - one message per resident -> authorised contact
-4. Manage documents and compliance.
+Used by authorised contacts (family members, friends, and other approved contacts) to send and play social voice messages linked to the resident.
 
-Documents available in Care Hub – Office only:
-- Care home responsibilities
-- Care home guide
-- Safeguarding & consent
-- Access protocol
-- Privacy policy
-- Terms of service
-- Compliance documents
+### Care Hub – Mobile
 
-Messages are for non-urgent, social contact only. This service is not monitored.
+Used by carers to play messages to residents and support residents in recording replies.
 
-### Safeguarding
+### Care Hub – Office
+
+Used by office and senior staff for oversight, governance documents, and Office-originated updates for each resident.
+
+## Safeguarding boundary
 
 Safeguarding duties remain with the care home.  
-This service is not a safeguarding system and is not designed to provide alerts, monitoring, or risk detection.
+This service is not a safeguarding alert system and is not monitored in real time.

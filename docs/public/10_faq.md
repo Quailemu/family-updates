@@ -14,6 +14,10 @@ It is intended for non-urgent, social voice messages between residents in care h
 
 Each role uses its own app.
 
+## How many app interfaces are there?
+
+There are three role-based interfaces linked to the resident's care circle: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
+
 ## Is this service monitored or responded to by staff?
 
 Messages are not monitored or responded to by staff as part of care communication. Staff may assist residents with recording or playback as part of normal support.
@@ -24,7 +28,15 @@ No. The service is not intended for care or health updates. Please contact the c
 
 ## Why does my message replace the previous one?
 
-The service keeps only the current message per direction for each contact. New messages replace the previous one, and there is no message history. This supports data minimisation.
+The service keeps only the current message in each message lane. New messages replace the previous message in that lane, and there is no message history. This supports data minimisation.
+
+## Can different groups play the same current messages?
+
+Yes. Current messages for that resident may be played by authorised users across Family, Care Hub – Mobile, and Care Hub – Office.
+
+## Can one group change another group's message?
+
+No. No group can directly alter another group's message. Each lane can only be replaced by the interface that created that lane.
 
 ## What if I have a concern about a resident?
 
@@ -36,7 +48,7 @@ For resident care questions, contact the care home. For access or usage question
 
 ## Are messages private?
 
-Messages are intended for the resident, but they are recorded and played in a care home setting and are not guaranteed to be private.
+Playback is limited to authorised users in the resident's care circle, but messages may be played in normal care environments and are not guaranteed to be private.
 
 ## How long are messages kept?
 
@@ -89,3 +101,7 @@ Formal complaints should follow the care home's complaints process. See Complain
 ## Can I use this to report safeguarding concerns?
 
 No. Contact the care home directly through its safeguarding channels.
+
+## How is message timing shown?
+
+Where timing is shown, the service uses simple AM/PM wording (for example, Today AM, Today PM, Yesterday AM, Yesterday PM, or a simple older date with AM/PM). Exact clock times are intentionally not shown in the main communication views.
