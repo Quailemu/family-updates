@@ -458,6 +458,7 @@ def upsert_family_contact(
     email: str,
     first_name: str,
     last_name: str,
+    relationship: str = "",
 ) -> tuple[dict | None, str | None]:
     supabase, error = get_authed_supabase(access_token)
     if error:
@@ -468,6 +469,7 @@ def upsert_family_contact(
         "auth_user_id": auth_user_id,
         "email": email.strip().lower(),
         "display_name": display_name or "Family contact",
+        "relationship": relationship.strip(),
         "active": True,
     }
     try:
@@ -477,7 +479,7 @@ def upsert_family_contact(
         ).execute()
         resp = (
             supabase.table("family_contacts")
-            .select("id, auth_user_id, care_home_id, email, display_name, active")
+            .select("id, auth_user_id, care_home_id, email, display_name, relationship, active")
             .eq("auth_user_id", auth_user_id)
             .eq("care_home_id", care_home_id)
             .limit(1)
@@ -534,6 +536,7 @@ def _apply_family_registration_mapping(
         email=str(payload.get("email") or ""),
         first_name=str(payload.get("first_name") or ""),
         last_name=str(payload.get("last_name") or ""),
+        relationship=str(payload.get("relationship") or ""),
     )
     if contact_error or not contact_row:
         return False, contact_error or "Failed to upsert family contact."
@@ -640,7 +643,10 @@ def render_office_family_registration_form(
             "Relationship (optional)",
             key="office_family_relationship",
         )
-        st.caption("Relationship is recorded for local workflow guidance only.")
+        st.caption(
+            "Examples: daughter, son, spouse, niece, friend, neighbour. "
+            "This helps staff select the right contact."
+        )
         st.markdown("#### Section 2 — Link to Resident")
         resident_id = st.selectbox(
             "Resident",
@@ -1669,7 +1675,7 @@ def fetch_family_contacts_for_resident(
         contact_resp = (
             supabase.table("family_contact_access")
             .select(
-                "family_contact_id, family_contacts(id, display_name, auth_user_id)"
+                "family_contact_id, family_contacts(id, display_name, relationship, auth_user_id)"
             )
             .eq("resident_id", resident_id)
             .eq("active", True)
@@ -1684,7 +1690,7 @@ def fetch_family_contacts_for_resident(
                 {
                     "id": contact.get("id"),
                     "full_name": contact.get("display_name", "Family contact"),
-                    "relationship": "",
+                    "relationship": contact.get("relationship") or "",
                     "auth_user_id": contact.get("auth_user_id"),
                 }
             )
@@ -3487,11 +3493,15 @@ def render_family_login_hub() -> None:
     normalized_email = email.strip().lower()
     normalized_password = password.strip()
     st.markdown('<div id="vm-login-actions"></div>', unsafe_allow_html=True)
-    action_cols = st.columns(2, gap="small")
+    action_cols = st.columns(3, gap="small")
     with action_cols[0]:
         submit_login = st.button("Log in", key="family_login_submit")
     with action_cols[1]:
         forgot_pressed = st.button("Forgot?", key="family_login_forgot")
+    with action_cols[2]:
+        register_pressed = st.button(
+            "New user registration", key="family_login_register"
+        )
     sign_out_pressed = False
     if st.session_state.get("auth_uid"):
         if st.button("Sign out", key="family_login_sign_out"):
@@ -3564,6 +3574,16 @@ def render_family_login_hub() -> None:
         ok, message = send_password_reset_email(normalized_email, app_variant=VARIANT_FAMILY)
         if ok:
             st.success(message)
+        else:
+            st.error(message)
+    if register_pressed:
+        ok, message = send_password_reset_email(
+            normalized_email, app_variant=VARIANT_FAMILY
+        )
+        if ok:
+            st.success(
+                "Registration link sent. Please open your email and set your password."
+            )
         else:
             st.error(message)
 
