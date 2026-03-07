@@ -34,7 +34,11 @@ This includes the Office lane: Office can send one current update per resident l
 
 ### Access model
 
-The service typically uses one shared operator login for the care home rather than staff-specific accounts. The care home decides who can use the shared login and how access is supervised.
+Family users sign in with secure email links (email only).
+
+Care Hub – Mobile is intended for individual staff access with an individual Mobile PIN per staff member.
+
+Care Hub – Office is a separate staff/admin login path.
 
 Carers use Care Hub – Mobile only.  
 Office staff use Care Hub – Office only.
@@ -63,7 +67,8 @@ Steps
 What Happens Next
 
 The family contact receives an email invitation.
-They set their password.
+They click a secure email login link to sign in.
+No password is required.
 They log into the Family app.
 Access is restricted to the selected resident.
 

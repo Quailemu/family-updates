@@ -10,6 +10,12 @@ This summary is for Care Hub – Office users. It outlines the separation of app
 - Care Hub – Office: oversight, documents, and access management.
 - Family app: access for approved family members or other authorised contacts only, with no care hub tools.
 
+## Authentication model (role-based)
+
+- Family app: secure email-link sign-in (email only).
+- Care Hub – Mobile: individual staff PIN access for day-to-day use.
+- Care Hub – Office: separate staff/admin login path (not family login).
+
 ## Office responsibilities
 
 - Control access for staff and approved family members or other authorised contacts.
@@ -34,8 +40,9 @@ Steps
 
 What Happens Next
 
-The family contact receives an email invitation.
-They set their password.
+The family contact receives a secure email login link.
+They click the link from their inbox to sign in.
+No password is required.
 They log into the Family app.
 Access is restricted to the selected resident.
 

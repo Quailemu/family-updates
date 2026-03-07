@@ -31,10 +31,12 @@ Ports:
 - Care Hub – Mobile: http://localhost:8502
 - Care Hub – Office: http://localhost:8503
 
-## Supabase auth setup
+## Supabase auth setup (role-based)
 
-- Set `PASSWORD_RESET_REDIRECT_URL` to your Family login URL (for example `https://family.voice-message.com/family/login`).
-- In Supabase Dashboard, add the same Family URL to Auth -> URL Configuration -> Redirect URLs.
+- Family: email magic-link auth (email only). Set `FAMILY_MAGIC_LINK_REDIRECT_URL`.
+- Care Hub – Mobile: individual staff PIN for day-to-day access, with email secure link only for first sign-in / recovery (`CARE_MOBILE_MAGIC_LINK_REDIRECT_URL`).
+- Care Hub – Office: separate staff/admin login path (email + password), with Office MFA available if enabled.
+- In Supabase Dashboard, add Family/Mobile magic-link redirect URLs to Auth -> URL Configuration -> Redirect URLs.
 
 ## Documentation
 

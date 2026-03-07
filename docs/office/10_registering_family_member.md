@@ -17,8 +17,9 @@ Care Hub staff can securely invite authorised family contacts to access the Fami
 
 ## What Happens Next
 
-The family contact receives an email invitation.
-They set their password.
+The family contact receives a secure email login link.
+They click the link from their inbox to sign in.
+No password is required.
 They log into the Family app.
 Access is restricted to the selected resident.
 

@@ -5,6 +5,12 @@
 Q: Who should use Care Hub - Mobile?  
 A: Carers and approved care-home staff using the shared mobile workflow.
 
+Q: How do Mobile staff log in day to day?  
+A: Mobile is intended for individual staff access using each staff member's own Mobile PIN.
+
+Q: Is email magic-link the normal Mobile login method?  
+A: No. Email secure link is for first sign-in or expired-session recovery. Routine Mobile access uses each staff member's PIN.
+
 Q: Is Care Hub - Mobile the same as Office?  
 A: No. Mobile is the restricted operational view. Office includes broader admin and document tools.
 
@@ -37,4 +43,3 @@ A: Typically no. These tasks are handled through Office/admin workflows.
 
 Q: What if a family member asks for a care update in a message?  
 A: Direct them to the care home's normal care communication channels.
-

@@ -22,7 +22,7 @@ The care home controls who is invited. The family activates themselves via a sec
 ### Step 1 – Care Home Invites (Office)
 In Care Hub – Office, for a resident, the care home enters:
 - Family member name
-- Mobile number OR email address
+- Email address
 Then selects: “Send Invite”.
 
 The system generates:
@@ -39,7 +39,7 @@ Store:
 - invite_token_id
 
 ### Step 2 – Family Receives Link
-Family receives an SMS or email with the activation link. They tap the link. No password is required.
+Family receives an email with the secure activation/login link. They click the link. No password is required.
 
 ### Step 3 – Family Activates
 On first access, family:
@@ -81,7 +81,7 @@ Family accounts are:
 - Linked to a specific resident
 - Not globally searchable
 - Revocable at any time
-- Based on verified contact method (SMS/email link)
+- Based on verified contact method (email link)
 
 Family capabilities are limited to product design:
 - Send one outbound message
