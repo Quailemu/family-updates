@@ -450,6 +450,249 @@ def invite_user(admin_client: object, email: str) -> tuple[bool, str | None, str
     return True, auth_user_id, None
 
 
+def get_magic_link_redirect_url(app_variant: str) -> str:
+    if app_variant == VARIANT_FAMILY:
+        return (
+            os.getenv("FAMILY_MAGIC_LINK_REDIRECT_URL", "").strip()
+            or os.getenv("PASSWORD_RESET_REDIRECT_URL", "").strip()
+            or os.getenv("FAMILY_APP_URL", "").strip()
+        )
+    if app_variant == VARIANT_MOBILE:
+        return (
+            os.getenv("CARE_MOBILE_MAGIC_LINK_REDIRECT_URL", "").strip()
+            or os.getenv("CARE_MOBILE_APP_URL", "").strip()
+            or os.getenv("CARE_OFFICE_APP_URL", "").strip()
+        )
+    if app_variant == VARIANT_OFFICE:
+        return (
+            os.getenv("CARE_OFFICE_MAGIC_LINK_REDIRECT_URL", "").strip()
+            or os.getenv("CARE_OFFICE_APP_URL", "").strip()
+            or os.getenv("CARE_MOBILE_APP_URL", "").strip()
+        )
+    return ""
+
+
+def send_magic_link_email(
+    email: str, *, app_variant: str, should_create_user: bool = False
+) -> tuple[bool, str]:
+    target_email = email.strip().lower()
+    if not target_email:
+        return False, "Enter an email address first."
+    supabase, error = get_supabase_client()
+    if error:
+        return False, error
+    redirect_to = get_magic_link_redirect_url(app_variant).strip()
+    if not redirect_to:
+        return (
+            False,
+            "Missing magic-link redirect URL configuration for this app variant.",
+        )
+    try:
+        options = {
+            "email_redirect_to": redirect_to,
+            "should_create_user": bool(should_create_user),
+        }
+        supabase.auth.sign_in_with_otp({"email": target_email, "options": options})
+    except Exception as exc:  # pragma: no cover - Supabase runtime error
+        raw_error = str(exc or "").strip()
+        normalized = raw_error.lower()
+        if "email rate limit" in normalized or "rate limit" in normalized:
+            return (
+                False,
+                "Too many email links have been requested in a short time. Please wait a few minutes and try again.",
+            )
+        if (
+            "signups not allowed" in normalized
+            or "user not found" in normalized
+            or "no user" in normalized
+            or "email not confirmed" in normalized
+        ):
+            return (
+                False,
+                "This email has not been invited yet. Please ask the care home to invite you.",
+            )
+        return False, raw_error
+    return (
+        True,
+        "Check your inbox and click the secure login link to sign in. No password required.",
+    )
+
+
+def consume_magic_link_callback() -> None:
+    if st.session_state.get("_magic_link_callback_consumed"):
+        return
+    if not hasattr(st, "query_params"):
+        return
+    params = st.query_params
+    auth_code = str(params.get("code", "") or "").strip()
+    token_hash = str(params.get("token_hash", "") or "").strip()
+    otp_type = str(params.get("type", "") or "").strip().lower()
+    if not auth_code and not token_hash:
+        st.session_state["_magic_link_callback_consumed"] = True
+        return
+
+    supabase, error = get_supabase_client()
+    if error:
+        return
+
+    auth_result = None
+    try:
+        if auth_code:
+            try:
+                auth_result = supabase.auth.exchange_code_for_session(auth_code)
+            except TypeError:
+                auth_result = supabase.auth.exchange_code_for_session({"auth_code": auth_code})
+        elif token_hash:
+            verify_type = otp_type if otp_type in {"magiclink", "recovery", "invite"} else "magiclink"
+            auth_result = supabase.auth.verify_otp(
+                {"token_hash": token_hash, "type": verify_type}
+            )
+    except Exception:
+        return
+
+    session = getattr(auth_result, "session", None)
+    user = getattr(auth_result, "user", None)
+    if session is None and isinstance(auth_result, dict):
+        session = auth_result.get("session")
+        user = auth_result.get("user")
+    if not session:
+        return
+
+    access_token = getattr(session, "access_token", "") if session is not None else ""
+    refresh_token = getattr(session, "refresh_token", "") if session is not None else ""
+    if isinstance(session, dict):
+        access_token = access_token or str(session.get("access_token") or "")
+        refresh_token = refresh_token or str(session.get("refresh_token") or "")
+        if user is None:
+            user = session.get("user")
+    if not access_token or not refresh_token:
+        return
+
+    auth_uid = ""
+    auth_email = ""
+    if user is not None:
+        auth_uid = str(getattr(user, "id", "") or "")
+        auth_email = str(getattr(user, "email", "") or "")
+        if isinstance(user, dict):
+            auth_uid = auth_uid or str(user.get("id") or "")
+            auth_email = auth_email or str(user.get("email") or "")
+
+    st.session_state["access_token"] = access_token
+    st.session_state["refresh_token"] = refresh_token
+    st.session_state["auth_uid"] = auth_uid
+    st.session_state["auth_email"] = auth_email
+    persist_auth_cookie(refresh_token)
+    st.session_state["_magic_link_callback_consumed"] = True
+    for key in ("code", "token_hash", "type"):
+        try:
+            if key in st.query_params:
+                del st.query_params[key]
+        except Exception:
+            pass
+
+
+def _mobile_pin_hash(pin_value: str, auth_uid: str, care_home_id: str) -> str:
+    material = f"vm_mobile_pin_v1:{care_home_id}:{auth_uid}:{pin_value}"
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
+def _is_valid_mobile_pin(pin_value: str) -> bool:
+    return bool(re.fullmatch(r"\d{4,8}", pin_value or ""))
+
+
+def get_mobile_pin_record(access_token: str | None) -> tuple[dict | None, str | None]:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return None, error
+    auth_uid = str(st.session_state.get("auth_uid") or "").strip()
+    if not auth_uid:
+        return None, "Missing authenticated user."
+    try:
+        resp = (
+            supabase.table("care_home_users")
+            .select("id, care_home_id, mobile_pin_hash, active")
+            .eq("auth_user_id", auth_uid)
+            .eq("active", True)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:  # pragma: no cover - Supabase runtime error
+        return None, str(exc)
+    if not resp.data:
+        return None, "No active care-home staff mapping found."
+    return resp.data[0], None
+
+
+def is_mobile_pin_verified_for_session() -> bool:
+    auth_uid = str(st.session_state.get("auth_uid") or "")
+    return bool(
+        auth_uid
+        and st.session_state.get("mobile_pin_verified") is True
+        and str(st.session_state.get("mobile_pin_verified_uid") or "") == auth_uid
+    )
+
+
+def mark_mobile_pin_verified() -> None:
+    st.session_state["mobile_pin_verified"] = True
+    st.session_state["mobile_pin_verified_uid"] = str(st.session_state.get("auth_uid") or "")
+
+
+def render_mobile_pin_gate(access_token: str | None) -> bool:
+    record, record_error = get_mobile_pin_record(access_token)
+    if record_error or not record:
+        st.error(record_error or "Could not load mobile PIN settings.")
+        return False
+    auth_uid = str(st.session_state.get("auth_uid") or "").strip()
+    care_home_id = str(record.get("care_home_id") or "").strip()
+    stored_hash = str(record.get("mobile_pin_hash") or "").strip()
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        st.error(error)
+        return False
+
+    if not stored_hash:
+        st.info("Set your individual 4-8 digit Mobile PIN to continue.")
+        new_pin = st.text_input("Create your Mobile PIN", type="password", key="mobile_pin_create")
+        confirm_pin = st.text_input(
+            "Confirm Mobile PIN", type="password", key="mobile_pin_confirm"
+        )
+        if st.button("Set PIN and continue", key="mobile_pin_set_submit"):
+            if not _is_valid_mobile_pin(new_pin):
+                st.error("PIN must be 4-8 digits.")
+                return False
+            if new_pin != confirm_pin:
+                st.error("PIN values do not match.")
+                return False
+            pin_hash = _mobile_pin_hash(new_pin, auth_uid, care_home_id)
+            try:
+                supabase.rpc("set_mobile_pin_hash", {"p_pin_hash": pin_hash}).execute()
+            except Exception as exc:  # pragma: no cover - Supabase runtime error
+                st.error(str(exc))
+                return False
+            mark_mobile_pin_verified()
+            st.success("Mobile PIN set.")
+            st.rerun()
+        return False
+
+    pin_value = st.text_input(
+        "Enter your individual Mobile PIN",
+        type="password",
+        key="mobile_pin_unlock",
+    )
+    st.caption("PIN access is individual to each staff account.")
+    if st.button("Unlock Mobile", key="mobile_pin_unlock_submit"):
+        if not _is_valid_mobile_pin(pin_value):
+            st.error("Enter your 4-8 digit PIN.")
+            return False
+        if _mobile_pin_hash(pin_value, auth_uid, care_home_id) != stored_hash:
+            st.error("Incorrect PIN.")
+            return False
+        mark_mobile_pin_verified()
+        st.success("Mobile unlocked.")
+        st.rerun()
+    return is_mobile_pin_verified_for_session()
+
+
 def upsert_family_contact(
     access_token: str | None,
     *,
@@ -614,7 +857,7 @@ def render_office_family_registration_form(
 
     st.markdown("### Register a Family Member")
     st.caption(
-        "Register an authorised family contact for a resident. We will send them an email invitation to set up their account."
+        "Register an authorised family contact for a resident. We will send a secure email login link. No password required."
     )
     resident_options = []
     resident_by_id = {}
@@ -633,6 +876,18 @@ def render_office_family_registration_form(
     if not resident_options:
         st.info("No valid residents are available for family registration.")
         return
+
+    invite_cooldown_key = "office_register_invite_cooldown_until"
+    cooldown_until = float(st.session_state.get(invite_cooldown_key, 0.0) or 0.0)
+    cooldown_remaining = max(0, int(cooldown_until - time.time()))
+    if cooldown_remaining > 0:
+        st.info(
+            "For security, invitations are rate-limited. "
+            f"Please wait {cooldown_remaining} seconds before sending another invite."
+        )
+        st.caption(
+            "If you click repeatedly, the wait time can restart. Please click once and wait."
+        )
 
     with st.form("office_register_family_member_form"):
         st.markdown("#### Section 1 — Family Contact Details")
@@ -659,7 +914,13 @@ def render_office_family_registration_form(
             "I confirm this person is authorised by the resident (or their representative) to receive and send social voice messages.",
             key="office_family_authorisation_confirm",
         )
-        submitted = st.form_submit_button("Send invitation")
+        st.caption(
+            "Security note: after sending an invite, wait for the countdown before retrying."
+        )
+        submitted = st.form_submit_button(
+            "Send invitation",
+            disabled=cooldown_remaining > 0,
+        )
 
     if not submitted:
         return
@@ -712,7 +973,26 @@ def render_office_family_registration_form(
         st.info(f"Invite redirect_to: {invite_redirect_to}")
     invited, auth_user_id, invite_error = invite_user(admin_client, normalized_email)
     if not invited or not auth_user_id:
-        st.error(invite_error or "Invite failed.")
+        invite_error_text = str(invite_error or "Invite failed.")
+        invite_error_lower = invite_error_text.lower()
+        if (
+            "security" in invite_error_lower
+            or "too many requests" in invite_error_lower
+            or "rate" in invite_error_lower
+            or "60 seconds" in invite_error_lower
+            or "1 minute" in invite_error_lower
+        ):
+            seconds_match = re.search(r"(\d+)\s*second", invite_error_text, re.IGNORECASE)
+            cooldown_seconds = int(seconds_match.group(1)) if seconds_match else 60
+            st.session_state[invite_cooldown_key] = time.time() + cooldown_seconds
+            st.error(
+                f"Invite blocked by security cooldown. Please wait {cooldown_seconds} seconds, then try once."
+            )
+            st.info(
+                "The countdown resets if clicked repeatedly. Please do not click multiple times."
+            )
+        else:
+            st.error(invite_error_text)
         return
 
     payload = {
@@ -729,7 +1009,7 @@ def render_office_family_registration_form(
         st.session_state.pop(pending_key, None)
         st.success(
             "Invitation sent\n"
-            f"We've emailed {normalized_email} with instructions to set up their account.\n"
+            f"We've emailed {normalized_email} with a secure login link.\n"
             "Ask them to check spam/junk if they don't receive it."
         )
         return
@@ -1039,7 +1319,7 @@ def render_how_it_works_family() -> None:
     info_boxes = [
         "voice-message.com — for non-urgent social voice messages. One channel between each Family sender and each resident in a care home.",
         "One message kept at a time in each direction, i.e resident to Family and Family to resident. No threads.",
-        "In this service, 'Family' means authorised contacts approved by the care home, such as family members or close friends.",
+        "Family access uses secure email login links. No SMS and no phone-number login.",
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
@@ -1067,7 +1347,8 @@ def render_how_it_works_mobile() -> None:
     info_boxes = [
         "voice-message.com — for non-urgent social voice messages. One channel between each Family sender and each resident in a care home.",
         "One message kept at a time in each direction, i.e resident to Family and Family to resident. No threads.",
-        "In this service, 'Family' means authorised contacts approved by the care home, such as family members or close friends.",
+        "Care Hub – Mobile uses individual staff PIN access for day-to-day use.",
+        "Secure email link is used only for first sign-in or expired-session recovery.",
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
@@ -1100,9 +1381,9 @@ def render_how_it_works_office_overview() -> None:
     info_boxes = [
         "voice-message.com — for non-urgent social voice messages. One channel between each Family sender and each resident in a care home.",
         "One message kept at a time in each direction, i.e resident to Family and Family to resident. No threads.",
-        "In this service, 'Family' means authorised contacts approved by the care home, such as family members or close friends.",
-        "Care Hub – Office provides full access and includes Care Hub – Mobile functionality.",
-        "Office users may carry out Mobile tasks as part of supervision or care delivery.",
+        "Care Hub – Office is a separate staff/admin access path.",
+        "Office authentication is distinct from Family email links and Mobile staff PIN access.",
+        "If Office 2FA is enabled, users complete Office verification after login.",
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
@@ -3480,7 +3761,7 @@ def render_family_login_hub() -> None:
     )
     login_info_boxes = [
         "Send one social voice message to a resident. The care team manages playback and support.",
-        "Only the latest message is kept.",
+        "Enter your email to receive a secure login link. No password required.",
         "For urgent matters or safeguarding concerns, contact the care home directly.",
     ]
     for box in login_info_boxes:
@@ -3489,19 +3770,17 @@ def render_family_login_hub() -> None:
 
     st.markdown("### Login")
     email = st.text_input("Email", key="family_login_email")
-    password = st.text_input("Password", type="password", key="family_login_password")
+    st.caption(
+        "Sign in: enter your invited email and use a secure login link. No password required."
+    )
     normalized_email = email.strip().lower()
-    normalized_password = password.strip()
     st.markdown('<div id="vm-login-actions"></div>', unsafe_allow_html=True)
-    action_cols = st.columns(3, gap="small")
+    action_cols = st.columns(2, gap="small")
     with action_cols[0]:
-        submit_login = st.button("Log in", key="family_login_submit")
+        submit_login = st.button("Send secure sign-in link", key="family_login_submit")
     with action_cols[1]:
-        forgot_pressed = st.button("Forgot?", key="family_login_forgot")
-    with action_cols[2]:
-        register_pressed = st.button(
-            "New user registration", key="family_login_register"
-        )
+        resend_pressed = st.button("Resend sign-in link", key="family_login_resend")
+    st.caption("If this email has not been invited yet, ask the care home to invite you.")
     sign_out_pressed = False
     if st.session_state.get("auth_uid"):
         if st.button("Sign out", key="family_login_sign_out"):
@@ -3509,83 +3788,26 @@ def render_family_login_hub() -> None:
     back_pressed = False
 
     if submit_login:
-        supabase, error = get_supabase_client()
-        if error:
-            st.error(error)
-        elif not normalized_email or not normalized_password:
-            st.error("Please enter both email and password.")
-        else:
-            try:
-                auth = supabase.auth.sign_in_with_password(
-                    {"email": normalized_email, "password": normalized_password}
-                )
-            except Exception as exc:  # pragma: no cover - Supabase runtime error
-                st.error(str(exc))
-            else:
-                if not auth or not auth.user:
-                    st.error("Invalid login credentials.")
-                    st.caption(f"Tried email: {normalized_email}")
-                else:
-                    st.session_state["auth_uid"] = auth.user.id
-                    st.session_state["access_token"] = auth.session.access_token
-                    st.session_state["refresh_token"] = auth.session.refresh_token
-                    persist_auth_cookie(st.session_state.get("refresh_token"))
-                    st.session_state["auth_email"] = normalized_email
-                    family_found, care_found, mapping_error, family_record, care_record = (
-                        get_mapping_status()
-                    )
-                    if family_found:
-                        if family_record:
-                            st.session_state["active_role"] = "family"
-                            st.session_state["active_care_home_id"] = family_record.get(
-                                "care_home_id"
-                            )
-                            st.session_state["family_display_name"] = (
-                                (family_record.get("display_name") or "").strip()
-                                or "Family member"
-                            )
-                        residents = get_linked_residents()
-                        st.session_state["linked_residents"] = residents
-                        if len(residents) == 1:
-                            st.session_state["selected_resident_id"] = residents[0]["id"]
-                        else:
-                            st.session_state["selected_resident_id"] = None
-                        log_audit_event(
-                            "login_success",
-                            "family",
-                            st.session_state.get("active_care_home_id"),
-                        )
-                        set_route(get_home_route(VARIANT_FAMILY))
-                    elif care_found:
-                        st.error("Wrong app variant")
-                        st.info("Your login details are for Care Hub.")
-                        if st.button("Log out", key="family_login_wrong_logout_after"):
-                            sign_out_user("family")
-                    else:
-                        if mapping_error:
-                            st.error(mapping_error)
-                            st.info("Please sign in again.")
-                        else:
-                            st.error("Account not set up yet.")
-
-    if sign_out_pressed:
-        sign_out_user("family")
-    if forgot_pressed:
-        ok, message = send_password_reset_email(normalized_email, app_variant=VARIANT_FAMILY)
+        ok, message = send_magic_link_email(
+            normalized_email, app_variant=VARIANT_FAMILY, should_create_user=False
+        )
         if ok:
             st.success(message)
         else:
             st.error(message)
-    if register_pressed:
-        ok, message = send_password_reset_email(
-            normalized_email, app_variant=VARIANT_FAMILY
+            st.info("If you are new, ask the care home to send your invitation first.")
+
+    if sign_out_pressed:
+        sign_out_user("family")
+    if resend_pressed:
+        ok, message = send_magic_link_email(
+            normalized_email, app_variant=VARIANT_FAMILY, should_create_user=False
         )
         if ok:
-            st.success(
-                "Registration link sent. Please open your email and set your password."
-            )
+            st.success(message)
         else:
             st.error(message)
+            st.info("If you are new, ask the care home to send your invitation first.")
 
     # Logged-out Family view is intentionally login-only to avoid pre-login routing issues.
 
@@ -4857,11 +5079,13 @@ def render_care_login() -> None:
         mobile_login_boxes = [
             "Care Hub - Mobile supports non-urgent social voice messages between residents and families.",
             "Not a live service. Messages are played and recorded when staff are available.",
+            "Mobile access uses an individual staff PIN for day-to-day use.",
+            "Use email secure link only for first sign-in or when session access has expired.",
         ]
         for box in mobile_login_boxes:
             st.markdown(f'<div class="care-login-box">{box}</div>', unsafe_allow_html=True)
     elif app_variant == VARIANT_OFFICE:
-        pass
+        st.caption("Office login is a separate staff/admin access path.")
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
     if st.session_state.get("auth_uid"):
         family_found, care_found, error, family_record, care_record = get_mapping_status()
@@ -4869,7 +5093,11 @@ def render_care_login() -> None:
             if care_record:
                 st.session_state["active_role"] = "care_hub"
                 st.session_state["active_care_home_id"] = care_record.get("care_home_id")
-            if app_variant == VARIANT_OFFICE and is_office_mfa_required():
+            if app_variant == VARIANT_MOBILE:
+                st.markdown("### Mobile PIN access")
+                if render_mobile_pin_gate(st.session_state.get("access_token")):
+                    set_route(get_home_route(app_variant))
+            elif app_variant == VARIANT_OFFICE and is_office_mfa_required():
                 set_route("/care-hub/mfa")
             else:
                 set_route(get_home_route(app_variant))
@@ -4886,22 +5114,52 @@ def render_care_login() -> None:
                 st.error("Account not set up yet.")
         return
 
-    email = st.text_input("Email", key="care_login_email")
-    password = st.text_input("Password", type="password", key="care_login_password")
+    if app_variant == VARIANT_MOBILE:
+        email = st.text_input("Staff email", key="care_mobile_login_email")
+        normalized_email = email.strip().lower()
+        st.caption(
+            "For first sign-in (or expired session), enter your staff email and request a secure link."
+        )
+        action_cols = st.columns(2, gap="small")
+        with action_cols[0]:
+            send_link_pressed = st.button(
+                "Send secure link", key="care_mobile_login_send_link"
+            )
+        with action_cols[1]:
+            resend_link_pressed = st.button(
+                "Resend secure link", key="care_mobile_login_resend_link"
+            )
+        if send_link_pressed or resend_link_pressed:
+            ok, message = send_magic_link_email(
+                normalized_email,
+                app_variant=VARIANT_MOBILE,
+                should_create_user=False,
+            )
+            if ok:
+                st.success(message)
+            else:
+                st.error(message)
+        return
+
+    email = st.text_input("Staff/admin email", key="care_login_email")
+    password = st.text_input(
+        "Office password", type="password", key="care_login_password"
+    )
     normalized_email = email.strip().lower()
     normalized_password = password.strip()
+    st.caption("Office uses staff/admin credentials. This is separate from Family and Mobile PIN access.")
 
     st.markdown('<div id="vm-login-actions"></div>', unsafe_allow_html=True)
-    app_variant = get_app_variant()
     show_sign_out = st.session_state.get("auth_uid")
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
         submit_login = st.button("Log in", key="care_login_submit")
     with action_cols[1]:
-        forgot_pressed = st.button("Forgot?", key="care_login_forgot")
+        forgot_pressed = st.button("Forgot password?", key="care_login_forgot")
     with action_cols[2]:
-        sign_out_pressed = st.button("Sign out", key="care_login_sign_out") if show_sign_out else False
-    back_pressed = False
+        sign_out_pressed = (
+            st.button("Sign out", key="care_login_sign_out") if show_sign_out else False
+        )
 
     if submit_login:
         supabase, error = get_supabase_client()
@@ -4919,7 +5177,6 @@ def render_care_login() -> None:
             else:
                 if not auth or not auth.user:
                     st.error("Invalid login credentials.")
-                    st.caption(f"Tried email: {normalized_email}")
                 else:
                     st.session_state["auth_uid"] = auth.user.id
                     st.session_state["access_token"] = auth.session.access_token
@@ -4940,15 +5197,13 @@ def render_care_login() -> None:
                             "care_hub",
                             st.session_state.get("active_care_home_id"),
                         )
-                        if app_variant == VARIANT_OFFICE and is_office_mfa_required():
+                        if is_office_mfa_required():
                             set_route("/care-hub/mfa")
                         else:
-                            set_route(get_home_route(app_variant))
+                            set_route(get_home_route(VARIANT_OFFICE))
                     elif family_found:
                         st.error("Wrong app variant")
                         st.info("Your login details are for Family.")
-                        if st.button("Log out", key="care_login_wrong_logout_after"):
-                            sign_out_user("care_hub")
                     else:
                         if mapping_error:
                             st.error(mapping_error)
@@ -4956,8 +5211,6 @@ def render_care_login() -> None:
                         else:
                             st.error("Account not set up yet.")
 
-    if back_pressed:
-        set_route(get_login_route(app_variant))
     if sign_out_pressed:
         sign_out_user("care_hub")
     if forgot_pressed:
@@ -4970,6 +5223,9 @@ def render_care_login() -> None:
 
 def render_care_hub() -> None:
     require_care_access()
+    if get_app_variant() == VARIANT_MOBILE and not is_mobile_pin_verified_for_session():
+        set_route(get_login_route(VARIANT_MOBILE))
+        st.stop()
     run_daily_audit_log_retention_purge()
     st.markdown(
         f"""
@@ -5658,6 +5914,7 @@ def main() -> None:
             st.error("Configuration error: AUTH_COOKIE_SIGNING_KEY is required for secure session cookies.")
             st.stop()
         restore_auth_session_from_cookie()
+    consume_magic_link_callback()
     init_state()
     route = get_route()
     st.session_state.route = route
