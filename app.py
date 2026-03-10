@@ -519,35 +519,76 @@ def send_magic_link_email(
 
 
 def consume_magic_link_callback() -> None:
-    if st.session_state.get("_magic_link_callback_consumed"):
-        return
     if not hasattr(st, "query_params"):
         return
     params = st.query_params
     auth_code = str(params.get("code", "") or "").strip()
     token_hash = str(params.get("token_hash", "") or "").strip()
+    token = str(params.get("token", "") or "").strip()
     otp_type = str(params.get("type", "") or "").strip().lower()
-    if not auth_code and not token_hash:
-        st.session_state["_magic_link_callback_consumed"] = True
+    raw_access_token = str(params.get("access_token", "") or "").strip()
+    raw_refresh_token = str(params.get("refresh_token", "") or "").strip()
+    if not auth_code and not token_hash and not token and not (raw_access_token and raw_refresh_token):
         return
 
     supabase, error = get_supabase_client()
     if error:
+        if APP_DEBUG:
+            print(f"[auth-callback] Supabase client error: {error}", flush=True)
         return
 
     auth_result = None
     try:
+        if raw_access_token and raw_refresh_token:
+            # Some auth providers/routes can return raw tokens directly in query params.
+            st.session_state["access_token"] = raw_access_token
+            st.session_state["refresh_token"] = raw_refresh_token
+            st.session_state["auth_uid"] = str(st.session_state.get("auth_uid") or "")
+            persist_auth_cookie(raw_refresh_token)
+            if APP_DEBUG:
+                print("[auth-callback] Accepted raw access/refresh tokens from query params.", flush=True)
+            for key in ("access_token", "refresh_token", "code", "token_hash", "token", "type"):
+                try:
+                    if key in st.query_params:
+                        del st.query_params[key]
+                except Exception:
+                    pass
+            return
         if auth_code:
             try:
                 auth_result = supabase.auth.exchange_code_for_session(auth_code)
             except TypeError:
                 auth_result = supabase.auth.exchange_code_for_session({"auth_code": auth_code})
-        elif token_hash:
-            verify_type = otp_type if otp_type in {"magiclink", "recovery", "invite"} else "magiclink"
-            auth_result = supabase.auth.verify_otp(
-                {"token_hash": token_hash, "type": verify_type}
-            )
+        elif token_hash or token:
+            token_payload_key = "token_hash" if token_hash else "token"
+            token_value = token_hash or token
+            candidate_types = []
+            if otp_type:
+                candidate_types.append(otp_type)
+            # Be permissive across Supabase/Gotrue variants.
+            for fallback in ("magiclink", "email", "signup", "invite", "recovery"):
+                if fallback not in candidate_types:
+                    candidate_types.append(fallback)
+            last_exc = None
+            for verify_type in candidate_types:
+                try:
+                    auth_result = supabase.auth.verify_otp(
+                        {token_payload_key: token_value, "type": verify_type}
+                    )
+                    if APP_DEBUG:
+                        print(
+                            f"[auth-callback] verify_otp succeeded using {token_payload_key} + type={verify_type}.",
+                            flush=True,
+                        )
+                    break
+                except Exception as exc:
+                    last_exc = exc
+                    continue
+            if auth_result is None and last_exc and APP_DEBUG:
+                print(f"[auth-callback] verify_otp failed for all candidate types: {last_exc}", flush=True)
     except Exception:
+        if APP_DEBUG:
+            print("[auth-callback] Exception while consuming callback.", flush=True)
         return
 
     session = getattr(auth_result, "session", None)
@@ -556,6 +597,8 @@ def consume_magic_link_callback() -> None:
         session = auth_result.get("session")
         user = auth_result.get("user")
     if not session:
+        if APP_DEBUG:
+            print("[auth-callback] No session returned from callback exchange.", flush=True)
         return
 
     access_token = getattr(session, "access_token", "") if session is not None else ""
@@ -566,6 +609,8 @@ def consume_magic_link_callback() -> None:
         if user is None:
             user = session.get("user")
     if not access_token or not refresh_token:
+        if APP_DEBUG:
+            print("[auth-callback] Missing access/refresh token in callback session.", flush=True)
         return
 
     auth_uid = ""
@@ -582,8 +627,12 @@ def consume_magic_link_callback() -> None:
     st.session_state["auth_uid"] = auth_uid
     st.session_state["auth_email"] = auth_email
     persist_auth_cookie(refresh_token)
-    st.session_state["_magic_link_callback_consumed"] = True
-    for key in ("code", "token_hash", "type"):
+    if APP_DEBUG:
+        print(
+            f"[auth-callback] Session established. auth_uid={auth_uid or '(missing)'} auth_email={auth_email or '(missing)'}",
+            flush=True,
+        )
+    for key in ("code", "token_hash", "token", "type", "access_token", "refresh_token"):
         try:
             if key in st.query_params:
                 del st.query_params[key]
@@ -6067,8 +6116,8 @@ def main() -> None:
     )
     render_debug_panel("top", app_variant, "none")
     if app_variant == VARIANT_FAMILY and not is_family_authenticated():
-        render_debug_panel("family_unauth", app_variant, "render_family_login_hub + st.stop")
-        render_family_login_hub()
+        render_debug_panel("family_unauth", app_variant, "render_family_login + st.stop")
+        render_family_login()
         st.stop()
     validate_supabase_config_for_variant(app_variant)
     # No raw variant banner in UI.
