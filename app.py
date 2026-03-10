@@ -4945,9 +4945,11 @@ def render_care_hub_security() -> None:
             )
             qr = qrcode.make(provisioning_uri)
             qr_image = qr.get_image() if hasattr(qr, "get_image") else qr
-            st.image(qr_image, caption="Scan this QR code with your authenticator app.")
+            st.image(qr_image, width=220, caption="Scan this QR code with your authenticator app.")
+            st.write("If QR scanning is difficult, add account manually using this secret key:")
             st.code(secret, language=None)
-            st.write("Enter the 6-digit code from your authenticator to activate 2FA.")
+            st.caption("Do not paste the secret key below. Enter the 6-digit app code only.")
+            st.write("Enter the 6-digit code from your authenticator app to activate 2FA.")
             code_input = st.text_input("Authenticator code", key="mfa_enroll_code")
             if st.button("Verify and enable 2FA", key="mfa_enroll_verify"):
                 if totp.verify(code_input.strip(), valid_window=1):
@@ -5016,8 +5018,10 @@ def render_care_hub_mfa() -> None:
             )
             qr = qrcode.make(provisioning_uri)
             qr_image = qr.get_image() if hasattr(qr, "get_image") else qr
-            st.image(qr_image, caption="Scan this QR code with your authenticator app.")
+            st.image(qr_image, width=220, caption="Scan this QR code with your authenticator app.")
+            st.write("If QR scanning is difficult, add account manually using this secret key:")
             st.code(secret, language=None)
+            st.caption("Do not paste the secret key below. Enter the 6-digit app code only.")
             code_input = st.text_input("Authenticator code", key="mfa_login_enroll_code")
             if st.button("Verify and enable 2FA", key="mfa_login_enroll_verify"):
                 if totp.verify(code_input.strip(), valid_window=1):
