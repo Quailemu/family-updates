@@ -1726,6 +1726,8 @@ def is_office_mfa_required() -> bool:
         return False
     if st.session_state.get("mfa_verified"):
         return False
+    if os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in TRUE_VALUES:
+        return True
     access_token = st.session_state.get("access_token")
     auth_uid = st.session_state.get("auth_uid")
     record = get_care_hub_mfa_record(access_token, auth_uid)
@@ -4900,11 +4902,14 @@ def render_care_hub_security() -> None:
     auth_email = st.session_state.get("auth_email") or "office-user"
     record = get_care_hub_mfa_record(access_token, auth_uid)
     enabled = bool(record and record.get("enabled"))
+    mfa_required = os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in TRUE_VALUES
 
     st.markdown("### Two-factor authentication (TOTP)")
     if enabled:
         st.success("Two-factor authentication is enabled.")
-        if st.button("Disable 2FA", key="mfa_disable"):
+        if mfa_required:
+            st.caption("2FA is required for Care Hub - Office and cannot be disabled.")
+        elif st.button("Disable 2FA", key="mfa_disable"):
             totp_secret = record.get("totp_secret") or pyotp.random_base32()
             ok = upsert_care_hub_mfa(access_token, auth_uid, totp_secret, [], False)
             if ok:
@@ -4915,7 +4920,10 @@ def render_care_hub_security() -> None:
                 st.error("Could not update 2FA settings.")
         st.markdown("Recovery codes are shown once at enrolment. Keep them safe.")
     else:
-        st.info("2FA is optional but recommended for Care Hub – Office.")
+        if mfa_required:
+            st.info("2FA is required for Care Hub - Office. Set up your authenticator app now.")
+        else:
+            st.info("2FA is optional but recommended for Care Hub - Office.")
         if st.button("Start 2FA setup", key="mfa_start"):
             st.session_state["mfa_enroll_secret"] = pyotp.random_base32()
             st.session_state["mfa_enroll_codes"] = generate_recovery_codes()
@@ -4967,6 +4975,7 @@ def render_care_hub_mfa() -> None:
     render_page_header("Two-factor verification")
     access_token = st.session_state.get("access_token")
     auth_uid = st.session_state.get("auth_uid")
+    mfa_required = os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in TRUE_VALUES
     if not auth_uid:
         render_access_gate(
             "Please sign in to access Care Hub – Office.",
@@ -4976,9 +4985,56 @@ def render_care_hub_mfa() -> None:
         return
     record = get_care_hub_mfa_record(access_token, auth_uid)
     if not record or not record.get("enabled"):
-        st.info("Two-factor authentication is not enabled for this account.")
-        if st.button("Continue", key="mfa_not_enabled_continue"):
-            set_route(get_home_route(get_app_variant()))
+        if not mfa_required:
+            st.info("Two-factor authentication is not enabled for this account.")
+            if st.button("Continue", key="mfa_not_enabled_continue"):
+                set_route(get_home_route(get_app_variant()))
+            return
+        st.info("Two-factor authentication is required for Care Hub - Office.")
+        st.write("Set up your authenticator app to continue.")
+        if st.button("Start 2FA setup", key="mfa_login_start_setup"):
+            st.session_state["mfa_enroll_secret"] = pyotp.random_base32()
+            st.session_state["mfa_enroll_codes"] = generate_recovery_codes()
+
+        secret = st.session_state.get("mfa_enroll_secret")
+        codes = st.session_state.get("mfa_enroll_codes")
+        if secret and codes:
+            totp = pyotp.TOTP(secret)
+            auth_email = st.session_state.get("auth_email") or "office-user"
+            provisioning_uri = totp.provisioning_uri(
+                name=auth_email,
+                issuer_name="voice-message.com",
+            )
+            qr = qrcode.make(provisioning_uri)
+            qr_image = qr.get_image() if hasattr(qr, "get_image") else qr
+            st.image(qr_image, caption="Scan this QR code with your authenticator app.")
+            st.code(secret, language=None)
+            code_input = st.text_input("Authenticator code", key="mfa_login_enroll_code")
+            if st.button("Verify and enable 2FA", key="mfa_login_enroll_verify"):
+                if totp.verify(code_input.strip(), valid_window=1):
+                    hashes = [hash_recovery_code(code) for code in codes]
+                    ok = upsert_care_hub_mfa(access_token, auth_uid, secret, hashes, True)
+                    if ok:
+                        st.session_state["mfa_show_codes"] = codes
+                        st.session_state["mfa_verified"] = True
+                        st.session_state.pop("mfa_enroll_secret", None)
+                        st.session_state.pop("mfa_enroll_codes", None)
+                        st.success("2FA enabled.")
+                    else:
+                        st.error("Could not enable 2FA.")
+                else:
+                    st.error("Invalid code. Please try again.")
+        if st.session_state.get("mfa_show_codes"):
+            st.markdown("### Recovery codes")
+            st.write("Save these codes now. They will not be shown again.")
+            for code in st.session_state["mfa_show_codes"]:
+                st.code(code, language=None)
+            if st.button("I have saved these codes", key="mfa_login_codes_saved"):
+                st.session_state.pop("mfa_show_codes", None)
+                set_route(get_home_route(get_app_variant()))
+                st.rerun()
+        if st.button("Sign out", key="mfa_setup_sign_out"):
+            sign_out_user("care_hub")
         return
 
     st.write("Enter your authenticator code.")
