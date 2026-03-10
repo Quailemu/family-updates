@@ -1731,7 +1731,7 @@ def is_office_mfa_required() -> bool:
         return False
     if st.session_state.get("mfa_verified"):
         return False
-    if os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in TRUE_VALUES:
+    if os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in {"1", "true", "yes", "on"}:
         return True
     access_token = st.session_state.get("access_token")
     auth_uid = st.session_state.get("auth_uid")
@@ -4907,7 +4907,9 @@ def render_care_hub_security() -> None:
     auth_email = st.session_state.get("auth_email") or "office-user"
     record = get_care_hub_mfa_record(access_token, auth_uid)
     enabled = bool(record and record.get("enabled"))
-    mfa_required = os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in TRUE_VALUES
+    mfa_required = (
+        os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in {"1", "true", "yes", "on"}
+    )
 
     st.markdown("### Two-factor authentication (TOTP)")
     if enabled:
@@ -4980,7 +4982,9 @@ def render_care_hub_mfa() -> None:
     render_page_header("Two-factor verification")
     access_token = st.session_state.get("access_token")
     auth_uid = st.session_state.get("auth_uid")
-    mfa_required = os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in TRUE_VALUES
+    mfa_required = (
+        os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in {"1", "true", "yes", "on"}
+    )
     if not auth_uid:
         render_access_gate(
             "Please sign in to access Care Hub – Office.",
