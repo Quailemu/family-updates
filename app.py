@@ -543,10 +543,31 @@ def consume_magic_link_callback() -> None:
             # Some auth providers/routes can return raw tokens directly in query params.
             st.session_state["access_token"] = raw_access_token
             st.session_state["refresh_token"] = raw_refresh_token
-            st.session_state["auth_uid"] = str(st.session_state.get("auth_uid") or "")
+            raw_auth_uid = ""
+            raw_auth_email = ""
+            try:
+                user_result = supabase.auth.get_user(raw_access_token)
+                user_obj = getattr(user_result, "user", None)
+                if user_obj is None and isinstance(user_result, dict):
+                    user_obj = user_result.get("user")
+                if user_obj is not None:
+                    raw_auth_uid = str(getattr(user_obj, "id", "") or "")
+                    raw_auth_email = str(getattr(user_obj, "email", "") or "")
+                    if isinstance(user_obj, dict):
+                        raw_auth_uid = raw_auth_uid or str(user_obj.get("id") or "")
+                        raw_auth_email = raw_auth_email or str(user_obj.get("email") or "")
+            except Exception:
+                pass
+            st.session_state["auth_uid"] = raw_auth_uid or str(st.session_state.get("auth_uid") or "")
+            if raw_auth_email:
+                st.session_state["auth_email"] = raw_auth_email
             persist_auth_cookie(raw_refresh_token)
             if APP_DEBUG:
-                print("[auth-callback] Accepted raw access/refresh tokens from query params.", flush=True)
+                print(
+                    "[auth-callback] Accepted raw access/refresh tokens from query params. "
+                    f"auth_uid={st.session_state.get('auth_uid') or '(missing)'}",
+                    flush=True,
+                )
             for key in ("access_token", "refresh_token", "code", "token_hash", "token", "type"):
                 try:
                     if key in st.query_params:
@@ -621,6 +642,20 @@ def consume_magic_link_callback() -> None:
         if isinstance(user, dict):
             auth_uid = auth_uid or str(user.get("id") or "")
             auth_email = auth_email or str(user.get("email") or "")
+    if not auth_uid:
+        try:
+            user_result = supabase.auth.get_user(access_token)
+            user_obj = getattr(user_result, "user", None)
+            if user_obj is None and isinstance(user_result, dict):
+                user_obj = user_result.get("user")
+            if user_obj is not None:
+                auth_uid = str(getattr(user_obj, "id", "") or "")
+                auth_email = auth_email or str(getattr(user_obj, "email", "") or "")
+                if isinstance(user_obj, dict):
+                    auth_uid = auth_uid or str(user_obj.get("id") or "")
+                    auth_email = auth_email or str(user_obj.get("email") or "")
+        except Exception:
+            pass
 
     st.session_state["access_token"] = access_token
     st.session_state["refresh_token"] = refresh_token
@@ -1102,7 +1137,27 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
         return False, False, "No access token in session.", None, None
     try:
         supabase.postgrest.auth(access_token)
-        auth_uid = st.session_state.get("auth_uid")
+        auth_uid = str(st.session_state.get("auth_uid") or "").strip()
+        if not auth_uid:
+            try:
+                user_result = supabase.auth.get_user(access_token)
+                user_obj = getattr(user_result, "user", None)
+                if user_obj is None and isinstance(user_result, dict):
+                    user_obj = user_result.get("user")
+                if user_obj is not None:
+                    auth_uid = str(getattr(user_obj, "id", "") or "")
+                    auth_email = str(getattr(user_obj, "email", "") or "")
+                    if isinstance(user_obj, dict):
+                        auth_uid = auth_uid or str(user_obj.get("id") or "")
+                        auth_email = auth_email or str(user_obj.get("email") or "")
+                    if auth_uid:
+                        st.session_state["auth_uid"] = auth_uid
+                    if auth_email:
+                        st.session_state["auth_email"] = auth_email
+            except Exception:
+                pass
+        if not auth_uid:
+            return False, False, "Authenticated user identity could not be resolved.", None, None
         family_resp = (
             supabase.table("family_contacts")
             .select("id, care_home_id, display_name")
