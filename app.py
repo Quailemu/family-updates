@@ -1114,12 +1114,17 @@ def send_password_reset_email(email: str, app_variant: str = "") -> tuple[bool, 
     if error:
         return False, error
     try:
+        redirect_to = ""
         if app_variant == VARIANT_FAMILY:
             redirect_to = os.getenv("PASSWORD_RESET_REDIRECT_URL", "").strip()
+        elif app_variant in {VARIANT_MOBILE, VARIANT_OFFICE}:
+            redirect_to = get_magic_link_redirect_url(app_variant).strip()
+
+        if redirect_to:
             debug = os.getenv("APP_DEBUG", "").strip() in ("1", "true", "True", "yes", "YES")
             if debug:
                 st.info(f"Reset redirect_to: {redirect_to}")
-            print(f"[auth] Family forgot-password redirect_to={redirect_to!r}")
+            print(f"[auth] Password reset redirect_to={redirect_to!r} for variant={app_variant!r}")
             supabase.auth.reset_password_email(target_email, {"redirect_to": redirect_to})
         else:
             supabase.auth.reset_password_email(target_email)
@@ -5374,7 +5379,7 @@ def render_care_login() -> None:
     if sign_out_pressed:
         sign_out_user("care_hub")
     if forgot_pressed:
-        ok, message = send_password_reset_email(normalized_email)
+        ok, message = send_password_reset_email(normalized_email, app_variant=app_variant)
         if ok:
             st.success(message)
         else:
