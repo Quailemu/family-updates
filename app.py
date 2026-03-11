@@ -4105,7 +4105,7 @@ def render_family_send() -> None:
         if room_label:
             st.markdown(f"*{room_label}*")
 
-        render_message_direction_header("resident", "family")
+        st.markdown(f"**Latest message from {full_name} to you**")
         latest = fetch_latest_message(
             resident_id,
             "from_resident",
@@ -4122,8 +4122,8 @@ def render_family_send() -> None:
                 unsafe_allow_html=True,
             )
 
-        st.markdown("**Care Hub Update (Office) → Family**")
-        render_message_direction_header("care_hub", "family")
+        st.markdown("**Care Hub update to Family (Office informational message)**")
+        st.caption("One current office update for this resident. Office updates are informational only.")
         latest_office_update = fetch_latest_message(
             resident_id,
             "office_to_family",
@@ -4143,13 +4143,7 @@ def render_family_send() -> None:
                 unsafe_allow_html=True,
             )
 
-        is_office_variant = get_app_variant() == VARIANT_OFFICE
-        render_message_direction_header(
-            "family",
-            "resident",
-            show_chips=not is_office_variant,
-            use_from_to_heading=is_office_variant,
-        )
+        st.markdown(f"**Latest message from you to {full_name}**")
         latest_sent = fetch_latest_message(
             resident_id,
             "to_resident",
@@ -4211,7 +4205,7 @@ def render_family_send() -> None:
         native_recording_available = hasattr(st, "audio_input")
         if native_recording_available:
             recorded_from_native = st.audio_input(
-                "Record voice message",
+                f"Record voice message to {full_name}",
                 key=f"family_audio_input_{resident_id}",
             )
             if recorded_from_native is not None:
