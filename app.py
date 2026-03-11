@@ -1251,7 +1251,6 @@ def upsert_care_hub_mfa(
         "totp_secret": totp_secret,
         "recovery_code_hashes": recovery_code_hashes,
         "enabled": enabled,
-        "updated_at": "now()",
     }
     try:
         supabase.table("care_hub_mfa").upsert(payload).execute()
@@ -1273,7 +1272,7 @@ def update_care_hub_mfa_codes(
     try:
         (
             supabase.table("care_hub_mfa")
-            .update({"recovery_code_hashes": recovery_code_hashes, "updated_at": "now()"})
+            .update({"recovery_code_hashes": recovery_code_hashes})
             .eq("auth_user_id", auth_uid)
             .execute()
         )
