@@ -3819,6 +3819,13 @@ def format_soft_message_period_label(recorded_at_value: str | None) -> str | Non
         return None
 
 
+def format_office_sent_label(now_dt: object | None = None) -> str:
+    dt_mod = __import__("datetime")
+    local_now = now_dt or dt_mod.datetime.now()
+    period = "am" if local_now.hour < 12 else "pm"
+    return f"Message sent \u2014 Today {period}"
+
+
 def render_family_login_hub() -> None:
     inject_login_css()
     st.markdown(
@@ -5530,6 +5537,7 @@ def render_care_hub() -> None:
                     "office_recording_mime_type": "audio/wav",
                     "office_preview_confirmed": False,
                     "office_recording_fingerprint": None,
+                    "office_last_sent_label": None,
                 },
             )
     else:
@@ -5556,6 +5564,7 @@ def render_care_hub() -> None:
                 "office_recording_mime_type": "audio/wav",
                 "office_preview_confirmed": False,
                 "office_recording_fingerprint": None,
+                "office_last_sent_label": None,
             },
         )
         full_name = f"{resident['preferred_name']} {resident['surname']}"
@@ -5936,6 +5945,7 @@ def render_care_hub() -> None:
                             getattr(recorded_office, "type", None) or "audio/wav"
                         )
                         state["office_preview_confirmed"] = False
+                        state["office_last_sent_label"] = None
                         st.session_state[f"care_office_listened_{resident_id}"] = False
             elif get_app_variant() == VARIANT_OFFICE:
                 st.warning("Native microphone recording is unavailable in this environment.")
@@ -5953,6 +5963,22 @@ def render_care_hub() -> None:
                 )
             elif get_app_variant() == VARIANT_OFFICE:
                 state["office_preview_confirmed"] = False
+
+            if (
+                get_app_variant() == VARIANT_OFFICE
+                and state.get("office_last_sent_label")
+                and not state.get("office_recording_bytes")
+            ):
+                st.success(state.get("office_last_sent_label"))
+
+            if get_app_variant() == VARIANT_OFFICE:
+                st.markdown("**Office update**")
+                st.caption(
+                    "This update will be sent to all authorised family contacts for this resident and will appear in Care Hub Mobile."
+                )
+                st.caption(
+                    "Office updates are non-urgent, one-way updates from the care team (no replies). For any queries, please contact the care home directly."
+                )
 
             office_can_send = bool(
                 state.get("office_recording_bytes") and state.get("office_preview_confirmed")
@@ -6061,7 +6087,8 @@ def render_care_hub() -> None:
                             state["office_recording_mime_type"] = "audio/wav"
                             state["office_preview_confirmed"] = False
                             state["office_recording_fingerprint"] = None
-                            st.success("Care hub update sent.")
+                            state["office_last_sent_label"] = format_office_sent_label()
+                            st.rerun()
 
 
     # Navigation rendered at the top of the page.
