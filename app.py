@@ -1443,6 +1443,12 @@ def render_how_it_works_family() -> None:
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
+    family_back_route = (
+        get_home_route(VARIANT_FAMILY)
+        if st.session_state.get("auth_uid")
+        else get_login_route(VARIANT_FAMILY)
+    )
+    render_route_link("Back to Family", family_back_route, key="family_how_it_works_back_link")
 
 
 def render_how_it_works_mobile() -> None:
