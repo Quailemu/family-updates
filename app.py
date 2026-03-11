@@ -1208,6 +1208,10 @@ def hash_recovery_code(code: str) -> str:
     return hashlib.sha256(code.strip().encode("utf-8")).hexdigest()
 
 
+def normalize_totp_code(raw_code: str) -> str:
+    return "".join(ch for ch in (raw_code or "") if ch.isdigit())
+
+
 def generate_recovery_codes(count: int = 8) -> list[str]:
     codes = []
     for _ in range(count):
@@ -4951,7 +4955,7 @@ def render_care_hub_security() -> None:
             st.write("Enter the 6-digit code from your authenticator app to activate 2FA.")
             code_input = st.text_input("Authenticator code", key="mfa_enroll_code")
             if st.button("Verify and enable 2FA", key="mfa_enroll_verify"):
-                if totp.verify(code_input.strip(), valid_window=1):
+                if totp.verify(normalize_totp_code(code_input), valid_window=2):
                     hashes = [hash_recovery_code(code) for code in codes]
                     ok = upsert_care_hub_mfa(access_token, auth_uid, secret, hashes, True)
                     if ok:
@@ -5023,7 +5027,7 @@ def render_care_hub_mfa() -> None:
             st.caption("Do not paste the secret key below. Enter the 6-digit app code only.")
             code_input = st.text_input("Authenticator code", key="mfa_login_enroll_code")
             if st.button("Verify and enable 2FA", key="mfa_login_enroll_verify"):
-                if totp.verify(code_input.strip(), valid_window=1):
+                if totp.verify(normalize_totp_code(code_input), valid_window=2):
                     hashes = [hash_recovery_code(code) for code in codes]
                     ok = upsert_care_hub_mfa(access_token, auth_uid, secret, hashes, True)
                     if ok:
@@ -5058,7 +5062,7 @@ def render_care_hub_mfa() -> None:
         verified = False
         if totp_code:
             totp = pyotp.TOTP(totp_secret)
-            verified = totp.verify(totp_code.strip(), valid_window=1)
+            verified = totp.verify(normalize_totp_code(totp_code), valid_window=2)
         elif recovery_code:
             hashed = hash_recovery_code(recovery_code)
             if hashed in recovery_hashes:
