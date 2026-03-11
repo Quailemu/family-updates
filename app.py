@@ -4939,8 +4939,8 @@ def render_care_hub_security() -> None:
         if secret and codes:
             totp = pyotp.TOTP(secret)
             provisioning_uri = totp.provisioning_uri(
-                name=auth_email,
-                issuer_name="voice-message.com",
+                name=f"{auth_email} (Office)",
+                issuer_name="voice-message-office",
             )
             qr = qrcode.make(provisioning_uri)
             qr_image = qr.get_image() if hasattr(qr, "get_image") else qr
@@ -5012,8 +5012,8 @@ def render_care_hub_mfa() -> None:
             totp = pyotp.TOTP(secret)
             auth_email = st.session_state.get("auth_email") or "office-user"
             provisioning_uri = totp.provisioning_uri(
-                name=auth_email,
-                issuer_name="voice-message.com",
+                name=f"{auth_email} (Office)",
+                issuer_name="voice-message-office",
             )
             qr = qrcode.make(provisioning_uri)
             qr_image = qr.get_image() if hasattr(qr, "get_image") else qr
