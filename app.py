@@ -1246,9 +1246,11 @@ def upsert_care_hub_mfa(
     enabled: bool,
 ) -> bool:
     if not auth_uid:
+        st.session_state["mfa_last_error"] = "Missing authenticated user id."
         return False
     supabase, error = get_authed_supabase(access_token)
     if error:
+        st.session_state["mfa_last_error"] = error
         return False
     payload = {
         "auth_user_id": auth_uid,
@@ -1258,8 +1260,10 @@ def upsert_care_hub_mfa(
     }
     try:
         supabase.table("care_hub_mfa").upsert(payload).execute()
+        st.session_state.pop("mfa_last_error", None)
         return True
-    except Exception:
+    except Exception as exc:
+        st.session_state["mfa_last_error"] = str(exc)
         return False
 
 
@@ -1269,9 +1273,11 @@ def update_care_hub_mfa_codes(
     recovery_code_hashes: list[str],
 ) -> bool:
     if not auth_uid:
+        st.session_state["mfa_last_error"] = "Missing authenticated user id."
         return False
     supabase, error = get_authed_supabase(access_token)
     if error:
+        st.session_state["mfa_last_error"] = error
         return False
     try:
         (
@@ -1280,8 +1286,10 @@ def update_care_hub_mfa_codes(
             .eq("auth_user_id", auth_uid)
             .execute()
         )
+        st.session_state.pop("mfa_last_error", None)
         return True
-    except Exception:
+    except Exception as exc:
+        st.session_state["mfa_last_error"] = str(exc)
         return False
 
 def render_access_gate(message: str, login_route: str, role: str) -> None:
@@ -4965,6 +4973,9 @@ def render_care_hub_security() -> None:
                         st.success("2FA enabled.")
                     else:
                         st.error("Could not enable 2FA.")
+                        mfa_error = st.session_state.get("mfa_last_error")
+                        if mfa_error:
+                            st.error(f"2FA error detail: {mfa_error}")
                 else:
                     st.error("Invalid code. Please try again.")
 
@@ -5038,6 +5049,9 @@ def render_care_hub_mfa() -> None:
                         st.success("2FA enabled.")
                     else:
                         st.error("Could not enable 2FA.")
+                        mfa_error = st.session_state.get("mfa_last_error")
+                        if mfa_error:
+                            st.error(f"2FA error detail: {mfa_error}")
                 else:
                     st.error("Invalid code. Please try again.")
         if st.session_state.get("mfa_show_codes"):
