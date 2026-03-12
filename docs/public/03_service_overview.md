@@ -10,6 +10,14 @@ Office updates are one-way informational messages and replies cannot be sent thr
 
 The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
 
+## Where this helps in practice
+
+- Sending one non-urgent office update to reduce repeated routine calls from authorised contacts.
+- Supporting residents to send replies during planned care routines rather than arranging live calls.
+- Reducing front-desk time spent on repeated non-urgent check-in requests.
+- Keeping communication clear by showing only the current message in each direction.
+- Sharing day-to-day home updates as one-way information without creating reply pressure.
+
 ## System structure
 
 The system has three application interfaces for different groups of people associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, and other authorised contacts).

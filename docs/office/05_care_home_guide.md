@@ -36,6 +36,14 @@ Updates are sent from the care home to keep families informed about day-to-day e
 
 ## Day-to-day use
 
+### Where this helps in practice
+
+- Sending one office update for routine home news instead of multiple separate calls.
+- Supporting resident playback and recording within existing care rounds.
+- Reducing repeated non-urgent inbound enquiries to office staff.
+- Keeping message handling simple by retaining only the current message in each direction.
+- Giving authorised contacts clear one-way office information without reply workflows.
+
 ### Access model
 
 Family users sign in with secure email links (email only).
