@@ -35,6 +35,24 @@ This means, for example:
 
 There is no archive, no scrolling thread, and no message history.
 
+## Family/friend channel structure
+
+Authorised contacts are organised into channels (sub-groups) for each resident.
+A sub-group is often one person, but can contain more than one authorised contact where configured by the care home.
+
+Each sub-group channel has one current message in each direction at any one time:
+
+- Family/Friend -> Resident
+- Resident -> Family/Friend
+
+Office adds a separate one-way informational lane:
+
+- Office -> Family/Friend
+
+Each lane keeps only its current message. New messages replace previous messages in that same lane.
+
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 ## App versions (three distinct experiences)
 
 - Family App: used by authorised contacts only.

@@ -25,6 +25,40 @@ Only the latest message remains in each lane.
 
 All current messages for that resident may be played by authorised users across these groups, but no group can alter another group's message. Each message lane may only be replaced by the interface that created it.
 
+## Family/friend channels and sub-groups
+
+Family and friends are organised into authorised channels (sub-groups) around the resident.
+A sub-group is often one person (for example one daughter, one son, or one close friend), but can include more than one authorised contact where the care home chooses.
+
+Each sub-group channel has one current message each way at any one time:
+
+- Family/Friend -> Resident (current message only)
+- Resident -> Family/Friend (current message only)
+
+When a new message is recorded in either direction for that same channel, the previous message in that direction is replaced.
+
+## Flow diagram (channel model)
+
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
+The diagram shows the three-interface model:
+
+- Care Hub – Office provides one-way informational Office updates.
+- Family/friend sub-groups each have their own channel to the resident (often one person per sub-group).
+- Care Hub – Mobile supports resident playback and resident replies.
+
+```text
+Care Hub – Office
+    |  Office -> Family/Friend (one current update per resident/family group)
+    v
+Family/Friend sub-group 1 <-> Resident (one current message each way)
+Family/Friend sub-group 2 <-> Resident (one current message each way)
+Family/Friend sub-group 3 <-> Resident (one current message each way)
+    ^
+    |  Resident support and playback
+Care Hub – Mobile
+```
+
 ## Playback and care setting
 
 Playback access is limited to authorised users in the resident's care circle.  

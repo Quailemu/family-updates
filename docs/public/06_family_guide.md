@@ -30,6 +30,16 @@ Each message lane may only be replaced by the interface that created it.
 | Resident -> Family/Friend | Care Hub – Mobile | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Mobile |
 | Office -> Family/Friend | Care Hub – Office | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Office |
 
+## Channels and sub-groups
+
+Family/friend contacts are organised into authorised channels (sub-groups) linked to the resident.
+A sub-group is often one person, but can include more than one authorised contact where set up that way.
+
+Each authorised channel keeps one current message in each direction at any one time.
+When a new message is recorded in that channel and direction, the previous one is replaced.
+
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 ## How to use the Family App
 
 ### Sending your message

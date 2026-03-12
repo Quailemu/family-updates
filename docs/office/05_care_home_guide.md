@@ -30,6 +30,22 @@ Each lane may only be replaced by the interface that created it.
 
 This includes the Office lane: Office can send one current update per resident lane, and a new Office message replaces the previous Office message in that lane.
 
+## Family/friend channels and sub-groups
+
+For each resident, family/friend communication is organised into authorised channels (sub-groups).
+A sub-group is often one person, but can include more than one authorised contact where the home configures a shared channel.
+
+Each sub-group channel keeps one current message each way at any one time:
+
+- Family/Friend -> Resident
+- Resident -> Family/Friend
+
+Office updates are separate:
+
+- Office -> Family/Friend (one current informational update per resident lane)
+
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 ## Day-to-day use
 
 ### Access model
