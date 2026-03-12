@@ -17,23 +17,24 @@ The service has three interfaces linked to the resident's care circle:
 - Care Hub – Office supports oversight and Office-originated updates.
 - Family App supports authorised contacts sending and playing messages.
 
+The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
+
 ## Message playback and control
 
-All current messages for the resident may be played by authorised users across these groups.
+Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
+No group can directly replace another group's message.
 
-No group can alter another group's message directly.  
-Each message can only be replaced by the side that created it.
+## Authorised contact channel structure
 
-## Family/friend channel structure
+Family/friend contacts are organised into authorised contact channels linked to the resident.
+An authorised contact channel may contain one authorised contact or multiple authorised contacts where set up that way.
 
-Family/friend contacts are organised into authorised channels (sub-groups) linked to the resident.
-A sub-group is often one person, but can include more than one authorised contact where set up that way.
-
-Each authorised channel keeps one current message in each direction at any one time.
+Each two-way contact channel keeps one current message in each direction at any one time.
 When a new message is recorded in that same direction, the previous one is replaced.
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
+The Voice Message Flow Diagram should appear on any page where the messaging system is explained, as it provides the clearest explanation of how the channels operate.
 Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
 
 ## How to use the Family App

@@ -17,8 +17,10 @@ Each role uses its own app.
 ## How many app interfaces are there?
 
 There are three role-based interfaces linked to the resident's care circle: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
+The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+The Voice Message Flow Diagram should appear on any page where the messaging system is explained, as it provides the clearest explanation of how the channels operate.
 
 ## Is this service monitored or responded to by staff?
 
@@ -34,7 +36,7 @@ The service keeps only the current message in each direction for each authorised
 
 ## Can different groups play the same current messages?
 
-Yes. Current messages for that resident may be played by authorised users across Family, Care Hub – Mobile, and Care Hub – Office.
+Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
 
 ## Can one group change another group's message?
 

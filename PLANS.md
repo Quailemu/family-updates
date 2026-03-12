@@ -146,15 +146,17 @@ Care Hub – Office provides management-level access to the voice-message.com pl
 It supports oversight of how the platform is used, while maintaining the care home’s existing governance framework.
 
 ## How the Platform Operates
-The platform operates on a channel-based “one message in, one message out” structure.
+The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
 
-Lanes:
+Channel directions:
 - Family/Friend -> Resident (created/replaced in Family App)
 - Resident -> Family/Friend (created/replaced in Care Hub – Mobile)
 - Office -> Family/Friend (created/replaced in Care Hub – Office)
 
 Only the latest message in each direction is kept.  
 When a new message is sent in the same direction, the previous message in that direction is replaced.
+
+Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
 
 This structure helps keep communication simple and manageable within care settings.
 

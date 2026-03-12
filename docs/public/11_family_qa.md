@@ -11,7 +11,11 @@ A: Non-urgent, social voice messages between residents in care homes and authori
 Q: Which interfaces are part of this service?  
 A: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
 
+Q: What channel types does the service use?  
+A: The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
+
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+The Voice Message Flow Diagram should appear on any page where the messaging system is explained, as it provides the clearest explanation of how the channels operate.
 
 Q: Can I send urgent updates here?  
 A: No. For urgent, care, or safeguarding matters, contact the care home directly.
@@ -41,7 +45,7 @@ Q: Can staff edit my recording?
 A: Staff do not edit your recording. A new recording replaces the previous one.
 
 Q: Can different groups play the same current messages?  
-A: Yes. Current messages for the resident may be played across Family, Care Hub – Mobile, and Care Hub – Office by authorised users.
+A: Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
 
 Q: Can one group replace another group's message?  
 A: No. Each message may only be replaced by the side that created it.

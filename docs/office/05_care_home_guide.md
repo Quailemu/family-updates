@@ -9,27 +9,26 @@ It explains how the Care Hub is used day to day across the Care Hub – Mobile a
 
 The service has three interfaces linked to the resident's care circle:
 
-- Care Hub – Mobile (carer operational interface)
+- Care Hub – Mobile (carer operational interface supporting each resident with messaging)
 - Care Hub – Office (office/admin interface)
 - Family App (family members, friends, and other authorised contacts)
 
 Each interface has separate controls for the messages it creates.
+The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
 
 ## Message playback and control
 
-All current messages for a resident may be played by authorised users across Mobile, Office, and Family.
+In each direction, only one current message is kept. A new message replaces the previous message in that same direction.
+Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
+No group can directly replace another group's message.
 
-No group can alter another group's message directly.
-Each message can only be replaced by the side that created it.
-Office can send one current update per resident/family context, and a new Office update replaces the previous Office update.
+## Authorised contact channel structure
 
-## Family/friend channels and sub-groups
+For each resident, family/friend communication is organised into authorised contact channels.
+An authorised contact channel may contain one authorised contact or multiple authorised contacts where the home configures a shared channel.
 
-For each resident, family/friend communication is organised into authorised channels (sub-groups).
-A sub-group is often one person, but can include more than one authorised contact where the home configures a shared channel.
-
-Each sub-group channel keeps one current message each way at any one time.
-Office updates are one-way from the care home to Family/Friend channels.
+Each two-way contact channel keeps one current message each way at any one time.
+The Office update channel is separate and one-way from the care home to authorised contacts.
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
@@ -43,7 +42,7 @@ Family users sign in with secure email links (email only).
 
 Care Hub – Mobile is intended for individual staff access with an individual Mobile PIN per staff member.
 
-Care Hub – Office is a separate staff/admin login path.
+Care Hub – Office is a separate staff/admin login path using two-factor authentication.
 
 Carers use Care Hub – Mobile only.  
 Office staff use Care Hub – Office only.
@@ -71,18 +70,11 @@ Steps
 
 What Happens Next
 
-The family contact receives an email invitation.
-They click a secure email login link to sign in.
-No password is required.
-They log into the Family app.
-Access is restricted to the selected resident.
+The family contact receives an email invitation. They click a secure email login link to sign in. No password is required. They log into the Family app. Access is restricted to the selected resident.
 
-Important Notes
+Important notes
 
-This service is for non-urgent social communication only.
-Only authorised contacts should be registered.
-Duplicate registrations are prevented automatically.
-Relationship labels help staff identify the right contact in daily workflows.
+This service is for non-urgent social communication only. Only authorised contacts should be registered. Duplicate registrations are prevented automatically. Relationship labels help staff identify the right contact in daily workflows.
 
 ### Resident list and cards (Care Hub)
 
@@ -90,11 +82,7 @@ Care Hub users see a scrollable list of residents. Each resident has one communi
 
 ### Mobile send section
 
-Staff can record an outgoing message for that resident from the Send section. The card includes:
-
-- a single recorder/player
-- a "I have listened to this message." checkbox before sending
-- a recipient selector listing the resident's linked approved contacts
+Staff can record an outgoing message for that resident from the Send section. The card includes a single recorder/player, a "I have listened to this message." checkbox before sending, and a recipient selector listing the resident's linked approved contacts.
 
 ### Office update message
 

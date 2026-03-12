@@ -57,6 +57,10 @@ Duplicate registrations are prevented automatically.
 - One message per direction per resident/contact (no threads).
 - Each new message replaces the previous one.
 
+## Message flow diagram
+
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 ## Safeguarding clarification
 
 - Safeguarding, consent, and capacity duties remain with the care home.

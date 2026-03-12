@@ -15,6 +15,7 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 ## Message flow and control
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+The Voice Message Flow Diagram should appear on any page where the messaging system is explained, as it provides the clearest explanation of how the channels operate.
 
 ## Resident and Family messages
 

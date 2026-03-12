@@ -15,27 +15,26 @@ The service is not intended for care updates, health information, safeguarding c
 The system has three application interfaces for different groups of people associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, and other authorised contacts).
 
 Each interface is role-based and uses separate controls.
+The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
 
 ## Message playback and control
 
-Only the latest message is kept in each direction.  
-When a new message is recorded from the same source and direction, the previous message is replaced.
-
-All current messages for that resident may be played by authorised users across Mobile, Office, and Family.
-No group can alter another group's message directly.
+In each direction, only one current message is kept. A new message replaces the previous message in that same direction.
+Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
 
 There is no archive, no scrolling thread, and no message history.
 
-## Family/friend channel structure
+## Authorised contact channel structure
 
-Authorised contacts are organised into channels (sub-groups) for each resident.
-A sub-group is often one person, but can contain more than one authorised contact where configured by the care home.
+Authorised contacts are organised into authorised contact channels for each resident.
+An authorised contact channel may contain one authorised contact or multiple authorised contacts where configured by the care home.
 
-Each sub-group keeps one current message each way at any one time.
-Office updates are one-way from the care home to Family/Friend channels.
+Each two-way contact channel supports Family/Friend -> Resident and Resident -> Family/Friend.
+The Office update channel is separate and one-way from the care home to authorised contacts.
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
+The Voice Message Flow Diagram should appear on any page where the messaging system is explained, as it provides the clearest explanation of how the channels operate.
 Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
 
 ## App versions (three distinct experiences)
