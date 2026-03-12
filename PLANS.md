@@ -33,6 +33,13 @@ All current messages for that resident may be played by authorised users across 
 Office update statement:
 Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
 
+Service overview purpose statement:
+voice-message.com is a simple tool for exchanging non-urgent social voice messages between residents in care homes and their authorised contacts. The care home office may also send non-urgent general updates about daily life in the home to authorised contacts.
+
+Office updates are one-way informational messages and replies cannot be sent through the system.
+
+The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
+
 ---
 
 ## Pricing page (public)

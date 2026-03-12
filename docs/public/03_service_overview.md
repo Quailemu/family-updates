@@ -4,7 +4,11 @@
 
 ## Purpose
 
-voice-message.com is a simple tool for exchanging non-urgent, social voice messages between residents in care homes and their authorised contacts. It supports staying in touch and is not intended for care updates, health information, or safeguarding communication.
+voice-message.com is a simple tool for exchanging non-urgent social voice messages between residents in care homes and their authorised contacts. The care home office may also send non-urgent general updates about daily life in the home to authorised contacts.
+
+Office updates are one-way informational messages and replies cannot be sent through the system.
+
+The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
 
 ## System structure
 
