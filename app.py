@@ -1417,6 +1417,23 @@ def render_safeguarding_block() -> None:
     )
 
 
+def render_how_it_works_diagram_and_notes() -> None:
+    diagram_path = Path("assets/voice-message-flow-diagram.png")
+    if diagram_path.exists():
+        try:
+            st.image(str(diagram_path), caption="Voice message flow diagram", use_container_width=True)
+        except TypeError:
+            st.image(str(diagram_path), caption="Voice message flow diagram", use_column_width=True)
+    else:
+        st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
+    st.markdown(
+        "Updates are sent from the care home to keep families informed about day-to-day events. "
+        "Messages are one-way and replies cannot be sent through this system. "
+        "These updates are for non-urgent, non-medical information only. "
+        "For any urgent, medical, or other queries, please contact the care home directly."
+    )
+
+
 def render_how_it_works_family() -> None:
     render_page_header("How it works — Family")
     st.markdown(
@@ -1443,6 +1460,7 @@ def render_how_it_works_family() -> None:
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
+    render_how_it_works_diagram_and_notes()
     family_back_route = (
         get_home_route(VARIANT_FAMILY)
         if st.session_state.get("auth_uid")
@@ -1478,6 +1496,7 @@ def render_how_it_works_mobile() -> None:
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
+    render_how_it_works_diagram_and_notes()
     render_route_link(
         "Back to Care Hub – Mobile",
         get_home_route(VARIANT_MOBILE),
@@ -1513,6 +1532,7 @@ def render_how_it_works_office_overview() -> None:
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
+    render_how_it_works_diagram_and_notes()
 
 
 def render_how_it_works_office() -> None:
@@ -2620,6 +2640,7 @@ def render_how_it_works_general() -> None:
         "Care staff and office staff may read messages where required.  \n"
         "Security is in place to prevent access by members of the public."
     )
+    render_how_it_works_diagram_and_notes()
 
 
 def render_how_it_works_button(button_key: str) -> None:
