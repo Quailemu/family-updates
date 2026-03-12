@@ -14,24 +14,11 @@ Each interface is role-based and uses separate controls.
 
 ## Message playback and control
 
-The service uses separate message lanes linked to each resident.  
-Each lane follows a one-message-only rule: a new message replaces the previous message in that same lane.
+Only the latest message is kept in each direction.  
+When a new message is recorded from the same source and direction, the previous message is replaced.
 
-| Message lane | Created by | Playable by | Replaceable by |
-| --- | --- | --- | --- |
-| Family/Friend -> Resident | Family App | Family App, Care Hub – Mobile, Care Hub – Office | Family App |
-| Resident -> Family/Friend | Care Hub – Mobile | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Mobile |
-| Office -> Family/Friend | Care Hub – Office | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Office |
-
-All current messages for that resident may be played by authorised users across these groups, but no group can alter another group's message. Each message lane may only be replaced by the interface that created it.
-
-This means, for example:
-
-- Office messages are playable in Mobile and Family.
-- Mobile/resident messages are playable in Office and Family.
-- Office cannot replace Mobile/resident messages.
-- Mobile cannot replace Office messages.
-- Family cannot replace Office or Mobile/resident messages, except by replacing its own Family lane message.
+All current messages for that resident may be played by authorised users across Mobile, Office, and Family.
+No group can alter another group's message directly.
 
 There is no archive, no scrolling thread, and no message history.
 
@@ -40,18 +27,12 @@ There is no archive, no scrolling thread, and no message history.
 Authorised contacts are organised into channels (sub-groups) for each resident.
 A sub-group is often one person, but can contain more than one authorised contact where configured by the care home.
 
-Each sub-group channel has one current message in each direction at any one time:
-
-- Family/Friend -> Resident
-- Resident -> Family/Friend
-
-Office adds a separate one-way informational lane:
-
-- Office -> Family/Friend
-
-Each lane keeps only its current message. New messages replace previous messages in that same lane.
+Each sub-group keeps one current message each way at any one time.
+Office updates are one-way from the care home to Family/Friend channels.
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
+Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
 
 ## App versions (three distinct experiences)
 

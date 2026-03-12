@@ -13,38 +13,27 @@ The service has three interfaces linked to the resident's care circle:
 - Care Hub – Office (office/admin interface)
 - Family App (family members, friends, and other authorised contacts)
 
-Each interface has separate controls for the lanes it creates.
+Each interface has separate controls for the messages it creates.
 
 ## Message playback and control
 
 All current messages for a resident may be played by authorised users across Mobile, Office, and Family.
 
 No group can alter another group's message directly.
-Each lane may only be replaced by the interface that created it.
-
-| Message lane | Created by | Playable by | Replaceable by |
-| --- | --- | --- | --- |
-| Family/Friend -> Resident | Family App | Family App, Care Hub – Mobile, Care Hub – Office | Family App |
-| Resident -> Family/Friend | Care Hub – Mobile | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Mobile |
-| Office -> Family/Friend | Care Hub – Office | Family App, Care Hub – Mobile, Care Hub – Office | Care Hub – Office |
-
-This includes the Office lane: Office can send one current update per resident lane, and a new Office message replaces the previous Office message in that lane.
+Each message can only be replaced by the side that created it.
+Office can send one current update per resident/family context, and a new Office update replaces the previous Office update.
 
 ## Family/friend channels and sub-groups
 
 For each resident, family/friend communication is organised into authorised channels (sub-groups).
 A sub-group is often one person, but can include more than one authorised contact where the home configures a shared channel.
 
-Each sub-group channel keeps one current message each way at any one time:
-
-- Family/Friend -> Resident
-- Resident -> Family/Friend
-
-Office updates are separate:
-
-- Office -> Family/Friend (one current informational update per resident lane)
+Each sub-group channel keeps one current message each way at any one time.
+Office updates are one-way from the care home to Family/Friend channels.
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
+Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
 
 ## Day-to-day use
 
@@ -97,7 +86,7 @@ Relationship labels help staff identify the right contact in daily workflows.
 
 ### Resident list and cards (Care Hub)
 
-Care Hub users see a scrollable list of residents. Each resident has one communication area showing the current lane messages relevant to that role.
+Care Hub users see a scrollable list of residents. Each resident has one communication area showing the current messages relevant to that role.
 
 ### Mobile send section
 
@@ -107,7 +96,7 @@ Staff can record an outgoing message for that resident from the Send section. Th
 - a "I have listened to this message." checkbox before sending
 - a recipient selector listing the resident's linked approved contacts
 
-### Office update lane
+### Office update message
 
 Office can record a current Office -> Family/Friend update for that resident.
 This update is playable in Office, Mobile, and Family.

@@ -14,8 +14,8 @@ Homepage buttons (only):
 
 Short Explanation (homepage section):
 The system has three application interfaces for groups associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, and other authorised contacts).  
-Messages are organised into lanes and only the latest message is kept in each lane.  
-When a new message is recorded in a lane, the previous message in that lane is replaced.  
+Messages are organised into channels and only the latest message is kept in each direction.  
+When a new message is recorded in the same direction, the previous message in that direction is replaced.  
 No archive. No message history. No scrolling thread.
 
 Non-real-time reinforcement (homepage or family entry page, short):
@@ -28,7 +28,10 @@ Role-based access (Family vs Care Hub):
 Family and Care Hub are separate, role-based experiences.
 
 Playback and control statement:
-All current messages for that resident may be played by authorised users across Mobile, Office, and Family, but no group can alter another group's message. Each message lane may only be replaced by the interface that created it.
+All current messages for that resident may be played by authorised users across Mobile, Office, and Family, but no group can alter another group's message. Each message may only be replaced by the interface that created it.
+
+Office update statement:
+Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
 
 ---
 
@@ -136,15 +139,15 @@ Care Hub – Office provides management-level access to the voice-message.com pl
 It supports oversight of how the platform is used, while maintaining the care home’s existing governance framework.
 
 ## How the Platform Operates
-The platform operates on a lane-based “one message in, one message out” structure.
+The platform operates on a channel-based “one message in, one message out” structure.
 
 Lanes:
 - Family/Friend -> Resident (created/replaced in Family App)
 - Resident -> Family/Friend (created/replaced in Care Hub – Mobile)
 - Office -> Family/Friend (created/replaced in Care Hub – Office)
 
-Only the latest message in each lane is kept.  
-When a new message is sent in a lane, the previous message in that lane is replaced.
+Only the latest message in each direction is kept.  
+When a new message is sent in the same direction, the previous message in that direction is replaced.
 
 This structure helps keep communication simple and manageable within care settings.
 
@@ -207,13 +210,13 @@ Residents can record a reply when appropriate support is available.
 Replies are not immediate, and timing will vary depending on care home routines.
 
 ### Message replacement
-The service operates on a lane-based “one message in, one message out” structure.
+The service operates on a channel-based “one message in, one message out” structure.
 
-Family/Friend -> Resident and Resident -> Family/Friend are separate lanes.  
-Office -> Family/Friend is an additional lane.
+Family/Friend -> Resident and Resident -> Family/Friend are separate directions.  
+Office -> Family/Friend is an additional one-way direction.
 
-Only the latest message in each lane is kept.  
-When a new message is sent in a lane, the previous message in that lane is replaced.
+Only the latest message in each direction is kept.  
+When a new message is sent in the same direction, the previous message in that direction is replaced.
 
 There is no message history or archive within the service.
 
@@ -262,8 +265,8 @@ Staff may assist a resident in recording a reply.
 Once recorded, that reply replaces the previous reply from the resident.
 
 ### Message replacement
-The service operates on a lane-based “one message in, one message out” structure.
-Only the latest message in each lane is kept (Family/Friend -> Resident, Resident -> Family/Friend, and Office -> Family/Friend).
+The service operates on a channel-based “one message in, one message out” structure.
+Only the latest message in each direction is kept (Family/Friend -> Resident, Resident -> Family/Friend, and Office -> Family/Friend).
 There is no message history or archive within the service.
 
 ## Intended Use

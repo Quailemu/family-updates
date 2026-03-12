@@ -12,16 +12,20 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 - One message in. One message out.
 - Not live messaging
 
-## Resident and Family lane
+## Message flow and control
 
-- Play the latest Family -> Resident message.
-- Record and send the latest Resident -> Family message on behalf of the resident.
-- A new Resident -> Family message replaces the previous one in that lane.
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-## Office update lane (read-only in Mobile)
+## Resident and Family messages
 
-- Mobile users can play the latest Office -> Family update.
-- Mobile users cannot edit, delete, or replace the Office lane message.
+- Play the latest family message for the resident.
+- Record and send the latest resident message for the selected authorised contact.
+- A new message replaces the previous message in that same direction.
+
+## Office update (read-only in Mobile)
+
+- Mobile users can play the latest Office update.
+- Mobile users cannot edit, delete, or replace the Office update.
 
 ## Contact selection and relationship labels
 
@@ -33,4 +37,3 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 - This is not an emergency or urgent service.
 - Do not use this channel for clinical, medication, appointment, or safeguarding content.
 - For those matters, follow normal care home escalation routes.
-

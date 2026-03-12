@@ -10,7 +10,7 @@ This guide is for office and admin staff using Care Hub - Office.
 
 - Managing authorised contacts
 - Sending non-urgent social Office updates
-- Oversight of current resident communication lanes
+- Oversight of current resident communication
 
 ## Registering authorised contacts
 
@@ -23,17 +23,16 @@ This guide is for office and admin staff using Care Hub - Office.
 
 The relationship label is stored to help staff identify and select the right contact in Care Hub workflows.
 
-## Message lanes and control
+## Message flow and control
 
-- Family/Friend -> Resident: replaceable by Family App only
-- Resident -> Family/Friend: replaceable by Care Hub - Mobile only
-- Office -> Family/Friend: replaceable by Care Hub - Office only
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-All current messages may be played by authorised users in the resident's care circle, but no role can directly replace another role's lane.
+All current messages may be played by authorised users in the resident's care circle.
+No role can directly replace another role's message.
+Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
 
 ## Important boundaries
 
 - This is not an emergency or urgent service.
 - Not live messaging.
 - For clinical, medication, appointment, safeguarding, or emergency matters, use normal care home processes.
-

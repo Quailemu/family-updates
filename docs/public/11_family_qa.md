@@ -11,11 +11,13 @@ A: Non-urgent, social voice messages between residents in care homes and authori
 Q: Which interfaces are part of this service?  
 A: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
 
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 Q: Can I send urgent updates here?  
 A: No. For urgent, care, or safeguarding matters, contact the care home directly.
 
 Q: Why did my old message disappear?  
-A: The service keeps one current message in each lane. New messages replace previous ones in that lane.
+A: The service keeps one current message in each direction. New messages replace previous ones in that same direction.
 
 Q: Can I see message history?  
 A: No. There is no archive or message timeline.
@@ -42,7 +44,7 @@ Q: Can different groups play the same current messages?
 A: Yes. Current messages for the resident may be played across Family, Care Hub – Mobile, and Care Hub – Office by authorised users.
 
 Q: Can one group replace another group's message?  
-A: No. Each message lane may only be replaced by the interface that created it.
+A: No. Each message may only be replaced by the side that created it.
 
 Q: Will I always receive a reply?  
 A: No. Replies are not guaranteed and depend on resident wellbeing and staff workflow.

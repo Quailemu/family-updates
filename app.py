@@ -4520,9 +4520,45 @@ def render_document_boxes(doc_path: str, strip_first_heading: bool = True) -> No
 """,
         unsafe_allow_html=True,
     )
+    def _render_markdown_image(markdown_line: str) -> bool:
+        image_match = re.fullmatch(r"!\[([^\]]*)\]\(([^)]+)\)", markdown_line.strip())
+        if not image_match:
+            return False
+        alt_text = image_match.group(1).strip()
+        image_ref = image_match.group(2).strip()
+        if not image_ref:
+            return False
+        try:
+            if re.match(r"^[a-zA-Z]+://", image_ref):
+                st.image(image_ref, caption=alt_text or None, use_container_width=True)
+                return True
+            image_path = (Path(doc_path).parent / image_ref).resolve()
+            if image_path.exists():
+                st.image(str(image_path), caption=alt_text or None, use_container_width=True)
+                return True
+        except TypeError:
+            # Streamlit compatibility fallback for older versions.
+            if re.match(r"^[a-zA-Z]+://", image_ref):
+                st.image(image_ref, caption=alt_text or None, use_column_width=True)
+                return True
+            image_path = (Path(doc_path).parent / image_ref).resolve()
+            if image_path.exists():
+                st.image(str(image_path), caption=alt_text or None, use_column_width=True)
+                return True
+        st.error(f"Image not found: {image_ref}")
+        return True
+
     def _render_box(markdown_text: str) -> None:
         raw_text = markdown_text.strip()
         if re.fullmatch(r"[-*_]{3,}", raw_text):
+            return
+        remaining_lines: list[str] = []
+        for line in raw_text.splitlines():
+            if _render_markdown_image(line):
+                continue
+            remaining_lines.append(line)
+        raw_text = "\n".join(remaining_lines).strip()
+        if not raw_text:
             return
         text = re.sub(r"^\s*[-*]\s+", "• ", raw_text, flags=re.M).strip()
         if re.fullmatch(r"[•\-\*\s]+", text):
@@ -5504,11 +5540,13 @@ def render_care_hub() -> None:
 
     send_state = st.session_state.setdefault("care_send_state", {})
     has_pending_recording = any(
-        bool((entry or {}).get("recording_bytes"))
+        bool((entry or {}).get("recording_bytes") or (entry or {}).get("office_recording_bytes"))
         for entry in send_state.values()
         if isinstance(entry, dict)
     )
-    trigger_live_message_refresh("care_live_refresh", disabled=has_pending_recording)
+    # Office recording uses native audio input; periodic full-page reruns cause visible flicker.
+    disable_live_refresh = has_pending_recording or (get_app_variant() == VARIANT_OFFICE)
+    trigger_live_message_refresh("care_live_refresh", disabled=disable_live_refresh)
     active_rec_id = st.session_state.get("care_active_rec_resident")
     manual_active = st.session_state.get("care_active_rec_manual", False)
     resident_ids = {resident["id"] for resident in residents}

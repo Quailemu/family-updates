@@ -18,6 +18,8 @@ Each role uses its own app.
 
 There are three role-based interfaces linked to the resident's care circle: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
 
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 ## Is this service monitored or responded to by staff?
 
 Messages are not monitored or responded to by staff as part of care communication. Staff may assist residents with recording or playback as part of normal support.
@@ -28,7 +30,7 @@ No. The service is not intended for care or health updates. Please contact the c
 
 ## Why does my message replace the previous one?
 
-The service keeps only the current message in each message lane. New messages replace the previous message in that lane, and there is no message history. This supports data minimisation.
+The service keeps only the current message in each direction for each authorised channel. New messages replace the previous message in that same direction, and there is no message history. This supports data minimisation.
 
 ## Can different groups play the same current messages?
 
@@ -36,7 +38,7 @@ Yes. Current messages for that resident may be played by authorised users across
 
 ## Can one group change another group's message?
 
-No. No group can directly alter another group's message. Each lane can only be replaced by the interface that created that lane.
+No. No group can directly alter another group's message. Each message can only be replaced by the side that created it.
 
 ## What if I have a concern about a resident?
 
