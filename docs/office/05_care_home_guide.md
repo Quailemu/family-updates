@@ -7,35 +7,57 @@ It explains how the Care Hub is used day to day across the Care Hub – Mobile a
 
 ## System structure
 
-The service has three interfaces linked to the resident's care circle:
+The service provides three user interfaces connected to a resident's care circle:
 
-- Care Hub – Mobile (carer operational interface supporting each resident with messaging)
-- Care Hub – Office (office/admin interface)
-- Family App (family members, friends, and other authorised contacts)
+- Care Hub – Mobile: the operational interface used by carers to support the resident and manage voice messaging
+- Care Hub – Office: the office/administration interface used by care-home staff
+- Family App: used by family members, friends, and other authorised contacts
 
-Each interface has separate controls for the messages it creates.
-The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
+Each interface has its own controls for creating and managing the messages it sends.
+
+The messaging system uses two types of channels linked to each resident:
+
+- Two-way contact channels between the resident and authorised contacts
+- A one-way Office update channel used by the care home to send updates to authorised contacts
 
 ## Message playback and control
 
-In each direction, only one current message is kept. A new message replaces the previous message in that same direction.
-Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
-No group can directly replace another group's message.
+In every direction of communication, only one current message is stored at a time.
+When a new message is recorded, it replaces the previous message in that same direction.
+
+Messages within a contact channel can only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages.
+
+Care-home staff using Care Hub – Mobile or Care Hub – Office may also play messages when required for operational support.
+
+Messages are controlled by the group that created them. One group cannot directly replace another group's message.
+
+## Voice Message Flow Example
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own two-way message channel with Jane. In each channel there is one current message from the contact to Jane and one current message from Jane to that contact. When a new message is recorded, it replaces the previous message in that direction.
+The diagram shows how voice messages are organised for a single resident.
 
-The care home can also send a one-way Office update to Jane's authorised contacts. Only one Office update is kept at a time, and a new update replaces the previous one.
+Each authorised contact communicates with the resident through their own two-way contact channel. In each channel there is:
+
+- one current message from the contact to Jane
+- one current message from Jane to that contact
+
+When a new message is recorded in either direction, it replaces the previous message in that direction.
+
+The care home can also send a one-way Office update to all authorised contacts. Only one Office update is stored at a time, and a new update replaces the previous one.
 
 ## Authorised contact channel structure
 
-For each resident, family/friend communication is organised into authorised contact channels.
-An authorised contact channel may contain one authorised contact or multiple authorised contacts where the home configures a shared channel.
+For each resident, communication with family and friends is organised through authorised contact channels.
 
-Each two-way contact channel keeps one current message each way at any one time.
+An authorised contact channel may contain:
+
+- a single authorised contact, or
+- multiple authorised contacts where the care home configures a shared channel
+
+Each two-way contact channel keeps one current message in each direction.
 The Office update channel is separate and one-way from the care home to authorised contacts.
 
 ## Day-to-day use
