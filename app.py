@@ -6156,15 +6156,6 @@ def render_care_hub() -> None:
                 and not state.get("office_recording_bytes")
             ):
                 st.success(state.get("office_last_sent_label"))
-            office_flash = st.session_state.get("care_office_flash")
-            if (
-                get_app_variant() == VARIANT_OFFICE
-                and isinstance(office_flash, dict)
-                and office_flash.get("resident_id") == resident_id
-                and office_flash.get("message")
-            ):
-                st.success(str(office_flash.get("message")))
-                st.session_state.pop("care_office_flash", None)
 
             if get_app_variant() == VARIANT_OFFICE:
                 st.markdown("**Office update**")
@@ -6289,15 +6280,11 @@ def render_care_hub() -> None:
                             state["office_ignore_audio_until"] = time.time() + 5.0
                             soft_sent_label = format_soft_message_period_label(office_now_iso)
                             state["office_last_sent_label"] = (
-                                f"Care hub update sent. {soft_sent_label}"
+                                f"Message sent to all authorised family contacts. {soft_sent_label}"
                                 if soft_sent_label
-                                else "Care hub update sent."
+                                else "Message sent to all authorised family contacts."
                             )
                             state["office_last_sent_fingerprint"] = sent_office_fp
-                            st.session_state["care_office_flash"] = {
-                                "resident_id": resident_id,
-                                "message": state["office_last_sent_label"],
-                            }
                             st.rerun()
 
 
