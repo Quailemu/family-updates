@@ -3881,9 +3881,8 @@ def format_office_sent_label(now_dt: object | None = None) -> str:
 
 
 def render_slow_speech_hint() -> None:
-    if not st.session_state.get("vm_slow_hint_css_loaded"):
-        st.markdown(
-            """
+    st.markdown(
+        """
 <style>
   .vm-slow-hint {
     display: flex;
@@ -3922,9 +3921,8 @@ def render_slow_speech_hint() -> None:
   }
 </style>
 """,
-            unsafe_allow_html=True,
-        )
-        st.session_state["vm_slow_hint_css_loaded"] = True
+        unsafe_allow_html=True,
+    )
     st.markdown(
         """
 <div class="vm-slow-hint" aria-label="Speak slowly and clearly">
