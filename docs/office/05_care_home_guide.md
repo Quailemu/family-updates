@@ -1,5 +1,7 @@
 ![logo](../../assets/logo.png)
 
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 ## Purpose
 
 This guide is for care home managers and staff.
@@ -29,8 +31,6 @@ An authorised contact channel may contain one authorised contact or multiple aut
 
 Each two-way contact channel keeps one current message each way at any one time.
 The Office update channel is separate and one-way from the care home to authorised contacts.
-
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
 Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
 

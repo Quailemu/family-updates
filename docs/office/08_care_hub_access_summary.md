@@ -2,6 +2,8 @@
 
 # Care Hub access summary (Office)
 
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 This summary is for Care Hub – Office users. It outlines the separation of apps, office responsibilities, and the message and safeguarding boundaries.
 
 ## App separation summary
@@ -56,10 +58,6 @@ Duplicate registrations are prevented automatically.
 
 - One message per direction per resident/contact (no threads).
 - Each new message replaces the previous one.
-
-## Message flow diagram
-
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
 ## Safeguarding clarification
 

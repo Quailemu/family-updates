@@ -2,6 +2,8 @@
 
 # Care Hub - Office training and instructions
 
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 ## Who this is for
 
 This guide is for office and admin staff using Care Hub - Office.
@@ -24,9 +26,6 @@ This guide is for office and admin staff using Care Hub - Office.
 The relationship label is stored to help staff identify and select the right contact in Care Hub workflows.
 
 ## Message flow and control
-
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
-The Voice Message Flow Diagram should appear on any page where the messaging system is explained, as it provides the clearest explanation of how the channels operate.
 
 All current messages may be played by authorised users in the resident's care circle.
 No role can directly replace another role's message.
