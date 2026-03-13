@@ -2,6 +2,8 @@
 
 # Family Q&A
 
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 Q: Is this a live messaging service?  
 A: No. It is not live. Messages are played when staff are available.
 
@@ -13,9 +15,6 @@ A: Care Hub – Mobile, Care Hub – Office, and Family App (for family members,
 
 Q: What channel types does the service use?  
 A: The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
-
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
-The Voice Message Flow Diagram should appear on any page where the messaging system is explained, as it provides the clearest explanation of how the channels operate.
 
 Q: Can I send urgent updates here?  
 A: No. For urgent, care, or safeguarding matters, contact the care home directly.

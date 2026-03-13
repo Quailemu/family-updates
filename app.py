@@ -3410,6 +3410,21 @@ def render_home(active: str) -> None:
         return
 
     st.markdown('<div class="vm-wrap vm-stage">', unsafe_allow_html=True)
+    if get_app_variant() == VARIANT_PUBLIC:
+        public_diagram_path = Path("assets/voice-message-flow-diagram.png")
+        if public_diagram_path.exists():
+            try:
+                st.image(
+                    str(public_diagram_path),
+                    caption="Voice message flow diagram",
+                    use_container_width=True,
+                )
+            except TypeError:
+                st.image(
+                    str(public_diagram_path),
+                    caption="Voice message flow diagram",
+                    use_column_width=True,
+                )
     st.markdown("### Service overview")
     st.markdown(
         "voice-message.com  \n"

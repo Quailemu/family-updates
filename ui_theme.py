@@ -1,9 +1,9 @@
 import streamlit as st
 
 TOKENS = {
-    "primary": "#D80073",
+    "primary": "#4FB7C2",
     "cream": "#FFFFFF",
-    "tab_pale": "#F5C6D6",
+    "tab_pale": "#CCF4F6",
     "secondary": "#0E7C86",
     "accent": "#B9E53D",
     "bg": "#F7F7F4",

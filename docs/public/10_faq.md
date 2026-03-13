@@ -2,6 +2,8 @@
 
 # Public Q&A
 
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 ## What is voice-message.com for?
 
 It is intended for non-urgent, social voice messages between residents in care homes and their authorised contacts. It is not intended for care updates, health information, or safeguarding concerns.
@@ -18,9 +20,6 @@ Each role uses its own app.
 
 There are three role-based interfaces linked to the resident's care circle: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
 The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
-
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
-The Voice Message Flow Diagram should appear on any page where the messaging system is explained, as it provides the clearest explanation of how the channels operate.
 
 ## Is this service monitored or responded to by staff?
 

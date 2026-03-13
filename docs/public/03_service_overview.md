@@ -2,6 +2,8 @@
 
 # Service overview
 
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 ## Purpose
 
 voice-message.com is a simple tool for exchanging non-urgent social voice messages between residents in care homes and their authorised contacts. The care home office may also send non-urgent general updates about daily life in the home to authorised contacts.
@@ -40,9 +42,6 @@ An authorised contact channel may contain one authorised contact or multiple aut
 Each two-way contact channel supports Family/Friend -> Resident and Resident -> Family/Friend.
 The Office update channel is separate and one-way from the care home to authorised contacts.
 
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
-
-The Voice Message Flow Diagram should appear on any page where the messaging system is explained, as it provides the clearest explanation of how the channels operate.
 Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
 
 ## App versions (three distinct experiences)
