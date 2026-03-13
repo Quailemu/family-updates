@@ -3828,7 +3828,7 @@ def format_soft_message_period_label(recorded_at_value: str | None) -> str | Non
             parsed = parsed.replace(tzinfo=dt_mod.timezone.utc)
         local_dt = parsed.astimezone()
         now_local = dt_mod.datetime.now(local_dt.tzinfo)
-        period = "AM" if local_dt.hour < 12 else "PM"
+        period = "am" if local_dt.hour < 12 else "pm"
         if local_dt.date() == now_local.date():
             return f"Sent today {period}"
         if local_dt.date() == (now_local.date() - dt_mod.timedelta(days=1)):
@@ -3845,6 +3845,69 @@ def format_office_sent_label(now_dt: object | None = None) -> str:
     local_now = now_dt or dt_mod.datetime.now()
     period = "am" if local_now.hour < 12 else "pm"
     return f"Message sent \u2014 Today {period}"
+
+
+def render_slow_speech_hint() -> None:
+    if not st.session_state.get("vm_slow_hint_css_loaded"):
+        st.markdown(
+            """
+<style>
+  .vm-slow-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0 10px 0;
+  }
+  .vm-slow-face {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+  }
+  .vm-slow-face svg {
+    width: 36px;
+    height: 36px;
+    display: block;
+  }
+  .vm-slow-mouth {
+    transform-box: fill-box;
+    transform-origin: center top;
+    animation: vmSlowMouth 2s ease-in-out infinite;
+  }
+  .vm-slow-text {
+    font-size: 0.9rem;
+    color: #111;
+  }
+  @keyframes vmSlowMouth {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .vm-slow-mouth {
+      animation: none;
+      transform: scaleY(0.6);
+    }
+  }
+</style>
+""",
+            unsafe_allow_html=True,
+        )
+        st.session_state["vm_slow_hint_css_loaded"] = True
+    st.markdown(
+        """
+<div class="vm-slow-hint" aria-label="Speak slowly and clearly">
+  <div class="vm-slow-face" aria-hidden="true">
+    <svg viewBox="0 0 48 48" role="img" aria-hidden="true">
+      <circle cx="24" cy="24" r="21" fill="#fff" stroke="#111" stroke-width="2"/>
+      <circle cx="17" cy="19" r="2.2" fill="#111"/>
+      <circle cx="31" cy="19" r="2.2" fill="#111"/>
+      <rect class="vm-slow-mouth" x="18" y="27" width="12" height="8" rx="4" fill="#111"/>
+    </svg>
+  </div>
+  <div class="vm-slow-text">Speak slowly and clearly.</div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
 
 
 def render_family_login_hub() -> None:
@@ -4171,6 +4234,11 @@ def render_family_send() -> None:
                 latest_office_audio,
                 format=latest_office_update.get("audio_mime_type") or "audio/wav",
             )
+            office_soft_label = format_soft_message_period_label(
+                latest_office_update.get("recorded_at")
+            )
+            if office_soft_label:
+                st.caption(office_soft_label)
         else:
             st.markdown(
                 '<div class="vm-muted-line">No care hub updates.</div>',
@@ -4242,6 +4310,7 @@ def render_family_send() -> None:
                 f"Record voice message to {full_name}",
                 key=f"family_audio_input_{resident_id}",
             )
+            render_slow_speech_hint()
             if recorded_from_native is not None:
                 native_bytes = recorded_from_native.getvalue()
                 if native_bytes:
@@ -5596,6 +5665,9 @@ def render_care_hub() -> None:
                     "office_recording_mime_type": "audio/wav",
                     "office_preview_confirmed": False,
                     "office_recording_fingerprint": None,
+                    "office_recording_input_nonce": 0,
+                    "office_last_sent_fingerprint": None,
+                    "office_ignore_audio_until": 0.0,
                     "office_last_sent_label": None,
                 },
             )
@@ -5623,6 +5695,9 @@ def render_care_hub() -> None:
                 "office_recording_mime_type": "audio/wav",
                 "office_preview_confirmed": False,
                 "office_recording_fingerprint": None,
+                "office_recording_input_nonce": 0,
+                "office_last_sent_fingerprint": None,
+                "office_ignore_audio_until": 0.0,
                 "office_last_sent_label": None,
             },
         )
@@ -5787,6 +5862,7 @@ def render_care_hub() -> None:
                     f"Record voice message from {full_name} to {selected_contact_name}",
                     key=f"care_audio_input_{resident_id}_{state.get('recording_input_nonce', 0)}",
                 )
+                render_slow_speech_hint()
                 if recorded_from_native is not None:
                     native_bytes = recorded_from_native.getvalue()
                     if native_bytes:
@@ -5988,8 +6064,9 @@ def render_care_hub() -> None:
             if get_app_variant() == VARIANT_OFFICE and hasattr(st, "audio_input"):
                 recorded_office = st.audio_input(
                     "Record care hub update",
-                    key=f"care_office_audio_input_{resident_id}",
+                    key=f"care_office_audio_input_{resident_id}_{state.get('office_recording_input_nonce', 0)}",
                 )
+                render_slow_speech_hint()
                 if recorded_office is not None:
                     office_bytes = recorded_office.getvalue()
                     office_fp = (
@@ -5997,7 +6074,25 @@ def render_care_hub() -> None:
                         if office_bytes
                         else None
                     )
-                    if office_bytes and office_fp != state.get("office_recording_fingerprint"):
+                    now_ts = time.time()
+                    # Prevent stale recorder replay after a send from re-populating the form.
+                    if (
+                        now_ts < float(state.get("office_ignore_audio_until") or 0.0)
+                        and not state.get("office_recording_bytes")
+                    ):
+                        pass
+                    elif (
+                        office_bytes
+                        and office_fp
+                        and office_fp == state.get("office_last_sent_fingerprint")
+                        and not state.get("office_recording_bytes")
+                    ):
+                        pass
+                    # Once user has confirmed preview for current recording, avoid resetting
+                    # from duplicate/replayed audio_input payloads.
+                    elif state.get("office_preview_confirmed") and state.get("office_recording_bytes"):
+                        pass
+                    elif office_bytes and office_fp != state.get("office_recording_fingerprint"):
                         state["office_recording_bytes"] = office_bytes
                         state["office_recording_fingerprint"] = office_fp
                         state["office_recording_mime_type"] = (
@@ -6005,6 +6100,7 @@ def render_care_hub() -> None:
                         )
                         state["office_preview_confirmed"] = False
                         state["office_last_sent_label"] = None
+                        state["office_last_sent_fingerprint"] = None
                         st.session_state[f"care_office_listened_{resident_id}"] = False
             elif get_app_variant() == VARIANT_OFFICE:
                 st.warning("Native microphone recording is unavailable in this environment.")
@@ -6029,6 +6125,15 @@ def render_care_hub() -> None:
                 and not state.get("office_recording_bytes")
             ):
                 st.success(state.get("office_last_sent_label"))
+            office_flash = st.session_state.get("care_office_flash")
+            if (
+                get_app_variant() == VARIANT_OFFICE
+                and isinstance(office_flash, dict)
+                and office_flash.get("resident_id") == resident_id
+                and office_flash.get("message")
+            ):
+                st.success(str(office_flash.get("message")))
+                st.session_state.pop("care_office_flash", None)
 
             if get_app_variant() == VARIANT_OFFICE:
                 st.markdown("**Office update**")
@@ -6145,8 +6250,23 @@ def render_care_hub() -> None:
                             state["office_recording_bytes"] = None
                             state["office_recording_mime_type"] = "audio/wav"
                             state["office_preview_confirmed"] = False
+                            sent_office_fp = state.get("office_recording_fingerprint")
                             state["office_recording_fingerprint"] = None
-                            state["office_last_sent_label"] = format_office_sent_label()
+                            state["office_recording_input_nonce"] = (
+                                int(state.get("office_recording_input_nonce", 0)) + 1
+                            )
+                            state["office_ignore_audio_until"] = time.time() + 5.0
+                            soft_sent_label = format_soft_message_period_label(office_now_iso)
+                            state["office_last_sent_label"] = (
+                                f"Care hub update sent. {soft_sent_label}"
+                                if soft_sent_label
+                                else "Care hub update sent."
+                            )
+                            state["office_last_sent_fingerprint"] = sent_office_fp
+                            st.session_state["care_office_flash"] = {
+                                "resident_id": resident_id,
+                                "message": state["office_last_sent_label"],
+                            }
                             st.rerun()
 
 
