@@ -1426,11 +1426,17 @@ def render_how_it_works_diagram_and_notes() -> None:
             st.image(str(diagram_path), caption="Voice message flow diagram", use_column_width=True)
     else:
         st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
+    st.markdown("Example: June")
     st.markdown(
-        "Updates are sent from the care home to keep families informed about day-to-day events. "
-        "Messages are one-way and replies cannot be sent through this system. "
-        "These updates are for non-urgent, non-medical information only. "
-        "For any urgent, medical, or other queries, please contact the care home directly."
+        "This diagram shows how voice messages and updates are organised for a single resident, "
+        "using June as the example. Each authorised contact has their own two-way message channel "
+        "with June. In each channel there is one current message from the contact to June and one "
+        "current message from June to that contact. When a new message is recorded, it replaces the "
+        "previous message in that direction."
+    )
+    st.markdown(
+        "The care home can also send a one-way Office update to June's authorised contacts. "
+        "Only one Office update is kept at a time, and a new update replaces the previous one."
     )
 
 
@@ -3425,6 +3431,18 @@ def render_home(active: str) -> None:
                     caption="Voice message flow diagram",
                     use_column_width=True,
                 )
+            st.markdown("Example: June")
+            st.markdown(
+                "This diagram shows how voice messages and updates are organised for a single resident, "
+                "using June as the example. Each authorised contact has their own two-way message channel "
+                "with June. In each channel there is one current message from the contact to June and one "
+                "current message from June to that contact. When a new message is recorded, it replaces the "
+                "previous message in that direction."
+            )
+            st.markdown(
+                "The care home can also send a one-way Office update to June's authorised contacts. "
+                "Only one Office update is kept at a time, and a new update replaces the previous one."
+            )
     st.markdown("### Service overview")
     st.markdown(
         "voice-message.com  \n"

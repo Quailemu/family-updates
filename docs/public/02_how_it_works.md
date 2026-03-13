@@ -4,6 +4,12 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
+Example: June
+
+This diagram shows how voice messages and updates are organised for a single resident, using June as the example. Each authorised contact has their own two-way message channel with June. In each channel there is one current message from the contact to June and one current message from June to that contact. When a new message is recorded, it replaces the previous message in that direction.
+
+The care home can also send a one-way Office update to June's authorised contacts. Only one Office update is kept at a time, and a new update replaces the previous one.
+
 ## Purpose
 
 voice-message.com is a simple, non-urgent social voice messaging service for residents and their authorised contacts.
@@ -28,8 +34,6 @@ An authorised contact channel may contain one authorised contact or multiple aut
 
 Each two-way contact channel supports Family/Friend -> Resident and Resident -> Family/Friend.
 The Office update channel is separate and one-way from the care home to authorised contacts.
-
-Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
 
 ## Playback and care setting
 

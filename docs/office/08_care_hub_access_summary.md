@@ -2,9 +2,15 @@
 
 # Care Hub access summary (Office)
 
+This summary is for Care Hub – Office users. It outlines the separation of apps, office responsibilities, and the message and safeguarding boundaries.
+
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-This summary is for Care Hub – Office users. It outlines the separation of apps, office responsibilities, and the message and safeguarding boundaries.
+Example: June
+
+This diagram shows how voice messages and updates are organised for a single resident, using June as the example. Each authorised contact has their own two-way message channel with June. In each channel there is one current message from the contact to June and one current message from June to that contact. When a new message is recorded, it replaces the previous message in that direction.
+
+The care home can also send a one-way Office update to June's authorised contacts. Only one Office update is kept at a time, and a new update replaces the previous one.
 
 ## App separation summary
 
