@@ -1426,16 +1426,16 @@ def render_how_it_works_diagram_and_notes() -> None:
             st.image(str(diagram_path), caption="Voice message flow diagram", use_column_width=True)
     else:
         st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
-    st.markdown("Example: June")
+    st.markdown("Example: Jane")
     st.markdown(
         "This diagram shows how voice messages and updates are organised for a single resident, "
-        "using June as the example. Each authorised contact has their own two-way message channel "
-        "with June. In each channel there is one current message from the contact to June and one "
-        "current message from June to that contact. When a new message is recorded, it replaces the "
+        "using Jane as the example. Each authorised contact has their own two-way message channel "
+        "with Jane. In each channel there is one current message from the contact to Jane and one "
+        "current message from Jane to that contact. When a new message is recorded, it replaces the "
         "previous message in that direction."
     )
     st.markdown(
-        "The care home can also send a one-way Office update to June's authorised contacts. "
+        "The care home can also send a one-way Office update to Jane's authorised contacts. "
         "Only one Office update is kept at a time, and a new update replaces the previous one."
     )
 
@@ -3431,16 +3431,16 @@ def render_home(active: str) -> None:
                     caption="Voice message flow diagram",
                     use_column_width=True,
                 )
-            st.markdown("Example: June")
+            st.markdown("Example: Jane")
             st.markdown(
                 "This diagram shows how voice messages and updates are organised for a single resident, "
-                "using June as the example. Each authorised contact has their own two-way message channel "
-                "with June. In each channel there is one current message from the contact to June and one "
-                "current message from June to that contact. When a new message is recorded, it replaces the "
+                "using Jane as the example. Each authorised contact has their own two-way message channel "
+                "with Jane. In each channel there is one current message from the contact to Jane and one "
+                "current message from Jane to that contact. When a new message is recorded, it replaces the "
                 "previous message in that direction."
             )
             st.markdown(
-                "The care home can also send a one-way Office update to June's authorised contacts. "
+                "The care home can also send a one-way Office update to Jane's authorised contacts. "
                 "Only one Office update is kept at a time, and a new update replaces the previous one."
             )
     st.markdown("### Service overview")

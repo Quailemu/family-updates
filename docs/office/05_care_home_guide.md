@@ -1,13 +1,5 @@
 ![logo](../../assets/logo.png)
 
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
-
-Example: June
-
-This diagram shows how voice messages and updates are organised for a single resident, using June as the example. Each authorised contact has their own two-way message channel with June. In each channel there is one current message from the contact to June and one current message from June to that contact. When a new message is recorded, it replaces the previous message in that direction.
-
-The care home can also send a one-way Office update to June's authorised contacts. Only one Office update is kept at a time, and a new update replaces the previous one.
-
 ## Purpose
 
 This guide is for care home managers and staff.
@@ -29,6 +21,14 @@ The messaging system uses two types of channels linked to each resident: two-way
 In each direction, only one current message is kept. A new message replaces the previous message in that same direction.
 Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
 No group can directly replace another group's message.
+
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
+Example: Jane
+
+This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own two-way message channel with Jane. In each channel there is one current message from the contact to Jane and one current message from Jane to that contact. When a new message is recorded, it replaces the previous message in that direction.
+
+The care home can also send a one-way Office update to Jane's authorised contacts. Only one Office update is kept at a time, and a new update replaces the previous one.
 
 ## Authorised contact channel structure
 
