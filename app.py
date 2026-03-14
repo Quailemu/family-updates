@@ -698,6 +698,40 @@ def consume_magic_link_callback() -> None:
             pass
 
 
+def normalize_auth_hash_fragment() -> None:
+    # Supabase magic links can return tokens in URL hash (#access_token=...).
+    # Streamlit server code cannot read hash fragments, so move them into query params.
+    components.html(
+        """
+<script>
+(function () {
+  try {
+    var hash = window.location.hash || "";
+    if (!hash || hash.length < 2) return;
+    var raw = hash.substring(1);
+    if (raw.indexOf("access_token=") === -1 && raw.indexOf("refresh_token=") === -1) return;
+
+    var url = new URL(window.location.href);
+    var hashParams = new URLSearchParams(raw);
+    ["access_token", "refresh_token", "token_hash", "token", "type", "code"].forEach(function (k) {
+      var v = hashParams.get(k);
+      if (v && !url.searchParams.get(k)) {
+        url.searchParams.set(k, v);
+      }
+    });
+    url.hash = "";
+    window.location.replace(url.toString());
+  } catch (e) {
+    // Fail closed: keep current URL if parsing fails.
+  }
+})();
+</script>
+""",
+        height=0,
+        width=0,
+    )
+
+
 def _mobile_pin_hash(pin_value: str, auth_uid: str, care_home_id: str) -> str:
     material = f"vm_mobile_pin_v1:{care_home_id}:{auth_uid}:{pin_value}"
     return hashlib.sha256(material.encode("utf-8")).hexdigest()
@@ -6350,6 +6384,7 @@ def main() -> None:
             st.error("Configuration error: AUTH_COOKIE_SIGNING_KEY is required for secure session cookies.")
             st.stop()
         restore_auth_session_from_cookie()
+    normalize_auth_hash_fragment()
     consume_magic_link_callback()
     init_state()
     route = get_route()
