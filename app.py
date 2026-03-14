@@ -43,10 +43,6 @@ APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
     "yes",
     "on",
 }
-APP_ENABLE_HASH_MAGIC_LINK_NORMALIZER = (
-    os.getenv("APP_ENABLE_HASH_MAGIC_LINK_NORMALIZER", "0").strip().lower()
-    in {"1", "true", "yes", "on"}
-)
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 
 ALLOWED_VARIANT_VALUES_TEXT = "public, family, mobile, office"
@@ -714,41 +710,6 @@ def consume_magic_link_callback() -> None:
                 del st.query_params[key]
         except Exception:
             pass
-
-
-def normalize_auth_hash_fragment() -> None:
-    # Supabase magic links can return tokens in URL hash (#access_token=...).
-    # Streamlit server code cannot read hash fragments, so move them into query params.
-    components.html(
-        """
-<script>
-(function () {
-  try {
-    var topWin = window.parent && window.parent.location ? window.parent : window;
-    var hash = topWin.location.hash || "";
-    if (!hash || hash.length < 2) return;
-    var raw = hash.substring(1);
-    if (raw.indexOf("access_token=") === -1 && raw.indexOf("refresh_token=") === -1) return;
-
-    var url = new URL(topWin.location.href);
-    var hashParams = new URLSearchParams(raw);
-    ["access_token", "refresh_token", "token_hash", "token", "type", "code"].forEach(function (k) {
-      var v = hashParams.get(k);
-      if (v && !url.searchParams.get(k)) {
-        url.searchParams.set(k, v);
-      }
-    });
-    url.hash = "";
-    topWin.location.replace(url.toString());
-  } catch (e) {
-    // Fail closed: keep current URL if parsing fails.
-  }
-})();
-</script>
-""",
-        height=0,
-        width=0,
-    )
 
 
 def _mobile_pin_hash(pin_value: str, auth_uid: str, care_home_id: str) -> str:
@@ -6421,12 +6382,6 @@ def main() -> None:
             st.stop()
         restore_auth_session_from_cookie()
     init_state()
-    pre_auth_route = get_route()
-    if (
-        APP_ENABLE_HASH_MAGIC_LINK_NORMALIZER
-        and pre_auth_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}
-    ):
-        normalize_auth_hash_fragment()
     consume_magic_link_callback()
     route = get_route()
     st.session_state.route = route
