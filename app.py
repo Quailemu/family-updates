@@ -6394,9 +6394,11 @@ def main() -> None:
             st.error("Configuration error: AUTH_COOKIE_SIGNING_KEY is required for secure session cookies.")
             st.stop()
         restore_auth_session_from_cookie()
-    normalize_auth_hash_fragment()
-    consume_magic_link_callback()
     init_state()
+    pre_auth_route = get_route()
+    if pre_auth_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}:
+        normalize_auth_hash_fragment()
+    consume_magic_link_callback()
     route = get_route()
     st.session_state.route = route
     default_route = normalize_route(get_default_route(app_variant)) or "/"
