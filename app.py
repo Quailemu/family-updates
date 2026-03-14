@@ -5714,10 +5714,8 @@ def render_care_hub() -> None:
         for entry in send_state.values()
         if isinstance(entry, dict)
     )
-    # Periodic full-page reruns cause visible flicker in Office and Mobile flows.
-    disable_live_refresh = has_pending_recording or (
-        get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE}
-    )
+    # Office recording uses native audio input; periodic full-page reruns cause visible flicker.
+    disable_live_refresh = has_pending_recording or (get_app_variant() == VARIANT_OFFICE)
     trigger_live_message_refresh("care_live_refresh", disabled=disable_live_refresh)
     active_rec_id = st.session_state.get("care_active_rec_resident")
     manual_active = st.session_state.get("care_active_rec_manual", False)
