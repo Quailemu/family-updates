@@ -798,11 +798,13 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
 
     if not stored_hash:
         st.info("Set your individual 4-8 digit Mobile PIN to continue.")
-        new_pin = st.text_input("Create your Mobile PIN", type="password", key="mobile_pin_create")
-        confirm_pin = st.text_input(
-            "Confirm Mobile PIN", type="password", key="mobile_pin_confirm"
-        )
-        if st.button("Set PIN and continue", key="mobile_pin_set_submit"):
+        with st.form("mobile_pin_set_form", clear_on_submit=False):
+            new_pin = st.text_input("Create your Mobile PIN", type="password", key="mobile_pin_create")
+            confirm_pin = st.text_input(
+                "Confirm Mobile PIN", type="password", key="mobile_pin_confirm"
+            )
+            submitted = st.form_submit_button("Set PIN and continue")
+        if submitted:
             if not _is_valid_mobile_pin(new_pin):
                 st.error("PIN must be 4-8 digits.")
                 return False
@@ -821,13 +823,15 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
             return True
         return False
 
-    pin_value = st.text_input(
-        "Enter your individual Mobile PIN",
-        type="password",
-        key="mobile_pin_unlock",
-    )
     st.caption("PIN access is individual to each staff account.")
-    if st.button("Unlock Mobile", key="mobile_pin_unlock_submit"):
+    with st.form("mobile_pin_unlock_form", clear_on_submit=False):
+        pin_value = st.text_input(
+            "Enter your individual Mobile PIN",
+            type="password",
+            key="mobile_pin_unlock_form_value",
+        )
+        unlock_submitted = st.form_submit_button("Unlock Mobile")
+    if unlock_submitted:
         if not _is_valid_mobile_pin(pin_value):
             st.error("Enter your 4-8 digit PIN.")
             return False
