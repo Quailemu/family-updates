@@ -812,6 +812,7 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
                 st.error(str(exc))
                 return False
             mark_mobile_pin_verified()
+            st.session_state["mobile_pin_just_accepted"] = True
             set_route(MOBILE_HOME_ROUTE)
             return True
         return False
@@ -830,6 +831,7 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
             st.error("Incorrect PIN.")
             return False
         mark_mobile_pin_verified()
+        st.session_state["mobile_pin_just_accepted"] = True
         set_route(MOBILE_HOME_ROUTE)
         return True
     return is_mobile_pin_verified_for_session()
@@ -5685,6 +5687,11 @@ def render_care_hub() -> None:
         unsafe_allow_html=True,
     )
     render_page_header(f"{get_care_hub_label()} voice messages")
+    if (
+        get_app_variant() == VARIANT_MOBILE
+        and st.session_state.pop("mobile_pin_just_accepted", False)
+    ):
+        st.success("Mobile PIN accepted.")
     # Top action buttons removed; navigation is handled through the header menu.
     # Action row already rendered at the top of the page.
 
@@ -5720,8 +5727,10 @@ def render_care_hub() -> None:
         for entry in send_state.values()
         if isinstance(entry, dict)
     )
-    # Office recording uses native audio input; periodic full-page reruns cause visible flicker.
-    disable_live_refresh = has_pending_recording or (get_app_variant() == VARIANT_OFFICE)
+    # Periodic full-page reruns cause visible flicker in Office and Mobile flows.
+    disable_live_refresh = has_pending_recording or (
+        get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE}
+    )
     trigger_live_message_refresh("care_live_refresh", disabled=disable_live_refresh)
     active_rec_id = st.session_state.get("care_active_rec_resident")
     manual_active = st.session_state.get("care_active_rec_manual", False)
