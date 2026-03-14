@@ -706,12 +706,13 @@ def normalize_auth_hash_fragment() -> None:
 <script>
 (function () {
   try {
-    var hash = window.location.hash || "";
+    var topWin = window.parent && window.parent.location ? window.parent : window;
+    var hash = topWin.location.hash || "";
     if (!hash || hash.length < 2) return;
     var raw = hash.substring(1);
     if (raw.indexOf("access_token=") === -1 && raw.indexOf("refresh_token=") === -1) return;
 
-    var url = new URL(window.location.href);
+    var url = new URL(topWin.location.href);
     var hashParams = new URLSearchParams(raw);
     ["access_token", "refresh_token", "token_hash", "token", "type", "code"].forEach(function (k) {
       var v = hashParams.get(k);
@@ -720,7 +721,7 @@ def normalize_auth_hash_fragment() -> None:
       }
     });
     url.hash = "";
-    window.location.replace(url.toString());
+    topWin.location.replace(url.toString());
   } catch (e) {
     // Fail closed: keep current URL if parsing fails.
   }
