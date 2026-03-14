@@ -812,8 +812,8 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
                 st.error(str(exc))
                 return False
             mark_mobile_pin_verified()
-            st.success("Mobile PIN set.")
-            st.rerun()
+            set_route(MOBILE_HOME_ROUTE)
+            return True
         return False
 
     pin_value = st.text_input(
@@ -830,8 +830,8 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
             st.error("Incorrect PIN.")
             return False
         mark_mobile_pin_verified()
-        st.success("Mobile unlocked.")
-        st.rerun()
+        set_route(MOBILE_HOME_ROUTE)
+        return True
     return is_mobile_pin_verified_for_session()
 
 
