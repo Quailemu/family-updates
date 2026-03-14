@@ -557,6 +557,20 @@ def consume_magic_link_callback() -> None:
     raw_refresh_token = str(params.get("refresh_token", "") or "").strip()
     if not auth_code and not token_hash and not token and not (raw_access_token and raw_refresh_token):
         return
+    callback_sig = "|".join(
+        [
+            auth_code,
+            token_hash,
+            token,
+            otp_type,
+            raw_access_token[:24],
+            raw_refresh_token[:24],
+        ]
+    )
+    if callback_sig and st.session_state.get("_last_magiclink_callback_sig") == callback_sig:
+        return
+    if callback_sig:
+        st.session_state["_last_magiclink_callback_sig"] = callback_sig
 
     supabase, error = get_supabase_client()
     if error:
