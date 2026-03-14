@@ -487,6 +487,29 @@ def send_magic_link_email(
             False,
             "Missing magic-link redirect URL configuration for this app variant.",
         )
+    redirect_to_lower = redirect_to.lower()
+    if app_variant == VARIANT_MOBILE and (
+        "voice-message-family.onrender.com" in redirect_to_lower
+        or "/family/login" in redirect_to_lower
+    ):
+        return (
+            False,
+            "Mobile magic-link redirect is misconfigured (currently pointing to Family). "
+            "Update CARE_MOBILE_MAGIC_LINK_REDIRECT_URL and CARE_MOBILE_APP_URL to the mobile URL.",
+        )
+    if app_variant == VARIANT_FAMILY and (
+        "voice-message-mobile.onrender.com" in redirect_to_lower
+        or "/care-hub/mobile" in redirect_to_lower
+    ):
+        return (
+            False,
+            "Family magic-link redirect is misconfigured (currently pointing to Mobile). "
+            "Update FAMILY_MAGIC_LINK_REDIRECT_URL/FAMILY_APP_URL to the family URL.",
+        )
+    print(
+        f"[auth] send_magic_link_email variant={app_variant!r} redirect_to={redirect_to!r}",
+        flush=True,
+    )
     try:
         options = {
             "email_redirect_to": redirect_to,
@@ -4292,6 +4315,9 @@ def render_family_send() -> None:
                 channel="resident_family",
             )
         latest_sent_audio = decode_audio_payload(latest_sent)
+        show_recent_send_feedback = bool(
+            (state.get("last_message") or {}) and not state.get("recording_bytes")
+        )
         if latest_sent and not state.get("recording_bytes"):
             if latest_sent_audio:
                 st.audio(
@@ -4301,23 +4327,17 @@ def render_family_send() -> None:
             else:
                 st.success("Latest Family → Resident message is saved.")
             latest_sent_at = latest_sent.get("recorded_at")
-            if latest_sent_at:
-                st.caption(f"Sent at: {latest_sent_at}")
+            if latest_sent_at and not show_recent_send_feedback:
+                latest_sent_label = format_soft_message_period_label(latest_sent_at)
+                if latest_sent_label:
+                    st.caption(latest_sent_label)
         last_message = state.get("last_message") or {}
         if last_message and not state.get("recording_bytes"):
             sent_at = last_message.get("sent_at")
-            sent_display = sent_at or "Unknown time"
-            if sent_at:
-                try:
-                    sent_display = (
-                        __import__("datetime")
-                        .datetime.fromisoformat(sent_at.replace("Z", ""))
-                        .strftime("%Y-%m-%d %H:%M")
-                    )
-                except Exception:
-                    sent_display = sent_at
+            sent_display = format_soft_message_period_label(sent_at) if sent_at else None
             st.success("Message sent")
-            st.caption(f"Sent at: {sent_display}")
+            if sent_display:
+                st.caption(sent_display)
             if st.button(
                 "Record new message (replaces previous)",
                 key=f"family_record_new_{resident_id}",
@@ -5885,7 +5905,9 @@ def render_care_hub() -> None:
                 st.success("Latest Resident → Family message is saved.")
             latest_sent_at = latest_sent.get("recorded_at")
             if latest_sent_at:
-                st.caption(f"Sent at: {latest_sent_at}")
+                latest_sent_label = format_soft_message_period_label(latest_sent_at)
+                if latest_sent_label:
+                    st.caption(latest_sent_label)
         is_mobile_variant = get_app_variant() == VARIANT_MOBILE
         if is_mobile_variant:
             if hasattr(st, "audio_input"):
