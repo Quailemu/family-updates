@@ -3810,6 +3810,10 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
         st.stop()
         return True
     if is_variant_authed and is_login_route_for_variant(app_variant, current_route):
+        # Mobile must stay on login route until individual PIN gate is completed.
+        # Otherwise route can bounce between login and inbox before PIN verification.
+        if app_variant == VARIANT_MOBILE and not is_mobile_pin_verified_for_session():
+            return False
         set_route(home_route)
         st.stop()
         return True
