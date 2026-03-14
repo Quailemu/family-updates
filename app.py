@@ -43,6 +43,10 @@ APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
     "yes",
     "on",
 }
+APP_ENABLE_HASH_MAGIC_LINK_NORMALIZER = (
+    os.getenv("APP_ENABLE_HASH_MAGIC_LINK_NORMALIZER", "0").strip().lower()
+    in {"1", "true", "yes", "on"}
+)
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 
 ALLOWED_VARIANT_VALUES_TEXT = "public, family, mobile, office"
@@ -6396,7 +6400,10 @@ def main() -> None:
         restore_auth_session_from_cookie()
     init_state()
     pre_auth_route = get_route()
-    if pre_auth_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}:
+    if (
+        APP_ENABLE_HASH_MAGIC_LINK_NORMALIZER
+        and pre_auth_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}
+    ):
         normalize_auth_hash_fragment()
     consume_magic_link_callback()
     route = get_route()
