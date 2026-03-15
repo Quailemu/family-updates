@@ -1,3 +1,7 @@
+![logo](../../assets/logo.png)
+
+![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+
 # Public walkthrough recording script (60-90 seconds)
 
 voice-message.com. One message in. One message out.
@@ -7,14 +11,14 @@ In this service, 'Family' means authorised contacts approved by the care home, s
 It is not live messaging.
 
 The model is simple and clear.
-Each Family channel is one-to-one with the resident.
-It is not a shared whole-family thread.
+Each authorised contact has their own contact channel to the resident for Family to resident messages.
+Care Hub - Mobile plays those family messages in a fair rotating order, with unplayed messages first.
 
-Within each one-to-one channel, only two messages are stored at any one time:
-first, the latest message from Family to the resident;
-second, the latest reply from the resident to Family.
+Resident replies are one shared current message to all authorised contacts.
+Office updates are one-way and shared to all authorised contacts.
 
-When a new message is recorded, it replaces the previous message in that same direction.
+In each channel and direction, only one current message is stored at a time.
+When a new message is recorded, it replaces the previous message in that same channel/direction.
 There is no archive, no message history, and no scrolling thread.
 
 Messages are played and replies are recorded by staff when available within normal care routines.

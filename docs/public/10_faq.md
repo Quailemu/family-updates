@@ -6,9 +6,9 @@
 
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own two-way message channel with Jane. In each channel there is one current message from the contact to Jane and one current message from Jane to that contact. When a new message is recorded, it replaces the previous message in that direction.
+This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-The care home can also send a one-way Office update to Jane's authorised contacts. Only one Office update is kept at a time, and a new update replaces the previous one.
+Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. In each channel/direction, only one current message is kept at a time, and a new message replaces the previous one.
 
 ## What is voice-message.com for?
 
@@ -25,7 +25,7 @@ Each role uses its own app.
 ## How many app interfaces are there?
 
 There are three role-based interfaces linked to the resident's care circle: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
-The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
+The messaging system links each resident to authorised contact channels for Family/Friend -> Resident messages, plus a shared Resident -> Family message and a one-way Office update channel.
 
 ## Is this service monitored or responded to by staff?
 
@@ -37,7 +37,7 @@ No. The service is not intended for care or health updates. Please contact the c
 
 ## Why does my message replace the previous one?
 
-The service keeps only the current message in each direction for each authorised channel. New messages replace the previous message in that same direction, and there is no message history. This supports data minimisation.
+The service keeps only one current message in each channel/direction. New messages replace the previous message in that same channel/direction, and there is no message history. This supports data minimisation.
 
 ## Can different groups play the same current messages?
 
@@ -61,7 +61,7 @@ Playback is limited to authorised users in the resident's care circle, but messa
 
 ## How long are messages kept?
 
-Only the current message is kept for each direction and contact. New messages replace previous ones.
+Only the current message is kept for each channel/direction. New messages replace previous ones in that same channel/direction.
 
 ## Where can I read more about roles and responsibilities?
 

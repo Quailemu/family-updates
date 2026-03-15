@@ -6,9 +6,9 @@
 
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own two-way message channel with Jane. In each channel there is one current message from the contact to Jane and one current message from Jane to that contact. When a new message is recorded, it replaces the previous message in that direction.
+This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-The care home can also send a one-way Office update to Jane's authorised contacts. Only one Office update is kept at a time, and a new update replaces the previous one.
+Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. In each channel/direction, only one current message is kept at a time, and a new message replaces the previous one.
 
 ## Who this is for
 
@@ -24,8 +24,8 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 
 ## Resident and Family messages
 
-- Play the latest family message for the resident.
-- Record and send the latest resident message for the selected authorised contact.
+- Play the latest family messages for the resident in the app's fair rotating order (unplayed first).
+- Record and send one shared current resident message to all authorised contacts.
 - A new message replaces the previous message in that same direction.
 
 ## Office update (read-only in Mobile)
@@ -33,10 +33,10 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 - Mobile users can play the latest Office update.
 - Mobile users cannot edit, delete, or replace the Office update.
 
-## Contact selection and relationship labels
+## Contact labels and message order
 
-- When selecting a contact, use the relationship label where provided (for example: daughter, son, spouse, friend).
-- This helps ensure the correct recipient is selected.
+- Relationship labels (for example: daughter, son, spouse, friend) help staff identify each authorised contact.
+- Family messages are played in a fair rotating order, with unplayed messages first.
 
 ## Important boundaries
 

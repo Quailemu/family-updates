@@ -6,9 +6,9 @@
 
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own two-way message channel with Jane. In each channel there is one current message from the contact to Jane and one current message from Jane to that contact. When a new message is recorded, it replaces the previous message in that direction.
+This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-The care home can also send a one-way Office update to Jane's authorised contacts. Only one Office update is kept at a time, and a new update replaces the previous one.
+Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. In each channel/direction, only one current message is kept at a time, and a new message replaces the previous one.
 
 Q: Is this a live messaging service?  
 A: No. It is not live. Messages are played when staff are available.
@@ -20,7 +20,7 @@ Q: Which interfaces are part of this service?
 A: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
 
 Q: What channel types does the service use?  
-A: The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
+A: Each resident has authorised contact channels for Family/Friend -> Resident messages, plus a shared Resident -> Family message and a one-way Office update channel.
 
 Q: Can I send urgent updates here?  
 A: No. For urgent, care, or safeguarding matters, contact the care home directly.

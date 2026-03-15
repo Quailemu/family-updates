@@ -8,9 +8,9 @@ This summary is for Care Hub – Office users. It outlines the separation of app
 
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own two-way message channel with Jane. In each channel there is one current message from the contact to Jane and one current message from Jane to that contact. When a new message is recorded, it replaces the previous message in that direction.
+This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-The care home can also send a one-way Office update to Jane's authorised contacts. Only one Office update is kept at a time, and a new update replaces the previous one.
+Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. In each channel/direction, only one current message is kept at a time, and a new message replaces the previous one.
 
 ## App separation summary
 
@@ -62,8 +62,11 @@ Duplicate registrations are prevented automatically.
 
 ## Message policy
 
-- One message per direction per resident/contact (no threads).
-- Each new message replaces the previous one.
+- One current message per channel/direction (no threads).
+- Family/Friend -> Resident messages are kept per authorised contact channel.
+- Resident -> Family is one shared current message to all authorised contacts.
+- Office -> Family is one shared current update to all authorised contacts.
+- Each new message replaces the previous one in that same channel/direction.
 
 ## Safeguarding clarification
 

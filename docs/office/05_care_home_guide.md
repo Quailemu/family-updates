@@ -17,7 +17,8 @@ Each interface has its own controls for creating and managing the messages it se
 
 The messaging system uses two types of channels linked to each resident:
 
-- Two-way contact channels between the resident and authorised contacts
+- Authorised contact channels for Family/Friend -> Resident messages
+- A shared Resident -> Family message channel to all authorised contacts
 - A one-way Office update channel used by the care home to send updates to authorised contacts
 
 ## Message playback and control
@@ -39,14 +40,11 @@ Example: Jane
 
 The diagram shows how voice messages are organised for a single resident.
 
-Each authorised contact communicates with the resident through their own two-way contact channel. In each channel there is:
+Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-- one current message from the contact to Jane
-- one current message from Jane to that contact
+Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts.
 
-When a new message is recorded in either direction, it replaces the previous message in that direction.
-
-The care home can also send a one-way Office update to all authorised contacts. Only one Office update is stored at a time, and a new update replaces the previous one.
+In each channel/direction, only one current message is kept at a time, and a new message replaces the previous one.
 
 ## Authorised contact channel structure
 
@@ -57,7 +55,8 @@ An authorised contact channel may contain:
 - a single authorised contact, or
 - multiple authorised contacts where the care home configures a shared channel
 
-Each two-way contact channel keeps one current message in each direction.
+Family/Friend -> Resident messages are kept per authorised contact channel.
+Resident -> Family is one shared current message to all authorised contacts.
 The Office update channel is separate and one-way from the care home to authorised contacts.
 
 ## Day-to-day use
@@ -116,7 +115,7 @@ Care Hub users see a scrollable list of residents. Each resident has one communi
 
 ### Mobile send section
 
-Staff can record an outgoing message for that resident from the Send section. The card includes a single recorder/player, a "I have listened to this message." checkbox before sending, and a recipient selector listing the resident's linked approved contacts.
+Staff can record an outgoing message for that resident from the Send section. The card includes a single recorder/player and an "I have listened to this message." checkbox before sending. The resident message is then sent to all authorised contacts as one shared current message.
 
 ### Office update message
 

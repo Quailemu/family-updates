@@ -6,9 +6,9 @@
 
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own two-way message channel with Jane. In each channel there is one current message from the contact to Jane and one current message from Jane to that contact. When a new message is recorded, it replaces the previous message in that direction.
+This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-The care home can also send a one-way Office update to Jane's authorised contacts. Only one Office update is kept at a time, and a new update replaces the previous one.
+Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. In each channel/direction, only one current message is kept at a time, and a new message replaces the previous one.
 
 ## Purpose
 
@@ -20,7 +20,7 @@ It is not intended for live or urgent communication.
 The system has three application interfaces for different groups of people associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, and other authorised contacts).
 
 Each interface has its own role in the resident's care circle. The product is role-based and non-urgent.
-The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
+The messaging system links each resident to authorised contact channels for Family/Friend -> Resident messages, plus a shared Resident -> Family message and a one-way Office update channel.
 
 ## Message playback and control
 
@@ -32,7 +32,8 @@ Messages in a contact channel may only be played by authorised users of that spe
 Family and friends are organised into authorised contact channels around the resident.
 An authorised contact channel may contain one authorised contact or multiple authorised contacts where the care home chooses.
 
-Each two-way contact channel supports Family/Friend -> Resident and Resident -> Family/Friend.
+Family/Friend -> Resident messages are kept per authorised contact channel.
+Resident -> Family is a separate shared current message to all authorised contacts.
 The Office update channel is separate and one-way from the care home to authorised contacts.
 
 ## Playback and care setting

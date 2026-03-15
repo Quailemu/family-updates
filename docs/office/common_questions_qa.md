@@ -21,7 +21,7 @@ Q: Why can a family message disappear?
 A: A new message from that same contact replaces their previous one by design.
 
 Q: Can one contact see another contact's messages?  
-A: No. Each approved contact has a separate channel linked to the resident.
+A: No. Other authorised contacts cannot access a contact's Family/Friend -> Resident message channel.
 
 Q: Can we keep old messages for memory work?  
 A: Not in this service. It is intentionally current-message only with no archive.
@@ -33,7 +33,7 @@ Q: Who decides which contacts are approved?
 A: The care home decides and manages approved family members or other authorised contacts.
 
 Q: Can office users do mobile tasks?  
-A: Yes. Care Hub - Office includes Care Hub - Mobile functionality.
+A: No. Care Hub - Office and Care Hub - Mobile are separate role-based app variants.
 
 Q: Can mobile users access office documents?  
 A: No. Care Hub - Mobile is restricted and does not include office/admin documents.
