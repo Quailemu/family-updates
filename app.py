@@ -1939,6 +1939,179 @@ def audit_event_exists(
         return False
 
 
+def audit_event_exists_any_actor(
+    action: str,
+    *,
+    target_id: str | None = None,
+    resident_id: str | None = None,
+    care_home_id: str | None = None,
+) -> bool:
+    supabase, error = get_supabase_client()
+    if error:
+        return False
+    access_token = st.session_state.get("access_token")
+    if not access_token:
+        return False
+    try:
+        supabase.postgrest.auth(access_token)
+        query = supabase.table("audit_log").select("id").eq("action", action).limit(1)
+        if target_id:
+            query = query.eq("target_id", target_id)
+        if resident_id:
+            query = query.eq("resident_id", resident_id)
+        if care_home_id:
+            query = query.eq("care_home_id", care_home_id)
+        resp = query.execute()
+        return bool(resp.data)
+    except Exception:
+        return False
+
+
+def sort_contacts_for_playback(contacts: list[dict]) -> list[dict]:
+    return sorted(
+        contacts,
+        key=lambda c: (
+            str(c.get("full_name") or "").strip().casefold(),
+            str(c.get("id") or ""),
+        ),
+    )
+
+
+def get_next_contact_user_id_in_order(
+    contacts_sorted: list[dict],
+    current_contact_user_id: str | None,
+) -> str | None:
+    if not contacts_sorted:
+        return None
+    ordered_user_ids = [
+        str(c.get("auth_user_id") or "").strip()
+        for c in contacts_sorted
+        if str(c.get("auth_user_id") or "").strip()
+    ]
+    if not ordered_user_ids:
+        return None
+    current = str(current_contact_user_id or "").strip()
+    if current and current in ordered_user_ids:
+        idx = ordered_user_ids.index(current)
+        return ordered_user_ids[(idx + 1) % len(ordered_user_ids)]
+    return ordered_user_ids[0]
+
+
+def get_resident_playback_pointer(
+    resident_id: str,
+    care_home_id: str,
+    access_token: str | None,
+) -> str | None:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return None
+    try:
+        resp = (
+            supabase.table("resident_playback_state")
+            .select("next_contact_user_id")
+            .eq("resident_id", resident_id)
+            .eq("care_home_id", care_home_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception:
+        return None
+    if not resp.data:
+        return None
+    return str(resp.data[0].get("next_contact_user_id") or "").strip() or None
+
+
+def set_resident_playback_pointer(
+    resident_id: str,
+    care_home_id: str,
+    next_contact_user_id: str | None,
+    access_token: str | None,
+) -> None:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return
+    payload = {
+        "resident_id": resident_id,
+        "care_home_id": care_home_id,
+        "next_contact_user_id": next_contact_user_id,
+        "updated_at": __import__("datetime").datetime.utcnow().isoformat(),
+    }
+    try:
+        supabase.table("resident_playback_state").upsert(payload, on_conflict="resident_id").execute()
+    except Exception:
+        return
+
+
+def select_next_family_message_for_mobile(
+    resident_id: str,
+    care_home_id: str,
+    contacts: list[dict],
+    access_token: str,
+) -> tuple[dict | None, dict | None, str]:
+    contacts_sorted = sort_contacts_for_playback(contacts)
+    if not contacts_sorted:
+        return None, None, "No linked family contacts."
+
+    queued_items: list[dict] = []
+    for contact in contacts_sorted:
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        if not contact_user_id:
+            continue
+        latest = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            contact_user_id=contact_user_id,
+            channel="resident_family",
+        )
+        if not latest:
+            continue
+        message_id = str(latest.get("id") or "").strip()
+        played = bool(
+            message_id
+            and audit_event_exists_any_actor(
+                "message_played",
+                target_id=message_id,
+                resident_id=resident_id,
+                care_home_id=care_home_id,
+            )
+        )
+        queued_items.append(
+            {
+                "contact": contact,
+                "message": latest,
+                "played": played,
+            }
+        )
+
+    if not queued_items:
+        return None, None, "No family messages available."
+
+    unplayed = [item for item in queued_items if not item["played"]]
+    if unplayed:
+        return unplayed[0]["contact"], unplayed[0]["message"], "Unplayed first"
+
+    pointer = get_resident_playback_pointer(resident_id, care_home_id, access_token)
+    by_contact_user_id = {
+        str(item["contact"].get("auth_user_id") or "").strip(): item for item in queued_items
+    }
+    ordered_user_ids = [
+        str(c.get("auth_user_id") or "").strip()
+        for c in contacts_sorted
+        if str(c.get("auth_user_id") or "").strip() in by_contact_user_id
+    ]
+    if not ordered_user_ids:
+        return queued_items[0]["contact"], queued_items[0]["message"], "Played cycle"
+    start_idx = 0
+    if pointer and pointer in ordered_user_ids:
+        start_idx = ordered_user_ids.index(pointer)
+    chosen_user_id = ordered_user_ids[start_idx]
+    chosen = by_contact_user_id.get(chosen_user_id)
+    if not chosen:
+        chosen = queued_items[0]
+    return chosen["contact"], chosen["message"], "Played cycle"
+
+
 def run_daily_audit_log_retention_purge() -> None:
     if st.session_state.get("active_role") != "care_hub":
         return
@@ -4324,12 +4497,12 @@ def render_family_send() -> None:
         if room_label:
             st.markdown(f"*{room_label}*")
 
-        st.markdown(f"**Latest message from {full_name} to you**")
+        st.markdown(f"**Latest message from {full_name} to authorised family contacts**")
         latest = fetch_latest_message(
             resident_id,
             "from_resident",
             access_token,
-            contact_user_id=st.session_state.get("auth_uid"),
+            family_id=resident.get("family_id") or resident_id,
             channel="resident_family",
         )
         audio_bytes = decode_audio_payload(latest)
@@ -5835,8 +6008,30 @@ def render_care_hub() -> None:
             st.markdown(f"Room {resident.get('room')}")
 
         contacts = contacts_by_resident.get(resident_id, [])
+        is_mobile_variant = get_app_variant() == VARIANT_MOBILE
         selected_contact = None
-        if contacts:
+        latest = None
+        queue_mode_label = ""
+        if not contacts:
+            st.markdown(
+                '<div class="vm-muted-line">No linked family contacts.</div>',
+                unsafe_allow_html=True,
+            )
+            state["selected_contact_id"] = None
+            state["selected_contact_user_id"] = None
+        elif is_mobile_variant:
+            st.caption(
+                "Play messages follows a fixed contact order. Unplayed messages are always first."
+            )
+            selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
+                resident_id,
+                resident["care_home_id"],
+                contacts,
+                access_token,
+            )
+            state["selected_contact_id"] = (selected_contact or {}).get("id")
+            state["selected_contact_user_id"] = (selected_contact or {}).get("auth_user_id")
+        else:
             contact_options: list[str] = []
             for contact in contacts:
                 relationship = (contact.get("relationship") or "").strip()
@@ -5862,19 +6057,12 @@ def render_care_hub() -> None:
                     ack_widget_key=f"care_listened_{resident_id}",
                     clear_care_last_sent_for_resident=resident_id,
                 )
-        else:
-            st.markdown(
-                '<div class="vm-muted-line">No linked family contacts.</div>',
-                unsafe_allow_html=True,
-            )
-            state["selected_contact_id"] = None
-            state["selected_contact_user_id"] = None
 
-        if selected_contact is None and state.get("selected_contact_id"):
-            selected_contact = next(
-                (c for c in contacts if c["id"] == state.get("selected_contact_id")),
-                None,
-            )
+            if selected_contact is None and state.get("selected_contact_id"):
+                selected_contact = next(
+                    (c for c in contacts if c["id"] == state.get("selected_contact_id")),
+                    None,
+                )
 
         selected_contact_name = (
             (selected_contact or {}).get("full_name") or "family contact"
@@ -5887,16 +6075,19 @@ def render_care_hub() -> None:
             if selected_contact_relationship
             else f"{selected_contact_name} (Family contact)"
         )
+        if is_mobile_variant and queue_mode_label:
+            st.caption(f"Queue mode: {queue_mode_label}")
         st.caption(f"Family contact selected: {selected_contact_display}")
 
         st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
-        latest = fetch_latest_message(
-            resident_id,
-            "to_resident",
-            access_token,
-            contact_user_id=state.get("selected_contact_user_id"),
-            channel="resident_family",
-        )
+        if latest is None:
+            latest = fetch_latest_message(
+                resident_id,
+                "to_resident",
+                access_token,
+                contact_user_id=state.get("selected_contact_user_id"),
+                channel="resident_family",
+            )
         audio_bytes = decode_audio_payload(latest)
         if audio_bytes:
             st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
@@ -5912,12 +6103,11 @@ def render_care_hub() -> None:
                     latest_message_id and st.session_state.get(played_state_key, False)
                 )
                 if latest_message_id and not already_logged:
-                    already_logged = audit_event_exists(
+                    already_logged = audit_event_exists_any_actor(
                         "message_played",
                         target_id=latest_message_id,
                         resident_id=resident_id,
                         care_home_id=resident["care_home_id"],
-                        actor_user_id=st.session_state.get("auth_uid"),
                     )
                     if already_logged:
                         st.session_state[played_state_key] = True
@@ -5947,6 +6137,17 @@ def render_care_hub() -> None:
                             latest_message_id,
                             resident_id=resident_id,
                         )
+                        if is_mobile_variant:
+                            next_contact_user_id = get_next_contact_user_id_in_order(
+                                sort_contacts_for_playback(contacts),
+                                state.get("selected_contact_user_id"),
+                            )
+                            set_resident_playback_pointer(
+                                resident_id,
+                                resident["care_home_id"],
+                                next_contact_user_id,
+                                access_token,
+                            )
                         st.session_state[played_state_key] = True
                         st.rerun()
         else:
@@ -5955,18 +6156,19 @@ def render_care_hub() -> None:
                 unsafe_allow_html=True,
             )
 
-        st.markdown(f"**Latest message from {full_name} to {selected_contact_name}**")
+        if is_mobile_variant:
+            st.markdown(f"**Latest message from {full_name} to all authorised family contacts**")
+        else:
+            st.markdown(f"**Latest message from {full_name} to {selected_contact_name}**")
 
-        latest_sent = None
+        latest_sent = fetch_latest_message(
+            resident_id,
+            "from_resident",
+            access_token,
+            family_id=resident.get("family_id") or resident_id,
+            channel="resident_family",
+        )
         latest_sent_audio = None
-        if state.get("selected_contact_user_id"):
-            latest_sent = fetch_latest_message(
-                resident_id,
-                "from_resident",
-                access_token,
-                contact_user_id=state.get("selected_contact_user_id"),
-                channel="resident_family",
-            )
         latest_sent_audio = decode_audio_payload(latest_sent)
         if latest_sent and not state.get("recording_bytes"):
             if latest_sent_audio:
@@ -5981,11 +6183,10 @@ def render_care_hub() -> None:
                 latest_sent_label = format_soft_message_period_label(latest_sent_at)
                 if latest_sent_label:
                     st.caption(latest_sent_label)
-        is_mobile_variant = get_app_variant() == VARIANT_MOBILE
         if is_mobile_variant:
             if hasattr(st, "audio_input"):
                 recorded_from_native = st.audio_input(
-                    f"Record voice message from {full_name} to {selected_contact_name}",
+                    f"Record voice message from {full_name} to all authorised family contacts",
                     key=f"care_audio_input_{resident_id}_{state.get('recording_input_nonce', 0)}",
                 )
                 render_slow_speech_hint()
@@ -6031,7 +6232,7 @@ def render_care_hub() -> None:
             room_display = f"Room {resident.get('room')}" if resident.get("room") else "Room not set"
             confirmation_line = (
                 "Sending on behalf of:<br/>"
-                f"{full_name} — {room_display} \u2192 {selected_contact_display}"
+                f"{full_name} — {room_display} \u2192 all authorised family contacts"
             )
             st.markdown(
                 f'<div class="vm-muted-line">{confirmation_line}</div>',
@@ -6046,8 +6247,6 @@ def render_care_hub() -> None:
             can_send = bool(
                 state.get("recording_bytes")
                 and state.get("preview_confirmed")
-                and state.get("selected_contact_id")
-                and state.get("selected_contact_user_id")
             )
             if st.button(
                 f"Send for {full_name}",
@@ -6055,7 +6254,7 @@ def render_care_hub() -> None:
                 disabled=not can_send,
             ):
                 if not can_send:
-                    st.info("Please select a linked recipient and record before sending.")
+                    st.info("Please record and listen before sending.")
                 else:
                     supabase, error = get_authed_supabase(access_token)
                     if error:
@@ -6067,7 +6266,7 @@ def render_care_hub() -> None:
                         now_iso = __import__("datetime").datetime.utcnow().isoformat()
                         payload = {
                             "resident_id": resident_id,
-                            "contact_user_id": state.get("selected_contact_user_id"),
+                            "contact_user_id": None,
                             "family_id": resident.get("family_id") or resident_id,
                             "channel": "resident_family",
                             "direction": "from_resident",
@@ -6083,9 +6282,7 @@ def render_care_hub() -> None:
                                         "insert_care_hub_message",
                                         {
                                             "p_resident_id": resident_id,
-                                            "p_contact_user_id": state.get(
-                                                "selected_contact_user_id"
-                                            ),
+                                            "p_contact_user_id": None,
                                             "p_audio_storage_path": audio_b64,
                                             "p_audio_mime_type": audio_mime_type,
                                             "p_audio_bytes": len(audio_bytes),
@@ -6110,14 +6307,52 @@ def render_care_hub() -> None:
                                 )
                                 if not rpc_missing:
                                     raise
-                                resp = (
-                                    supabase.table("messages")
-                                    .upsert(
-                                        payload,
-                                        on_conflict="resident_id,contact_user_id,direction,channel",
+                                try:
+                                    resp = (
+                                        supabase.table("messages")
+                                        .upsert(
+                                            payload,
+                                            on_conflict="resident_id,family_id,direction,channel",
+                                        )
+                                        .execute()
                                     )
-                                    .execute()
-                                )
+                                except Exception as broadcast_upsert_exc:
+                                    broadcast_upsert_msg = str(broadcast_upsert_exc)
+                                    broadcast_upsert_msg_l = broadcast_upsert_msg.lower()
+                                    missing_conflict_constraint = (
+                                        "42p10" in broadcast_upsert_msg_l
+                                        or "no unique or exclusion constraint matching the on conflict specification"
+                                        in broadcast_upsert_msg_l
+                                    )
+                                    if not missing_conflict_constraint:
+                                        raise
+                                    existing_broadcast = (
+                                        supabase.table("messages")
+                                        .select("id")
+                                        .eq("resident_id", resident_id)
+                                        .eq("family_id", resident.get("family_id") or resident_id)
+                                        .eq("channel", "resident_family")
+                                        .eq("direction", "from_resident")
+                                        .order("recorded_at", desc=True)
+                                        .limit(1)
+                                        .execute()
+                                    )
+                                    existing_broadcast_id = (
+                                        existing_broadcast.data[0].get("id")
+                                        if hasattr(existing_broadcast, "data")
+                                        and isinstance(existing_broadcast.data, list)
+                                        and existing_broadcast.data
+                                        else None
+                                    )
+                                    if existing_broadcast_id:
+                                        resp = (
+                                            supabase.table("messages")
+                                            .update(payload)
+                                            .eq("id", existing_broadcast_id)
+                                            .execute()
+                                        )
+                                    else:
+                                        resp = supabase.table("messages").insert(payload).execute()
                         except Exception as exc:  # pragma: no cover - Supabase runtime error
                             st.error(str(exc))
                         else:
@@ -6143,7 +6378,7 @@ def render_care_hub() -> None:
                                     "Saving Resident→Family message:",
                                     message_id,
                                     now_iso,
-                                    state.get("selected_contact_user_id"),
+                                    "broadcast",
                                 )
                             state["recording_bytes"] = None
                             state["recording_mime_type"] = "audio/wav"
@@ -6151,8 +6386,8 @@ def render_care_hub() -> None:
                             sent_now = True
                             st.session_state["care_last_sent"] = {
                                 "resident_id": resident_id,
-                                "contact_id": state.get("selected_contact_id"),
-                                "message": "Message sent.",
+                                "contact_id": None,
+                                "message": "Message sent to all authorised family contacts.",
                             }
                             state["recording_input_nonce"] = (
                                 int(state.get("recording_input_nonce", 0)) + 1
