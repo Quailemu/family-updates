@@ -6050,20 +6050,48 @@ def render_care_hub() -> None:
             state["selected_contact_id"] = (selected_contact or {}).get("id")
             state["selected_contact_user_id"] = (selected_contact or {}).get("auth_user_id")
         else:
+            contacts_sorted = sort_contacts_for_playback(contacts)
+            contact_search = st.text_input(
+                "Search family contacts",
+                key=f"care_contact_search_{resident_id}",
+                placeholder="Type a name or relationship",
+            )
+            search_term = (contact_search or "").strip().casefold()
+            filtered_contacts = [
+                contact
+                for contact in contacts_sorted
+                if (
+                    not search_term
+                    or search_term in str(contact.get("full_name") or "").casefold()
+                    or search_term in str(contact.get("relationship") or "").casefold()
+                )
+            ]
+            if not filtered_contacts:
+                st.info("No matching family contacts. Showing all contacts.")
+                filtered_contacts = contacts_sorted
+
             contact_options: list[str] = []
-            for contact in contacts:
+            for contact in filtered_contacts:
                 relationship = (contact.get("relationship") or "").strip()
                 if relationship:
                     contact_options.append(f"{contact['full_name']} — {relationship.title()}")
                 else:
                     contact_options.append(f"{contact['full_name']} — Family contact")
 
+            current_selected_id = state.get("selected_contact_id")
+            default_index = 0
+            if current_selected_id:
+                for idx, contact in enumerate(filtered_contacts):
+                    if contact.get("id") == current_selected_id:
+                        default_index = idx
+                        break
             selected_label = st.selectbox(
                 "Select family contact",
                 contact_options,
+                index=default_index,
                 key=f"care_recipient_{resident_id}",
             )
-            selected_contact = contacts[contact_options.index(selected_label)]
+            selected_contact = filtered_contacts[contact_options.index(selected_label)]
             if selected_contact["id"] != state.get("selected_contact_id"):
                 state["selected_contact_id"] = selected_contact["id"]
                 state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
