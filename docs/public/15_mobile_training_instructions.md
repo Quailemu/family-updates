@@ -37,6 +37,7 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 
 - Relationship labels (for example: daughter, son, spouse, friend) help staff identify each authorised contact.
 - Family messages are played in a fair rotating order, with unplayed messages first.
+- Mobile PINs must be unique per staff account within the care home.
 
 ## Important boundaries
 
