@@ -6070,6 +6070,21 @@ def render_care_hub() -> None:
                 st.info("No matching family contacts. Showing all contacts.")
                 filtered_contacts = contacts_sorted
 
+            st.caption(
+                f"Matching contacts: {len(filtered_contacts)}"
+            )
+            preview_limit = 6
+            for preview_contact in filtered_contacts[:preview_limit]:
+                preview_relationship = (preview_contact.get("relationship") or "").strip()
+                if preview_relationship:
+                    st.markdown(
+                        f"- {preview_contact.get('full_name')} ({preview_relationship.title()})"
+                    )
+                else:
+                    st.markdown(f"- {preview_contact.get('full_name')}")
+            if len(filtered_contacts) > preview_limit:
+                st.caption(f"Showing first {preview_limit} above. Use selector for full list.")
+
             contact_options: list[str] = []
             for contact in filtered_contacts:
                 relationship = (contact.get("relationship") or "").strip()
