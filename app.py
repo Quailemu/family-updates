@@ -6100,13 +6100,14 @@ def render_care_hub() -> None:
                     if contact.get("id") == current_selected_id:
                         default_index = idx
                         break
-            selected_label = st.selectbox(
+            selected_index = st.radio(
                 "Select family contact",
-                contact_options,
-                index=default_index,
+                options=list(range(len(filtered_contacts))),
+                index=default_index if filtered_contacts else 0,
+                format_func=lambda idx: contact_options[idx],
                 key=f"care_recipient_{resident_id}",
             )
-            selected_contact = filtered_contacts[contact_options.index(selected_label)]
+            selected_contact = filtered_contacts[selected_index]
             if selected_contact["id"] != state.get("selected_contact_id"):
                 state["selected_contact_id"] = selected_contact["id"]
                 state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
