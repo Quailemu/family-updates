@@ -756,9 +756,15 @@ def normalize_auth_hash_fragment_on_login_routes() -> None:
     )
 
 
-def _mobile_pin_hash(pin_value: str, auth_uid: str, care_home_id: str) -> str:
+def _mobile_pin_hash_legacy(pin_value: str, auth_uid: str, care_home_id: str) -> str:
     material = f"vm_mobile_pin_v1:{care_home_id}:{auth_uid}:{pin_value}"
     return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
+def _mobile_pin_hash(pin_value: str, care_home_id: str) -> str:
+    # v2 hash scope is per care home so PIN uniqueness can be enforced per home.
+    material = f"vm_mobile_pin_v2:{care_home_id}:{pin_value}"
+    return "v2:" + hashlib.sha256(material.encode("utf-8")).hexdigest()
 
 
 def _is_valid_mobile_pin(pin_value: str) -> bool:
@@ -830,11 +836,21 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
             if new_pin != confirm_pin:
                 st.error("PIN values do not match.")
                 return False
-            pin_hash = _mobile_pin_hash(new_pin, auth_uid, care_home_id)
+            pin_hash = _mobile_pin_hash(new_pin, care_home_id)
             try:
                 supabase.rpc("set_mobile_pin_hash", {"p_pin_hash": pin_hash}).execute()
             except Exception as exc:  # pragma: no cover - Supabase runtime error
-                st.error(str(exc))
+                msg = str(exc or "")
+                msg_l = msg.lower()
+                if (
+                    "duplicate key value violates unique constraint" in msg_l
+                    or "idx_care_home_users_unique_mobile_pin_per_home" in msg_l
+                ):
+                    st.error(
+                        "This Mobile PIN is already used by another staff account in this care home. Choose a different PIN."
+                    )
+                else:
+                    st.error(msg)
                 return False
             mark_mobile_pin_verified()
             st.session_state["mobile_pin_just_accepted"] = True
@@ -854,7 +870,9 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
         if not _is_valid_mobile_pin(pin_value):
             st.error("Enter your 4-8 digit PIN.")
             return False
-        if _mobile_pin_hash(pin_value, auth_uid, care_home_id) != stored_hash:
+        candidate_hash = _mobile_pin_hash(pin_value, care_home_id)
+        legacy_hash = _mobile_pin_hash_legacy(pin_value, auth_uid, care_home_id)
+        if candidate_hash != stored_hash and legacy_hash != stored_hash:
             st.error("Incorrect PIN.")
             return False
         mark_mobile_pin_verified()
