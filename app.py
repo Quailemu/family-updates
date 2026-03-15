@@ -6278,81 +6278,50 @@ def render_care_hub() -> None:
                         try:
                             try:
                                 resp = (
-                                    supabase.rpc(
-                                        "insert_care_hub_message",
-                                        {
-                                            "p_resident_id": resident_id,
-                                            "p_contact_user_id": None,
-                                            "p_audio_storage_path": audio_b64,
-                                            "p_audio_mime_type": audio_mime_type,
-                                            "p_audio_bytes": len(audio_bytes),
-                                            "p_recorded_at": now_iso,
-                                        },
+                                    supabase.table("messages")
+                                    .upsert(
+                                        payload,
+                                        on_conflict="resident_id,family_id,direction,channel",
                                     )
                                     .execute()
                                 )
-                            except Exception as rpc_exc:
-                                # Prefer DB helper function to avoid client-side RLS variance.
-                                # Only fall back to direct upsert when RPC is unavailable.
-                                rpc_msg = str(rpc_exc)
-                                rpc_msg_l = rpc_msg.lower()
-                                rpc_missing = (
-                                    "insert_care_hub_message" in rpc_msg
-                                    and (
-                                        "pgrst202" in rpc_msg_l
-                                        or "not found" in rpc_msg_l
-                                        or "does not exist" in rpc_msg_l
-                                        or "could not find the function" in rpc_msg_l
-                                    )
+                            except Exception as broadcast_upsert_exc:
+                                broadcast_upsert_msg = str(broadcast_upsert_exc)
+                                broadcast_upsert_msg_l = broadcast_upsert_msg.lower()
+                                missing_conflict_constraint = (
+                                    "42p10" in broadcast_upsert_msg_l
+                                    or "no unique or exclusion constraint matching the on conflict specification"
+                                    in broadcast_upsert_msg_l
                                 )
-                                if not rpc_missing:
+                                if not missing_conflict_constraint:
                                     raise
-                                try:
+                                existing_broadcast = (
+                                    supabase.table("messages")
+                                    .select("id")
+                                    .eq("resident_id", resident_id)
+                                    .eq("family_id", resident.get("family_id") or resident_id)
+                                    .eq("channel", "resident_family")
+                                    .eq("direction", "from_resident")
+                                    .order("recorded_at", desc=True)
+                                    .limit(1)
+                                    .execute()
+                                )
+                                existing_broadcast_id = (
+                                    existing_broadcast.data[0].get("id")
+                                    if hasattr(existing_broadcast, "data")
+                                    and isinstance(existing_broadcast.data, list)
+                                    and existing_broadcast.data
+                                    else None
+                                )
+                                if existing_broadcast_id:
                                     resp = (
                                         supabase.table("messages")
-                                        .upsert(
-                                            payload,
-                                            on_conflict="resident_id,family_id,direction,channel",
-                                        )
+                                        .update(payload)
+                                        .eq("id", existing_broadcast_id)
                                         .execute()
                                     )
-                                except Exception as broadcast_upsert_exc:
-                                    broadcast_upsert_msg = str(broadcast_upsert_exc)
-                                    broadcast_upsert_msg_l = broadcast_upsert_msg.lower()
-                                    missing_conflict_constraint = (
-                                        "42p10" in broadcast_upsert_msg_l
-                                        or "no unique or exclusion constraint matching the on conflict specification"
-                                        in broadcast_upsert_msg_l
-                                    )
-                                    if not missing_conflict_constraint:
-                                        raise
-                                    existing_broadcast = (
-                                        supabase.table("messages")
-                                        .select("id")
-                                        .eq("resident_id", resident_id)
-                                        .eq("family_id", resident.get("family_id") or resident_id)
-                                        .eq("channel", "resident_family")
-                                        .eq("direction", "from_resident")
-                                        .order("recorded_at", desc=True)
-                                        .limit(1)
-                                        .execute()
-                                    )
-                                    existing_broadcast_id = (
-                                        existing_broadcast.data[0].get("id")
-                                        if hasattr(existing_broadcast, "data")
-                                        and isinstance(existing_broadcast.data, list)
-                                        and existing_broadcast.data
-                                        else None
-                                    )
-                                    if existing_broadcast_id:
-                                        resp = (
-                                            supabase.table("messages")
-                                            .update(payload)
-                                            .eq("id", existing_broadcast_id)
-                                            .execute()
-                                        )
-                                    else:
-                                        resp = supabase.table("messages").insert(payload).execute()
+                                else:
+                                    resp = supabase.table("messages").insert(payload).execute()
                         except Exception as exc:  # pragma: no cover - Supabase runtime error
                             st.error(str(exc))
                         else:
