@@ -1781,6 +1781,7 @@ def render_care_hub_nav() -> None:
 
 
 def render_care_hub_instructions() -> None:
+    render_care_home_identity_banner(st.session_state.get("access_token"))
     app_variant = get_app_variant()
     if app_variant == VARIANT_OFFICE:
         render_how_it_works_office()
@@ -1789,6 +1790,7 @@ def render_care_hub_instructions() -> None:
 
 
 def render_care_hub_training() -> None:
+    render_care_home_identity_banner(st.session_state.get("access_token"))
     app_variant = get_app_variant()
     if app_variant == VARIANT_OFFICE:
         render_how_it_works_office()
@@ -1995,6 +1997,20 @@ def sort_contacts_for_playback(contacts: list[dict]) -> list[dict]:
     )
 
 
+def dedupe_contacts_by_auth_user_id(contacts: list[dict]) -> list[dict]:
+    deduped: list[dict] = []
+    seen_user_ids: set[str] = set()
+    for contact in sort_contacts_for_playback(contacts):
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        if not contact_user_id:
+            continue
+        if contact_user_id in seen_user_ids:
+            continue
+        seen_user_ids.add(contact_user_id)
+        deduped.append(contact)
+    return deduped
+
+
 def get_next_contact_user_id_in_order(
     contacts_sorted: list[dict],
     current_contact_user_id: str | None,
@@ -2006,6 +2022,36 @@ def get_next_contact_user_id_in_order(
         for c in contacts_sorted
         if str(c.get("auth_user_id") or "").strip()
     ]
+    if not ordered_user_ids:
+        return None
+    current = str(current_contact_user_id or "").strip()
+    if current and current in ordered_user_ids:
+        idx = ordered_user_ids.index(current)
+        return ordered_user_ids[(idx + 1) % len(ordered_user_ids)]
+    return ordered_user_ids[0]
+
+
+def get_next_contact_user_id_with_message(
+    resident_id: str,
+    contacts: list[dict],
+    access_token: str,
+    current_contact_user_id: str | None,
+) -> str | None:
+    contacts_sorted = dedupe_contacts_by_auth_user_id(contacts)
+    ordered_user_ids: list[str] = []
+    for contact in contacts_sorted:
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        if not contact_user_id:
+            continue
+        latest = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            contact_user_id=contact_user_id,
+            channel="resident_family",
+        )
+        if latest:
+            ordered_user_ids.append(contact_user_id)
     if not ordered_user_ids:
         return None
     current = str(current_contact_user_id or "").strip()
@@ -2066,7 +2112,7 @@ def select_next_family_message_for_mobile(
     contacts: list[dict],
     access_token: str,
 ) -> tuple[dict | None, dict | None, str]:
-    contacts_sorted = sort_contacts_for_playback(contacts)
+    contacts_sorted = dedupe_contacts_by_auth_user_id(contacts)
     if not contacts_sorted:
         return None, None, "No linked family contacts."
 
@@ -2106,6 +2152,11 @@ def select_next_family_message_for_mobile(
         return None, None, "No family messages available."
 
     pointer = get_resident_playback_pointer(resident_id, care_home_id, access_token)
+    # Prefer session pointer for active runtime progression; DB pointer can be stale.
+    session_pointer_key = f"care_mobile_pointer_{resident_id}"
+    session_pointer = str(st.session_state.get(session_pointer_key) or "").strip()
+    if session_pointer:
+        pointer = session_pointer
     by_contact_user_id = {
         str(item["contact"].get("auth_user_id") or "").strip(): item for item in queued_items
     }
@@ -2145,6 +2196,52 @@ def select_next_family_message_for_mobile(
     if not chosen:
         chosen = queued_items[0]
     return chosen["contact"], chosen["message"], "Played cycle"
+
+
+def get_family_queue_status_for_resident(
+    resident_id: str,
+    care_home_id: str,
+    contacts: list[dict],
+    access_token: str,
+) -> tuple[int, dict | None, list[dict]]:
+    contacts_sorted = dedupe_contacts_by_auth_user_id(contacts)
+    if not contacts_sorted:
+        return 0, None, []
+    unread_count = 0
+    unread_contacts: list[dict] = []
+    for contact in contacts_sorted:
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        if not contact_user_id:
+            continue
+        latest = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            contact_user_id=contact_user_id,
+            channel="resident_family",
+        )
+        if not latest:
+            continue
+        message_id = str(latest.get("id") or "").strip()
+        played = bool(
+            message_id
+            and audit_event_exists_any_actor(
+                "message_played",
+                target_id=message_id,
+                resident_id=resident_id,
+                care_home_id=care_home_id,
+            )
+        )
+        if not played:
+            unread_count += 1
+            unread_contacts.append(contact)
+    next_contact, _, _ = select_next_family_message_for_mobile(
+        resident_id,
+        care_home_id,
+        contacts_sorted,
+        access_token,
+    )
+    return unread_count, next_contact, unread_contacts
 
 
 def run_daily_audit_log_retention_purge() -> None:
@@ -2393,6 +2490,17 @@ def fetch_active_care_home_name(access_token: str | None) -> str:
         return name
     except Exception:
         return ""
+
+
+def render_care_home_identity_banner(access_token: str | None) -> None:
+    care_home_name = fetch_active_care_home_name(access_token)
+    if care_home_name:
+        st.caption(f"Care home: {care_home_name}")
+        st.caption("You are signed in to this care home.")
+    else:
+        st.warning(
+            "Care home name is not available for this session. Please check care home setup."
+        )
 
 
 def fetch_family_contacts_for_resident(
@@ -3591,6 +3699,7 @@ def render_home(active: str) -> None:
                 "</div>"
             )
         st.markdown(header_html, unsafe_allow_html=True)
+        st.caption("Public page build: protocol-refresh-2026-03-16")
 
         st.markdown('<div class="public-hero">', unsafe_allow_html=True)
         st.markdown(
@@ -3598,14 +3707,43 @@ def render_home(active: str) -> None:
             <h1 class="hero-headline">
             One message in. One message out.
             </h1>
-            <p>Non-urgent voice messaging between residents in care homes and Family.</p>
-            <p>In this service, 'Family' means authorised contacts approved by the care home, such as family members or close friends.</p>
-            <p>Each Family channel is 1:1 with the resident. This is not a shared thread.</p>
-            <p>Within each channel, only two messages are kept: the latest in each direction.</p>
-            <p>No archive, no message history, and no scrolling thread.</p>
-            <p>Not live messaging. Staff play and record messages when available within normal care routines.</p>
+            <p>No threads. No pressure.</p>
+            <p>voice-message.com is a simple tool for exchanging non-urgent social voice messages between residents in care homes and their authorised contacts.</p>
+            <p>Messages are organised into channels and only the latest message is kept in each direction.</p>
+            <p>When a new message is recorded in the same direction, the previous message in that direction is replaced.</p>
+            <p>No archive. No message history. No scrolling thread.</p>
+            <p>This is non-urgent and not live messaging. Messages are played and replies are recorded when staff are available, to fit around care routines.</p>
             """,
             unsafe_allow_html=True,
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        button_cols = st.columns(3, gap="small")
+        render_public_app_buttons(button_cols)
+
+        st.markdown('<div class="public-section">', unsafe_allow_html=True)
+        st.markdown("<h2>How the platform works (diagram)</h2>", unsafe_allow_html=True)
+        public_diagram_path = Path("assets/voice-message-flow-diagram.png")
+        if public_diagram_path.exists():
+            try:
+                st.image(
+                    str(public_diagram_path),
+                    caption="Voice message flow diagram",
+                    use_container_width=True,
+                )
+            except TypeError:
+                st.image(
+                    str(public_diagram_path),
+                    caption="Voice message flow diagram",
+                    use_column_width=True,
+                )
+        else:
+            st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
+        st.markdown(
+            "Use this diagram as the primary explanation of channel directions and replacement rules."
+        )
+        st.markdown(
+            "Only the latest message is kept in each direction. New messages replace the previous message in the same direction."
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -3613,16 +3751,16 @@ def render_home(active: str) -> None:
         st.markdown(
             """
             <div class="public-card">
-              <h3>1:1 channels</h3>
-              <div>Each Family sender has a separate channel with the resident.</div>
+              <h3>Role-based access</h3>
+              <div>Family, Care Hub – Mobile, and Care Hub – Office are separate role-based experiences.</div>
             </div>
             <div class="public-card pink">
-              <h3>Two messages kept</h3>
-              <div>Only the latest Family message and latest resident reply are stored in each channel.</div>
+              <h3>No live pressure</h3>
+              <div>No live notifications, delivery receipts, read receipts, or typing indicators.</div>
             </div>
             <div class="public-card">
-              <h3>Role-based access</h3>
-              <div>Family and Care Hub are separate role-based experiences.</div>
+              <h3>No visible timestamps</h3>
+              <div>The service does not show exact clock times in main care communication views.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -3634,10 +3772,11 @@ def render_home(active: str) -> None:
         st.markdown(
             """
             <div class="public-steps">
-              <div class="public-step">1) A Family sender records a short message for the resident.</div>
-              <div class="public-step">2) Staff play the message when available within normal routines.</div>
-              <div class="public-step">3) A resident reply is recorded with staff support.</div>
-              <div class="public-step">4) A new message replaces the previous message in that direction.</div>
+              <div class="public-step">Follow the diagram above as the main service explanation.</div>
+              <div class="public-step">Family/Friend -&gt; Resident (created/replaced in Family).</div>
+              <div class="public-step">Resident -&gt; Family/Friend (created/replaced in Care Hub – Mobile).</div>
+              <div class="public-step">Office -&gt; Family/Friend is one-way informational updates.</div>
+              <div class="public-step">No message history or archive.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -3651,15 +3790,15 @@ def render_home(active: str) -> None:
             <div class="public-roles">
               <div class="public-card">
                 <h3>Family</h3>
-                <div>Authorised contacts record and send messages.</div>
+                <div>Authorised contacts send non-urgent social messages and listen to current replies.</div>
               </div>
               <div class="public-card pink">
                 <h3>Care Hub – Mobile</h3>
-                <div>Staff support playback and recording on site.</div>
+                <div>Staff support playback and resident recording around routine care workflows.</div>
               </div>
               <div class="public-card">
                 <h3>Care Hub – Office</h3>
-                <div>Oversight, access management, and governance.</div>
+                <div>Oversight and one-way day-to-day informational updates to authorised contacts.</div>
               </div>
             </div>
             """,
@@ -3671,9 +3810,9 @@ def render_home(active: str) -> None:
         st.markdown(
             """
             <div class="public-card">
-              <h3>Contact</h3>
-              <div>For information about voice-message.com, email
-              <a href="mailto:support@voice-message.com">support@voice-message.com</a>.</div>
+              <h3>Important boundaries</h3>
+              <div>The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.</div>
+              <div>For those matters, contact the care home directly using its normal channels.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -3729,24 +3868,26 @@ def render_home(active: str) -> None:
             st.markdown("Example: Jane")
             st.markdown(
                 "This diagram shows how voice messages and updates are organised for a single resident, "
-                "using Jane as the example. Each authorised contact has their own two-way message channel "
-                "with Jane. In each channel there is one current message from the contact to Jane and one "
-                "current message from Jane to that contact. When a new message is recorded, it replaces the "
-                "previous message in that direction."
+                "using Jane as the example. Each authorised contact has their own contact channel for "
+                "Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a "
+                "fair rotating order, with unplayed messages first."
             )
             st.markdown(
-                "The care home can also send a one-way Office update to Jane's authorised contacts. "
-                "Only one Office update is kept at a time, and a new update replaces the previous one."
+                "Resident -> Family is one shared current message to all authorised contacts. "
+                "The care home can also send a one-way Office update to all authorised contacts. "
+                "Each authorised contact channel retains the current message for that channel. "
+                "A new message replaces only the previous message in that same channel or direction."
             )
     st.markdown("### Service overview")
     st.markdown(
         "voice-message.com  \n"
         "One message in. One message out.  \n"
         "No threads. No pressure.\n\n"
-        "Only the most recent message from an approved family member or friend and the most recent reply from the resident are kept.  \n"
-        "When a new message is sent, the previous message from that sender is replaced.  \n"
-        "This structure helps keep communication simple and manageable within care settings.\n\n"
-        "This is not a live service. Messages are played and replies are recorded when staff are available, to fit around care routines."
+        "The service supports non-urgent social voice messages between residents and authorised contacts.  \n"
+        "The care home office may also send non-urgent general updates about daily life in the home.  \n"
+        "Office updates are one-way informational messages.\n\n"
+        "This is not a live service. Messages are played and recorded when staff are available, to fit around care routines.  \n"
+        "The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries."
     )
 
     button_cols = st.columns(3, gap="small")
@@ -4020,6 +4161,15 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
         and not is_public_route_for_variant(app_variant, current_route)
     ):
         set_route(login_route)
+        st.stop()
+        return True
+    if (
+        app_variant == VARIANT_MOBILE
+        and is_authed
+        and is_login_route_for_variant(app_variant, current_route)
+        and is_mobile_pin_verified_for_session()
+    ):
+        set_route(home_route)
         st.stop()
         return True
     if is_variant_authed and is_login_route_for_variant(app_variant, current_route):
@@ -4450,6 +4600,7 @@ def render_family_send() -> None:
 
     access_token = st.session_state.get("access_token")
     care_home_name = fetch_active_care_home_name(access_token)
+    render_care_home_identity_banner(access_token)
     residents = fetch_family_residents(
         st.session_state.get("auth_uid", ""), access_token
     )
@@ -4787,6 +4938,7 @@ def render_family_sent() -> None:
         unsafe_allow_html=True,
     )
     render_page_header("Message sent")
+    render_care_home_identity_banner(st.session_state.get("access_token"))
     st.write("Your voice-message has been sent.")
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
@@ -4828,6 +4980,7 @@ def render_docs() -> None:
     )
     require_care_access()
     render_page_header("Documents")
+    render_care_home_identity_banner(st.session_state.get("access_token"))
 
     docs = [
         {
@@ -5384,6 +5537,7 @@ def render_care_hub_security() -> None:
         return
     render_page_header("Account & Security")
     access_token = st.session_state.get("access_token")
+    render_care_home_identity_banner(access_token)
     auth_uid = st.session_state.get("auth_uid")
     auth_email = st.session_state.get("auth_email") or "office-user"
     record = get_care_hub_mfa_record(access_token, auth_uid)
@@ -5467,6 +5621,7 @@ def render_care_hub_security() -> None:
 def render_care_hub_mfa() -> None:
     render_page_header("Two-factor verification")
     access_token = st.session_state.get("access_token")
+    render_care_home_identity_banner(access_token)
     auth_uid = st.session_state.get("auth_uid")
     mfa_required = (
         os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in {"1", "true", "yes", "on"}
@@ -5945,9 +6100,7 @@ def render_care_hub() -> None:
     # Action row already rendered at the top of the page.
 
     access_token = st.session_state.get("access_token")
-    care_home_name = fetch_active_care_home_name(access_token)
-    if care_home_name:
-        st.caption(f"Care home: {care_home_name}")
+    render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
     is_care_queue_variant_screen = get_app_variant() in {VARIANT_MOBILE, VARIANT_OFFICE}
     contacts_by_resident = {
@@ -6074,6 +6227,20 @@ def render_care_hub() -> None:
         is_mobile_variant = get_app_variant() == VARIANT_MOBILE
         is_office_variant = get_app_variant() == VARIANT_OFFICE
         is_queue_playback_variant = is_mobile_variant
+        queue_unread_count = 0
+        queue_next_contact = None
+        queue_unread_contacts: list[dict] = []
+        if contacts and (is_mobile_variant or is_office_variant):
+            (
+                queue_unread_count,
+                queue_next_contact,
+                queue_unread_contacts,
+            ) = get_family_queue_status_for_resident(
+                resident_id,
+                resident["care_home_id"],
+                contacts,
+                access_token,
+            )
         selected_contact = None
         latest = None
         queue_mode_label = ""
@@ -6088,12 +6255,41 @@ def render_care_hub() -> None:
             st.caption(
                 "Play messages follows a fixed contact order. Unplayed messages are always first."
             )
-            selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
-                resident_id,
-                resident["care_home_id"],
-                contacts,
-                access_token,
-            )
+            mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
+            keep_current_after_start = bool(st.session_state.get(mobile_play_requested_key, False))
+            current_user_id = str(state.get("selected_contact_user_id") or "").strip()
+            if keep_current_after_start and current_user_id:
+                selected_contact = next(
+                    (
+                        c
+                        for c in contacts
+                        if str(c.get("auth_user_id") or "").strip() == current_user_id
+                    ),
+                    None,
+                )
+                if selected_contact:
+                    latest = fetch_latest_message(
+                        resident_id,
+                        "to_resident",
+                        access_token,
+                        contact_user_id=current_user_id,
+                        channel="resident_family",
+                    )
+                    queue_mode_label = "Session order"
+                else:
+                    selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
+                        resident_id,
+                        resident["care_home_id"],
+                        contacts,
+                        access_token,
+                    )
+            else:
+                selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
+                    resident_id,
+                    resident["care_home_id"],
+                    contacts,
+                    access_token,
+                )
             state["selected_contact_id"] = (selected_contact or {}).get("id")
             state["selected_contact_user_id"] = (selected_contact or {}).get("auth_user_id")
         elif is_office_variant:
@@ -6180,6 +6376,30 @@ def render_care_hub() -> None:
         selected_contact_name = (
             (selected_contact or {}).get("full_name") or "family contact"
         )
+        if contacts and (is_mobile_variant or is_office_variant):
+            st.caption(f"Unread family messages: {queue_unread_count}")
+            if queue_next_contact:
+                next_name = (queue_next_contact.get("full_name") or "family contact").strip()
+                next_relationship = ((queue_next_contact.get("relationship") or "").strip())
+                next_display = (
+                    f"{next_name} ({next_relationship.title()})"
+                    if next_relationship
+                    else f"{next_name} (Family contact)"
+                )
+                st.caption(f"Next in queue: {next_display}")
+            else:
+                st.caption("Next in queue: none")
+            if queue_unread_contacts:
+                st.caption("Unplayed list:")
+                for unread_contact in queue_unread_contacts:
+                    unread_name = (unread_contact.get("full_name") or "family contact").strip()
+                    unread_relationship = ((unread_contact.get("relationship") or "").strip())
+                    unread_display = (
+                        f"{unread_name} ({unread_relationship.title()})"
+                        if unread_relationship
+                        else f"{unread_name} (Family contact)"
+                    )
+                    st.markdown(f"- {unread_display}")
         if not is_office_variant:
             selected_contact_relationship = (
                 ((selected_contact or {}).get("relationship") or "").strip()
@@ -6197,13 +6417,52 @@ def render_care_hub() -> None:
                 st.caption(f"Family contact selected: {selected_contact_display}")
 
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
+            mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
             if is_mobile_variant:
                 if st.button(
                     "Play next family message",
                     key=f"care_play_next_{resident_id}",
                     use_container_width=True,
                 ):
+                    playable: list[tuple[dict, dict]] = []
+                    for c in dedupe_contacts_by_auth_user_id(contacts):
+                        contact_user_id = str(c.get("auth_user_id") or "").strip()
+                        if not contact_user_id:
+                            continue
+                        msg = fetch_latest_message(
+                            resident_id,
+                            "to_resident",
+                            access_token,
+                            contact_user_id=contact_user_id,
+                            channel="resident_family",
+                        )
+                        if msg:
+                            playable.append((c, msg))
+                    cycle_idx_key = f"care_mobile_cycle_idx_{resident_id}"
+                    if playable:
+                        ordered_user_ids = [
+                            str(item[0].get("auth_user_id") or "").strip() for item in playable
+                        ]
+                        current_user_id = str(state.get("selected_contact_user_id") or "").strip()
+                        current_idx = (
+                            ordered_user_ids.index(current_user_id)
+                            if current_user_id in ordered_user_ids
+                            else -1
+                        )
+                        next_idx = (current_idx + 1) % len(playable)
+                        st.session_state[cycle_idx_key] = next_idx
+                        selected_contact, latest = playable[next_idx]
+                        state["selected_contact_id"] = selected_contact.get("id")
+                        state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
+                        queue_mode_label = "Session cycle"
+                        if APP_DEBUG:
+                            st.caption(
+                                "Queue debug: "
+                                f"cycle_idx={next_idx}/{len(playable)} "
+                                f"manual_next={state.get('selected_contact_user_id')}"
+                            )
                     st.session_state[mobile_play_requested_key] = True
+                    st.session_state[mobile_advance_pointer_key] = False
 
             st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
             if latest is None:
@@ -6223,8 +6482,17 @@ def render_care_hub() -> None:
 
             if audio_bytes and should_show_message:
                 st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
-                latest_message_id = str(latest.get("id") or "").strip()
-                if is_mobile_variant and latest_message_id:
+                st.caption("Press 'Play next family message' for the next contact.")
+            elif not audio_bytes:
+                st.markdown(
+                    '<div class="vm-muted-line">No new messages.</div>',
+                    unsafe_allow_html=True,
+                )
+
+            if is_mobile_variant:
+                latest_message_id = str((latest or {}).get("id") or "").strip()
+                advance_pointer_now = bool(st.session_state.get(mobile_advance_pointer_key, False))
+                if advance_pointer_now and latest_message_id:
                     already_logged = audit_event_exists_any_actor(
                         "message_played",
                         target_id=latest_message_id,
@@ -6239,8 +6507,10 @@ def render_care_hub() -> None:
                             latest_message_id,
                             resident_id=resident_id,
                         )
-                    next_contact_user_id = get_next_contact_user_id_in_order(
-                        sort_contacts_for_playback(contacts),
+                    next_contact_user_id = get_next_contact_user_id_with_message(
+                        resident_id,
+                        contacts,
+                        access_token,
                         state.get("selected_contact_user_id"),
                     )
                     set_resident_playback_pointer(
@@ -6249,13 +6519,18 @@ def render_care_hub() -> None:
                         next_contact_user_id,
                         access_token,
                     )
-                    st.session_state[mobile_play_requested_key] = False
-                    st.caption("Press 'Play next family message' to continue.")
-            elif not audio_bytes:
-                st.markdown(
-                    '<div class="vm-muted-line">No new messages.</div>',
-                    unsafe_allow_html=True,
-                )
+                    st.session_state[f"care_mobile_pointer_{resident_id}"] = (
+                        next_contact_user_id or ""
+                    )
+                    if APP_DEBUG:
+                        st.caption(
+                            "Queue debug: "
+                            f"current={state.get('selected_contact_user_id')} "
+                            f"played_message={latest_message_id} "
+                            f"next={next_contact_user_id or 'none'}"
+                        )
+                if advance_pointer_now:
+                    st.session_state[mobile_advance_pointer_key] = False
 
         if is_mobile_variant or is_office_variant:
             st.markdown(f"**Latest message from {full_name} to all authorised family contacts**")
@@ -6700,6 +6975,7 @@ def render_care_hub_register_family() -> None:
         return
     render_page_header("Register a Family Member")
     access_token = st.session_state.get("access_token")
+    render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
     render_office_family_registration_form(access_token, residents)
 
@@ -6988,6 +7264,7 @@ def main() -> None:
         render_care_hub_security()
     elif route == "/care-hub/office/qa":
         render_page_header("Office Q&A", show_variant_subheading=False)
+        render_care_home_identity_banner(st.session_state.get("access_token"))
         render_route_link(
             "← Back to dashboard",
             get_office_home_route(bool(st.session_state.get("auth_uid"))),
@@ -6996,10 +7273,12 @@ def main() -> None:
         render_qa_document("docs/office/common_questions_qa.md", search_key="office_qa_search")
     elif route == "/care-hub/mobile/qa":
         render_page_header("Mobile Q&A", show_variant_subheading=False)
+        render_care_home_identity_banner(st.session_state.get("access_token"))
         render_route_link("Back", get_home_route(VARIANT_MOBILE), key="mobile_qa_back_link")
         render_qa_document("docs/public/12_mobile_qa.md", search_key="mobile_qa_search")
     elif route == "/family/qa":
         render_page_header("Family Q&A", show_variant_subheading=False)
+        render_care_home_identity_banner(st.session_state.get("access_token"))
         render_route_link("Back", get_home_route(VARIANT_FAMILY), key="family_qa_back_link")
         render_qa_document("docs/public/11_family_qa.md", search_key="family_qa_search")
     elif route == "/docs":
@@ -7007,7 +7286,7 @@ def main() -> None:
     elif route == "/public-docs":
         render_public_docs()
     elif route == "/public/service-overview":
-        render_public_document("docs/public/03_service_overview.md")
+        render_home("public")
     elif route == "/public/how-it-works":
         render_public_document("docs/public/02_how_it_works.md")
     elif route == "/public/resident-participation":
