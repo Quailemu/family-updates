@@ -3699,7 +3699,7 @@ def render_home(active: str) -> None:
                 "</div>"
             )
         st.markdown(header_html, unsafe_allow_html=True)
-        st.caption("Public page build: protocol-refresh-2026-03-16")
+        st.caption("Public page build: protocol-refresh-2026-03-16-b")
 
         st.markdown('<div class="public-hero">', unsafe_allow_html=True)
         st.markdown(
@@ -3708,11 +3708,9 @@ def render_home(active: str) -> None:
             One message in. One message out.
             </h1>
             <p>No threads. No pressure.</p>
-            <p>voice-message.com is a simple tool for exchanging non-urgent social voice messages between residents in care homes and their authorised contacts.</p>
-            <p>Messages are organised into channels and only the latest message is kept in each direction.</p>
-            <p>When a new message is recorded in the same direction, the previous message in that direction is replaced.</p>
-            <p>No archive. No message history. No scrolling thread.</p>
-            <p>This is non-urgent and not live messaging. Messages are played and replies are recorded when staff are available, to fit around care routines.</p>
+            <p>voice-message.com is a simple system for exchanging non-urgent social voice messages between a resident and their authorised family.</p>
+            <p>It also allows the care home to send one-way general voice updates to all authorised family contacts. These updates are non-medical, non-urgent, and reassuring.</p>
+            <p>The service is designed to be calm, controlled, and easy to use, fitting around care routines.</p>
             """,
             unsafe_allow_html=True,
         )
@@ -3722,7 +3720,7 @@ def render_home(active: str) -> None:
         render_public_app_buttons(button_cols)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
-        st.markdown("<h2>How the platform works (diagram)</h2>", unsafe_allow_html=True)
+        st.markdown("<h2>How it works (diagram first)</h2>", unsafe_allow_html=True)
         public_diagram_path = Path("assets/voice-message-flow-diagram.png")
         if public_diagram_path.exists():
             try:
@@ -3739,11 +3737,17 @@ def render_home(active: str) -> None:
                 )
         else:
             st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
+        st.markdown("### Diagram is the primary reference")
+        st.markdown("- Message directions")
+        st.markdown("- Broadcast behaviour")
+        st.markdown("- Replacement rules")
+        st.markdown("- Playback order")
+        st.markdown("### Communication participants")
+        st.markdown("- Jane (Resident)")
+        st.markdown("- Jane's family (authorised contacts)")
+        st.markdown("- Care Hub (Office and Mobile)")
         st.markdown(
-            "Use this diagram as the primary explanation of channel directions and replacement rules."
-        )
-        st.markdown(
-            "Only the latest message is kept in each direction. New messages replace the previous message in the same direction."
+            "Only the latest message is kept in each channel and direction. A new message replaces the previous one in that same channel and direction."
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -3751,16 +3755,16 @@ def render_home(active: str) -> None:
         st.markdown(
             """
             <div class="public-card">
-              <h3>Role-based access</h3>
-              <div>Family, Care Hub – Mobile, and Care Hub – Office are separate role-based experiences.</div>
+              <h3>Office -&gt; Family (one-way updates)</h3>
+              <div>Care Hub – Office sends one current update to all authorised family contacts. No replies. A new update replaces the previous update.</div>
             </div>
             <div class="public-card pink">
-              <h3>No live pressure</h3>
-              <div>No live notifications, delivery receipts, read receipts, or typing indicators.</div>
+              <h3>Resident -&gt; Family (one message out)</h3>
+              <div>Care Hub – Mobile supports the resident to record one current message to all authorised family contacts. A new recording replaces the previous resident message.</div>
             </div>
             <div class="public-card">
-              <h3>No visible timestamps</h3>
-              <div>The service does not show exact clock times in main care communication views.</div>
+              <h3>Family -&gt; Resident (one message each)</h3>
+              <div>Each authorised family contact has one current message to the resident. Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -3768,15 +3772,15 @@ def render_home(active: str) -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
-        st.markdown("<h2>How it works</h2>", unsafe_allow_html=True)
+        st.markdown("<h2>Message behaviour</h2>", unsafe_allow_html=True)
         st.markdown(
             """
             <div class="public-steps">
-              <div class="public-step">Follow the diagram above as the main service explanation.</div>
-              <div class="public-step">Family/Friend -&gt; Resident (created/replaced in Family).</div>
-              <div class="public-step">Resident -&gt; Family/Friend (created/replaced in Care Hub – Mobile).</div>
-              <div class="public-step">Office -&gt; Family/Friend is one-way informational updates.</div>
-              <div class="public-step">No message history or archive.</div>
+              <div class="public-step">No message history</div>
+              <div class="public-step">No archive</div>
+              <div class="public-step">No scrolling threads</div>
+              <div class="public-step">This is not live messaging</div>
+              <div class="public-step">Messages are played when staff are available and recorded when appropriate</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -3784,21 +3788,21 @@ def render_home(active: str) -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
-        st.markdown("<h2>Roles</h2>", unsafe_allow_html=True)
+        st.markdown("<h2>Playback and privacy</h2>", unsafe_allow_html=True)
         st.markdown(
             """
             <div class="public-roles">
               <div class="public-card">
-                <h3>Family</h3>
-                <div>Authorised contacts send non-urgent social messages and listen to current replies.</div>
+                <h3>Family privacy boundary</h3>
+                <div>Family members do not hear each other's Family -&gt; Resident messages. Each authorised contact channel is separate.</div>
               </div>
               <div class="public-card pink">
-                <h3>Care Hub – Mobile</h3>
-                <div>Staff support playback and resident recording around routine care workflows.</div>
+                <h3>Care Hub playback</h3>
+                <div>Family messages are played to residents in Care Hub – Mobile and are operationally visible in Care Hub – Office.</div>
               </div>
               <div class="public-card">
-                <h3>Care Hub – Office</h3>
-                <div>Oversight and one-way day-to-day informational updates to authorised contacts.</div>
+                <h3>No live pressure</h3>
+                <div>No notifications, no delivery/read receipts, no typing indicators, and no visible timestamps in Family and Care Hub – Mobile views.</div>
               </div>
             </div>
             """,
@@ -3810,9 +3814,11 @@ def render_home(active: str) -> None:
         st.markdown(
             """
             <div class="public-card">
-              <h3>Important boundaries</h3>
-              <div>The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.</div>
-              <div>For those matters, contact the care home directly using its normal channels.</div>
+              <h3>Roles and important boundaries</h3>
+              <div><strong>Family (Jane's family):</strong> authorised contacts send messages and listen to Jane's current reply.</div>
+              <div><strong>Care Hub – Mobile:</strong> staff play family messages and support resident recordings.</div>
+              <div><strong>Care Hub – Office:</strong> oversight plus one-way updates to family.</div>
+              <div style="margin-top:8px;">This service is for social communication only. It is not for medical updates, health information, safeguarding communication, or urgent enquiries. For those matters, contact the care home directly using normal channels.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -6401,21 +6407,6 @@ def render_care_hub() -> None:
                     )
                     st.markdown(f"- {unread_display}")
         if not is_office_variant:
-            selected_contact_relationship = (
-                ((selected_contact or {}).get("relationship") or "").strip()
-            )
-            selected_contact_display = (
-                f"{selected_contact_name} ({selected_contact_relationship.title()})"
-                if selected_contact_relationship
-                else f"{selected_contact_name} (Family contact)"
-            )
-            if is_queue_playback_variant and queue_mode_label:
-                st.caption(f"Queue mode: {queue_mode_label}")
-            if is_queue_playback_variant:
-                st.caption(f"Now playing from: {selected_contact_display}")
-            else:
-                st.caption(f"Family contact selected: {selected_contact_display}")
-
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
             if is_mobile_variant:
@@ -6459,12 +6450,11 @@ def render_care_hub() -> None:
                             st.caption(
                                 "Queue debug: "
                                 f"cycle_idx={next_idx}/{len(playable)} "
-                                f"manual_next={state.get('selected_contact_user_id')}"
-                            )
+                                    f"manual_next={state.get('selected_contact_user_id')}"
+                                )
                     st.session_state[mobile_play_requested_key] = True
                     st.session_state[mobile_advance_pointer_key] = False
 
-            st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
             if latest is None:
                 latest = fetch_latest_message(
                     resident_id,
@@ -6473,6 +6463,40 @@ def render_care_hub() -> None:
                     contact_user_id=state.get("selected_contact_user_id"),
                     channel="resident_family",
                 )
+            latest_contact_user_id = str((latest or {}).get("contact_user_id") or "").strip()
+            if latest_contact_user_id:
+                matched_contact = next(
+                    (
+                        c
+                        for c in contacts
+                        if str(c.get("auth_user_id") or "").strip() == latest_contact_user_id
+                    ),
+                    None,
+                )
+                if matched_contact is not None:
+                    selected_contact = matched_contact
+                    state["selected_contact_id"] = matched_contact.get("id")
+                    state["selected_contact_user_id"] = matched_contact.get("auth_user_id")
+
+            selected_contact_name = (
+                (selected_contact or {}).get("full_name") or "family contact"
+            )
+            selected_contact_relationship = (
+                ((selected_contact or {}).get("relationship") or "").strip()
+            )
+            selected_contact_display = (
+                f"{selected_contact_name} ({selected_contact_relationship.title()})"
+                if selected_contact_relationship
+                else f"{selected_contact_name} (Family contact)"
+            )
+            if is_queue_playback_variant and queue_mode_label:
+                st.caption(f"Queue mode: {queue_mode_label}")
+            if is_queue_playback_variant:
+                st.caption(f"Now playing from: {selected_contact_display}")
+            else:
+                st.caption(f"Family contact selected: {selected_contact_display}")
+
+            st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
             audio_bytes = decode_audio_payload(latest)
             should_show_message = True
             if is_mobile_variant:

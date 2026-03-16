@@ -1,47 +1,29 @@
 # Complaints & Concerns
-We take concerns seriously and aim to respond promptly and fairly.
 
-## 1) Concerns relating to care or platform use within a care home
-voice-message.com provides a communication platform to care homes under a subscription agreement.
+We take concerns seriously and respond in line with role boundaries.
 
-Each participating care home is responsible for:
-• Care delivery and safeguarding  
-• How the platform is used within their service  
-• Staff access, supervision, and training  
-• Responding to families through the platform  
-• Local governance and regulatory compliance  
+## Care-related concerns
 
-If your concern relates to care, staff conduct, safeguarding, or how the platform is being used within a specific care home, please contact the care home directly in the first instance.
+If your concern is about resident care, safeguarding, staff conduct, or local use of the service, contact the care home first.
 
-The care home remains responsible for operational decisions and oversight.
+The care home is responsible for care delivery, safeguarding, and operational decisions.
 
-## 2) Concerns relating to the voice-message.com service
-If your concern relates to:
-• Access or login issues  
-• Technical faults  
-• System errors  
-• Data protection queries  
-• Contract or subscription matters  
+## Platform-related concerns
 
-You may contact voice-message.com directly.
+If your concern is about access, technical faults, system errors, or data handling by voice-message.com, contact:
 
-Email: complaints@voice-message.com
+`complaints@voice-message.com`
 
-## 3) What happens next
-For platform-related complaints, we will:
-• Acknowledge your complaint within 2 working days  
-• Review the matter promptly  
-• Provide a response within 10 working days where possible  
+## Response approach
 
-If more time is required, we will explain why.
+For platform complaints we aim to:
 
-Where appropriate, we may liaise with the relevant care home.
+- Acknowledge within 2 working days
+- Review promptly
+- Provide a response within 10 working days where possible
 
-## 4) Important clarification
-voice-message.com does not:
-• Provide care services  
-• Supervise care home staff  
-• Make care decisions  
-• Replace a care home’s own complaints process  
+If more time is needed, we explain why.
 
-The care home remains responsible under its own regulatory framework.
+## Clarification
+
+voice-message.com does not provide care services, supervise care home staff, or replace care home complaints procedures.

@@ -4,34 +4,46 @@
 
 ## Purpose
 
-These terms apply to access to the Family app by approved family members or other authorised contacts for voice-message.com. It is written in plain English for family members, friends, and care homes.
+These terms apply to authorised contacts using the Family app.
 
-## Scope and use
+## Service type
 
-The service is for non-urgent, social voice messages only. It is not intended for care updates, health information, or safeguarding concerns.
+The Family app is for non-urgent social voice messages only.
 
-Messages are for non-urgent, social contact only. This service must not be used for care, urgent, or safeguarding matters.
+It is not for medical updates, health information, safeguarding communication, or urgent enquiries.
+
+## Not a live service
+
+This is not live messaging.
+
+There are no delivery confirmations, read receipts, typing indicators, or instant response expectations.
+
+Messages are played when staff are available.
 
 ## Role separation
 
-Approved family members or other authorised contacts use the Family app only. They do not use Care Hub – Mobile or Care Hub – Office.
+Family users use the Family app only.
 
-## Message handling
+Family users do not access Care Hub – Mobile or Care Hub – Office.
 
-Only the most recent voice message is kept and played. Older messages are automatically replaced. There is no message history or archive.
+## Message model
 
-## Care-home oversight
+Only the latest message is kept in each channel/direction.
 
-The care home manages access, supervision, and consent. voice-message.com provides the technical platform only.
+A new message replaces the previous one in that same channel/direction.
 
-## Privacy and setting
+No archive or message history is provided.
 
-Messages are recorded and played in a care home setting and are not guaranteed to be private.
+## Access and oversight
 
-## Acceptable use
+The care home controls who is authorised, who can participate, and how the service is used in practice.
 
-Please use the service respectfully and for social, non-urgent messages. For urgent or care-related matters, contact the care home directly.
+voice-message.com provides technical infrastructure only.
 
-## Support and issues
+## Privacy in care settings
 
-For care-related questions, access issues, or disputes, contact the care home. Platform support is provided to care homes rather than individual family members.
+Playback and recording may happen in normal care environments. Privacy cannot be guaranteed.
+
+## If you have concerns
+
+For care-related, urgent, or safeguarding concerns, contact the care home directly through its normal channels.

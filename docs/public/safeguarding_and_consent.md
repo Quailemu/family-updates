@@ -1,53 +1,40 @@
 # Safeguarding and Consent
 
 ## Purpose
-This section explains how safeguarding and consent responsibilities operate when using voice-message.com within a care setting.
 
-## Safeguarding Responsibility
-voice-message.com provides a communication platform only.
+This page sets out safeguarding and consent boundaries for voice-message.com.
 
-Each participating care home remains fully responsible for:
-• Safeguarding residents  
-• Assessing risk  
-• Monitoring staff conduct  
-• Responding to safeguarding concerns  
-• Compliance with regulatory obligations  
+## Platform boundary
 
-The platform is not monitored in real time and is not reviewed for safeguarding purposes.
+voice-message.com provides communication infrastructure only.
 
-The service does not replace the care home’s existing safeguarding procedures.
+The platform is not monitored in real time and does not moderate, screen, or approve message content.
 
-Any safeguarding concern must be handled through the care home’s established processes.
+## Care home responsibility
 
-## Managing Inappropriate Messages
-The care home is responsible for managing the use of the platform within its service. This includes:
-• Determining whether messages are appropriate  
-• Addressing inappropriate, distressing, or unsuitable content  
-• Managing or restricting access for approved family members or other authorised contacts where necessary  
-• Taking action in accordance with internal policies  
+Each care home remains responsible for:
 
-voice-message.com does not moderate, screen, or approve message content.
+- Safeguarding and risk management
+- Consent and capacity decisions
+- Suitability of resident participation
+- Staff supervision and local procedures
+- Handling inappropriate message content
+- Device security and operational governance
 
-## Consent to Participate
-The care home is responsible for determining whether a resident is suitable to participate in the service.
-This includes:
-• Assessing capacity where required  
-• Obtaining appropriate consent  
-• Involving approved family members, friends, or representatives where applicable  
-• Reviewing participation where circumstances change  
+## Consent and capacity
 
-voice-message.com does not assess resident capacity or consent.
+The care home decides whether a resident can participate and how consent/authority is established and reviewed.
 
-## Appropriate Use
-The service is not intended for clinical communication, safeguarding reporting, or formal complaints.
+voice-message.com does not assess capacity or consent.
 
-## Privacy in a Care Environment
-Messages are used within a care home setting.
-Staff may assist residents with listening to or recording messages.
-Playback may occur in shared spaces.
-Messages are not guaranteed to be private.
-The care home is responsible for managing privacy within its environment.
+## Appropriate use
 
-## Reporting Concerns
-If an approved family member, friend, or other authorised contact has a safeguarding concern, they should contact the care home directly.
-Platform-related issues may be directed to voice-message.com.
+The service is for non-urgent social communication only.
+
+It is not for clinical communication, safeguarding reporting, or urgent matters.
+
+## Reporting concerns
+
+For safeguarding concerns, contact the care home directly through its normal safeguarding routes.
+
+For platform faults, contact voice-message.com via the care home.

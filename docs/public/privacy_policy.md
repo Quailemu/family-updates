@@ -4,40 +4,44 @@
 
 ## Purpose
 
-This notice explains, in plain English, what personal data is used by voice-message.com and why. It aligns with the "Voice messages — how it works" page and the limited scope of the service.
+This notice explains what personal data is used in voice-message.com and why.
 
-## Roles and responsibilities
+## Data roles
 
-The care home is the Data Controller. voice-message.com is the Data Processor and acts only on the care home’s instructions.
+The care home is the Data Controller. voice-message.com is the Data Processor and acts on the care home's instructions.
 
-The care home decides how the service is used, who has access, and how resident and approved contact details are managed. Family members or friends should contact the care home directly for care-related or access questions.
+The care home decides access, participation, and day-to-day use in its service.
 
-## What data is used
+## Data used
 
-The service uses only the data needed to provide non-urgent social voice messages:
+- Care home account and access data
+- Resident identifiers set by the care home
+- Authorised contact details (for example, name and email)
+- Voice messages (current message only per channel/direction)
+- Security and operational logs needed to run the service safely
 
-- care home account details
-- resident identifiers defined by the care home (display name and internal reference)
-- authorised contact details (email address and display name)
-- voice message recordings (latest only, with no archive)
-- limited security and operational logs needed to run the service safely (for example, sign-in events)
+## Why data is used
 
-## Why the data is used
+Data is used to deliver non-urgent social voice messaging between residents and authorised contacts in a care setting.
 
-Data is used only to enable residents in care homes and their authorised contacts to exchange non-urgent social voice messages. The service is not used for care, health, or safeguarding communication.
+The service is not for medical updates, safeguarding reporting, or urgent enquiries.
 
-## Message storage
+## Message retention model
 
-Only the most recent voice message is kept and played. Older messages are automatically replaced. There is no message history or archive.
+The system keeps only the current message in each channel/direction.
 
-## Other data retention
+When a new message is sent in the same channel/direction, it replaces the previous one.
 
-Other data is kept only as needed to operate the service and manage access, and is removed when no longer required for those purposes.
+No message history and no archive are provided.
 
-## Infrastructure and storage
+## Hosting and security
 
-Data is hosted using a third-party infrastructure provider. Appropriate technical and organisational measures are in place to protect the data, but no system can guarantee complete security.
+Data is hosted on UK infrastructure. Technical and organisational controls are used to protect data.
+
+## Deletion after termination
+
+Personal data is deleted within 30 days after service termination, including normal backup/retention cycles.
 
 ## Questions
 
-If you have questions about how personal data is used, please contact your care home in the first instance.
+For care-home-specific data questions, contact the care home first.
