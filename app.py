@@ -5922,6 +5922,7 @@ def render_care_hub() -> None:
     if care_home_name:
         st.caption(f"Care home: {care_home_name}")
     residents = fetch_care_home_residents(access_token)
+    is_care_queue_variant_screen = get_app_variant() in {VARIANT_MOBILE, VARIANT_OFFICE}
     contacts_by_resident = {
         resident["id"]: fetch_family_contacts_for_resident(resident["id"], access_token)
         for resident in residents
@@ -5942,6 +5943,23 @@ def render_care_hub() -> None:
         if search_value:
             st.info("No residents match that search.")
         return
+
+    if is_care_queue_variant_screen:
+        resident_option_ids = [resident["id"] for resident in residents]
+        resident_label_by_id = {}
+        for resident in residents:
+            full_name = f"{resident['preferred_name']} {resident['surname']}"
+            room_suffix = f" (Room {resident['room']})" if resident.get("room") else ""
+            resident_label_by_id[resident["id"]] = f"{full_name}{room_suffix}"
+        selected_resident_id = st.selectbox(
+            "Select resident",
+            resident_option_ids,
+            format_func=lambda resident_id: resident_label_by_id.get(resident_id, "Resident"),
+            key="care_selected_resident_id",
+        )
+        residents = [
+            resident for resident in residents if resident["id"] == selected_resident_id
+        ]
 
     send_state = st.session_state.setdefault("care_send_state", {})
     has_pending_recording = any(
@@ -6027,6 +6045,8 @@ def render_care_hub() -> None:
 
         contacts = contacts_by_resident.get(resident_id, [])
         is_mobile_variant = get_app_variant() == VARIANT_MOBILE
+        is_office_variant = get_app_variant() == VARIANT_OFFICE
+        is_queue_playback_variant = is_mobile_variant or is_office_variant
         selected_contact = None
         latest = None
         queue_mode_label = ""
@@ -6037,7 +6057,7 @@ def render_care_hub() -> None:
             )
             state["selected_contact_id"] = None
             state["selected_contact_user_id"] = None
-        elif is_mobile_variant:
+        elif is_queue_playback_variant:
             st.caption(
                 "Play messages follows a fixed contact order. Unplayed messages are always first."
             )
@@ -6137,9 +6157,12 @@ def render_care_hub() -> None:
             if selected_contact_relationship
             else f"{selected_contact_name} (Family contact)"
         )
-        if is_mobile_variant and queue_mode_label:
+        if is_queue_playback_variant and queue_mode_label:
             st.caption(f"Queue mode: {queue_mode_label}")
-        st.caption(f"Family contact selected: {selected_contact_display}")
+        if is_queue_playback_variant:
+            st.caption(f"Now playing from: {selected_contact_display}")
+        else:
+            st.caption(f"Family contact selected: {selected_contact_display}")
 
         st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
         if latest is None:
@@ -6154,7 +6177,7 @@ def render_care_hub() -> None:
         if audio_bytes:
             st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
             latest_message_id = str(latest.get("id") or "").strip()
-            if get_app_variant() == VARIANT_MOBILE:
+            if is_queue_playback_variant:
                 played_state_key = (
                     f"care_played_logged_{resident_id}_{latest_message_id}"
                 )
@@ -6199,7 +6222,7 @@ def render_care_hub() -> None:
                             latest_message_id,
                             resident_id=resident_id,
                         )
-                        if is_mobile_variant:
+                        if is_queue_playback_variant:
                             next_contact_user_id = get_next_contact_user_id_in_order(
                                 sort_contacts_for_playback(contacts),
                                 state.get("selected_contact_user_id"),
