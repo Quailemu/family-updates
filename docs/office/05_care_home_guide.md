@@ -38,13 +38,9 @@ Messages are controlled by the group that created them. One group cannot directl
 
 Example: Jane
 
-The diagram shows how voice messages are organised for a single resident.
+This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
-
-Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts.
-
-In each channel/direction, only one current message is kept at a time, and a new message replaces the previous one.
+Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. In each channel/direction, only one current message is kept at a time, and a new message replaces the previous one.
 
 ## Authorised contact channel structure
 
@@ -67,7 +63,7 @@ The Office update channel is separate and one-way from the care home to authoris
 - Supporting resident playback and recording within existing care rounds.
 - Reducing repeated non-urgent inbound enquiries to office staff.
 - Keeping message handling simple by retaining only the current message in each direction.
-- Giving authorised contacts clear one-way office information without reply workflows.
+- Giving authorised contacts clear one-way office information without response workflows.
 
 ### Access model
 

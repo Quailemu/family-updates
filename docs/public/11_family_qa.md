@@ -14,7 +14,7 @@ Q: Is this a live messaging service?
 A: No. It is not live. Messages are played when staff are available.
 
 Q: What is this service for?  
-A: Non-urgent, social voice messages between residents in care homes and authorised contacts.
+A: Non-urgent, social voice messages between residents in care homes and authorised contacts, plus non-urgent, non-medical general and reassurance updates from Care Hub – Office.
 
 Q: Which interfaces are part of this service?  
 A: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
@@ -55,8 +55,8 @@ A: Messages in a contact channel may only be played by authorised users of that 
 Q: Can one group replace another group's message?  
 A: No. Each message may only be replaced by the side that created it.
 
-Q: Will I always receive a reply?  
-A: No. Replies are not guaranteed and depend on resident wellbeing and staff workflow.
+Q: Will I always receive a resident message?  
+A: No. Resident messages are not guaranteed and depend on resident wellbeing and staff workflow.
 
 Q: Can I use this for complaints?  
 A: Use the care home's formal complaints process for care concerns.

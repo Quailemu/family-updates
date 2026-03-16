@@ -2105,10 +2105,6 @@ def select_next_family_message_for_mobile(
     if not queued_items:
         return None, None, "No family messages available."
 
-    unplayed = [item for item in queued_items if not item["played"]]
-    if unplayed:
-        return unplayed[0]["contact"], unplayed[0]["message"], "Unplayed first"
-
     pointer = get_resident_playback_pointer(resident_id, care_home_id, access_token)
     by_contact_user_id = {
         str(item["contact"].get("auth_user_id") or "").strip(): item for item in queued_items
@@ -2120,6 +2116,27 @@ def select_next_family_message_for_mobile(
     ]
     if not ordered_user_ids:
         return queued_items[0]["contact"], queued_items[0]["message"], "Played cycle"
+
+    unplayed_user_ids = {
+        str(item["contact"].get("auth_user_id") or "").strip()
+        for item in queued_items
+        if not item["played"]
+    }
+    if unplayed_user_ids:
+        start_idx = 0
+        if pointer and pointer in ordered_user_ids:
+            start_idx = ordered_user_ids.index(pointer)
+        for offset in range(len(ordered_user_ids)):
+            candidate_user_id = ordered_user_ids[(start_idx + offset) % len(ordered_user_ids)]
+            if candidate_user_id in unplayed_user_ids:
+                chosen = by_contact_user_id.get(candidate_user_id)
+                if chosen:
+                    return (
+                        chosen["contact"],
+                        chosen["message"],
+                        "Unplayed first (from saved position)",
+                    )
+
     start_idx = 0
     if pointer and pointer in ordered_user_ids:
         start_idx = ordered_user_ids.index(pointer)
@@ -4143,23 +4160,20 @@ def format_soft_message_period_label(recorded_at_value: str | None) -> str | Non
             parsed = parsed.replace(tzinfo=dt_mod.timezone.utc)
         local_dt = parsed.astimezone()
         now_local = dt_mod.datetime.now(local_dt.tzinfo)
-        period = "am" if local_dt.hour < 12 else "pm"
         if local_dt.date() == now_local.date():
-            return f"Sent today {period}"
+            return "Sent today"
         if local_dt.date() == (now_local.date() - dt_mod.timedelta(days=1)):
-            return f"Sent yesterday {period}"
+            return "Sent yesterday"
         if local_dt.year == now_local.year:
-            return f"Sent {local_dt.day} {local_dt.strftime('%b')} {period}"
-        return f"Sent {local_dt.day} {local_dt.strftime('%b %Y')} {period}"
+            return f"Sent {local_dt.day} {local_dt.strftime('%b')}"
+        return f"Sent {local_dt.day} {local_dt.strftime('%b %Y')}"
     except Exception:
         return None
 
 
 def format_office_sent_label(now_dt: object | None = None) -> str:
-    dt_mod = __import__("datetime")
-    local_now = now_dt or dt_mod.datetime.now()
-    period = "am" if local_now.hour < 12 else "pm"
-    return f"Message sent \u2014 Today {period}"
+    _ = now_dt
+    return "Message sent \u2014 today"
 
 
 def render_slow_speech_hint() -> None:
@@ -4440,21 +4454,31 @@ def render_family_send() -> None:
         st.session_state.get("auth_uid", ""), access_token
     )
 
-    search_value = st.text_input("Search residents", key="family_resident_search")
-    if search_value:
-        search_lower = search_value.strip().lower()
-        residents = [
-            resident
-            for resident in residents
-            if search_lower in resident["preferred_name"].lower()
-            or search_lower in resident["surname"].lower()
-            or (resident.get("room") and search_lower in resident["room"])
-        ]
-
     if not residents:
-        if search_value:
-            st.info("No residents match that search.")
+        st.info("No residents are currently linked to your authorised contact.")
         return
+
+    authorised_resident_names = [
+        f"{resident['preferred_name']} {resident['surname']}" for resident in residents
+    ]
+    if len(authorised_resident_names) == 1:
+        st.caption(f"Authorised resident: {authorised_resident_names[0]}")
+    else:
+        st.caption("Authorised residents: " + ", ".join(authorised_resident_names))
+        resident_option_ids = [resident["id"] for resident in residents]
+        resident_label_by_id = {
+            resident["id"]: f"{resident['preferred_name']} {resident['surname']}"
+            for resident in residents
+        }
+        selected_resident_id = st.selectbox(
+            "Select resident",
+            resident_option_ids,
+            format_func=lambda resident_id: resident_label_by_id.get(resident_id, "Resident"),
+            key="family_selected_resident_id",
+        )
+        residents = [
+            resident for resident in residents if resident["id"] == selected_resident_id
+        ]
 
     send_state = st.session_state.setdefault("family_send_state", {})
     has_pending_recording = any(
@@ -4526,6 +4550,9 @@ def render_family_send() -> None:
         audio_bytes = decode_audio_payload(latest)
         if audio_bytes:
             st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
+            resident_sent_label = format_soft_message_period_label(latest.get("recorded_at"))
+            if resident_sent_label:
+                st.caption(resident_sent_label)
         else:
             st.markdown(
                 '<div class="vm-muted-line">No new messages.</div>',
@@ -6046,7 +6073,7 @@ def render_care_hub() -> None:
         contacts = contacts_by_resident.get(resident_id, [])
         is_mobile_variant = get_app_variant() == VARIANT_MOBILE
         is_office_variant = get_app_variant() == VARIANT_OFFICE
-        is_queue_playback_variant = is_mobile_variant or is_office_variant
+        is_queue_playback_variant = is_mobile_variant
         selected_contact = None
         latest = None
         queue_mode_label = ""
@@ -6069,6 +6096,10 @@ def render_care_hub() -> None:
             )
             state["selected_contact_id"] = (selected_contact or {}).get("id")
             state["selected_contact_user_id"] = (selected_contact or {}).get("auth_user_id")
+        elif is_office_variant:
+            # Office does not use the Family -> Resident playback feed controls.
+            state["selected_contact_id"] = None
+            state["selected_contact_user_id"] = None
         else:
             contacts_sorted = sort_contacts_for_playback(contacts)
             contact_search = st.text_input(
@@ -6149,72 +6180,58 @@ def render_care_hub() -> None:
         selected_contact_name = (
             (selected_contact or {}).get("full_name") or "family contact"
         )
-        selected_contact_relationship = (
-            ((selected_contact or {}).get("relationship") or "").strip()
-        )
-        selected_contact_display = (
-            f"{selected_contact_name} ({selected_contact_relationship.title()})"
-            if selected_contact_relationship
-            else f"{selected_contact_name} (Family contact)"
-        )
-        if is_queue_playback_variant and queue_mode_label:
-            st.caption(f"Queue mode: {queue_mode_label}")
-        if is_queue_playback_variant:
-            st.caption(f"Now playing from: {selected_contact_display}")
-        else:
-            st.caption(f"Family contact selected: {selected_contact_display}")
-
-        st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
-        if latest is None:
-            latest = fetch_latest_message(
-                resident_id,
-                "to_resident",
-                access_token,
-                contact_user_id=state.get("selected_contact_user_id"),
-                channel="resident_family",
+        if not is_office_variant:
+            selected_contact_relationship = (
+                ((selected_contact or {}).get("relationship") or "").strip()
             )
-        audio_bytes = decode_audio_payload(latest)
-        if audio_bytes:
-            st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
-            latest_message_id = str(latest.get("id") or "").strip()
+            selected_contact_display = (
+                f"{selected_contact_name} ({selected_contact_relationship.title()})"
+                if selected_contact_relationship
+                else f"{selected_contact_name} (Family contact)"
+            )
+            if is_queue_playback_variant and queue_mode_label:
+                st.caption(f"Queue mode: {queue_mode_label}")
             if is_queue_playback_variant:
-                played_state_key = (
-                    f"care_played_logged_{resident_id}_{latest_message_id}"
+                st.caption(f"Now playing from: {selected_contact_display}")
+            else:
+                st.caption(f"Family contact selected: {selected_contact_display}")
+
+            mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
+            if is_mobile_variant:
+                if st.button(
+                    "Play next family message",
+                    key=f"care_play_next_{resident_id}",
+                    use_container_width=True,
+                ):
+                    st.session_state[mobile_play_requested_key] = True
+
+            st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
+            if latest is None:
+                latest = fetch_latest_message(
+                    resident_id,
+                    "to_resident",
+                    access_token,
+                    contact_user_id=state.get("selected_contact_user_id"),
+                    channel="resident_family",
                 )
-                played_confirm_key = (
-                    f"care_played_confirm_{resident_id}_{latest_message_id}"
-                )
-                already_logged = bool(
-                    latest_message_id and st.session_state.get(played_state_key, False)
-                )
-                if latest_message_id and not already_logged:
+            audio_bytes = decode_audio_payload(latest)
+            should_show_message = True
+            if is_mobile_variant:
+                should_show_message = bool(st.session_state.get(mobile_play_requested_key, False))
+                if not should_show_message:
+                    st.caption("Press 'Play next family message' to start playback.")
+
+            if audio_bytes and should_show_message:
+                st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
+                latest_message_id = str(latest.get("id") or "").strip()
+                if is_mobile_variant and latest_message_id:
                     already_logged = audit_event_exists_any_actor(
                         "message_played",
                         target_id=latest_message_id,
                         resident_id=resident_id,
                         care_home_id=resident["care_home_id"],
                     )
-                    if already_logged:
-                        st.session_state[played_state_key] = True
-                status_line = (
-                    "Playback status: ✅ Played logged"
-                    if already_logged
-                    else "Playback status: Not yet marked as played"
-                )
-                st.caption(status_line)
-                if already_logged:
-                    pass
-                else:
-                    played_confirmed = st.checkbox(
-                        "I have played this message.",
-                        value=bool(st.session_state.get(played_confirm_key, False)),
-                        key=played_confirm_key,
-                    )
-                    if st.button(
-                        "Mark as played",
-                        key=f"care_mark_played_{resident_id}_{latest_message_id}",
-                        disabled=(not played_confirmed) or (not latest_message_id),
-                    ):
+                    if not already_logged:
                         log_audit_event(
                             "message_played",
                             "care_hub",
@@ -6222,26 +6239,25 @@ def render_care_hub() -> None:
                             latest_message_id,
                             resident_id=resident_id,
                         )
-                        if is_queue_playback_variant:
-                            next_contact_user_id = get_next_contact_user_id_in_order(
-                                sort_contacts_for_playback(contacts),
-                                state.get("selected_contact_user_id"),
-                            )
-                            set_resident_playback_pointer(
-                                resident_id,
-                                resident["care_home_id"],
-                                next_contact_user_id,
-                                access_token,
-                            )
-                        st.session_state[played_state_key] = True
-                        st.rerun()
-        else:
-            st.markdown(
-                '<div class="vm-muted-line">No new messages.</div>',
-                unsafe_allow_html=True,
-            )
+                    next_contact_user_id = get_next_contact_user_id_in_order(
+                        sort_contacts_for_playback(contacts),
+                        state.get("selected_contact_user_id"),
+                    )
+                    set_resident_playback_pointer(
+                        resident_id,
+                        resident["care_home_id"],
+                        next_contact_user_id,
+                        access_token,
+                    )
+                    st.session_state[mobile_play_requested_key] = False
+                    st.caption("Press 'Play next family message' to continue.")
+            elif not audio_bytes:
+                st.markdown(
+                    '<div class="vm-muted-line">No new messages.</div>',
+                    unsafe_allow_html=True,
+                )
 
-        if is_mobile_variant:
+        if is_mobile_variant or is_office_variant:
             st.markdown(f"**Latest message from {full_name} to all authorised family contacts**")
         else:
             st.markdown(f"**Latest message from {full_name} to {selected_contact_name}**")

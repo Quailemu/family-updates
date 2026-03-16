@@ -21,10 +21,10 @@ The service is not intended for care updates, health information, safeguarding c
 ## Where this helps in practice
 
 - Sending one non-urgent office update to reduce repeated routine calls from authorised contacts.
-- Supporting residents to send replies during planned care routines rather than arranging live calls.
+- Supporting residents to send resident-to-family messages during planned care routines rather than arranging live calls.
 - Reducing front-desk time spent on repeated non-urgent check-in requests.
 - Keeping communication clear by showing only the current message in each direction.
-- Sharing day-to-day home updates as one-way information without creating reply pressure.
+- Sharing day-to-day home updates as one-way information without creating response pressure.
 
 ## System structure
 

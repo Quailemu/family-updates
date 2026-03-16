@@ -58,7 +58,7 @@ Suggested script:
 
 "Your family can send you a short voice message.  
 We can play it to you when convenient.  
-If you would like to reply, we can help you record a message back.  
+If you would like to send a message back, we can help you record it.  
 Only one message is kept at a time, so the newest one replaces the previous one."
 
 ---

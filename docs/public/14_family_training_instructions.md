@@ -15,7 +15,7 @@ This guide is for Family App users (authorised contacts approved by the care hom
 ## How messages work
 
 - Family -> Resident: your latest message replaces your previous one.
-- Resident -> Family: the latest resident reply replaces the previous one.
+- Resident -> Family: the latest resident-to-family message replaces the previous one.
 - There is no thread and no message history.
 
 ## What to do
@@ -31,4 +31,3 @@ This guide is for Family App users (authorised contacts approved by the care hom
 - This is not an emergency or urgent service.
 - Messages are played by staff when available within normal care routines.
 - For urgent, clinical, medication, appointment, or safeguarding matters, contact the care home directly.
-

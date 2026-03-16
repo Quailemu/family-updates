@@ -41,7 +41,7 @@ The Office update channel is separate and one-way from the care home to authoris
 Playback access is limited to authorised users in the resident's care circle.  
 Messages may be played in normal care environments where staff are supporting residents.
 
-This is non-urgent and not live messaging. Messages are played and replies are recorded when staff are available.
+This is non-urgent and not live messaging. Messages are played and resident messages are recorded by staff when available.
 
 ## Time display
 
@@ -61,7 +61,7 @@ Used by authorised contacts (family members, friends, and other approved contact
 
 ### Care Hub – Mobile
 
-Used by carers to play messages to residents and support residents in recording replies.
+Used by carers to play messages to residents and support residents in recording resident-to-family messages.
 
 ### Care Hub – Office
 

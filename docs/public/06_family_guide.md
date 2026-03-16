@@ -21,7 +21,7 @@ Family users are authorised contacts (such as family members or close friends) a
 
 The service has three interfaces linked to the resident's care circle:
 
-- Care Hub – Mobile supports resident playback and resident replies.
+- Care Hub – Mobile supports resident playback and resident-to-family messages.
 - Care Hub – Office supports oversight and Office-originated updates.
 - Family App supports authorised contacts sending and playing messages.
 
@@ -49,7 +49,7 @@ You can record a short voice message for the resident. Messages are audio-only a
 
 ### Playing current messages
 
-You may play the current resident reply, and where applicable the current Office update for that resident.
+You may play the current resident-to-family message, and where applicable the current Office update for that resident.
 
 ### Message replacement
 
