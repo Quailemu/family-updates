@@ -24,7 +24,9 @@ This service is not for care updates, health information, safeguarding alerts, m
 
 ## Message scope
 
-Messages are audio-only and social in nature. The service stores only the current message per direction for each contact; new messages overwrite previous ones.
+Core messaging is audio-only and social in nature. The service stores only the current message per direction/channel; new messages overwrite previous ones.
+
+In addition, Office may publish a practical non-urgent message that supports structured family replies (Yes/No/Maybe, optional tick-boxes, optional short note). This is not live chat.
 
 ## Roles and responsibility
 

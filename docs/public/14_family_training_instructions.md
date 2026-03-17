@@ -16,6 +16,8 @@ This guide is for Family App users (authorised contacts approved by the care hom
 
 - Family -> Resident: your latest message replaces your previous one.
 - Resident -> Family: the latest resident-to-family message replaces the previous one.
+- Office general update -> Family: one-way non-urgent informational update.
+- Office practical message -> Family: structured non-urgent response (Yes/No/Maybe, optional tick-boxes, optional short note).
 - There is no thread and no message history.
 
 ## What to do

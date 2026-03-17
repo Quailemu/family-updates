@@ -31,12 +31,18 @@ Playback and control statement:
 All current messages for that resident may be played by authorised users across Mobile, Office, and Family, but no group can alter another group's message. Each message may only be replaced by the interface that created it.
 
 Office update statement:
-Updates are sent from the care home to keep families informed about day-to-day events. Messages are one-way and replies cannot be sent through this system. These updates are for non-urgent, non-medical information only. For any urgent, medical, or other queries, please contact the care home directly.
+General updates are sent from the care home to keep families informed about day-to-day events. General updates are one-way and are for non-urgent, non-medical information only.
+
+Office practical messages are optional structured requests linked to a specific resident (for example visits, attendance, reminders, or item requests). Authorised contacts can reply with a minimal structured response (Yes / No / Maybe), optional tick-box options, and an optional short note. This is still non-urgent and not live messaging.
+
+For urgent, medical, safeguarding, or other time-sensitive matters, families must contact the care home directly through normal channels.
 
 Service overview purpose statement:
 voice-message.com is a simple tool for exchanging non-urgent social voice messages between residents in care homes and their authorised contacts. The care home office may also send non-urgent general updates about daily life in the home to authorised contacts.
 
-Office updates are one-way informational messages and replies cannot be sent through the system.
+Office general updates are one-way informational messages.
+
+The care home may also publish an Office practical message that allows each authorised contact to send a structured non-urgent reply (Yes / No / Maybe, optional tick-boxes, optional short note).
 
 The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
 

@@ -6,111 +6,42 @@
 
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
-
-Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. Each authorised contact channel retains the current message for that channel. A new message replaces only the previous message in that same channel/direction.
-
 ## What is voice-message.com for?
 
-It is intended for non-urgent, social voice messages between residents in care homes and their authorised contacts. It is not intended for care updates, health information, or safeguarding concerns.
-
-## Which app should I use?
-
-- Authorised contacts use the Family app only.
-- Carers use Care Hub – Mobile only.
-- Office staff use Care Hub – Office only.
-
-Each role uses its own app.
-
-## How many app interfaces are there?
-
-There are three role-based interfaces linked to the resident's care circle: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
-The messaging system links each resident to authorised contact channels for Family/Friend -> Resident messages, plus a shared Resident -> Family message and a one-way Office update channel.
-
-## Is this service monitored or responded to by staff?
-
-Messages are not monitored or responded to by staff as part of care communication. Staff may assist residents with recording or playback as part of normal support.
-
-## Can messages be used for care or health updates?
-
-No. The service is not intended for care or health updates. Please contact the care home directly for those matters.
-
-## Why does my message replace the previous one?
-
-The service keeps only one current message in each channel/direction. New messages replace the previous message in that same channel/direction, and there is no message history. This supports data minimisation.
-
-## Can different groups play the same current messages?
-
-Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
-
-## Can one group change another group's message?
-
-No. No group can directly alter another group's message. Each message can only be replaced by the side that created it.
-
-## What if I have a concern about a resident?
-
-Contact the care home directly using its usual channels. The service is not a safeguarding or alerting system.
-
-## Who should I contact if I have a problem?
-
-For resident care questions, contact the care home. For access or usage questions, the care home manages the service and can advise.
-
-## Are messages private?
-
-Playback is limited to authorised users in the resident's care circle, but messages may be played in normal care environments and are not guaranteed to be private.
-
-## How long are messages kept?
-
-Only the current message is kept for each channel/direction. New messages replace previous ones in that same channel/direction.
-
-## Where can I read more about roles and responsibilities?
-
-See the Service overview and Care home responsibilities sections. For consent and safeguarding, see the Safeguarding and Consent section.
+Non-urgent social voice messaging between residents and authorised contacts, plus non-urgent Office communication to family.
 
 ## Is this a live chat?
 
-No. This is not a live service. Messages are played and recorded when staff are available.
+No. It is not live messaging.
 
-## Do I get a notification when staff play my message?
+## How many app interfaces are there?
 
-No. The service does not provide read receipts, delivery confirmations, or live status.
+Three: Family app, Care Hub - Mobile, and Care Hub - Office.
 
-## Can I send multiple messages one after another?
+## What is an Office general update?
 
-You can send a new message, but each new message replaces your previous one for that resident.
+A one-way Office message broadcast to all authorised contacts for non-urgent general information.
 
-## Can I contact several residents?
+## Can family reply to Office messages?
 
-Only if the care home has approved and linked your account to those residents.
+Family can reply to an Office practical message using a structured response form (Yes / No / Maybe, optional tick-boxes, optional short note).
 
-## Can I share my login with another relative or friend?
+## Is an Office practical message a chat thread?
 
-No. Each authorised contact should use their own access.
+No. It is a structured reply to one Office message, not open chat.
 
-## Is this service only for family members?
+## Why do old messages disappear?
 
-No. 'Family' here means authorised contacts approved by the care home, such as family members or close friends. Access is managed by the care home.
+Only one current message is kept per direction/channel. A new message replaces the previous message in that same direction/channel.
 
-## Can staff change who is allowed to message a resident?
+## Does the service show message history?
 
-Yes. The care home controls approved contacts and can add or remove access.
+No archive and no scrolling thread.
 
-## What if I accidentally send the wrong message?
+## Do I get delivery/read notifications?
 
-Send a corrected message. Your new message will replace your previous one.
+No. There are no live notifications, delivery confirmations, or read receipts.
 
-## Why is there no message timeline?
+## Is this suitable for urgent or medical matters?
 
-The service is intentionally simple and uses data minimisation: one current message each way, no archive.
-
-## Can this service be used for complaints?
-
-Formal complaints should follow the care home's complaints process. See Complaints & Concerns for more detail.
-
-## Can I use this to report safeguarding concerns?
-
-No. Contact the care home directly through its safeguarding channels.
-
-## How is message timing shown?
-
-Where timing is shown, the service uses simple AM/PM wording (for example, Today AM, Today PM, Yesterday AM, Yesterday PM, or a simple older date with AM/PM). Exact clock times are intentionally not shown in the main communication views.
+No. For urgent, medical, safeguarding, or emergency matters, contact the care home directly.

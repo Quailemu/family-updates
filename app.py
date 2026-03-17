@@ -2513,9 +2513,7 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
         st.caption(f"Care home: {care_home_name}")
         st.caption("You are signed in to this care home.")
     else:
-        st.warning(
-            "Care home name is not available for this session. Please check care home setup."
-        )
+        st.caption("You are signed in.")
 
 
 def fetch_family_contacts_for_resident(
@@ -2642,7 +2640,25 @@ def fetch_latest_open_office_practical_message(
         )
         return resp.data[0] if resp.data else None
     except Exception:
-        return None
+        try:
+            legacy_resp = (
+                supabase.table("office_practical_messages")
+                .select("id, care_home_id, resident_id, title, body, allow_note, response_enabled, status, created_at")
+                .eq("resident_id", resident_id)
+                .eq("status", "open")
+                .order("created_at", desc=True)
+                .limit(1)
+                .execute()
+            )
+            if not legacy_resp.data:
+                return None
+            row = legacy_resp.data[0]
+            row.setdefault("context_type", OFFICE_PRACTICAL_CONTEXT_GENERAL)
+            row.setdefault("requested_date", None)
+            row.setdefault("requested_time_window", None)
+            return row
+        except Exception:
+            return None
 
 
 def fetch_office_practical_message_options(
@@ -2676,14 +2692,24 @@ def fetch_family_practical_response(
     if error:
         return None
     try:
-        response_resp = (
-            supabase.table("office_practical_responses")
-            .select("id, primary_choice, note, response_status, planned_visit_time, share_with_family")
-            .eq("message_id", message_id)
-            .eq("family_contact_id", family_contact_id)
-            .limit(1)
-            .execute()
-        )
+        try:
+            response_resp = (
+                supabase.table("office_practical_responses")
+                .select("id, primary_choice, note, response_status, planned_visit_time, share_with_family")
+                .eq("message_id", message_id)
+                .eq("family_contact_id", family_contact_id)
+                .limit(1)
+                .execute()
+            )
+        except Exception:
+            response_resp = (
+                supabase.table("office_practical_responses")
+                .select("id, primary_choice, note, response_status")
+                .eq("message_id", message_id)
+                .eq("family_contact_id", family_contact_id)
+                .limit(1)
+                .execute()
+            )
         if not response_resp.data:
             return None
         response_row = response_resp.data[0]
@@ -2725,14 +2751,17 @@ def fetch_shared_family_practical_responses(
     if error:
         return []
     try:
-        resp = (
-            supabase.table("office_practical_responses")
-            .select("family_contact_id, primary_choice, planned_visit_time, note, family_contacts(display_name)")
-            .eq("message_id", message_id)
-            .eq("share_with_family", True)
-            .order("updated_at", desc=True)
-            .execute()
-        )
+        try:
+            resp = (
+                supabase.table("office_practical_responses")
+                .select("family_contact_id, primary_choice, planned_visit_time, note, family_contacts(display_name)")
+                .eq("message_id", message_id)
+                .eq("share_with_family", True)
+                .order("updated_at", desc=True)
+                .execute()
+            )
+        except Exception:
+            return []
         rows = []
         current_id = str(current_family_contact_id or "").strip()
         for row in resp.data or []:
@@ -2830,27 +2859,51 @@ def upsert_family_practical_response(
             "response_status": "submitted",
             "updated_at": now_iso,
         }
-        if existing_response_id:
-            response_payload["submitted_at"] = now_iso
-            _ = (
-                supabase.table("office_practical_responses")
-                .update(response_payload)
-                .eq("id", existing_response_id)
-                .execute()
-            )
-            response_id = existing_response_id
-        else:
-            response_payload["submitted_at"] = now_iso
-            inserted = (
-                supabase.table("office_practical_responses")
-                .insert(response_payload)
-                .execute()
-            )
-            response_id = (
-                str(inserted.data[0].get("id") or "").strip()
-                if inserted.data
-                else ""
-            )
+        try:
+            if existing_response_id:
+                response_payload["submitted_at"] = now_iso
+                _ = (
+                    supabase.table("office_practical_responses")
+                    .update(response_payload)
+                    .eq("id", existing_response_id)
+                    .execute()
+                )
+                response_id = existing_response_id
+            else:
+                response_payload["submitted_at"] = now_iso
+                inserted = (
+                    supabase.table("office_practical_responses")
+                    .insert(response_payload)
+                    .execute()
+                )
+                response_id = (
+                    str(inserted.data[0].get("id") or "").strip()
+                    if inserted.data
+                    else ""
+                )
+        except Exception:
+            legacy_payload = dict(response_payload)
+            legacy_payload.pop("planned_visit_time", None)
+            legacy_payload.pop("share_with_family", None)
+            if existing_response_id:
+                _ = (
+                    supabase.table("office_practical_responses")
+                    .update(legacy_payload)
+                    .eq("id", existing_response_id)
+                    .execute()
+                )
+                response_id = existing_response_id
+            else:
+                inserted = (
+                    supabase.table("office_practical_responses")
+                    .insert(legacy_payload)
+                    .execute()
+                )
+                response_id = (
+                    str(inserted.data[0].get("id") or "").strip()
+                    if inserted.data
+                    else ""
+                )
         if not response_id:
             return False, "Could not save response."
 
@@ -2917,7 +2970,14 @@ def create_office_practical_message(
             "created_by": st.session_state.get("auth_uid"),
             "created_at": now_iso,
         }
-        msg_resp = supabase.table("office_practical_messages").insert(payload).execute()
+        try:
+            msg_resp = supabase.table("office_practical_messages").insert(payload).execute()
+        except Exception:
+            legacy_payload = dict(payload)
+            legacy_payload.pop("context_type", None)
+            legacy_payload.pop("requested_date", None)
+            legacy_payload.pop("requested_time_window", None)
+            msg_resp = supabase.table("office_practical_messages").insert(legacy_payload).execute()
         message_id = (
             str(msg_resp.data[0].get("id") or "").strip()
             if msg_resp.data
@@ -2998,16 +3058,25 @@ def fetch_office_practical_response_summary(
             str(option.get("id") or "").strip(): str(option.get("option_label") or "").strip()
             for option in options
         }
-        responses_resp = (
-            supabase.table("office_practical_responses")
-            .select(
-                "id, family_contact_id, primary_choice, note, response_status, planned_visit_time, "
-                "share_with_family, family_contacts(display_name)"
+        try:
+            responses_resp = (
+                supabase.table("office_practical_responses")
+                .select(
+                    "id, family_contact_id, primary_choice, note, response_status, planned_visit_time, "
+                    "share_with_family, family_contacts(display_name)"
+                )
+                .eq("message_id", message_id)
+                .order("updated_at", desc=True)
+                .execute()
             )
-            .eq("message_id", message_id)
-            .order("updated_at", desc=True)
-            .execute()
-        )
+        except Exception:
+            responses_resp = (
+                supabase.table("office_practical_responses")
+                .select("id, family_contact_id, primary_choice, note, response_status, family_contacts(display_name)")
+                .eq("message_id", message_id)
+                .order("updated_at", desc=True)
+                .execute()
+            )
         response_rows = responses_resp.data or []
         response_ids = [
             str(row.get("id") or "").strip()
@@ -5313,13 +5382,22 @@ def render_family_send() -> None:
                         st.success("Response received.")
                     else:
                         st.error(message)
+            existing_response = fetch_family_practical_response(
+                practical_message_id,
+                family_contact_id,
+                access_token,
+            )
             shared_responses = fetch_shared_family_practical_responses(
                 practical_message_id,
                 family_contact_id,
                 access_token,
             )
+            if existing_response:
+                own_choice = str(existing_response.get("primary_choice") or "").strip().title()
+                if own_choice:
+                    st.caption(f"Your current response: {own_choice}")
+            st.caption("Shared responses from other authorised contacts:")
             if shared_responses:
-                st.caption("Shared responses from other authorised contacts:")
                 for shared_response in shared_responses:
                     contact_name = str(shared_response.get("contact_name") or "Authorised contact")
                     choice_label = str(shared_response.get("primary_choice") or "").strip().title()
@@ -5330,6 +5408,8 @@ def render_family_send() -> None:
                     shared_note = str(shared_response.get("note") or "").strip()
                     if shared_note:
                         st.caption(f"Note: {shared_note}")
+            else:
+                st.caption("No shared responses yet.")
         else:
             st.caption("No open practical office messages for this resident.")
 
@@ -6057,16 +6137,24 @@ def render_pr_homepage() -> None:
     st.markdown('<div class="pr-hero">', unsafe_allow_html=True)
     st.markdown("<h1>One message in. One message out.</h1>", unsafe_allow_html=True)
     st.markdown(
-        '<div class="pr-subheading">Non-urgent social voice messages between residents in care homes and their authorised contacts (such as family members or close friends).</div>',
+        '<div class="pr-subheading">Non-urgent social voice messages between residents and authorised contacts, with optional structured Office practical replies.</div>',
         unsafe_allow_html=True,
     )
     st.markdown('<div class="pr-calm">No threads. No pressure.</div>', unsafe_allow_html=True)
+    diagram_path = Path(__file__).resolve().parent / "assets" / "voice-message-flow-diagram.png"
+    if diagram_path.exists():
+        st.image(
+            diagram_path.read_bytes(),
+            caption="Use this diagram as the primary reference for message directions and replacement rules.",
+            use_container_width=True,
+        )
     st.markdown(
         """
 <div class="pr-explain">
-Only the most recent message from an authorised contact and the most recent reply from the resident are kept.<br />
-When a new message is sent, the previous message from that sender is replaced.<br />
-This structure helps keep communication simple and manageable within care settings.
+Only one current message is kept in each direction/channel.<br />
+A new message replaces the previous message in that same direction/channel.<br />
+Office general updates are one-way; Office practical messages allow structured family replies (Yes/No/Maybe, optional tick-boxes, optional short note).<br />
+For urgent, medical, safeguarding, or emergency matters, contact the care home directly.
 </div>
 """,
         unsafe_allow_html=True,
@@ -6093,21 +6181,22 @@ This structure helps keep communication simple and manageable within care settin
     st.markdown('<div class="pr-content">', unsafe_allow_html=True)
     if active_tab == "family":
         st.markdown(
-            "Family use the Family app to record short voice messages for residents. "
-            "This is not a live service, and replies are not immediate. "
-            "Only the most recent message and reply are kept. "
-            "The service is for non-urgent social contact only. "
-            "Safeguarding and care concerns must be directed to the care home."
+            "Family uses the Family app for non-urgent social voice messages. "
+            "Family can also respond to Office practical messages using a structured reply "
+            "(Yes/No/Maybe, optional tick-boxes, optional short note). "
+            "This is not live messaging."
         )
     elif active_tab == "mobile":
         st.markdown(
             "Care Hub – Mobile supports staff-assisted playback and recording for residents. "
-            "It is non-real-time and uses a one message model to keep communication simple. "
+            "Family -> Resident playback uses a fair rotating order with unplayed messages first. "
+            "It is non-real-time and keeps one current message per direction/channel. "
             "This view focuses on operational clarity and calm, non-urgent use."
         )
     else:
         st.markdown(
             "Care Hub – Office provides governance oversight, access management, and document control. "
+            "Office can send one-way general updates and publish practical messages with structured family replies. "
             "Role separation is maintained between Family, Mobile, and Office views. "
             "Subscriptions are provided on a per–care home basis."
         )
@@ -7008,45 +7097,20 @@ def render_care_hub() -> None:
                     key=f"care_play_next_{resident_id}",
                     use_container_width=True,
                 ):
-                    playable: list[tuple[dict, dict]] = []
-                    for c in dedupe_contacts_by_auth_user_id(contacts):
-                        contact_user_id = str(c.get("auth_user_id") or "").strip()
-                        if not contact_user_id:
-                            continue
-                        msg = fetch_latest_message(
-                            resident_id,
-                            "to_resident",
-                            access_token,
-                            contact_user_id=contact_user_id,
-                            channel="resident_family",
-                        )
-                        if msg:
-                            playable.append((c, msg))
-                    cycle_idx_key = f"care_mobile_cycle_idx_{resident_id}"
-                    if playable:
-                        ordered_user_ids = [
-                            str(item[0].get("auth_user_id") or "").strip() for item in playable
-                        ]
-                        current_user_id = str(state.get("selected_contact_user_id") or "").strip()
-                        current_idx = (
-                            ordered_user_ids.index(current_user_id)
-                            if current_user_id in ordered_user_ids
-                            else -1
-                        )
-                        next_idx = (current_idx + 1) % len(playable)
-                        st.session_state[cycle_idx_key] = next_idx
-                        selected_contact, latest = playable[next_idx]
+                    selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
+                        resident_id,
+                        resident["care_home_id"],
+                        contacts,
+                        access_token,
+                    )
+                    if selected_contact:
                         state["selected_contact_id"] = selected_contact.get("id")
                         state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
-                        queue_mode_label = "Session cycle"
-                        if APP_DEBUG:
-                            st.caption(
-                                "Queue debug: "
-                                f"cycle_idx={next_idx}/{len(playable)} "
-                                    f"manual_next={state.get('selected_contact_user_id')}"
-                                )
-                    st.session_state[mobile_play_requested_key] = True
-                    st.session_state[mobile_advance_pointer_key] = False
+                        st.session_state[mobile_play_requested_key] = True
+                        st.session_state[mobile_advance_pointer_key] = True
+                    else:
+                        st.session_state[mobile_play_requested_key] = False
+                        st.session_state[mobile_advance_pointer_key] = False
 
             if latest is None:
                 latest = fetch_latest_message(

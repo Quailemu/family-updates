@@ -6,84 +6,59 @@
 
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
-
-Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. Each authorised contact channel retains the current message for that channel. A new message replaces only the previous message in that same channel/direction.
+Use the diagram above as the primary reference for message directions, replacement rules, and playback order.
 
 ## Purpose
 
-voice-message.com is a simple tool for exchanging non-urgent social voice messages between residents in care homes and their authorised contacts. The care home office may also send non-urgent general updates about daily life in the home to authorised contacts.
+voice-message.com is a simple system for non-urgent social voice messages between a resident and authorised family contacts.
 
-Office updates are one-way informational messages and replies cannot be sent through the system.
+It also supports non-urgent care-home communication to family in two Office modes:
 
-The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
+- Office general update (one-way to all authorised contacts)
+- Office practical message (structured family reply to a specific office message)
 
-## Where this helps in practice
+## Core message model
 
-- Sending one non-urgent office update to reduce repeated routine calls from authorised contacts.
-- Supporting residents to send resident-to-family messages during planned care routines rather than arranging live calls.
-- Reducing front-desk time spent on repeated non-urgent check-in requests.
-- Keeping communication clear by showing only the current message in each direction.
-- Sharing day-to-day home updates as one-way information without creating response pressure.
+- One current message is kept per direction/channel.
+- A new message replaces the previous message in that same direction/channel.
+- No archive, no scrolling thread, no live chat.
 
-## System structure
+## Main flows
 
-The system has three application interfaces for different groups of people associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, and other authorised contacts).
+### Family -> Resident
 
-Each interface is role-based and uses separate controls.
-The messaging system links each resident to authorised contact channels for Family/Friend -> Resident messages, plus a shared Resident -> Family message and a one-way Office update channel.
+Each authorised contact has one current message to the resident.  
+Care Hub - Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.
 
-## Message playback and control
+### Resident -> Family
 
-In each direction, only one current message is kept. A new message replaces the previous message in that same direction.
-Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
+Resident reply is one shared current message to all authorised contacts.
 
-There is no archive, no scrolling thread, and no message history.
+### Office -> Family (general update)
 
-## Authorised contact channel structure
+One-way broadcast to all authorised contacts for non-urgent, non-medical information and reassurance.  
+General updates do not accept replies in the update channel.
 
-Authorised contacts are organised into authorised contact channels for each resident.
-An authorised contact channel may contain one authorised contact or multiple authorised contacts where configured by the care home.
+### Office practical message (structured reply)
 
-Family/Friend -> Resident messages are kept per authorised contact channel.
-Resident -> Family is a separate shared current message to all authorised contacts.
-The Office update channel is separate and one-way from the care home to authorised contacts.
+Office can publish a practical message for a resident (for example visits, attendance, reminders, item requests).  
+Each authorised contact can submit:
 
-## App versions (three distinct experiences)
+- Yes / No / Maybe
+- Optional tick-box selections
+- Optional short note
 
-- Family App: used by authorised contacts only.
-- Care Hub – Mobile: used by carers for resident support and playback/recording assistance.
-- Care Hub – Office: used by office/senior staff for oversight, governance, and Office-originated updates.
+This is not a live conversation and is not monitored for emergencies.
 
-Family and Care Hub are separate role-based experiences.
+## Boundaries
 
-## Time display
+This service is for social and practical non-urgent communication only.
 
-The product uses simple AM/PM timing language in applicable views (for example, Today AM, Today PM, Yesterday AM, Yesterday PM, or a simple older date + AM/PM). Exact clock times are intentionally not shown in the main care communication views.
+It is not for:
 
-## Roles
+- medical updates
+- health information
+- safeguarding communication
+- urgent or emergency enquiries
 
-### Care home (operator)
-
-The care home operates the service in practice and is responsible for day-to-day use. This includes:
-
-- controlling access to the service
-- supervising how the service is used
-- managing devices used for recording and playback
-- managing resident and authorised contacts
-
-The care home is responsible for identifying residents, confirming consent or authority, and deciding who can send and receive messages.
-
-### Residents
-
-Residents use the service to receive and send social voice messages with support from the care home as needed. The service is not a channel for care or health updates.
-
-### Authorised contacts
-
-Authorised contacts (family members, friends, and other approved contacts) use the Family App to send and play social messages only. They should not rely on it for care information, health updates, or safeguarding concerns. Those matters should be directed to the care home using its usual channels.
-
-### Service provider (voice-message.com)
-
-The service provider supplies the technical platform that enables the exchange of social voice messages. The platform does not provide care updates or health information and is not intended to be used as a safeguarding channel.
-
-The platform does not verify identity, consent, or authority, and does not review or moderate message content.
+For those matters, contact the care home directly using normal channels.

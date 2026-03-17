@@ -6,57 +6,32 @@
 
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
-
-Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. Each authorised contact channel retains the current message for that channel. A new message replaces only the previous message in that same channel/direction.
-
 Q: Is this a live messaging service?  
-A: No. It is not live. Messages are played when staff are available.
+A: No. It is not live. Messages are handled when staff are available.
 
 Q: What is this service for?  
-A: Non-urgent, social voice messages between residents in care homes and authorised contacts, plus non-urgent, non-medical general and reassurance updates from Care Hub – Office.
-
-Q: Which interfaces are part of this service?  
-A: Care Hub – Mobile, Care Hub – Office, and Family App (for family members, friends, and other authorised contacts).
-
-Q: What channel types does the service use?  
-A: Each resident has authorised contact channels for Family/Friend -> Resident messages, plus a shared Resident -> Family message and a one-way Office update channel.
+A: Non-urgent social voice messages between residents and authorised contacts, plus non-urgent Office communication.
 
 Q: Can I send urgent updates here?  
-A: No. For urgent, care, or safeguarding matters, contact the care home directly.
+A: No. For urgent, clinical, safeguarding, or emergency matters, contact the care home directly.
 
-Q: Why did my old message disappear?  
-A: The service keeps one current message in each direction. New messages replace previous ones in that same direction.
+Q: Why did my previous message disappear?  
+A: The service keeps one current message per direction/channel. New messages replace previous ones in that same direction/channel.
 
-Q: Can I see message history?  
-A: No. There is no archive or message timeline.
+Q: Can I see a message timeline?  
+A: No. There is no archive and no scrolling thread.
 
-Q: Can I share my login with another relative or friend?  
-A: No. Each approved contact should use their own access.
+Q: What is an Office general update?  
+A: A one-way Office broadcast to all authorised contacts for non-urgent general information.
 
-Q: Is this service only for family members?  
-A: No. 'Family' here means authorised contacts approved by the care home, such as family members or close friends. Access is managed by the care home.
+Q: What is an Office practical message?  
+A: A practical Office request linked to a resident (for example visits, attendance, reminders, or item requests) that allows a structured family reply.
 
-Q: How do I get access to a resident?  
-A: The care home decides approved contacts and manages access.
+Q: How do I reply to an Office practical message?  
+A: Choose Yes/No/Maybe, then optionally tick options and add a short note.
 
-Q: Can I contact more than one resident?  
-A: Only if your account is approved and linked to each resident by the care home.
+Q: Is this practical reply a chat conversation?  
+A: No. It is a structured response to a specific Office message.
 
-Q: Are messages private?  
-A: Playback is limited to authorised users in the resident's care circle, but messages may be played in normal care environments and are not guaranteed to be private.
-
-Q: Can staff edit my recording?  
-A: Staff do not edit your recording. A new recording replaces the previous one.
-
-Q: Can different groups play the same current messages?  
-A: Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
-
-Q: Can one group replace another group's message?  
-A: No. Each message may only be replaced by the side that created it.
-
-Q: Will I always receive a resident message?  
-A: No. Resident messages are not guaranteed and depend on resident wellbeing and staff workflow.
-
-Q: Can I use this for complaints?  
-A: Use the care home's formal complaints process for care concerns.
+Q: Do I get read receipts or delivery confirmations?  
+A: No.

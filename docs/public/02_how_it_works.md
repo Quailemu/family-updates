@@ -1,73 +1,61 @@
 ![logo](../../assets/logo.png)
 
-# Voice messages — how it works
+# Voice messages - how it works
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
+Start with the diagram. It shows the resident, authorised family contacts, and Care Hub channels.
 
-Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. Each authorised contact channel retains the current message for that channel. A new message replaces only the previous message in that same channel/direction.
+## The three app interfaces
 
-## Purpose
+- Family app
+- Care Hub - Mobile
+- Care Hub - Office
 
-voice-message.com is a simple, non-urgent social voice messaging service for residents and their authorised contacts.
-It is not intended for live or urgent communication.
+Each interface is role-based and separate.
 
-## System structure
+## Message directions
 
-The system has three application interfaces for different groups of people associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, and other authorised contacts).
+### 1) Family -> Resident
 
-Each interface has its own role in the resident's care circle. The product is role-based and non-urgent.
-The messaging system links each resident to authorised contact channels for Family/Friend -> Resident messages, plus a shared Resident -> Family message and a one-way Office update channel.
+Each authorised contact has one current message to the resident.  
+Care Hub - Mobile plays family messages one-at-a-time in a fair rotating order, with unplayed messages first.
 
-## Message playback and control
+### 2) Resident -> Family
 
-In each direction, only one current message is kept. A new message replaces the previous message in that same direction.
-Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
+Resident sends one current shared message to all authorised contacts.
 
-## Authorised contact channels
+### 3) Office -> Family (general update)
 
-Family and friends are organised into authorised contact channels around the resident.
-An authorised contact channel may contain one authorised contact or multiple authorised contacts where the care home chooses.
+Office can send one-way general updates to all authorised contacts.
 
-Family/Friend -> Resident messages are kept per authorised contact channel.
-Resident -> Family is a separate shared current message to all authorised contacts.
-The Office update channel is separate and one-way from the care home to authorised contacts.
+### 4) Office practical message (structured reply)
 
-## Playback and care setting
+Office can send a practical non-urgent message for a resident.  
+Each authorised contact can submit a structured reply:
 
-Playback access is limited to authorised users in the resident's care circle.  
-Messages may be played in normal care environments where staff are supporting residents.
+- Yes / No / Maybe
+- Optional tick-boxes
+- Optional short note
 
-This is non-urgent and not live messaging. Messages are played and resident messages are recorded by staff when available.
+## Replacement rule
 
-## Time display
+Only the current message is kept for each direction/channel.  
+A new message replaces the previous message in that same direction/channel.
 
-The interface uses simple timing language rather than exact clock times, for example:
+## Not live messaging
 
-- Today AM / Today PM
-- Yesterday AM / Yesterday PM
-- A simple older date with AM/PM
+- No typing indicators
+- No live status
+- No read receipts
+- No delivery confirmations
+- No response-time expectation
 
-Exact times are intentionally not shown in the main care communication views.
+Messages are played and recorded by staff when available within care routines.
 
-## Interface roles
+## Safety boundary
 
-### Family App
-
-Used by authorised contacts (family members, friends, and other approved contacts) to send and play social voice messages linked to the resident.
-
-### Care Hub – Mobile
-
-Used by carers to play messages to residents and support residents in recording resident-to-family messages.
-
-### Care Hub – Office
-
-Used by office and senior staff for oversight, governance documents, and Office-originated updates for each resident.
-
-## Safeguarding boundary
-
-Safeguarding duties remain with the care home.  
-This service is not a safeguarding alert system and is not monitored in real time.
+This service is non-urgent and non-clinical.  
+For urgent, medical, safeguarding, or emergency matters, contact the care home directly.
