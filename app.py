@@ -57,6 +57,8 @@ OFFICE_PRACTICAL_CHECKBOX_OPTIONS = (
     "I can attend",
     "I cannot attend",
 )
+OFFICE_PRACTICAL_CONTEXT_GENERAL = "general"
+OFFICE_PRACTICAL_CONTEXT_VISIT = "visit"
 
 ALLOWED_VARIANT_VALUES_TEXT = "public, family, mobile, office"
 AUTH_COOKIE_NAME = "vm_auth_rt"
@@ -2628,7 +2630,10 @@ def fetch_latest_open_office_practical_message(
     try:
         resp = (
             supabase.table("office_practical_messages")
-            .select("id, care_home_id, resident_id, title, body, allow_note, response_enabled, status, created_at")
+            .select(
+                "id, care_home_id, resident_id, title, body, allow_note, response_enabled, "
+                "status, created_at, context_type, requested_date, requested_time_window"
+            )
             .eq("resident_id", resident_id)
             .eq("status", "open")
             .order("created_at", desc=True)
@@ -2673,7 +2678,7 @@ def fetch_family_practical_response(
     try:
         response_resp = (
             supabase.table("office_practical_responses")
-            .select("id, primary_choice, note, response_status")
+            .select("id, primary_choice, note, response_status, planned_visit_time, share_with_family")
             .eq("message_id", message_id)
             .eq("family_contact_id", family_contact_id)
             .limit(1)
@@ -2701,10 +2706,51 @@ def fetch_family_practical_response(
             "primary_choice": response_row.get("primary_choice"),
             "note": response_row.get("note") or "",
             "response_status": response_row.get("response_status") or "submitted",
+            "planned_visit_time": response_row.get("planned_visit_time") or "",
+            "share_with_family": bool(response_row.get("share_with_family", False)),
             "selected_option_ids": selected_option_ids,
         }
     except Exception:
         return None
+
+
+def fetch_shared_family_practical_responses(
+    message_id: str,
+    current_family_contact_id: str,
+    access_token: str | None,
+) -> list[dict]:
+    if not message_id:
+        return []
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return []
+    try:
+        resp = (
+            supabase.table("office_practical_responses")
+            .select("family_contact_id, primary_choice, planned_visit_time, note, family_contacts(display_name)")
+            .eq("message_id", message_id)
+            .eq("share_with_family", True)
+            .order("updated_at", desc=True)
+            .execute()
+        )
+        rows = []
+        current_id = str(current_family_contact_id or "").strip()
+        for row in resp.data or []:
+            family_contact_id = str(row.get("family_contact_id") or "").strip()
+            if current_id and family_contact_id == current_id:
+                continue
+            family_details = row.get("family_contacts") or {}
+            rows.append(
+                {
+                    "contact_name": str(family_details.get("display_name") or "Authorised contact"),
+                    "primary_choice": str(row.get("primary_choice") or "").strip().lower(),
+                    "planned_visit_time": str(row.get("planned_visit_time") or "").strip(),
+                    "note": str(row.get("note") or "").strip(),
+                }
+            )
+        return rows
+    except Exception:
+        return []
 
 
 def upsert_family_practical_response(
@@ -2713,6 +2759,8 @@ def upsert_family_practical_response(
     primary_choice: str,
     note: str,
     selected_option_ids: list[str],
+    planned_visit_time: str,
+    share_with_family: bool,
     access_token: str | None,
 ) -> tuple[bool, str]:
     supabase, error = get_authed_supabase(access_token)
@@ -2777,6 +2825,8 @@ def upsert_family_practical_response(
             "family_contact_id": family_contact_id,
             "primary_choice": primary_choice,
             "note": note_value,
+            "planned_visit_time": (planned_visit_time or "").strip()[:80],
+            "share_with_family": bool(share_with_family),
             "response_status": "submitted",
             "updated_at": now_iso,
         }
@@ -2828,6 +2878,9 @@ def create_office_practical_message(
     body: str,
     allow_note: bool,
     checkbox_option_labels: list[str],
+    context_type: str,
+    requested_date: str,
+    requested_time_window: str,
     access_token: str | None,
 ) -> tuple[bool, str | None, str]:
     supabase, error = get_authed_supabase(access_token)
@@ -2845,6 +2898,11 @@ def create_office_practical_message(
         body_value = body_value[:800]
     now_iso = __import__("datetime").datetime.utcnow().isoformat()
     try:
+        context_value = (
+            OFFICE_PRACTICAL_CONTEXT_VISIT
+            if context_type == OFFICE_PRACTICAL_CONTEXT_VISIT
+            else OFFICE_PRACTICAL_CONTEXT_GENERAL
+        )
         payload = {
             "care_home_id": care_home_id,
             "resident_id": resident_id,
@@ -2853,6 +2911,9 @@ def create_office_practical_message(
             "allow_note": bool(allow_note),
             "response_enabled": True,
             "status": "open",
+            "context_type": context_value,
+            "requested_date": (requested_date or "").strip() or None,
+            "requested_time_window": (requested_time_window or "").strip()[:80] or None,
             "created_by": st.session_state.get("auth_uid"),
             "created_at": now_iso,
         }
@@ -2939,7 +3000,10 @@ def fetch_office_practical_response_summary(
         }
         responses_resp = (
             supabase.table("office_practical_responses")
-            .select("id, family_contact_id, primary_choice, note, response_status, family_contacts(display_name)")
+            .select(
+                "id, family_contact_id, primary_choice, note, response_status, planned_visit_time, "
+                "share_with_family, family_contacts(display_name)"
+            )
             .eq("message_id", message_id)
             .order("updated_at", desc=True)
             .execute()
@@ -2980,6 +3044,8 @@ def fetch_office_practical_response_summary(
                     "contact_name": str(family_details.get("display_name") or "Authorised contact"),
                     "primary_choice": choice,
                     "note": str(row.get("note") or "").strip(),
+                    "planned_visit_time": str(row.get("planned_visit_time") or "").strip(),
+                    "share_with_family": bool(row.get("share_with_family", False)),
                     "selected_labels": checks_by_response_id.get(response_id, []),
                 }
             )
@@ -5147,11 +5213,21 @@ def render_family_send() -> None:
         )
         if practical_message:
             practical_message_id = str(practical_message.get("id") or "").strip()
+            practical_context_type = str(
+                practical_message.get("context_type") or OFFICE_PRACTICAL_CONTEXT_GENERAL
+            ).strip()
             st.markdown("**Office practical message**")
             st.markdown(
                 f"**{(practical_message.get('title') or 'Practical update').strip()}**"
             )
             st.markdown(str(practical_message.get("body") or "").strip())
+            if practical_context_type == OFFICE_PRACTICAL_CONTEXT_VISIT:
+                requested_date = str(practical_message.get("requested_date") or "").strip()
+                requested_time = str(practical_message.get("requested_time_window") or "").strip()
+                if requested_date:
+                    st.caption(f"Requested date: {requested_date}")
+                if requested_time:
+                    st.caption(f"Requested time window: {requested_time}")
             st.caption("For urgent or medical matters, please call the care home directly.")
             st.caption("Messages sent here are not monitored for emergencies.")
             response_options = fetch_office_practical_message_options(
@@ -5203,6 +5279,19 @@ def render_family_send() -> None:
                     key=f"family_practical_note_{resident_id}_{practical_message_id}",
                     max_chars=500,
                 )
+            planned_visit_time_value = ""
+            if practical_context_type == OFFICE_PRACTICAL_CONTEXT_VISIT:
+                planned_visit_time_value = st.text_input(
+                    "Planned visit time (optional)",
+                    value=str((existing_response or {}).get("planned_visit_time") or ""),
+                    key=f"family_practical_planned_visit_time_{resident_id}_{practical_message_id}",
+                    placeholder="Example: Saturday about 11am",
+                )
+            share_with_family_value = st.checkbox(
+                "Share this response with all authorised contacts",
+                value=bool((existing_response or {}).get("share_with_family", False)),
+                key=f"family_practical_share_{resident_id}_{practical_message_id}",
+            )
             if st.button(
                 "Send response",
                 key=f"family_practical_submit_{resident_id}_{practical_message_id}",
@@ -5216,12 +5305,31 @@ def render_family_send() -> None:
                         choice_to_value.get(selected_choice_label, "maybe"),
                         note_value,
                         selected_option_ids,
+                        planned_visit_time_value,
+                        share_with_family_value,
                         access_token,
                     )
                     if ok:
                         st.success("Response received.")
                     else:
                         st.error(message)
+            shared_responses = fetch_shared_family_practical_responses(
+                practical_message_id,
+                family_contact_id,
+                access_token,
+            )
+            if shared_responses:
+                st.caption("Shared responses from other authorised contacts:")
+                for shared_response in shared_responses:
+                    contact_name = str(shared_response.get("contact_name") or "Authorised contact")
+                    choice_label = str(shared_response.get("primary_choice") or "").strip().title()
+                    st.markdown(f"- {contact_name}: {choice_label}")
+                    shared_visit = str(shared_response.get("planned_visit_time") or "").strip()
+                    if shared_visit:
+                        st.caption(f"Planned visit: {shared_visit}")
+                    shared_note = str(shared_response.get("note") or "").strip()
+                    if shared_note:
+                        st.caption(f"Note: {shared_note}")
         else:
             st.caption("No open practical office messages for this resident.")
 
@@ -7515,6 +7623,24 @@ def render_care_hub() -> None:
                     value=True,
                     key=f"office_practical_allow_note_{resident_id}",
                 )
+                practical_is_visit = st.checkbox(
+                    "This is a visit coordination message",
+                    value=False,
+                    key=f"office_practical_is_visit_{resident_id}",
+                )
+                practical_requested_date_iso = ""
+                practical_requested_time_window = ""
+                if practical_is_visit:
+                    practical_requested_date_iso = st.text_input(
+                        "Requested date (optional)",
+                        key=f"office_practical_requested_date_{resident_id}",
+                        placeholder="Example: 2026-04-21",
+                    ).strip()
+                    practical_requested_time_window = st.text_input(
+                        "Requested time window (optional)",
+                        key=f"office_practical_requested_time_window_{resident_id}",
+                        placeholder="Example: Morning, around 11am",
+                    )
                 practical_checkboxes = st.multiselect(
                     "Optional tick-box responses",
                     options=list(OFFICE_PRACTICAL_CHECKBOX_OPTIONS),
@@ -7533,6 +7659,13 @@ def render_care_hub() -> None:
                         practical_body,
                         practical_allow_note,
                         practical_checkboxes,
+                        (
+                            OFFICE_PRACTICAL_CONTEXT_VISIT
+                            if practical_is_visit
+                            else OFFICE_PRACTICAL_CONTEXT_GENERAL
+                        ),
+                        practical_requested_date_iso,
+                        practical_requested_time_window,
                         access_token,
                     )
                     if ok:
@@ -7556,6 +7689,13 @@ def render_care_hub() -> None:
                     st.markdown("**Current open practical message**")
                     st.markdown(f"**{str(active_practical.get('title') or '').strip()}**")
                     st.markdown(str(active_practical.get("body") or "").strip())
+                    if str(active_practical.get("context_type") or "").strip() == OFFICE_PRACTICAL_CONTEXT_VISIT:
+                        requested_date = str(active_practical.get("requested_date") or "").strip()
+                        requested_time = str(active_practical.get("requested_time_window") or "").strip()
+                        if requested_date:
+                            st.caption(f"Requested date: {requested_date}")
+                        if requested_time:
+                            st.caption(f"Requested time window: {requested_time}")
                     option_rows = fetch_office_practical_message_options(
                         active_message_id, access_token
                     )
@@ -7590,9 +7730,14 @@ def render_care_hub() -> None:
                             selected_labels = response.get("selected_labels") or []
                             if selected_labels:
                                 st.caption("Selections: " + ", ".join(selected_labels))
+                            planned_visit = str(response.get("planned_visit_time") or "").strip()
+                            if planned_visit:
+                                st.caption(f"Planned visit: {planned_visit}")
                             note_value = str(response.get("note") or "").strip()
                             if note_value:
                                 st.caption(f"Note: {note_value}")
+                            if bool(response.get("share_with_family", False)):
+                                st.caption("Shared with all authorised contacts.")
                     if st.button(
                         "Close responses for this practical message",
                         key=f"office_practical_close_{resident_id}_{active_message_id}",
