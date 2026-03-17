@@ -44,6 +44,19 @@ APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
     "on",
 }
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+OFFICE_UPDATE_CATEGORIES = (
+    "General reassurance",
+    "Daily life",
+    "Activities",
+    "Meals",
+)
+OFFICE_PRACTICAL_CHECKBOX_OPTIONS = (
+    "Please call me",
+    "I will bring the requested items",
+    "I have seen this",
+    "I can attend",
+    "I cannot attend",
+)
 
 ALLOWED_VARIANT_VALUES_TEXT = "public, family, mobile, office"
 AUTH_COOKIE_NAME = "vm_auth_rt"
@@ -2585,6 +2598,397 @@ def fetch_latest_message(
         return None
 
 
+def get_family_contact_for_session(access_token: str | None) -> dict | None:
+    auth_uid = str(st.session_state.get("auth_uid") or "").strip()
+    if not auth_uid:
+        return None
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return None
+    try:
+        resp = (
+            supabase.table("family_contacts")
+            .select("id, care_home_id, display_name")
+            .eq("auth_user_id", auth_uid)
+            .eq("active", True)
+            .limit(1)
+            .execute()
+        )
+        return resp.data[0] if resp.data else None
+    except Exception:
+        return None
+
+
+def fetch_latest_open_office_practical_message(
+    resident_id: str, access_token: str | None
+) -> dict | None:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return None
+    try:
+        resp = (
+            supabase.table("office_practical_messages")
+            .select("id, care_home_id, resident_id, title, body, allow_note, response_enabled, status, created_at")
+            .eq("resident_id", resident_id)
+            .eq("status", "open")
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        )
+        return resp.data[0] if resp.data else None
+    except Exception:
+        return None
+
+
+def fetch_office_practical_message_options(
+    message_id: str, access_token: str | None
+) -> list[dict]:
+    supabase, error = get_authed_supabase(access_token)
+    if error or not message_id:
+        return []
+    try:
+        resp = (
+            supabase.table("office_practical_message_options")
+            .select("id, option_label, sort_order")
+            .eq("message_id", message_id)
+            .order("sort_order")
+            .order("created_at")
+            .execute()
+        )
+        return resp.data or []
+    except Exception:
+        return []
+
+
+def fetch_family_practical_response(
+    message_id: str,
+    family_contact_id: str,
+    access_token: str | None,
+) -> dict | None:
+    if not message_id or not family_contact_id:
+        return None
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return None
+    try:
+        response_resp = (
+            supabase.table("office_practical_responses")
+            .select("id, primary_choice, note, response_status")
+            .eq("message_id", message_id)
+            .eq("family_contact_id", family_contact_id)
+            .limit(1)
+            .execute()
+        )
+        if not response_resp.data:
+            return None
+        response_row = response_resp.data[0]
+        response_id = str(response_row.get("id") or "").strip()
+        selected_option_ids: list[str] = []
+        if response_id:
+            checks_resp = (
+                supabase.table("office_practical_response_checks")
+                .select("option_id")
+                .eq("response_id", response_id)
+                .execute()
+            )
+            selected_option_ids = [
+                str(row.get("option_id") or "").strip()
+                for row in (checks_resp.data or [])
+                if str(row.get("option_id") or "").strip()
+            ]
+        return {
+            "id": response_id,
+            "primary_choice": response_row.get("primary_choice"),
+            "note": response_row.get("note") or "",
+            "response_status": response_row.get("response_status") or "submitted",
+            "selected_option_ids": selected_option_ids,
+        }
+    except Exception:
+        return None
+
+
+def upsert_family_practical_response(
+    message_id: str,
+    family_contact_id: str,
+    primary_choice: str,
+    note: str,
+    selected_option_ids: list[str],
+    access_token: str | None,
+) -> tuple[bool, str]:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, error
+    if primary_choice not in {"yes", "no", "maybe"}:
+        return False, "Please choose Yes, No, or Maybe."
+    try:
+        message_resp = (
+            supabase.table("office_practical_messages")
+            .select("id, allow_note, response_enabled, status")
+            .eq("id", message_id)
+            .limit(1)
+            .execute()
+        )
+        if not message_resp.data:
+            return False, "This office message is not available."
+        message_row = message_resp.data[0]
+        if message_row.get("status") != "open" or not bool(
+            message_row.get("response_enabled", True)
+        ):
+            return False, "Responses are closed for this message."
+
+        options_resp = (
+            supabase.table("office_practical_message_options")
+            .select("id")
+            .eq("message_id", message_id)
+            .execute()
+        )
+        allowed_option_ids = {
+            str(row.get("id") or "").strip() for row in (options_resp.data or [])
+        }
+        clean_option_ids = []
+        for option_id in selected_option_ids or []:
+            candidate = str(option_id or "").strip()
+            if candidate and candidate in allowed_option_ids:
+                clean_option_ids.append(candidate)
+
+        allow_note = bool(message_row.get("allow_note", True))
+        note_value = (note or "").strip()
+        if not allow_note:
+            note_value = ""
+        if len(note_value) > 500:
+            note_value = note_value[:500]
+
+        now_iso = __import__("datetime").datetime.utcnow().isoformat()
+        existing_resp = (
+            supabase.table("office_practical_responses")
+            .select("id")
+            .eq("message_id", message_id)
+            .eq("family_contact_id", family_contact_id)
+            .limit(1)
+            .execute()
+        )
+        existing_response_id = (
+            str(existing_resp.data[0].get("id") or "").strip()
+            if existing_resp.data
+            else ""
+        )
+        response_payload = {
+            "message_id": message_id,
+            "family_contact_id": family_contact_id,
+            "primary_choice": primary_choice,
+            "note": note_value,
+            "response_status": "submitted",
+            "updated_at": now_iso,
+        }
+        if existing_response_id:
+            response_payload["submitted_at"] = now_iso
+            _ = (
+                supabase.table("office_practical_responses")
+                .update(response_payload)
+                .eq("id", existing_response_id)
+                .execute()
+            )
+            response_id = existing_response_id
+        else:
+            response_payload["submitted_at"] = now_iso
+            inserted = (
+                supabase.table("office_practical_responses")
+                .insert(response_payload)
+                .execute()
+            )
+            response_id = (
+                str(inserted.data[0].get("id") or "").strip()
+                if inserted.data
+                else ""
+            )
+        if not response_id:
+            return False, "Could not save response."
+
+        _ = (
+            supabase.table("office_practical_response_checks")
+            .delete()
+            .eq("response_id", response_id)
+            .execute()
+        )
+        if clean_option_ids:
+            check_rows = [
+                {"response_id": response_id, "option_id": option_id}
+                for option_id in clean_option_ids
+            ]
+            _ = supabase.table("office_practical_response_checks").insert(check_rows).execute()
+        return True, "Response received."
+    except Exception as exc:
+        return False, str(exc)
+
+
+def create_office_practical_message(
+    resident_id: str,
+    care_home_id: str,
+    title: str,
+    body: str,
+    allow_note: bool,
+    checkbox_option_labels: list[str],
+    access_token: str | None,
+) -> tuple[bool, str | None, str]:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, None, error
+    title_value = (title or "").strip()
+    body_value = (body or "").strip()
+    if not title_value:
+        return False, None, "Enter a short title."
+    if not body_value:
+        return False, None, "Enter a message."
+    if len(title_value) > 120:
+        title_value = title_value[:120]
+    if len(body_value) > 800:
+        body_value = body_value[:800]
+    now_iso = __import__("datetime").datetime.utcnow().isoformat()
+    try:
+        payload = {
+            "care_home_id": care_home_id,
+            "resident_id": resident_id,
+            "title": title_value,
+            "body": body_value,
+            "allow_note": bool(allow_note),
+            "response_enabled": True,
+            "status": "open",
+            "created_by": st.session_state.get("auth_uid"),
+            "created_at": now_iso,
+        }
+        msg_resp = supabase.table("office_practical_messages").insert(payload).execute()
+        message_id = (
+            str(msg_resp.data[0].get("id") or "").strip()
+            if msg_resp.data
+            else ""
+        )
+        if not message_id:
+            return False, None, "Could not publish practical message."
+        clean_labels = []
+        seen = set()
+        for label in checkbox_option_labels or []:
+            value = str(label or "").strip()
+            if not value:
+                continue
+            if value.casefold() in seen:
+                continue
+            seen.add(value.casefold())
+            clean_labels.append(value[:120])
+        if clean_labels:
+            option_rows = [
+                {
+                    "message_id": message_id,
+                    "option_label": option_label,
+                    "sort_order": idx + 1,
+                }
+                for idx, option_label in enumerate(clean_labels)
+            ]
+            _ = supabase.table("office_practical_message_options").insert(option_rows).execute()
+        return True, message_id, "Practical message published."
+    except Exception as exc:
+        return False, None, str(exc)
+
+
+def close_office_practical_message(
+    message_id: str,
+    access_token: str | None,
+) -> tuple[bool, str]:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, error
+    if not message_id:
+        return False, "Message not found."
+    try:
+        _ = (
+            supabase.table("office_practical_messages")
+            .update(
+                {
+                    "status": "closed",
+                    "response_enabled": False,
+                    "closed_at": __import__("datetime").datetime.utcnow().isoformat(),
+                }
+            )
+            .eq("id", message_id)
+            .execute()
+        )
+        return True, "Responses closed for this practical message."
+    except Exception as exc:
+        return False, str(exc)
+
+
+def fetch_office_practical_response_summary(
+    message_id: str,
+    access_token: str | None,
+) -> dict:
+    summary = {
+        "responses": [],
+        "choice_counts": {"yes": 0, "no": 0, "maybe": 0},
+        "option_counts": {},
+        "total": 0,
+    }
+    if not message_id:
+        return summary
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return summary
+    try:
+        options = fetch_office_practical_message_options(message_id, access_token)
+        option_label_by_id = {
+            str(option.get("id") or "").strip(): str(option.get("option_label") or "").strip()
+            for option in options
+        }
+        responses_resp = (
+            supabase.table("office_practical_responses")
+            .select("id, family_contact_id, primary_choice, note, response_status, family_contacts(display_name)")
+            .eq("message_id", message_id)
+            .order("updated_at", desc=True)
+            .execute()
+        )
+        response_rows = responses_resp.data or []
+        response_ids = [
+            str(row.get("id") or "").strip()
+            for row in response_rows
+            if str(row.get("id") or "").strip()
+        ]
+        checks_by_response_id: dict[str, list[str]] = {}
+        if response_ids:
+            checks_resp = (
+                supabase.table("office_practical_response_checks")
+                .select("response_id, option_id")
+                .in_("response_id", response_ids)
+                .execute()
+            )
+            for row in checks_resp.data or []:
+                response_id = str(row.get("response_id") or "").strip()
+                option_id = str(row.get("option_id") or "").strip()
+                option_label = option_label_by_id.get(option_id, "")
+                if not response_id or not option_label:
+                    continue
+                checks_by_response_id.setdefault(response_id, []).append(option_label)
+                summary["option_counts"][option_label] = (
+                    int(summary["option_counts"].get(option_label, 0)) + 1
+                )
+
+        for row in response_rows:
+            choice = str(row.get("primary_choice") or "").strip().lower()
+            if choice in summary["choice_counts"]:
+                summary["choice_counts"][choice] += 1
+            response_id = str(row.get("id") or "").strip()
+            family_details = row.get("family_contacts") or {}
+            summary["responses"].append(
+                {
+                    "contact_name": str(family_details.get("display_name") or "Authorised contact"),
+                    "primary_choice": choice,
+                    "note": str(row.get("note") or "").strip(),
+                    "selected_labels": checks_by_response_id.get(response_id, []),
+                }
+            )
+        summary["total"] = len(summary["responses"])
+        return summary
+    except Exception:
+        return summary
+
+
 def decode_audio_payload(message: dict) -> bytes | None:
     if not message:
         return None
@@ -3699,7 +4103,6 @@ def render_home(active: str) -> None:
                 "</div>"
             )
         st.markdown(header_html, unsafe_allow_html=True)
-        st.caption("Public page build: protocol-refresh-2026-03-16-b")
 
         st.markdown('<div class="public-hero">', unsafe_allow_html=True)
         st.markdown(
@@ -3708,8 +4111,8 @@ def render_home(active: str) -> None:
             One message in. One message out.
             </h1>
             <p>No threads. No pressure.</p>
-            <p>voice-message.com is a simple system for exchanging non-urgent social voice messages between a resident and their authorised family.</p>
-            <p>It also allows the care home to send one-way general voice updates to all authorised family contacts. These updates are non-medical, non-urgent, and reassuring.</p>
+            <p>voice-message.com is a simple system for exchanging non-urgent social voice messages between residents in care homes and their authorised contacts (for example family members, friends, and other approved contacts).</p>
+            <p>It also allows the care home to send one-way general voice updates to all authorised contacts. These updates are non-medical, non-urgent, and aim to provide general information and reassurance.</p>
             <p>The service is designed to be calm, controlled, and easy to use, fitting around care routines.</p>
             """,
             unsafe_allow_html=True,
@@ -3720,7 +4123,7 @@ def render_home(active: str) -> None:
         render_public_app_buttons(button_cols)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
-        st.markdown("<h2>How it works (diagram first)</h2>", unsafe_allow_html=True)
+        st.markdown("<h2>How it works</h2>", unsafe_allow_html=True)
         public_diagram_path = Path("assets/voice-message-flow-diagram.png")
         if public_diagram_path.exists():
             try:
@@ -3737,11 +4140,9 @@ def render_home(active: str) -> None:
                 )
         else:
             st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
-        st.markdown("### Diagram is the primary reference")
-        st.markdown("- Message directions")
-        st.markdown("- Broadcast behaviour")
-        st.markdown("- Replacement rules")
-        st.markdown("- Playback order")
+        st.markdown(
+            "Use the diagram above as the primary reference for message directions, broadcast behaviour, replacement rules, and playback order."
+        )
         st.markdown("### Communication participants")
         st.markdown("- Jane (Resident)")
         st.markdown("- Jane's family (authorised contacts)")
@@ -4240,9 +4641,6 @@ def render_public_app_buttons(cols: list) -> None:
                     )
             else:
                 st.button(label, key=f"public_{variant}_disabled", disabled=True, use_container_width=True)
-                st.caption(
-                    f"This opens the {label} app (separate URL). Not configured in this environment."
-                )
 
 
 def get_how_it_works_route(app_variant: str) -> str:
@@ -4606,6 +5004,8 @@ def render_family_send() -> None:
 
     access_token = st.session_state.get("access_token")
     care_home_name = fetch_active_care_home_name(access_token)
+    family_contact_record = get_family_contact_for_session(access_token)
+    family_contact_id = str((family_contact_record or {}).get("id") or "").strip()
     render_care_home_identity_banner(access_token)
     residents = fetch_family_residents(
         st.session_state.get("auth_uid", ""), access_token
@@ -4741,6 +5141,89 @@ def render_family_send() -> None:
                 '<div class="vm-muted-line">No care hub updates.</div>',
                 unsafe_allow_html=True,
             )
+
+        practical_message = fetch_latest_open_office_practical_message(
+            resident_id, access_token
+        )
+        if practical_message:
+            practical_message_id = str(practical_message.get("id") or "").strip()
+            st.markdown("**Office practical message**")
+            st.markdown(
+                f"**{(practical_message.get('title') or 'Practical update').strip()}**"
+            )
+            st.markdown(str(practical_message.get("body") or "").strip())
+            st.caption("For urgent or medical matters, please call the care home directly.")
+            st.caption("Messages sent here are not monitored for emergencies.")
+            response_options = fetch_office_practical_message_options(
+                practical_message_id, access_token
+            )
+            existing_response = fetch_family_practical_response(
+                practical_message_id,
+                family_contact_id,
+                access_token,
+            )
+            response_choice = (
+                str((existing_response or {}).get("primary_choice") or "").strip().lower()
+            )
+            choice_labels = ["Yes", "No", "Maybe"]
+            choice_to_value = {"Yes": "yes", "No": "no", "Maybe": "maybe"}
+            default_choice_index = (
+                choice_labels.index(response_choice.title())
+                if response_choice in {"yes", "no", "maybe"}
+                else 0
+            )
+            selected_choice_label = st.radio(
+                "Your response",
+                options=choice_labels,
+                index=default_choice_index,
+                horizontal=True,
+                key=f"family_practical_choice_{resident_id}_{practical_message_id}",
+            )
+            selected_option_ids: list[str] = []
+            existing_selected_option_ids = set(
+                (existing_response or {}).get("selected_option_ids") or []
+            )
+            for option in response_options:
+                option_id = str(option.get("id") or "").strip()
+                option_label = str(option.get("option_label") or "").strip()
+                if not option_id or not option_label:
+                    continue
+                checked = st.checkbox(
+                    option_label,
+                    value=option_id in existing_selected_option_ids,
+                    key=f"family_practical_check_{resident_id}_{practical_message_id}_{option_id}",
+                )
+                if checked:
+                    selected_option_ids.append(option_id)
+            note_value = ""
+            if bool(practical_message.get("allow_note", True)):
+                note_value = st.text_area(
+                    "Add a short note for the office (optional).",
+                    value=str((existing_response or {}).get("note") or ""),
+                    key=f"family_practical_note_{resident_id}_{practical_message_id}",
+                    max_chars=500,
+                )
+            if st.button(
+                "Send response",
+                key=f"family_practical_submit_{resident_id}_{practical_message_id}",
+            ):
+                if not family_contact_id:
+                    st.error("Your authorised contact mapping could not be found. Please sign in again.")
+                else:
+                    ok, message = upsert_family_practical_response(
+                        practical_message_id,
+                        family_contact_id,
+                        choice_to_value.get(selected_choice_label, "maybe"),
+                        note_value,
+                        selected_option_ids,
+                        access_token,
+                    )
+                    if ok:
+                        st.success("Response received.")
+                    else:
+                        st.error(message)
+        else:
+            st.caption("No open practical office messages for this resident.")
 
         st.markdown(f"**Latest message from you to {full_name}**")
         latest_sent = fetch_latest_message(
@@ -6188,6 +6671,7 @@ def render_care_hub() -> None:
                     "office_last_sent_fingerprint": None,
                     "office_ignore_audio_until": 0.0,
                     "office_last_sent_label": None,
+                    "office_update_category": OFFICE_UPDATE_CATEGORIES[0],
                 },
             )
     else:
@@ -6218,6 +6702,7 @@ def render_care_hub() -> None:
                 "office_last_sent_fingerprint": None,
                 "office_ignore_audio_until": 0.0,
                 "office_last_sent_label": None,
+                "office_update_category": OFFICE_UPDATE_CATEGORIES[0],
             },
         )
         full_name = f"{resident['preferred_name']} {resident['surname']}"
@@ -6864,6 +7349,22 @@ def render_care_hub() -> None:
                 st.caption(
                     "Office updates are non-urgent, one-way updates from the care team (no replies). For any queries, please contact the care home directly."
                 )
+                selected_office_category = st.selectbox(
+                    "Office update category (non-urgent)",
+                    options=list(OFFICE_UPDATE_CATEGORIES),
+                    index=(
+                        list(OFFICE_UPDATE_CATEGORIES).index(
+                            state.get("office_update_category", OFFICE_UPDATE_CATEGORIES[0])
+                        )
+                        if state.get("office_update_category") in OFFICE_UPDATE_CATEGORIES
+                        else 0
+                    ),
+                    key=f"care_office_update_category_{resident_id}",
+                )
+                state["office_update_category"] = selected_office_category
+                st.caption(
+                    "Use these categories for general reassurance only. Personal clinical or urgent matters must use normal care-home channels."
+                )
 
             office_can_send = bool(
                 state.get("office_recording_bytes") and state.get("office_preview_confirmed")
@@ -6978,13 +7479,140 @@ def render_care_hub() -> None:
                             )
                             state["office_ignore_audio_until"] = time.time() + 5.0
                             soft_sent_label = format_soft_message_period_label(office_now_iso)
+                            category_label = (
+                                state.get("office_update_category")
+                                or OFFICE_UPDATE_CATEGORIES[0]
+                            )
                             state["office_last_sent_label"] = (
-                                f"Message sent to all authorised family contacts. {soft_sent_label}"
+                                f"{category_label} update sent to all authorised family contacts. {soft_sent_label}"
                                 if soft_sent_label
-                                else "Message sent to all authorised family contacts."
+                                else f"{category_label} update sent to all authorised family contacts."
                             )
                             state["office_last_sent_fingerprint"] = sent_office_fp
                             st.rerun()
+
+            if get_app_variant() == VARIANT_OFFICE:
+                st.markdown("**Office practical message (structured family reply)**")
+                st.caption(
+                    "Use this for low-risk practical communication only (for example visits, events, reminders, attendance, or item requests)."
+                )
+                st.caption(
+                    "For urgent or medical matters, families should call the care home directly. Messages sent here are not monitored for emergencies."
+                )
+                practical_title = st.text_input(
+                    "Practical message title",
+                    key=f"office_practical_title_{resident_id}",
+                    placeholder="Example: Weekend visits",
+                )
+                practical_body = st.text_area(
+                    "Practical message",
+                    key=f"office_practical_body_{resident_id}",
+                    placeholder="Example: Please confirm whether you are visiting this weekend.",
+                    max_chars=800,
+                )
+                practical_allow_note = st.checkbox(
+                    "Allow short note from family (optional)",
+                    value=True,
+                    key=f"office_practical_allow_note_{resident_id}",
+                )
+                practical_checkboxes = st.multiselect(
+                    "Optional tick-box responses",
+                    options=list(OFFICE_PRACTICAL_CHECKBOX_OPTIONS),
+                    default=list(OFFICE_PRACTICAL_CHECKBOX_OPTIONS),
+                    key=f"office_practical_options_{resident_id}",
+                )
+                if st.button(
+                    f"Publish practical message for {full_name}",
+                    key=f"office_practical_publish_{resident_id}",
+                    use_container_width=True,
+                ):
+                    ok, practical_message_id, practical_message = create_office_practical_message(
+                        resident_id,
+                        resident["care_home_id"],
+                        practical_title,
+                        practical_body,
+                        practical_allow_note,
+                        practical_checkboxes,
+                        access_token,
+                    )
+                    if ok:
+                        log_audit_event(
+                            "office_practical_message_created",
+                            "care_hub",
+                            resident["care_home_id"],
+                            practical_message_id,
+                            resident_id=resident_id,
+                        )
+                        st.success(practical_message)
+                        st.rerun()
+                    else:
+                        st.error(practical_message)
+
+                active_practical = fetch_latest_open_office_practical_message(
+                    resident_id, access_token
+                )
+                if active_practical:
+                    active_message_id = str(active_practical.get("id") or "").strip()
+                    st.markdown("**Current open practical message**")
+                    st.markdown(f"**{str(active_practical.get('title') or '').strip()}**")
+                    st.markdown(str(active_practical.get("body") or "").strip())
+                    option_rows = fetch_office_practical_message_options(
+                        active_message_id, access_token
+                    )
+                    if option_rows:
+                        st.caption("Enabled tick-box options:")
+                        for option_row in option_rows:
+                            label = str(option_row.get("option_label") or "").strip()
+                            if label:
+                                st.markdown(f"- {label}")
+                    summary = fetch_office_practical_response_summary(
+                        active_message_id, access_token
+                    )
+                    st.caption(
+                        "Responses: "
+                        f"Yes {summary['choice_counts'].get('yes', 0)} | "
+                        f"No {summary['choice_counts'].get('no', 0)} | "
+                        f"Maybe {summary['choice_counts'].get('maybe', 0)} | "
+                        f"Total {summary.get('total', 0)}"
+                    )
+                    option_counts = summary.get("option_counts") or {}
+                    if option_counts:
+                        st.caption("Tick-box selections:")
+                        for option_label, option_count in option_counts.items():
+                            st.markdown(f"- {option_label}: {option_count}")
+                    responses = summary.get("responses") or []
+                    if responses:
+                        st.caption("Family responses:")
+                        for response in responses:
+                            contact_name = str(response.get("contact_name") or "Authorised contact")
+                            choice_label = str(response.get("primary_choice") or "").strip().title()
+                            st.markdown(f"- {contact_name}: {choice_label}")
+                            selected_labels = response.get("selected_labels") or []
+                            if selected_labels:
+                                st.caption("Selections: " + ", ".join(selected_labels))
+                            note_value = str(response.get("note") or "").strip()
+                            if note_value:
+                                st.caption(f"Note: {note_value}")
+                    if st.button(
+                        "Close responses for this practical message",
+                        key=f"office_practical_close_{resident_id}_{active_message_id}",
+                        use_container_width=True,
+                    ):
+                        ok, close_message = close_office_practical_message(
+                            active_message_id, access_token
+                        )
+                        if ok:
+                            log_audit_event(
+                                "office_practical_message_closed",
+                                "care_hub",
+                                resident["care_home_id"],
+                                active_message_id,
+                                resident_id=resident_id,
+                            )
+                            st.success(close_message)
+                            st.rerun()
+                        else:
+                            st.error(close_message)
 
 
     # Navigation rendered at the top of the page.
