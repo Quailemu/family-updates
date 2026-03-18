@@ -2005,6 +2005,36 @@ def audit_event_exists_any_actor(
         return False
 
 
+def audit_event_count_any_actor(
+    action: str,
+    *,
+    target_id: str | None = None,
+    resident_id: str | None = None,
+    care_home_id: str | None = None,
+) -> int:
+    supabase, error = get_supabase_client()
+    if error:
+        return 0
+    access_token = st.session_state.get("access_token")
+    if not access_token:
+        return 0
+    try:
+        supabase.postgrest.auth(access_token)
+        query = supabase.table("audit_log").select("id", count="exact").eq("action", action)
+        if target_id:
+            query = query.eq("target_id", target_id)
+        if resident_id:
+            query = query.eq("resident_id", resident_id)
+        if care_home_id:
+            query = query.eq("care_home_id", care_home_id)
+        resp = query.execute()
+        if getattr(resp, "count", None) is not None:
+            return int(resp.count or 0)
+        return len(resp.data or [])
+    except Exception:
+        return 0
+
+
 def sort_contacts_for_playback(contacts: list[dict]) -> list[dict]:
     return sorted(
         contacts,
@@ -2149,20 +2179,21 @@ def select_next_family_message_for_mobile(
         if not latest:
             continue
         message_id = str(latest.get("id") or "").strip()
-        played = bool(
-            message_id
-            and audit_event_exists_any_actor(
+        play_count = (
+            audit_event_count_any_actor(
                 "message_played",
                 target_id=message_id,
                 resident_id=resident_id,
                 care_home_id=care_home_id,
             )
+            if message_id
+            else 0
         )
         queued_items.append(
             {
                 "contact": contact,
                 "message": latest,
-                "played": played,
+                "play_count": play_count,
             }
         )
 
@@ -2186,24 +2217,30 @@ def select_next_family_message_for_mobile(
     if not ordered_user_ids:
         return queued_items[0]["contact"], queued_items[0]["message"], "Played cycle"
 
-    unplayed_user_ids = {
+    min_play_count = min(int(item.get("play_count", 0)) for item in queued_items)
+    active_round_user_ids = {
         str(item["contact"].get("auth_user_id") or "").strip()
         for item in queued_items
-        if not item["played"]
+        if int(item.get("play_count", 0)) == min_play_count
     }
-    if unplayed_user_ids:
+    if active_round_user_ids:
         start_idx = 0
         if pointer and pointer in ordered_user_ids:
             start_idx = ordered_user_ids.index(pointer)
         for offset in range(len(ordered_user_ids)):
             candidate_user_id = ordered_user_ids[(start_idx + offset) % len(ordered_user_ids)]
-            if candidate_user_id in unplayed_user_ids:
+            if candidate_user_id in active_round_user_ids:
                 chosen = by_contact_user_id.get(candidate_user_id)
                 if chosen:
+                    queue_label = (
+                        "Unplayed first (round 0)"
+                        if min_play_count == 0
+                        else f"Replay round {min_play_count}"
+                    )
                     return (
                         chosen["contact"],
                         chosen["message"],
-                        "Unplayed first (from saved position)",
+                        queue_label,
                     )
 
     start_idx = 0
@@ -2241,16 +2278,17 @@ def get_family_queue_status_for_resident(
         if not latest:
             continue
         message_id = str(latest.get("id") or "").strip()
-        played = bool(
-            message_id
-            and audit_event_exists_any_actor(
+        play_count = (
+            audit_event_count_any_actor(
                 "message_played",
                 target_id=message_id,
                 resident_id=resident_id,
                 care_home_id=care_home_id,
             )
+            if message_id
+            else 0
         )
-        if not played:
+        if play_count == 0:
             unread_count += 1
             unread_contacts.append(contact)
     next_contact, _, _ = select_next_family_message_for_mobile(
