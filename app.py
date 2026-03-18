@@ -33,8 +33,11 @@ from ui_theme import TOKENS, inject_css
 FAMILY_SESSION_TIMEOUT_SECONDS = int(
     os.getenv("FAMILY_SESSION_TIMEOUT_SECONDS", str(60 * 60 * 4))
 )
-CARE_HUB_SESSION_TIMEOUT_SECONDS = int(
-    os.getenv("CARE_HUB_SESSION_TIMEOUT_SECONDS", str(60 * 30))
+# Guard against accidental very-low timeout values in deployment config.
+# Care Hub sessions should not expire during normal short pauses in workflow.
+CARE_HUB_SESSION_TIMEOUT_SECONDS = max(
+    int(os.getenv("CARE_HUB_SESSION_TIMEOUT_SECONDS", str(60 * 30))),
+    60 * 30,
 )
 APP_DEBUG = os.getenv("APP_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
 APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
@@ -7246,25 +7249,30 @@ def render_care_hub() -> None:
                     '<div class="vm-muted-line">No new messages.</div>',
                     unsafe_allow_html=True,
                 )
+                if is_mobile_variant and bool(
+                    st.session_state.get(mobile_advance_pointer_key, False)
+                ):
+                    st.caption("Message payload could not be played. Skipping to next contact.")
 
             if is_mobile_variant:
                 latest_message_id = str((latest or {}).get("id") or "").strip()
                 advance_pointer_now = bool(st.session_state.get(mobile_advance_pointer_key, False))
-                if advance_pointer_now and latest_message_id:
-                    already_logged = audit_event_exists_any_actor(
-                        "message_played",
-                        target_id=latest_message_id,
-                        resident_id=resident_id,
-                        care_home_id=resident["care_home_id"],
-                    )
-                    if not already_logged:
-                        log_audit_event(
+                if advance_pointer_now:
+                    if latest_message_id:
+                        already_logged = audit_event_exists_any_actor(
                             "message_played",
-                            "care_hub",
-                            resident["care_home_id"],
-                            latest_message_id,
+                            target_id=latest_message_id,
                             resident_id=resident_id,
+                            care_home_id=resident["care_home_id"],
                         )
+                        if not already_logged:
+                            log_audit_event(
+                                "message_played",
+                                "care_hub",
+                                resident["care_home_id"],
+                                latest_message_id,
+                                resident_id=resident_id,
+                            )
                     next_contact_user_id = get_next_contact_user_id_with_message(
                         resident_id,
                         contacts,
