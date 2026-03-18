@@ -1549,14 +1549,15 @@ def render_how_it_works_diagram_and_notes() -> None:
     st.markdown("Example: Jane")
     st.markdown(
         "This diagram shows how voice messages and updates are organised for a single resident, "
-        "using Jane as the example. Each authorised contact has their own two-way message channel "
-        "with Jane. In each channel there is one current message from the contact to Jane and one "
-        "current message from Jane to that contact. When a new message is recorded, it replaces the "
-        "previous message in that direction."
+        "using Jane as the example. Each authorised contact has their own Family -> Resident channel "
+        "with one current message to Jane. Resident -> Family is one shared current resident message "
+        "to all authorised contacts. When a new message is recorded, it replaces the previous message "
+        "in that same channel and direction."
     )
     st.markdown(
-        "The care home can also send a one-way Office update to Jane's authorised contacts. "
-        "Only one Office update is kept at a time, and a new update replaces the previous one."
+        "The care home can also send a one-way Office broadcast voice mail to all authorised contacts, "
+        "and can publish an Office practical text message that supports structured family replies. Only one current message is "
+        "kept per channel and direction."
     )
 
 
