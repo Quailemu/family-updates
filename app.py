@@ -1580,8 +1580,8 @@ def render_how_it_works_family() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages. One channel between each Family sender and each resident in a care home.",
-        "One message kept at a time in each direction, i.e resident to Family and Family to resident. No threads.",
+        "voice-message.com — for non-urgent social voice messages between residents and authorised contacts.",
+        "Family -> Resident uses separate per-contact channels. Resident -> Family is one shared current resident message to all authorised contacts. No threads.",
         "Family access uses secure email login links. No SMS and no phone-number login.",
     ]
     for box in info_boxes:
@@ -1615,8 +1615,8 @@ def render_how_it_works_mobile() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages. One channel between each Family sender and each resident in a care home.",
-        "One message kept at a time in each direction, i.e resident to Family and Family to resident. No threads.",
+        "voice-message.com — for non-urgent social voice messages between residents and authorised contacts.",
+        "Family -> Resident uses separate per-contact channels. Resident -> Family is one shared current resident message to all authorised contacts. No threads.",
         "Care Hub – Mobile uses individual staff PIN access for day-to-day use.",
         "Secure email link is used only for first sign-in or expired-session recovery.",
     ]
@@ -1650,8 +1650,8 @@ def render_how_it_works_office_overview() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages. One channel between each Family sender and each resident in a care home.",
-        "One message kept at a time in each direction, i.e resident to Family and Family to resident. No threads.",
+        "voice-message.com — for non-urgent social voice messages between residents and authorised contacts.",
+        "Family -> Resident uses separate per-contact channels. Resident -> Family is one shared current resident message to all authorised contacts. No threads.",
         "Care Hub – Office is a separate staff/admin access path.",
         "Office authentication is distinct from Family email links and Mobile staff PIN access.",
         "If Office 2FA is enabled, users complete Office verification after login.",
