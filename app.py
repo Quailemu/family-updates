@@ -6994,6 +6994,13 @@ def render_care_hub() -> None:
                 if selected_contact:
                     state["selected_contact_id"] = selected_contact.get("id")
                     state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
+                    latest = fetch_latest_message(
+                        resident_id,
+                        "to_resident",
+                        access_token,
+                        contact_user_id=selected_contact.get("auth_user_id"),
+                        channel="resident_family",
+                    )
             if selected_contact is None and state.get("selected_contact_id"):
                 selected_contact = next(
                     (c for c in contacts if c.get("id") == state.get("selected_contact_id")),
@@ -7001,12 +7008,21 @@ def render_care_hub() -> None:
                 )
             if selected_contact is None:
                 selected_contact = queue_next_contact
+                if selected_contact is None and unread_contacts:
+                    selected_contact = unread_contacts[0]
                 if selected_contact is None:
                     sorted_contacts = dedupe_contacts_by_auth_user_id(contacts)
                     selected_contact = sorted_contacts[0] if sorted_contacts else None
                 if selected_contact:
                     state["selected_contact_id"] = selected_contact.get("id")
                     state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
+                    latest = fetch_latest_message(
+                        resident_id,
+                        "to_resident",
+                        access_token,
+                        contact_user_id=selected_contact.get("auth_user_id"),
+                        channel="resident_family",
+                    )
         else:
             contacts_sorted = sort_contacts_for_playback(contacts)
             contact_search = st.text_input(
