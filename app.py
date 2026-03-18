@@ -52,10 +52,17 @@ OFFICE_UPDATE_CATEGORIES = (
 )
 OFFICE_PRACTICAL_CHECKBOX_OPTIONS = (
     "Please call me",
-    "I will bring the requested items",
-    "I have seen this",
+    "I will call the care home",
+    "I will sort this out",
+    "I will bring requested items",
     "I can attend",
     "I cannot attend",
+    "I will book and take them",
+    "Please arrange this and confirm to family",
+    "Please share more detail",
+    "I don't understand - please explain",
+    "I will do this if no one else can",
+    "I have seen this",
 )
 OFFICE_PRACTICAL_CONTEXT_GENERAL = "general"
 OFFICE_PRACTICAL_CONTEXT_VISIT = "visit"
