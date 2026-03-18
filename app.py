@@ -292,22 +292,7 @@ def get_query_route_debug() -> str:
 
 
 def render_debug_panel(stage: str, app_variant: str, redirect_decision: str = "None") -> None:
-    if not APP_DEBUG:
-        return
-    auth_state = is_family_authenticated() if app_variant == VARIANT_FAMILY else bool(st.session_state.get("auth_uid"))
-    st.markdown(
-        f"""
-<div style="border:1px solid #d6d6d6;background:#fff9d9;border-radius:8px;padding:8px 10px;margin:6px 0 10px;">
-  <div style="font-weight:700;">DEBUG: Reached top of app</div>
-  <div>stage: <code>{stage}</code></div>
-  <div>variant: <code>{app_variant or '(missing)'}</code></div>
-  <div>logged_in: <code>{auth_state}</code></div>
-  <div>query route: <code>{get_query_route_debug()}</code></div>
-  <div>redirect decision: <code>{redirect_decision}</code></div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
+    return
 
 
 def init_state() -> None:
@@ -4457,13 +4442,13 @@ def render_home(active: str) -> None:
     else:
         with button_cols[0]:
             if st.button("Family", key="tab_family", use_container_width=True):
-                set_route(get_login_route(VARIANT_FAMILY))
+                set_route("/public/family-guide")
         with button_cols[1]:
             if st.button("Care Hub – Mobile", key="tab_care_mobile", use_container_width=True):
-                set_route(get_login_route(VARIANT_MOBILE))
+                set_route("/public/how-it-works")
         with button_cols[2]:
             if st.button("Care Hub – Office", key="tab_care_office", use_container_width=True):
-                set_route(get_login_route(VARIANT_OFFICE))
+                set_route("/public/service-overview")
 
     # Homepage buttons are handled above (Family / Care Hub – Mobile / Care Hub – Office).
 
@@ -7975,10 +7960,7 @@ def main() -> None:
         flush=True,
     )
     guard_route_access(route, app_variant)
-    if APP_DEBUG:
-        st.info(
-            f"DEBUG startup: variant={app_variant}, route={route}, allowlisted={route_allowlisted}"
-        )
+    # Debug startup banner disabled in UI.
     st.markdown(
         """
 <style>
