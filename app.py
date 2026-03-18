@@ -7015,8 +7015,8 @@ def render_care_hub() -> None:
                 )
             if selected_contact is None:
                 selected_contact = queue_next_contact
-                if selected_contact is None and unread_contacts:
-                    selected_contact = unread_contacts[0]
+                if selected_contact is None and queue_unread_contacts:
+                    selected_contact = queue_unread_contacts[0]
                 if selected_contact is None:
                     sorted_contacts = dedupe_contacts_by_auth_user_id(contacts)
                     selected_contact = sorted_contacts[0] if sorted_contacts else None
@@ -7134,7 +7134,50 @@ def render_care_hub() -> None:
                         else f"{unread_name} (Family contact)"
                     )
                     st.markdown(f"- {unread_display}")
-        if not is_office_variant:
+            playlist_contacts = dedupe_contacts_by_auth_user_id(contacts)
+            if playlist_contacts:
+                with st.expander("Select from family playlist"):
+                    playlist_options = []
+                    for playlist_contact in playlist_contacts:
+                        playlist_name = (playlist_contact.get("full_name") or "family contact").strip()
+                        playlist_relationship = ((playlist_contact.get("relationship") or "").strip())
+                        playlist_label = (
+                            f"{playlist_name} ({playlist_relationship.title()})"
+                            if playlist_relationship
+                            else f"{playlist_name} (Family contact)"
+                        )
+                        playlist_options.append((playlist_label, playlist_contact))
+                    selected_playlist_label = st.selectbox(
+                        "Family contact",
+                        options=[label for label, _ in playlist_options],
+                        key=f"care_playlist_select_{resident_id}",
+                    )
+                    if st.button(
+                        "Play selected family message",
+                        key=f"care_playlist_play_{resident_id}",
+                        use_container_width=True,
+                    ):
+                        selected_contact = next(
+                            (
+                                contact
+                                for label, contact in playlist_options
+                                if label == selected_playlist_label
+                            ),
+                            None,
+                        )
+                        if selected_contact:
+                            state["selected_contact_id"] = selected_contact.get("id")
+                            state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
+                            latest = fetch_latest_message(
+                                resident_id,
+                                "to_resident",
+                                access_token,
+                                contact_user_id=selected_contact.get("auth_user_id"),
+                                channel="resident_family",
+                            )
+                            if is_mobile_variant:
+                                st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
+        if is_mobile_variant or is_office_variant:
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
             if is_mobile_variant:
@@ -7194,10 +7237,10 @@ def render_care_hub() -> None:
             )
             if is_queue_playback_variant and queue_mode_label:
                 st.caption(f"Queue mode: {queue_mode_label}")
-            if is_queue_playback_variant:
+            if is_mobile_variant:
                 st.caption(f"Now playing from: {selected_contact_display}")
             else:
-                st.caption(f"Family contact selected: {selected_contact_display}")
+                st.caption(f"Office review playing: {selected_contact_display}")
 
             st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
             audio_bytes = decode_audio_payload(latest)
@@ -7209,7 +7252,10 @@ def render_care_hub() -> None:
 
             if audio_bytes and should_show_message:
                 st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
-                st.caption("Press 'Play next family message' for the next contact.")
+                if is_mobile_variant:
+                    st.caption("Press 'Play next family message' for the next contact.")
+                else:
+                    st.caption("Use Office review controls or playlist selection to continue.")
             elif not audio_bytes:
                 st.markdown(
                     '<div class="vm-muted-line">No new messages.</div>',
