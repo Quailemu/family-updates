@@ -4276,7 +4276,7 @@ def render_home(active: str) -> None:
         else:
             st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
         st.markdown(
-            "Use the diagram above as the primary reference for message directions, broadcast behaviour, replacement rules, and playback order."
+            "This flow diagram uses Jane as an example resident to show message directions, broadcast behaviour, replacement rules, and playback order."
         )
         st.markdown("### Communication participants")
         st.markdown("- Jane (Resident)")
@@ -4292,7 +4292,11 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>Office -&gt; Family (one-way updates)</h3>
-              <div>Care Hub – Office sends one current update to all authorised family contacts. No replies. A new update replaces the previous update.</div>
+              <div>Care Hub – Office sends one current general update voice message to all authorised contacts. No replies in this general update channel. A new update replaces the previous general update.</div>
+            </div>
+            <div class="public-card">
+              <h3>Office practical text message (structured replies from family)</h3>
+              <div>Care Hub – Office can also send one current practical text message for a resident. Family replies are designed to be minimal: Yes/No/Maybe plus optional tick-box selections, with only a short optional note.</div>
             </div>
             <div class="public-card pink">
               <h3>Resident -&gt; Family (one message out)</h3>
@@ -6145,7 +6149,6 @@ def render_pr_homepage() -> None:
     if diagram_path.exists():
         st.image(
             diagram_path.read_bytes(),
-            caption="Use this diagram as the primary reference for message directions and replacement rules.",
             use_container_width=True,
         )
     st.markdown(
@@ -6162,6 +6165,19 @@ For urgent, medical, safeguarding, or emergency matters, contact the care home d
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown('<div class="pr-content">', unsafe_allow_html=True)
+    info_cols = st.columns(3, gap="small")
+    with info_cols[0]:
+        if st.button("Learn about Family app", key="pr_info_family", use_container_width=True):
+            set_route("/public/family-guide")
+            st.stop()
+    with info_cols[1]:
+        if st.button("Learn about Care Hub - Mobile", key="pr_info_mobile", use_container_width=True):
+            set_route("/public/how-it-works")
+            st.stop()
+    with info_cols[2]:
+        if st.button("Learn about Care Hub - Office", key="pr_info_office", use_container_width=True):
+            set_route("/public/service-overview")
+            st.stop()
     st.markdown(
         "**Family app**: non-urgent social voice messages between authorised contacts and residents, "
         "plus structured replies to Office practical messages."
