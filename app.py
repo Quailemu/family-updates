@@ -51,6 +51,13 @@ OFFICE_UPDATE_CATEGORIES = (
     "Meals",
 )
 OFFICE_PRACTICAL_CHECKBOX_OPTIONS = (
+    "Yes",
+    "No",
+    "Not sure",
+    "Pencil me in",
+    "Send me a link",
+    "Send me an invite",
+    "Day/date/time please",
     "Please call me",
     "I will call the care home",
     "I will sort this out",
