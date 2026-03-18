@@ -6161,45 +6161,19 @@ For urgent, medical, safeguarding, or emergency matters, contact the care home d
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown('<div class="pr-buttons">', unsafe_allow_html=True)
-    button_cols = st.columns(3, gap="small")
-    with button_cols[0]:
-        if st.button("Family", key="pr_role_family"):
-            st.session_state["pr_tab"] = "family"
-    with button_cols[1]:
-        if st.button("Care Hub – Mobile", key="pr_role_mobile"):
-            st.session_state["pr_tab"] = "mobile"
-    with button_cols[2]:
-        if st.button("Care Hub – Office", key="pr_role_office"):
-            st.session_state["pr_tab"] = "office"
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    if "pr_tab" not in st.session_state:
-        st.session_state["pr_tab"] = "family"
-    active_tab = st.session_state.get("pr_tab", "family")
-
     st.markdown('<div class="pr-content">', unsafe_allow_html=True)
-    if active_tab == "family":
-        st.markdown(
-            "Family uses the Family app for non-urgent social voice messages. "
-            "Family can also respond to Office practical messages using a structured reply "
-            "(Yes/No/Maybe, optional tick-boxes, optional short note). "
-            "This is not live messaging."
-        )
-    elif active_tab == "mobile":
-        st.markdown(
-            "Care Hub – Mobile supports staff-assisted playback and recording for residents. "
-            "Family -> Resident playback uses a fair rotating order with unplayed messages first. "
-            "It is non-real-time and keeps one current message per direction/channel. "
-            "This view focuses on operational clarity and calm, non-urgent use."
-        )
-    else:
-        st.markdown(
-            "Care Hub – Office provides governance oversight, access management, and document control. "
-            "Office can send one-way general updates and publish practical messages with structured family replies. "
-            "Role separation is maintained between Family, Mobile, and Office views. "
-            "Subscriptions are provided on a per–care home basis."
-        )
+    st.markdown(
+        "**Family app**: non-urgent social voice messages between authorised contacts and residents, "
+        "plus structured replies to Office practical messages."
+    )
+    st.markdown(
+        "**Care Hub - Mobile**: staff-assisted playback and resident recording support, including fair rotating "
+        "playback with unplayed family messages first."
+    )
+    st.markdown(
+        "**Care Hub - Office**: governance and oversight, one-way general family updates, and practical messages "
+        "with structured family responses."
+    )
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown(
