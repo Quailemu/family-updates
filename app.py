@@ -2224,16 +2224,6 @@ def select_next_family_message_for_mobile(
         return queued_items[0]["contact"], queued_items[0]["message"], "Played cycle"
 
     min_play_count = min(int(item.get("play_count", 0)) for item in queued_items)
-
-    if min_play_count == 0:
-        unread_items = [item for item in queued_items if int(item.get("play_count", 0)) == 0]
-        if unread_items:
-            newest_unread = max(
-                unread_items,
-                key=lambda item: str((item.get("message") or {}).get("recorded_at") or ""),
-            )
-            return newest_unread["contact"], newest_unread["message"], "Newest unread first"
-
     active_round_user_ids = {
         str(item["contact"].get("auth_user_id") or "").strip()
         for item in queued_items
@@ -7099,47 +7089,50 @@ def render_care_hub() -> None:
             state["selected_contact_user_id"] = None
         elif is_queue_playback_variant:
             st.caption(
-                "Play messages prioritises newest unread family messages first, then uses fixed contact order."
+                "Play messages follows a fixed contact order. Unplayed messages are always first."
             )
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             keep_current_after_start = bool(st.session_state.get(mobile_play_requested_key, False))
             current_user_id = str(state.get("selected_contact_user_id") or "").strip()
+            queue_selected_contact, queue_latest, queue_mode_label = select_next_family_message_for_mobile(
+                resident_id,
+                resident["care_home_id"],
+                contacts,
+                access_token,
+            )
             if keep_current_after_start and current_user_id:
-                selected_contact = next(
-                    (
-                        c
-                        for c in contacts
-                        if str(c.get("auth_user_id") or "").strip() == current_user_id
-                    ),
-                    None,
-                )
-                if selected_contact:
-                    latest = fetch_latest_message(
-                        resident_id,
-                        "to_resident",
-                        access_token,
-                        contact_user_id=current_user_id,
-                        channel="resident_family",
+                queue_user_id = str((queue_selected_contact or {}).get("auth_user_id") or "").strip()
+                if queue_user_id and queue_user_id == current_user_id:
+                    selected_contact = next(
+                        (
+                            c
+                            for c in contacts
+                            if str(c.get("auth_user_id") or "").strip() == current_user_id
+                        ),
+                        None,
                     )
-                    queue_mode_label = "Session order"
+                    if selected_contact:
+                        latest = fetch_latest_message(
+                            resident_id,
+                            "to_resident",
+                            access_token,
+                            contact_user_id=current_user_id,
+                            channel="resident_family",
+                        )
+                        queue_mode_label = "Session order"
+                    else:
+                        selected_contact, latest = queue_selected_contact, queue_latest
                 else:
-                    selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
-                        resident_id,
-                        resident["care_home_id"],
-                        contacts,
-                        access_token,
-                    )
+                    selected_contact, latest = queue_selected_contact, queue_latest
             else:
-                selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
-                    resident_id,
-                    resident["care_home_id"],
-                    contacts,
-                    access_token,
-                )
+                selected_contact, latest = queue_selected_contact, queue_latest
             state["selected_contact_id"] = (selected_contact or {}).get("id")
             state["selected_contact_user_id"] = (selected_contact or {}).get("auth_user_id")
         elif is_office_variant:
-            st.caption("Office review playback (does not change resident queue order).")
+            st.caption(
+                "Office review playback follows the same fixed contact order "
+                "(does not change resident queue order)."
+            )
             if st.button(
                 "Play next unread family message (Office review)",
                 key=f"office_play_next_{resident_id}",
