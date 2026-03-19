@@ -2041,6 +2041,54 @@ def audit_event_count_any_actor(
         return 0
 
 
+def has_message_been_played_since_recorded(
+    message: dict | None,
+    *,
+    resident_id: str | None = None,
+    care_home_id: str | None = None,
+) -> bool:
+    message_id = str((message or {}).get("id") or "").strip()
+    if not message_id:
+        return False
+    supabase, error = get_supabase_client()
+    if error:
+        return False
+    access_token = st.session_state.get("access_token")
+    if not access_token:
+        return False
+    try:
+        supabase.postgrest.auth(access_token)
+        query = (
+            supabase.table("audit_log")
+            .select("created_at")
+            .eq("action", "message_played")
+            .eq("target_id", message_id)
+            .order("created_at", desc=True)
+            .limit(1)
+        )
+        if resident_id:
+            query = query.eq("resident_id", resident_id)
+        if care_home_id:
+            query = query.eq("care_home_id", care_home_id)
+        resp = query.execute()
+        if not resp.data:
+            return False
+        latest_played_at = str(resp.data[0].get("created_at") or "").strip()
+        recorded_at = str((message or {}).get("recorded_at") or "").strip()
+        if not latest_played_at or not recorded_at:
+            return True
+        dt_mod = __import__("datetime")
+        played_dt = dt_mod.datetime.fromisoformat(latest_played_at.replace("Z", "+00:00"))
+        recorded_dt = dt_mod.datetime.fromisoformat(recorded_at.replace("Z", "+00:00"))
+        if played_dt.tzinfo is None:
+            played_dt = played_dt.replace(tzinfo=dt_mod.timezone.utc)
+        if recorded_dt.tzinfo is None:
+            recorded_dt = recorded_dt.replace(tzinfo=dt_mod.timezone.utc)
+        return played_dt >= recorded_dt
+    except Exception:
+        return False
+
+
 def sort_contacts_for_playback(contacts: list[dict]) -> list[dict]:
     return sorted(
         contacts,
@@ -2184,22 +2232,16 @@ def select_next_family_message_for_mobile(
         )
         if not latest:
             continue
-        message_id = str(latest.get("id") or "").strip()
-        play_count = (
-            audit_event_count_any_actor(
-                "message_played",
-                target_id=message_id,
-                resident_id=resident_id,
-                care_home_id=care_home_id,
-            )
-            if message_id
-            else 0
+        is_unread = not has_message_been_played_since_recorded(
+            latest,
+            resident_id=resident_id,
+            care_home_id=care_home_id,
         )
         queued_items.append(
             {
                 "contact": contact,
                 "message": latest,
-                "play_count": play_count,
+                "is_unread": is_unread,
             }
         )
 
@@ -2223,11 +2265,11 @@ def select_next_family_message_for_mobile(
     if not ordered_user_ids:
         return queued_items[0]["contact"], queued_items[0]["message"], "Played cycle"
 
-    min_play_count = min(int(item.get("play_count", 0)) for item in queued_items)
+    min_play_count = min(0 if bool(item.get("is_unread")) else 1 for item in queued_items)
     active_round_user_ids = {
         str(item["contact"].get("auth_user_id") or "").strip()
         for item in queued_items
-        if int(item.get("play_count", 0)) == min_play_count
+        if (0 if bool(item.get("is_unread")) else 1) == min_play_count
     }
     if active_round_user_ids:
         start_idx = 0
@@ -2241,7 +2283,7 @@ def select_next_family_message_for_mobile(
                     queue_label = (
                         "Unplayed first (round 0)"
                         if min_play_count == 0
-                        else f"Replay round {min_play_count}"
+                        else "Played cycle"
                     )
                     return (
                         chosen["contact"],
@@ -2283,18 +2325,12 @@ def get_family_queue_status_for_resident(
         )
         if not latest:
             continue
-        message_id = str(latest.get("id") or "").strip()
-        play_count = (
-            audit_event_count_any_actor(
-                "message_played",
-                target_id=message_id,
-                resident_id=resident_id,
-                care_home_id=care_home_id,
-            )
-            if message_id
-            else 0
+        is_unread = not has_message_been_played_since_recorded(
+            latest,
+            resident_id=resident_id,
+            care_home_id=care_home_id,
         )
-        if play_count == 0:
+        if is_unread:
             unread_count += 1
             unread_contacts.append(contact)
     next_contact, _, _ = select_next_family_message_for_mobile(
