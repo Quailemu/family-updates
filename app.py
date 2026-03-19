@@ -7184,6 +7184,16 @@ def render_care_hub() -> None:
                         contact_user_id=selected_contact.get("auth_user_id"),
                         channel="resident_family",
                     )
+                    # Advance Office session pointer so each click moves through queue order.
+                    office_next_contact_user_id = get_next_contact_user_id_with_message(
+                        resident_id,
+                        contacts,
+                        access_token,
+                        state.get("selected_contact_user_id"),
+                    )
+                    st.session_state[f"care_mobile_pointer_{resident_id}"] = (
+                        office_next_contact_user_id or ""
+                    )
             if selected_contact is None:
                 # Default Office review to queue-next (fixed order + unread-first) instead of stale session pick.
                 selected_contact = queue_next_contact
