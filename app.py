@@ -2275,14 +2275,10 @@ def select_next_family_message_for_mobile(
 
     queued_items: list[dict] = []
     for contact in contacts_sorted:
-        contact_user_id = str(contact.get("auth_user_id") or "").strip()
-        if not contact_user_id:
-            continue
-        latest = fetch_latest_message(
+        latest = fetch_latest_message_for_contact_with_mapping_repair(
             resident_id,
-            "to_resident",
             access_token,
-            contact_user_id=contact_user_id,
+            contact,
             channel="resident_family",
         )
         if not latest:
@@ -2375,14 +2371,10 @@ def get_family_queue_status_for_resident(
     unread_count = 0
     unread_contacts: list[dict] = []
     for contact in contacts_sorted:
-        contact_user_id = str(contact.get("auth_user_id") or "").strip()
-        if not contact_user_id:
-            continue
-        latest = fetch_latest_message(
+        latest = fetch_latest_message_for_contact_with_mapping_repair(
             resident_id,
-            "to_resident",
             access_token,
-            contact_user_id=contact_user_id,
+            contact,
             channel="resident_family",
         )
         if not latest:
@@ -2671,7 +2663,7 @@ def fetch_family_contacts_for_resident(
         contact_resp = (
             supabase.table("family_contact_access")
             .select(
-                "family_contact_id, family_contacts(id, display_name, relationship, auth_user_id)"
+                "family_contact_id, family_contacts(id, display_name, relationship, auth_user_id, email)"
             )
             .eq("resident_id", resident_id)
             .eq("active", True)
@@ -2688,11 +2680,81 @@ def fetch_family_contacts_for_resident(
                     "full_name": contact.get("display_name", "Family contact"),
                     "relationship": contact.get("relationship") or "",
                     "auth_user_id": contact.get("auth_user_id"),
+                    "email": contact.get("email") or "",
                 }
             )
         return contacts
     except Exception:
         return []
+
+
+def _get_contact_auth_user_id_via_email(email: str) -> str:
+    normalized_email = str(email or "").strip().lower()
+    if not normalized_email:
+        return ""
+    cache_key = "auth_uid_by_email_cache"
+    cache = st.session_state.get(cache_key)
+    if not isinstance(cache, dict):
+        cache = {}
+    cached = str(cache.get(normalized_email) or "").strip()
+    if cached:
+        return cached
+    admin_client, admin_error = get_admin_client()
+    if admin_error:
+        return ""
+    resolved = _resolve_auth_user_id_by_email(admin_client, normalized_email).strip()
+    if resolved:
+        cache[normalized_email] = resolved
+        st.session_state[cache_key] = cache
+    return resolved
+
+
+def fetch_latest_message_for_contact_with_mapping_repair(
+    resident_id: str,
+    access_token: str,
+    contact: dict,
+    *,
+    channel: str = "resident_family",
+) -> dict | None:
+    contact_user_id = str(contact.get("auth_user_id") or "").strip()
+    if contact_user_id:
+        latest = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            contact_user_id=contact_user_id,
+            channel=channel,
+        )
+        if latest:
+            return latest
+
+    contact_email = str(contact.get("email") or "").strip().lower()
+    if not contact_email:
+        return None
+    resolved_user_id = _get_contact_auth_user_id_via_email(contact_email)
+    if not resolved_user_id:
+        return None
+
+    if resolved_user_id != contact_user_id:
+        contact["auth_user_id"] = resolved_user_id
+        contact_id = str(contact.get("id") or "").strip()
+        if contact_id:
+            supabase, error = get_authed_supabase(access_token)
+            if not error:
+                try:
+                    supabase.table("family_contacts").update({"auth_user_id": resolved_user_id}).eq(
+                        "id", contact_id
+                    ).execute()
+                except Exception:
+                    pass
+
+    return fetch_latest_message(
+        resident_id,
+        "to_resident",
+        access_token,
+        contact_user_id=resolved_user_id,
+        channel=channel,
+    )
 
 
 def fetch_latest_message(
