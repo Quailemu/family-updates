@@ -14,11 +14,11 @@ It is not for medical updates, health information, safeguarding communication, o
 
 ## Not a live service
 
-This is not live messaging.
+Not a live service. Messages are played when staff are available.
 
-There are no delivery confirmations, read receipts, typing indicators, or instant response expectations.
+There are no push alerts, delivery confirmations, read receipts, typing indicators, or instant response expectations.
 
-Messages are played when staff are available.
+Message date is shown in Family app and Care Hub - Mobile (date only, no time).
 
 ## Role separation
 
@@ -30,7 +30,7 @@ Family users do not access Care Hub – Mobile or Care Hub – Office.
 
 Each channel keeps only the latest message.
 
-A new message replaces the previous one in that channel.
+New replaces previous in that channel.
 
 No archive or message history is provided.
 

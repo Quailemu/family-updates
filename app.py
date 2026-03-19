@@ -4284,12 +4284,12 @@ def render_home(active: str) -> None:
         st.markdown(
             """
             <h1 class="hero-headline">
-            One message in. One message out.
+            A calm way to stay connected
             </h1>
-            <p>No threads. No pressure.</p>
-            <p>voice-message.com is a simple system for exchanging non-urgent social voice messages between residents in care homes and their authorised contacts (for example family members, friends, and other approved contacts).</p>
-            <p>It also allows the care home to send one-way general voice updates to all authorised contacts. These updates are non-medical, non-urgent, and aim to provide general information and reassurance.</p>
-            <p>The service is designed to be calm, controlled, and easy to use, fitting around care routines.</p>
+            <p>Simple voice messages between care home residents, their families, and care teams — with no pressure to reply and no overwhelming threads.</p>
+            <p>voice-message.com is a simple way for care home residents, their families, and care teams to stay connected through non-urgent voice messages.</p>
+            <p>It allows residents and their loved ones to exchange messages at their own pace, while care homes can share general updates with authorised contacts to provide reassurance and keep everyone informed.</p>
+            <p>The service is designed to be calm, controlled, and easy to use, fitting naturally around care routines.</p>
             """,
             unsafe_allow_html=True,
         )
@@ -4317,14 +4317,14 @@ def render_home(active: str) -> None:
         else:
             st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
         st.markdown(
-            "This flow diagram uses Jane as an example resident to show message directions, broadcast behaviour, replacement rules, and playback order."
+            "This flow diagram shows message directions, broadcast behaviour, replacement rules, and playback order."
         )
         st.markdown("### Communication participants")
-        st.markdown("- Jane (Resident)")
-        st.markdown("- Jane's family (authorised contacts)")
+        st.markdown("- Residents")
+        st.markdown("- Authorised family contacts")
         st.markdown("- Care Hub (Office and Mobile)")
         st.markdown(
-            "Each channel keeps only the latest message. A new message replaces the previous one in that channel."
+            "Each channel keeps only the latest message. New replaces previous in that channel."
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -4383,7 +4383,7 @@ def render_home(active: str) -> None:
               </div>
               <div class="public-card">
                 <h3>No live pressure</h3>
-                <div>No notifications, no delivery/read receipts, no typing indicators, and no visible timestamps in Family and Care Hub – Mobile views.</div>
+                <div>No notifications, no delivery/read receipts, and no typing indicators. Message date is shown without time in Family and Care Hub – Mobile views.</div>
               </div>
             </div>
             """,
@@ -4396,7 +4396,7 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>Roles and important boundaries</h3>
-              <div><strong>Family (Jane's family):</strong> authorised contacts send messages and listen to Jane's current reply.</div>
+              <div><strong>Family (authorised contacts):</strong> authorised contacts send messages and listen to the resident's current shared reply.</div>
               <div><strong>Care Hub – Mobile:</strong> staff play family messages and support resident recordings.</div>
               <div><strong>Care Hub – Office:</strong> oversight plus one-way updates to family.</div>
               <div style="margin-top:8px;">This service is for social communication only. It is not for medical updates, health information, safeguarding communication, or urgent enquiries. For those matters, contact the care home directly using normal channels.</div>
@@ -4452,10 +4452,10 @@ def render_home(active: str) -> None:
                     caption="Voice message flow diagram",
                     use_column_width=True,
                 )
-            st.markdown("Example: Jane")
+            st.markdown("Communication participants")
             st.markdown(
-                "This diagram shows how voice messages and updates are organised for a single resident, "
-                "using Jane as the example. Each authorised contact has their own contact channel for "
+                "This diagram shows how voice messages and updates are organised across channels. "
+                "Each authorised contact has their own contact channel for "
                 "Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a "
                 "fair rotating order, with unplayed messages first."
             )
@@ -4893,14 +4893,7 @@ def format_soft_message_period_label(recorded_at_value: str | None) -> str | Non
         if parsed.tzinfo is None:
             parsed = parsed.replace(tzinfo=dt_mod.timezone.utc)
         local_dt = parsed.astimezone()
-        now_local = dt_mod.datetime.now(local_dt.tzinfo)
-        if local_dt.date() == now_local.date():
-            return "Sent today"
-        if local_dt.date() == (now_local.date() - dt_mod.timedelta(days=1)):
-            return "Sent yesterday"
-        if local_dt.year == now_local.year:
-            return f"Sent {local_dt.day} {local_dt.strftime('%b')}"
-        return f"Sent {local_dt.day} {local_dt.strftime('%b %Y')}"
+        return f"Date: {local_dt.strftime('%d %b %Y')}"
     except Exception:
         return None
 
@@ -7278,6 +7271,9 @@ def render_care_hub() -> None:
 
             if audio_bytes and should_show_message:
                 st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
+                played_label = format_soft_message_period_label(latest.get("recorded_at"))
+                if played_label:
+                    st.caption(played_label)
                 if is_mobile_variant:
                     st.caption("Press 'Play next family message' for the next contact.")
                 else:

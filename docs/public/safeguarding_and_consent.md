@@ -33,6 +33,8 @@ The service is for non-urgent social communication only.
 
 It is not for clinical communication, safeguarding reporting, or urgent matters.
 
+Not a live service. Messages are played and recorded when staff are available.
+
 ## Reporting concerns
 
 For safeguarding concerns, contact the care home directly through its normal safeguarding routes.

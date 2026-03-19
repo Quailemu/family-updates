@@ -21,8 +21,8 @@ No archive. No message history. No scrolling thread.
 Non-real-time reinforcement (homepage or family entry page, short):
 This is non-urgent and not live messaging. Messages are played when staff are available, to fit around care routines.
 
-No notifications / no timestamps statement (family-facing, short):
-The service does not send live notifications or show exact clock times in main care communication views.
+No notifications / date-only statement (family-facing, short):
+The service does not send live notifications. Main care communication views show message date only (no clock time).
 
 Role-based access (Family vs Care Hub):
 Family and Care Hub are separate, role-based experiences.
@@ -235,7 +235,7 @@ When a new message is sent in a channel, the previous message in that channel is
 
 There is no message history or archive within the service.
 
-The service does not send live notifications or show system timestamps.
+The service does not send live notifications. Main care communication views show message date only (no clock time).
 
 ## Intended Use
 The service is for non-urgent, social messages.
@@ -534,7 +534,7 @@ Version 1.0
 1) Calm Over Immediacy — avoid features that introduce urgency, response pressure, or performance expectations.  
 2) Asynchronous by Design — no live status, typing, read receipts, delivery confirmations, response time tracking, push/instant reply notifications.  
 3) Single-Message Structure — one message in, one message out; no history/archive.  
-4) No Visible System Timestamps — timestamps not shown to families; internal audit timestamps allowed.  
+4) Date-Only Message Display — main care communication views show message date only (no clock time); internal audit timestamps allowed.  
 5) No Performance Metrics — do not display analytics that allow response speed or staff performance to be inferred.  
 6) Clear Role Boundaries — care home responsible for safeguarding, consent, content management, staff supervision, regulatory compliance; platform does not monitor/moderate.
 

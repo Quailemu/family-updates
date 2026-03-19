@@ -174,7 +174,7 @@ Generic Error:
 
 ## Scope guard reminders
 
-- No urgency cues (no badges, timestamps, "new" labels).
+- No urgency cues (no badges, time-of-day timestamps, "new" labels).
 - No history, timeline, or feed.
 - No text inputs beyond login.
 - No IDs shown in UI.

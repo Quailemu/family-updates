@@ -40,7 +40,7 @@ Reviewer:
 ## 5) UI & UX constraints
 
 - [ ] UI matches `docs/support/ui_page_map.md` and `docs/support/ui_wireframes.md`.
-- [ ] No urgency cues (no badges, timestamps, "new" labels).
+- [ ] No urgency cues (no badges, time-of-day timestamps, "new" labels).
 - [ ] No IDs shown; no global search.
 - [ ] Generic denial/error messages only.
 - [ ] Documents are available only in Care Hub – Office.

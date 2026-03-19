@@ -1,6 +1,6 @@
 ![logo](../../assets/logo.png)
 
-# Privacy & data notice
+# Privacy notice
 
 ## Purpose
 

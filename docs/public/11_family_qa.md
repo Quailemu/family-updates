@@ -4,7 +4,7 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Example: Jane
+Communication participants: residents, authorised family contacts, and Care Hub (Office and Mobile).
 
 Q: Is this a live messaging service?  
 A: No. It is not live. Messages are handled when staff are available.

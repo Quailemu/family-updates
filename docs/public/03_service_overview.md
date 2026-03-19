@@ -4,7 +4,7 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Example: Jane
+Communication participants: residents, authorised family contacts, and Care Hub (Office and Mobile).
 
 Use the diagram above as the primary reference for message directions, replacement rules, and playback order.
 
@@ -22,6 +22,7 @@ It also supports non-urgent care-home communication to family in two Office mode
 - Each channel keeps only the latest message.
 - A new message replaces the previous message in that channel.
 - No archive, no scrolling thread, no live chat.
+- Message date is shown in Family app and Care Hub - Mobile (date only, no time).
 
 ## Main flows
 

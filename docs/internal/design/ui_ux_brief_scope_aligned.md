@@ -38,7 +38,7 @@ App separation:
 - Care Hub – Office: senior staff/admin for documents and oversight; includes Care Hub – Mobile functionality.
 - Office users may carry out Mobile tasks as part of supervision or care delivery.
 
-No inbox, no timeline, no history, no triage, no message list with timestamps.
+No inbox, no timeline, no history, no triage, no message list with time-of-day timestamps.
 
 Header (always visible):
 - Logo + product name + subtitle + two-line subtext (as specified in `docs/support/ui_page_map.md`)
@@ -123,7 +123,7 @@ Avoid adding new tabs that imply history or inboxes.
 
 Care home dashboard:
 - A clean resident list with clear selection state
-- No urgency badges or timestamps
+- No urgency badges or time-of-day timestamps
 
 Family resident page:
 - Two clear sections: play current message, record/review/send
@@ -138,7 +138,7 @@ Resident list row:
 - Hover: light neutral highlight
 - Selected: thin left border in #D80073
 
-No message list rows or timestamp chips (out of scope).
+No message list rows or time-of-day timestamp chips (out of scope).
 
 ---
 

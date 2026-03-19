@@ -4,7 +4,7 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Example: Jane
+Communication participants: residents, authorised family contacts, and Care Hub (Office and Mobile).
 
 ## What is voice-message.com for?
 
@@ -41,6 +41,10 @@ No archive and no scrolling thread.
 ## Do I get delivery/read notifications?
 
 No. There are no live notifications, delivery confirmations, or read receipts.
+
+## Are timestamps shown in the app?
+
+Message date is shown in Family app and Care Hub - Mobile (date only, no time).
 
 ## Is this suitable for urgent or medical matters?
 

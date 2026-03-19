@@ -4,9 +4,9 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Example: Jane
+Communication participants: residents, authorised family contacts, and Care Hub channels (Office and Mobile).
 
-Start with the diagram. It shows the resident, authorised family contacts, and Care Hub channels.
+Start with the diagram. It shows the communication channels and message directions.
 
 ## The three app interfaces
 
@@ -47,13 +47,15 @@ A new message replaces the previous message in that channel.
 
 ## Not live messaging
 
+- Not a live service. Messages are played when staff are available.
 - No typing indicators
 - No live status
 - No read receipts
 - No delivery confirmations
 - No response-time expectation
+- Message date is shown in Family app and Care Hub - Mobile (date only, no time).
 
-Messages are played when staff are available within care routines.
+Messages are handled within normal care routines.
 
 ## Safety boundary
 

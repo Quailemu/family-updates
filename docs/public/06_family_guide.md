@@ -4,7 +4,7 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Diagram example: resident Jane.
+Communication participants: residents, authorised family contacts, and Care Hub (Office and Mobile).
 
 ## What this app is for
 
@@ -39,9 +39,9 @@ You can reply with:
 
 ## Service style
 
-- This is not a live service.
-- Messages are played when staff are available.
+- Not a live service. Messages are played when staff are available.
 - No read receipts, no delivery confirmations, no typing indicators.
+- Message date is shown in Family app and Care Hub - Mobile (date only, no time).
 
 ## Boundaries
 
