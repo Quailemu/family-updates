@@ -2266,8 +2266,10 @@ def select_next_family_message_for_mobile(
         if (0 if bool(item.get("is_unread")) else 1) == min_play_count
     }
     if active_round_user_ids:
+        # Rule: unread round should follow fixed contact order from the start,
+        # not from the rolling pointer.
         start_idx = 0
-        if pointer and pointer in ordered_user_ids:
+        if min_play_count != 0 and pointer and pointer in ordered_user_ids:
             start_idx = ordered_user_ids.index(pointer)
         for offset in range(len(ordered_user_ids)):
             candidate_user_id = ordered_user_ids[(start_idx + offset) % len(ordered_user_ids)]
