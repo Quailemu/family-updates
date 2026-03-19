@@ -46,6 +46,12 @@ APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
     "yes",
     "on",
 }
+APP_FAMILY_LIVE_REFRESH = os.getenv("APP_FAMILY_LIVE_REFRESH", "0").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 OFFICE_UPDATE_CATEGORIES = (
     "General reassurance",
@@ -5331,7 +5337,10 @@ def render_family_send() -> None:
         for entry in send_state.values()
         if isinstance(entry, dict)
     )
-    trigger_live_message_refresh("family_live_refresh", disabled=has_pending_recording)
+    trigger_live_message_refresh(
+        "family_live_refresh",
+        disabled=has_pending_recording or not APP_FAMILY_LIVE_REFRESH,
+    )
     active_rec_id = st.session_state.get("family_active_rec_resident")
     manual_active = st.session_state.get("family_active_rec_manual", False)
     resident_ids = {resident["id"] for resident in residents}
