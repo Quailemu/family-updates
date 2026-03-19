@@ -1310,6 +1310,16 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
                 .limit(1)
                 .execute()
             )
+            if not email_resp.data:
+                # Some legacy rows may have non-normalized email casing.
+                email_resp = (
+                    supabase.table("family_contacts")
+                    .select("id, care_home_id, display_name, auth_user_id, email")
+                    .ilike("email", auth_email)
+                    .eq("active", True)
+                    .limit(1)
+                    .execute()
+                )
             if email_resp.data:
                 family_record = email_resp.data[0]
                 existing_uid = str(family_record.get("auth_user_id") or "").strip()
