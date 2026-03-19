@@ -44,7 +44,7 @@ Header (always visible):
 - Logo + product name + subtitle + two-line subtext (as specified in `docs/support/ui_page_map.md`)
 
 Primary task surfaces:
-- One primary CTA per section (e.g., "Play current family message", "Send message")
+- One primary CTA per section (e.g., "Play latest family message", "Send message")
 - Record -> Review -> Send flow is explicit and step-based
 
 ---

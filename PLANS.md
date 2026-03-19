@@ -14,12 +14,12 @@ Homepage buttons (only):
 
 Short Explanation (homepage section):
 The system has three application interfaces for groups associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, and other authorised contacts).  
-Messages are organised into channels and only the latest message is kept in each direction.  
-When a new message is recorded in the same direction, the previous message in that direction is replaced.  
+Messages are organised into channels. Each channel keeps only the latest message.  
+When a new message is recorded in a channel, the previous message in that channel is replaced.  
 No archive. No message history. No scrolling thread.
 
 Non-real-time reinforcement (homepage or family entry page, short):
-This is non-urgent and not live messaging. Messages are played and replies are recorded when staff are available, to fit around care routines.
+This is non-urgent and not live messaging. Messages are played when staff are available, to fit around care routines.
 
 No notifications / no timestamps statement (family-facing, short):
 The service does not send live notifications or show exact clock times in main care communication views.
@@ -159,8 +159,8 @@ Channel directions:
 - Resident -> Family/Friend (created/replaced in Care Hub – Mobile)
 - Office -> Family/Friend (created/replaced in Care Hub – Office)
 
-Only the latest message in each direction is kept.  
-When a new message is sent in the same direction, the previous message in that direction is replaced.
+Each channel keeps only the latest message.  
+When a new message is sent in a channel, the previous message in that channel is replaced.
 
 Messages in a contact channel may only be played by authorised users of that specific channel. Other authorised contacts cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
 
@@ -230,8 +230,8 @@ The service operates on a channel-based “one message in, one message out” st
 Family/Friend -> Resident and Resident -> Family/Friend are separate directions.  
 Office -> Family/Friend is an additional one-way direction.
 
-Only the latest message in each direction is kept.  
-When a new message is sent in the same direction, the previous message in that direction is replaced.
+Each channel keeps only the latest message.  
+When a new message is sent in a channel, the previous message in that channel is replaced.
 
 There is no message history or archive within the service.
 
@@ -281,7 +281,7 @@ Once recorded, that reply replaces the previous reply from the resident.
 
 ### Message replacement
 The service operates on a channel-based “one message in, one message out” structure.
-Only the latest message in each direction is kept (Family/Friend -> Resident, Resident -> Family/Friend, and Office -> Family/Friend).
+Each channel keeps only the latest message (Family/Friend -> Resident, Resident -> Family/Friend, and Office -> Family/Friend).
 There is no message history or archive within the service.
 
 ## Intended Use

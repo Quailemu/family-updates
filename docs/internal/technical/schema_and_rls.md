@@ -10,7 +10,7 @@ This document defines the Supabase schema and row-level security (RLS) rules for
 
 - One shared care home login per care home, mapped to a single care_home_users row.
 - Family/friends use individual Supabase Auth accounts.
-- Only one current message exists per direction per resident/contact pair.
+- Each message channel keeps only the latest message per resident/contact pair.
 - RLS prevents family users from seeing any other family’s data.
 - RLS allows care home users to see and manage all data within their care home.
 - Storage is not directly accessible to clients; audio playback uses short-lived signed URLs.
@@ -100,7 +100,7 @@ Notes:
 
 ### 6) messages
 
-Purpose: Store the current voice message per direction for each resident/contact pair.
+Purpose: Store the latest voice message per channel for each resident/contact pair.
 
 Fields (minimum):
 - id (uuid, pk)
@@ -335,7 +335,7 @@ create table if not exists public.family_contact_access (
 
 alter table public.family_contact_access enable row level security;
 
--- 6) messages (one current message per direction)
+-- 6) messages (latest message per channel)
 create table if not exists public.messages (
   id uuid primary key default gen_random_uuid(),
   -- care_home_id is derived via residents to avoid cross-home mismatches.

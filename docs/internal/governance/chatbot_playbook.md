@@ -11,7 +11,7 @@ This playbook defines the scope and limits of the support chatbot for voice-mess
 The chatbot may:
 
 - explain how the service works in plain English
-- clarify the message replacement behaviour (one current message per direction)
+- clarify the message replacement behaviour (each channel keeps only the latest message)
 - explain that the service is for non-urgent, social messages
 - direct users to relevant handbook sections
 

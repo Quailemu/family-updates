@@ -14,14 +14,14 @@ The model is simple and clear.
 Each authorised contact has their own contact channel to the resident for Family to resident messages.
 Care Hub - Mobile plays those family messages in a fair rotating order, with unplayed messages first.
 
-Resident-to-family messages are one shared current message to all authorised contacts.
+Resident-to-family channel keeps the latest resident message shared to all authorised contacts.
 Office updates are one-way and shared to all authorised contacts.
 
-In each channel and direction, only one current message is stored at a time.
-When a new message is recorded, it replaces the previous message in that same channel/direction.
+Each channel keeps only the latest message.
+When a new message is recorded, it replaces the previous message in that channel.
 There is no archive, no message history, and no scrolling thread.
 
-Messages are played and resident messages are recorded by staff when available within normal care routines.
+Messages are played when staff are available within normal care routines.
 This keeps communication calm, manageable, and aligned with care-home workflow.
 
 Access is role-based.

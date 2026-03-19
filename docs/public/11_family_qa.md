@@ -16,7 +16,7 @@ Q: Can I send urgent updates here?
 A: No. For urgent, clinical, safeguarding, or emergency matters, contact the care home directly.
 
 Q: Why did my previous message disappear?  
-A: The service keeps one current message per direction/channel. New messages replace previous ones in that same direction/channel.
+A: Each channel keeps only the latest message. New messages replace previous ones in that channel.
 
 Q: Can I see a message timeline?  
 A: No. There is no archive and no scrolling thread.

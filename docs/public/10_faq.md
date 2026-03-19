@@ -32,7 +32,7 @@ No. It is a structured reply to one Office message, not open chat.
 
 ## Why do old messages disappear?
 
-Only one current message is kept per direction/channel. A new message replaces the previous message in that same direction/channel.
+Each channel keeps only the latest message. A new message replaces the previous message in that channel.
 
 ## Does the service show message history?
 

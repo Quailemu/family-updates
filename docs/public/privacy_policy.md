@@ -17,7 +17,7 @@ The care home decides access, participation, and day-to-day use in its service.
 - Care home account and access data
 - Resident identifiers set by the care home
 - Authorised contact details (for example, name and email)
-- Voice messages (current message only per channel/direction)
+- Voice messages (latest message only per channel)
 - Security and operational logs needed to run the service safely
 
 ## Why data is used
@@ -28,9 +28,9 @@ The service is not for medical updates, safeguarding reporting, or urgent enquir
 
 ## Message retention model
 
-The system keeps only the current message in each channel/direction.
+Each channel keeps only the latest message.
 
-When a new message is sent in the same channel/direction, it replaces the previous one.
+When a new message is sent in a channel, it replaces the previous one in that channel.
 
 No message history and no archive are provided.
 

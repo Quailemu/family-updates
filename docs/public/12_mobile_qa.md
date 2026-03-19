@@ -21,7 +21,7 @@ Q: Is this for urgent communication?
 A: No. The platform is for non-urgent, social voice messages.
 
 Q: Do messages have history?  
-A: No. Only the latest message in each direction is kept.
+A: No. Each channel keeps only the latest message.
 
 Q: What should staff do before sending a resident message?  
 A: Follow care-home process and confirm the message has been listened to before sending.

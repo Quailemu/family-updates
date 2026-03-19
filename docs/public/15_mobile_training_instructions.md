@@ -8,7 +8,7 @@ Example: Jane
 
 This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-Resident -> Family is one shared current message to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. Each authorised contact channel retains the current message for that channel. A new message replaces only the previous message in that same channel/direction.
+Resident -> Family channel keeps only the latest resident message shared to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. Each authorised contact channel keeps only the latest Family -> Resident message. A new message replaces the previous message in that channel.
 
 ## Who this is for
 
@@ -25,8 +25,8 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 ## Resident and Family messages
 
 - Play the latest family messages for the resident in the app's fair rotating order (unplayed first).
-- Record and send one shared current resident message to all authorised contacts.
-- A new message replaces the previous message in that same direction.
+- Record and send the latest resident message to all authorised contacts.
+- A new message replaces the previous message in that channel.
 
 ## Office update (read-only in Mobile)
 

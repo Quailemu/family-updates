@@ -1551,15 +1551,15 @@ def render_how_it_works_diagram_and_notes() -> None:
     st.markdown("Example: Jane")
     st.markdown(
         "This diagram shows how voice messages and updates are organised for a single resident, "
-        "using Jane as the example. Each authorised contact has their own Family -> Resident channel "
-        "with one current message to Jane. Resident -> Family is one shared current resident message "
-        "to all authorised contacts. When a new message is recorded, it replaces the previous message "
-        "in that same channel and direction."
+        "using Jane as the example. Each authorised contact channel keeps only the latest "
+        "Family -> Resident message to Jane. Resident -> Family channel keeps the latest resident "
+        "message shared to all authorised contacts. When a new message is recorded, it replaces the "
+        "previous message in that channel."
     )
     st.markdown(
         "The care home can also send a one-way Office broadcast voice mail to all authorised contacts, "
-        "and can publish an Office practical text message that supports structured family replies. Only one current message is "
-        "kept per channel and direction."
+        "and can publish an Office practical text message that supports structured family replies. Each channel keeps only "
+        "the latest message."
     )
 
 
@@ -1584,7 +1584,7 @@ def render_how_it_works_family() -> None:
     )
     info_boxes = [
         "voice-message.com — for non-urgent social voice messages between residents and authorised contacts.",
-        "Family -> Resident uses separate per-contact channels. Resident -> Family is one shared current resident message to all authorised contacts. No threads.",
+        "Family -> Resident uses separate per-contact channels. Resident -> Family channel keeps the latest shared resident message for all authorised contacts. No threads.",
         "Family access uses secure email login links. No SMS and no phone-number login.",
     ]
     for box in info_boxes:
@@ -1619,7 +1619,7 @@ def render_how_it_works_mobile() -> None:
     )
     info_boxes = [
         "voice-message.com — for non-urgent social voice messages between residents and authorised contacts.",
-        "Family -> Resident uses separate per-contact channels. Resident -> Family is one shared current resident message to all authorised contacts. No threads.",
+        "Family -> Resident uses separate per-contact channels. Resident -> Family channel keeps the latest shared resident message for all authorised contacts. No threads.",
         "Care Hub – Mobile uses individual staff PIN access for day-to-day use.",
         "Secure email link is used only for first sign-in or expired-session recovery.",
     ]
@@ -1654,7 +1654,7 @@ def render_how_it_works_office_overview() -> None:
     )
     info_boxes = [
         "voice-message.com — for non-urgent social voice messages between residents and authorised contacts.",
-        "Family -> Resident uses separate per-contact channels. Resident -> Family is one shared current resident message to all authorised contacts. No threads.",
+        "Family -> Resident uses separate per-contact channels. Resident -> Family channel keeps the latest shared resident message for all authorised contacts. No threads.",
         "Care Hub – Office is a separate staff/admin access path.",
         "Office authentication is distinct from Family email links and Mobile staff PIN access.",
         "If Office 2FA is enabled, users complete Office verification after login.",
@@ -3623,8 +3623,8 @@ def render_front_page_descriptor() -> None:
 
 def render_how_it_works_general() -> None:
     st.markdown(
-        "Only one message is kept between each authorised contact and each resident, in each direction, with no threads.  \n"
-        "Each new message deletes the previous message.\n\n"
+        "Each channel keeps only the latest message, with no threads.  \n"
+        "Each new message replaces the previous message in that channel.\n\n"
         "Messages are not private within the care home.  \n"
         "Care staff and office staff may read messages where required.  \n"
         "Security is in place to prevent access by members of the public."
@@ -4324,7 +4324,7 @@ def render_home(active: str) -> None:
         st.markdown("- Jane's family (authorised contacts)")
         st.markdown("- Care Hub (Office and Mobile)")
         st.markdown(
-            "Only the latest message is kept in each channel and direction. A new message replaces the previous one in that same channel and direction."
+            "Each channel keeps only the latest message. A new message replaces the previous one in that channel."
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -4333,19 +4333,19 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>Office -&gt; Family (one-way updates)</h3>
-              <div>Care Hub – Office sends one current general update voice message to all authorised contacts. No replies in this general update channel. A new update replaces the previous general update.</div>
+              <div>Care Hub – Office sends the latest general update voice message to all authorised contacts. No replies in this general update channel. A new update replaces the previous general update.</div>
             </div>
             <div class="public-card">
               <h3>Office practical text message (structured replies from family)</h3>
-              <div>Care Hub – Office can also send one current practical text message for a resident. Family replies are designed to be minimal: Yes/No/Maybe plus optional tick-box selections, with only a short optional note.</div>
+              <div>Care Hub – Office can also send the latest practical text message for a resident. Family replies are designed to be minimal: Yes/No/Maybe plus optional tick-box selections, with only a short optional note.</div>
             </div>
             <div class="public-card pink">
               <h3>Resident -&gt; Family (one message out)</h3>
-              <div>Care Hub – Mobile supports the resident to record one current message to all authorised family contacts. A new recording replaces the previous resident message.</div>
+              <div>Care Hub – Mobile supports the resident to record the latest message to all authorised family contacts. A new recording replaces the previous resident message.</div>
             </div>
             <div class="public-card">
               <h3>Family -&gt; Resident (one message each)</h3>
-              <div>Each authorised family contact has one current message to the resident. Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.</div>
+              <div>Each authorised family contact channel keeps only the latest message to the resident. Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -4460,10 +4460,10 @@ def render_home(active: str) -> None:
                 "fair rotating order, with unplayed messages first."
             )
             st.markdown(
-                "Resident -> Family is one shared current message to all authorised contacts. "
+                "Resident -> Family channel keeps the latest resident message shared to all authorised contacts. "
                 "The care home can also send a one-way Office update to all authorised contacts. "
-                "Each authorised contact channel retains the current message for that channel. "
-                "A new message replaces only the previous message in that same channel or direction."
+                "Each authorised contact channel keeps only the latest message. "
+                "A new message replaces only the previous message in that channel."
             )
     st.markdown("### Service overview")
     st.markdown(
@@ -4473,7 +4473,7 @@ def render_home(active: str) -> None:
         "The service supports non-urgent social voice messages between residents and authorised contacts.  \n"
         "The care home office may also send non-urgent general updates about daily life in the home.  \n"
         "Office updates are one-way informational messages.\n\n"
-        "This is not a live service. Messages are played and recorded when staff are available, to fit around care routines.  \n"
+        "This is not a live service. Messages are played when staff are available, to fit around care routines.  \n"
         "The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries."
     )
 
@@ -5297,7 +5297,7 @@ def render_family_send() -> None:
             )
 
         st.markdown("**Care Hub update to Family (Office informational message)**")
-        st.caption("One current office update for this resident. Office updates are informational only.")
+        st.caption("Latest office update for this resident. Office updates are informational only.")
         latest_office_update = fetch_latest_message(
             resident_id,
             "office_to_family",
@@ -6195,8 +6195,8 @@ def render_pr_homepage() -> None:
     st.markdown(
         """
 <div class="pr-explain">
-Only one current message is kept in each direction/channel.<br />
-A new message replaces the previous message in that same direction/channel.<br />
+Each channel keeps only the latest message.<br />
+A new message replaces the previous message in that channel.<br />
 Office general updates are one-way; Office practical messages allow structured family replies (Yes/No/Maybe, optional tick-boxes, optional short note).<br />
 For urgent, medical, safeguarding, or emergency matters, contact the care home directly.
 </div>
@@ -6610,7 +6610,7 @@ def render_care_login() -> None:
         )
         mobile_login_boxes = [
             "Care Hub - Mobile supports non-urgent social voice messages between residents and families.",
-            "Not a live service. Messages are played and recorded when staff are available.",
+            "Not a live service. Messages are played when staff are available.",
             "Mobile access uses an individual staff PIN for day-to-day use.",
             "Use email secure link only for first sign-in or when session access has expired.",
         ]

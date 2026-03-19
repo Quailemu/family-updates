@@ -11,8 +11,8 @@ Scope reference: `docs/support/scope_statement.md`
 ## 1) What this service is
 
 This is a simple way for family members or friends and residents to exchange non-urgent, social voice messages.  
-Messages are audio only. There is one current message at a time in each direction.  
-New messages replace the previous one.
+Messages are audio only. Each channel keeps only the latest message.  
+New messages replace the previous one in that channel.
 
 Care staff operate the system and decide when messages are recorded and played back.
 
@@ -43,8 +43,8 @@ If something is urgent, family members or friends should contact the care home u
 Suggested script:
 
 "This is a simple way to send a short, non-urgent voice message to your relative.  
-Messages are social only, and only one message is kept at a time.  
-When you send a new message, it replaces your previous one.  
+Messages are social only, and each channel keeps only the latest message.  
+When you send a new message, it replaces your previous one in that channel.  
 Care staff choose when messages are played.  
 Approved family members or other authorised contacts use the Family app only; carers use Care Hub – Mobile; office staff use Care Hub – Office.  
 Treat messages as shared within the care home. Staff may play messages in shared spaces.  
@@ -59,7 +59,7 @@ Suggested script:
 "Your family can send you a short voice message.  
 We can play it to you when convenient.  
 If you would like to send a message back, we can help you record it.  
-Only one message is kept at a time, so the newest one replaces the previous one."
+Each channel keeps only the latest message, so the newest one replaces the previous one in that channel."
 
 ---
 
@@ -69,7 +69,7 @@ Q: "Is this for urgent messages?"
 Answer: "No. It is for non-urgent, social messages only. For anything urgent, please contact the care home directly."
 
 Q: "Will I see a history of messages?"
-Answer: "No. Only the current message is kept. Each new message replaces the previous one."
+Answer: "No. Each channel keeps only the latest message. Each new message replaces the previous one in that channel."
 
 Q: "Do staff monitor messages?"
 Answer: "Staff help with recording and playback, but messages are not monitored as care updates."

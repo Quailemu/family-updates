@@ -19,20 +19,20 @@ It also supports non-urgent care-home communication to family in two Office mode
 
 ## Core message model
 
-- One current message is kept per direction/channel.
-- A new message replaces the previous message in that same direction/channel.
+- Each channel keeps only the latest message.
+- A new message replaces the previous message in that channel.
 - No archive, no scrolling thread, no live chat.
 
 ## Main flows
 
 ### Family -> Resident
 
-Each authorised contact has one current message to the resident.  
+Each authorised contact channel keeps only the latest Family -> Resident message.  
 Care Hub - Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.
 
 ### Resident -> Family
 
-Resident reply is one shared current message to all authorised contacts.
+Resident -> Family channel keeps only the latest resident reply shared to all authorised contacts.
 
 ### Office -> Family (general update)
 

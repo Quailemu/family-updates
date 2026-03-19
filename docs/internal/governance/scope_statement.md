@@ -15,7 +15,7 @@ Out of scope:
 - Moderation, review queues, or content analysis.
 
 Data minimisation:
-- Only the current audio message is stored per direction.
+- Each channel keeps only the latest audio message.
 - One message to the resident and one from the resident per contact.
 - New messages overwrite the previous message.
 - No archive or historical access.

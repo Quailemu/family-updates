@@ -4,16 +4,12 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Example: Jane
-
-Use the diagram first. It shows message directions and replacement rules.
+Diagram example: resident Jane.
 
 ## What this app is for
 
-Family app is for authorised contacts only (for example family members or close friends approved by the care home).
-
+Family app is for authorised contacts only (for example family members or close friends approved by the care home).  
 It supports:
-
 - Family -> Resident social voice messages
 - Playing the resident's current shared reply
 - Playing current Office general update
@@ -21,8 +17,8 @@ It supports:
 
 ## How messages work
 
-- One current message is kept per direction/channel.
-- A new message replaces the previous message in that same direction/channel.
+- Each channel keeps only the latest message.
+- A new message replaces the previous message in that channel.
 - There is no archive and no scrolling thread.
 
 ## Office communication in Family app
@@ -41,10 +37,10 @@ You can reply with:
 - Optional tick-box selections
 - Optional short note
 
-## Important expectations
+## Service style
 
 - This is not a live service.
-- Messages are played and recorded when staff are available.
+- Messages are played when staff are available.
 - No read receipts, no delivery confirmations, no typing indicators.
 
 ## Boundaries

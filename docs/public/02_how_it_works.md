@@ -20,12 +20,12 @@ Each interface is role-based and separate.
 
 ### 1) Family -> Resident
 
-Each authorised contact has one current message to the resident.  
+Each authorised contact channel keeps only the latest Family -> Resident message.  
 Care Hub - Mobile plays family messages one-at-a-time in a fair rotating order, with unplayed messages first.
 
 ### 2) Resident -> Family
 
-Resident sends one current shared message to all authorised contacts.
+Resident -> Family channel keeps only the latest resident message shared to all authorised contacts.
 
 ### 3) Office -> Family (general update)
 
@@ -42,8 +42,8 @@ Each authorised contact can submit a structured reply:
 
 ## Replacement rule
 
-Only the current message is kept for each direction/channel.  
-A new message replaces the previous message in that same direction/channel.
+Each channel keeps only the latest message.  
+A new message replaces the previous message in that channel.
 
 ## Not live messaging
 
@@ -53,7 +53,7 @@ A new message replaces the previous message in that same direction/channel.
 - No delivery confirmations
 - No response-time expectation
 
-Messages are played and recorded by staff when available within care routines.
+Messages are played when staff are available within care routines.
 
 ## Safety boundary
 

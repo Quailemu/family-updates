@@ -28,9 +28,9 @@ Family users do not access Care Hub – Mobile or Care Hub – Office.
 
 ## Message model
 
-Only the latest message is kept in each channel/direction.
+Each channel keeps only the latest message.
 
-A new message replaces the previous one in that same channel/direction.
+A new message replaces the previous one in that channel.
 
 No archive or message history is provided.
 
