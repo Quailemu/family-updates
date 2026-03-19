@@ -7184,6 +7184,22 @@ def render_care_hub() -> None:
                         contact_user_id=selected_contact.get("auth_user_id"),
                         channel="resident_family",
                     )
+                    latest_message_id = str((latest or {}).get("id") or "").strip()
+                    if latest_message_id:
+                        already_logged = audit_event_exists_any_actor(
+                            "message_played",
+                            target_id=latest_message_id,
+                            resident_id=resident_id,
+                            care_home_id=resident["care_home_id"],
+                        )
+                        if not already_logged:
+                            log_audit_event(
+                                "message_played",
+                                "care_hub",
+                                resident["care_home_id"],
+                                latest_message_id,
+                                resident_id=resident_id,
+                            )
                     # Advance Office session pointer so each click moves through queue order.
                     office_next_contact_user_id = get_next_contact_user_id_with_message(
                         resident_id,
@@ -7363,6 +7379,22 @@ def render_care_hub() -> None:
                                 contact_user_id=selected_contact.get("auth_user_id"),
                                 channel="resident_family",
                             )
+                            latest_message_id = str((latest or {}).get("id") or "").strip()
+                            if latest_message_id:
+                                already_logged = audit_event_exists_any_actor(
+                                    "message_played",
+                                    target_id=latest_message_id,
+                                    resident_id=resident_id,
+                                    care_home_id=resident["care_home_id"],
+                                )
+                                if not already_logged:
+                                    log_audit_event(
+                                        "message_played",
+                                        "care_hub",
+                                        resident["care_home_id"],
+                                        latest_message_id,
+                                        resident_id=resident_id,
+                                    )
                             if is_mobile_variant:
                                 st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
         if is_mobile_variant or is_office_variant:
