@@ -4214,6 +4214,68 @@ def render_home(active: str) -> None:
             .public-section {
                 margin-top: 18px;
             }
+            .public-app-buttons {
+                margin-top: 6px;
+            }
+            .pr-app-btn {
+                display: block;
+                width: 100%;
+                text-align: center;
+                text-decoration: none;
+                color: #1F2937;
+                font-weight: 700;
+                border-radius: 12px;
+                padding: 14px 12px;
+                border: 2px solid rgba(31, 41, 55, 0.14);
+                transition: background-color 0.2s ease, transform 0.08s ease;
+                box-sizing: border-box;
+                margin-bottom: 8px;
+            }
+            .pr-app-btn:hover {
+                transform: translateY(-1px);
+            }
+            .pr-app-btn:active {
+                transform: translateY(0);
+            }
+            .pr-app-btn.family {
+                background: #CFE3D4;
+            }
+            .pr-app-btn.family:hover {
+                background: #B8D2C3;
+            }
+            .pr-app-btn.mobile {
+                background: #F6D6DF;
+            }
+            .pr-app-btn.mobile:hover {
+                background: #EABFCC;
+            }
+            .pr-app-btn.office {
+                background: #CDEEEE;
+            }
+            .pr-app-btn.office:hover {
+                background: #B3DEDE;
+            }
+            .pr-app-btn.disabled {
+                opacity: 0.65;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+            .pr-recording-card {
+                border-radius: 12px;
+                border: 2px solid #D8E6EC;
+                background: #FBFDFF;
+                padding: 12px;
+                margin-top: 8px;
+            }
+            .pr-recording-card h3 {
+                margin: 0 0 6px;
+                font-size: 1rem;
+            }
+            .pr-recording-card p {
+                margin: 0 0 10px;
+                color: #4B5563;
+                font-size: 0.96rem;
+            }
             .public-section h2 {
                 font-size: 1.2rem;
                 margin: 0 0 10px;
@@ -4288,15 +4350,62 @@ def render_home(active: str) -> None:
             </h1>
             <p>Simple voice messages between care home residents, their families, and care teams — with no pressure to reply and no overwhelming threads.</p>
             <p>voice-message.com is a simple way for care home residents, their families, and care teams to stay connected through non-urgent voice messages.</p>
-            <p>It allows residents and their loved ones to exchange messages at their own pace, while care homes can share general updates with authorised contacts to provide reassurance and keep everyone informed.</p>
+            <p>It allows residents and their loved ones to exchange messages at their own pace, while care homes can share general updates with families to provide reassurance and keep everyone informed.</p>
             <p>The service is designed to be calm, controlled, and easy to use, fitting naturally around care routines.</p>
             """,
             unsafe_allow_html=True,
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
-        button_cols = st.columns(3, gap="small")
-        render_public_app_buttons(button_cols)
+        st.markdown('<div class="public-section public-app-buttons">', unsafe_allow_html=True)
+        st.markdown("<h2>Choose your app</h2>", unsafe_allow_html=True)
+        app_cols = st.columns(3, gap="small")
+        app_entries = [
+            (
+                VARIANT_FAMILY,
+                "Family",
+                "family",
+                "For families and friends to send and hear non-urgent messages.",
+                Path("assets/recordings/family-overview.mp4"),
+            ),
+            (
+                VARIANT_MOBILE,
+                "Care Hub – Mobile",
+                "mobile",
+                "For care staff to play family messages and support resident recordings.",
+                Path("assets/recordings/mobile-overview.mp4"),
+            ),
+            (
+                VARIANT_OFFICE,
+                "Care Hub – Office",
+                "office",
+                "For office oversight, one-way updates, and practical structured messages.",
+                Path("assets/recordings/office-overview.mp4"),
+            ),
+        ]
+        for idx, (variant, label, css_class, summary, recording_path) in enumerate(app_entries):
+            target_url = get_public_app_url(variant)
+            with app_cols[idx]:
+                if target_url:
+                    st.markdown(
+                        f'<a class="pr-app-btn {css_class}" href="{target_url}" target="_self">{label}</a>',
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.markdown(
+                        f'<div class="pr-app-btn {css_class} disabled">{label}</div>',
+                        unsafe_allow_html=True,
+                    )
+                    st.caption("Link will appear when this app URL is configured.")
+                st.markdown('<div class="pr-recording-card">', unsafe_allow_html=True)
+                st.markdown(f"<h3>{label}</h3>", unsafe_allow_html=True)
+                st.markdown(f"<p>{summary}</p>", unsafe_allow_html=True)
+                if recording_path.exists():
+                    st.video(str(recording_path))
+                else:
+                    st.caption("Screen recording coming soon.")
+                st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("<h2>How it works</h2>", unsafe_allow_html=True)
@@ -4316,13 +4425,11 @@ def render_home(active: str) -> None:
                 )
         else:
             st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
-        st.markdown(
-            "This flow diagram shows message directions, broadcast behaviour, replacement rules, and playback order."
-        )
         st.markdown("### Communication participants")
         st.markdown("- Residents")
-        st.markdown("- Authorised family contacts")
+        st.markdown("- Families")
         st.markdown("- Care Hub (Office and Mobile)")
+        st.caption("Here, families means authorised contacts approved by the care home.")
         st.markdown(
             "Each channel keeps only the latest message. New replaces previous in that channel."
         )
