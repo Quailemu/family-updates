@@ -30,7 +30,7 @@ Family users do not access Care Hub – Mobile or Care Hub – Office.
 
 Each channel keeps only the latest message.
 
-New replaces previous in that channel.
+A new message replaces the previous message in that channel.
 
 No archive or message history is provided.
 

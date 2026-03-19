@@ -1554,18 +1554,12 @@ def render_how_it_works_diagram_and_notes() -> None:
             st.image(str(diagram_path), caption="Voice message flow diagram", use_column_width=True)
     else:
         st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
-    st.markdown("Example: Jane")
     st.markdown(
-        "This diagram shows how voice messages and updates are organised for a single resident, "
-        "using Jane as the example. Each authorised contact channel keeps only the latest "
-        "Family -> Resident message to Jane. Resident -> Family channel keeps the latest resident "
-        "message shared to all authorised contacts. When a new message is recorded, it replaces the "
-        "previous message in that channel."
-    )
-    st.markdown(
-        "The care home can also send a one-way Office broadcast voice mail to all authorised contacts, "
-        "and can publish an Office practical text message that supports structured family replies. Each channel keeps only "
-        "the latest message."
+        "- The diagram shows the three app areas: Family, Care Hub – Mobile, and Care Hub – Office.\n"
+        "- Each family member authorised by the care home has their own individual communication channel to the resident.\n"
+        "- Office practical messages collect quick structured family responses to support efficient, inclusive practical decision-making.\n"
+        "- The care home reviews responses and makes the final operational decision.\n"
+        "- Each channel keeps only the latest message, and a new message replaces the previous one in that channel."
     )
 
 
@@ -4480,7 +4474,7 @@ def render_home(active: str) -> None:
         st.markdown("- Care Hub (Office and Mobile)")
         st.caption("Here, families means authorised contacts approved by the care home.")
         st.markdown(
-            "Each channel keeps only the latest message. New replaces previous in that channel."
+            "Each channel keeps only the latest message. A new message replaces the previous message in that channel."
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -4611,7 +4605,7 @@ def render_home(active: str) -> None:
             st.markdown("Communication participants")
             st.markdown(
                 "This diagram shows how voice messages and updates are organised across channels. "
-                "Each family member has their own individual channel for "
+                "Each family member authorised by the care home has their own individual channel for "
                 "Family/Friend -> Resident messages, managed by the care home. Care Hub – Mobile plays these family messages in a "
                 "fair rotating order, with unplayed messages first."
             )
