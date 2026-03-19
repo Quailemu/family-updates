@@ -2224,6 +2224,16 @@ def select_next_family_message_for_mobile(
         return queued_items[0]["contact"], queued_items[0]["message"], "Played cycle"
 
     min_play_count = min(int(item.get("play_count", 0)) for item in queued_items)
+
+    if min_play_count == 0:
+        unread_items = [item for item in queued_items if int(item.get("play_count", 0)) == 0]
+        if unread_items:
+            newest_unread = max(
+                unread_items,
+                key=lambda item: str((item.get("message") or {}).get("recorded_at") or ""),
+            )
+            return newest_unread["contact"], newest_unread["message"], "Newest unread first"
+
     active_round_user_ids = {
         str(item["contact"].get("auth_user_id") or "").strip()
         for item in queued_items
@@ -7089,7 +7099,7 @@ def render_care_hub() -> None:
             state["selected_contact_user_id"] = None
         elif is_queue_playback_variant:
             st.caption(
-                "Play messages follows a fixed contact order. Unplayed messages are always first."
+                "Play messages prioritises newest unread family messages first, then uses fixed contact order."
             )
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             keep_current_after_start = bool(st.session_state.get(mobile_play_requested_key, False))
