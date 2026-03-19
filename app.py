@@ -2104,6 +2104,36 @@ def has_message_been_played_since_recorded(
         return False
 
 
+def has_message_been_played_in_mobile_session_since_recorded(
+    message: dict | None,
+    *,
+    resident_id: str | None = None,
+) -> bool:
+    resident_key = str(resident_id or "").strip()
+    contact_user_id = str((message or {}).get("contact_user_id") or "").strip()
+    recorded_at = str((message or {}).get("recorded_at") or "").strip()
+    if not resident_key or not contact_user_id or not recorded_at:
+        return False
+    cache_key = f"care_mobile_played_cache_{resident_key}"
+    cache = st.session_state.get(cache_key)
+    if not isinstance(cache, dict):
+        return False
+    cached_recorded_at = str(cache.get(contact_user_id) or "").strip()
+    if not cached_recorded_at:
+        return False
+    try:
+        dt_mod = __import__("datetime")
+        cached_dt = dt_mod.datetime.fromisoformat(cached_recorded_at.replace("Z", "+00:00"))
+        recorded_dt = dt_mod.datetime.fromisoformat(recorded_at.replace("Z", "+00:00"))
+        if cached_dt.tzinfo is None:
+            cached_dt = cached_dt.replace(tzinfo=dt_mod.timezone.utc)
+        if recorded_dt.tzinfo is None:
+            recorded_dt = recorded_dt.replace(tzinfo=dt_mod.timezone.utc)
+        return cached_dt >= recorded_dt
+    except Exception:
+        return cached_recorded_at >= recorded_at
+
+
 def sort_contacts_for_playback(contacts: list[dict]) -> list[dict]:
     return sorted(
         contacts,
@@ -2252,6 +2282,11 @@ def select_next_family_message_for_mobile(
             resident_id=resident_id,
             care_home_id=care_home_id,
         )
+        if is_unread and has_message_been_played_in_mobile_session_since_recorded(
+            latest,
+            resident_id=resident_id,
+        ):
+            is_unread = False
         queued_items.append(
             {
                 "contact": contact,
@@ -7522,6 +7557,15 @@ def render_care_hub() -> None:
                             latest_message_id,
                             resident_id=resident_id,
                         )
+                    latest_contact_user_id = str((latest or {}).get("contact_user_id") or "").strip()
+                    latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
+                    if latest_contact_user_id and latest_recorded_at:
+                        cache_key = f"care_mobile_played_cache_{resident_id}"
+                        cache = st.session_state.get(cache_key)
+                        if not isinstance(cache, dict):
+                            cache = {}
+                        cache[latest_contact_user_id] = latest_recorded_at
+                        st.session_state[cache_key] = cache
                     next_contact_user_id = get_next_contact_user_id_with_message(
                         resident_id,
                         contacts,
