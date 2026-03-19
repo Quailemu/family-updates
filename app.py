@@ -1291,14 +1291,36 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
                 pass
         if not auth_uid:
             return False, False, "Authenticated user identity could not be resolved.", None, None
+        auth_email = str(st.session_state.get("auth_email") or "").strip().lower()
         family_resp = (
             supabase.table("family_contacts")
-            .select("id, care_home_id, display_name")
+            .select("id, care_home_id, display_name, auth_user_id, email")
             .eq("auth_user_id", auth_uid)
             .eq("active", True)
             .limit(1)
             .execute()
         )
+        family_record = family_resp.data[0] if family_resp.data else None
+        if not family_record and auth_email:
+            email_resp = (
+                supabase.table("family_contacts")
+                .select("id, care_home_id, display_name, auth_user_id, email")
+                .eq("email", auth_email)
+                .eq("active", True)
+                .limit(1)
+                .execute()
+            )
+            if email_resp.data:
+                family_record = email_resp.data[0]
+                existing_uid = str(family_record.get("auth_user_id") or "").strip()
+                if existing_uid != auth_uid:
+                    try:
+                        supabase.table("family_contacts").update({"auth_user_id": auth_uid}).eq(
+                            "id", family_record.get("id")
+                        ).execute()
+                        family_record["auth_user_id"] = auth_uid
+                    except Exception:
+                        pass
         care_resp = (
             supabase.table("care_home_users")
             .select("id, care_home_id")
@@ -1307,7 +1329,6 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
             .limit(1)
             .execute()
         )
-        family_record = family_resp.data[0] if family_resp.data else None
         care_record = care_resp.data[0] if care_resp.data else None
         family_found = family_record is not None
         care_found = care_record is not None
