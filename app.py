@@ -4425,6 +4425,13 @@ def render_home(active: str) -> None:
                 )
         else:
             st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
+        st.markdown(
+            "- The diagram shows the three app areas: Family, Care Hub – Mobile, and Care Hub – Office.\n"
+            "- Each family member has their own individual communication channel to the resident, managed by the care home.\n"
+            "- Office practical messages collect quick structured family responses to support efficient, inclusive practical decision-making.\n"
+            "- The care home reviews responses and makes the final operational decision.\n"
+            "- Each channel keeps only the latest message, and a new message replaces the previous one in that channel."
+        )
         st.markdown("### Communication participants")
         st.markdown("- Residents")
         st.markdown("- Families")
@@ -4562,13 +4569,14 @@ def render_home(active: str) -> None:
             st.markdown("Communication participants")
             st.markdown(
                 "This diagram shows how voice messages and updates are organised across channels. "
-                "Each authorised contact has their own contact channel for "
-                "Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a "
+                "Each family member has their own individual channel for "
+                "Family/Friend -> Resident messages, managed by the care home. Care Hub – Mobile plays these family messages in a "
                 "fair rotating order, with unplayed messages first."
             )
             st.markdown(
                 "Resident -> Family channel keeps the latest resident message shared to all authorised contacts. "
                 "The care home can also send a one-way Office update to all authorised contacts. "
+                "Office practical messages collect quick structured family responses, and the care home makes the final operational decision. "
                 "Each authorised contact channel keeps only the latest message. "
                 "A new message replaces only the previous message in that channel."
             )
