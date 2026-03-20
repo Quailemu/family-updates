@@ -32,6 +32,9 @@ Care-home staff using Care Hub – Mobile or Care Hub – Office may also play m
 
 Messages are controlled by the group that created them. One group cannot directly replace another group's message.
 
+Unread queue state is tracked per resident and per authorised contact channel.
+If all current family messages have been played, then one new family message from a single contact appears as the next unread item for that resident.
+
 ## Voice Message Flow Example
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)

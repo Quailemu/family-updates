@@ -137,7 +137,25 @@ Notes:
 - No message content, audio, or email addresses are stored here.
 - This table is write-only for server-side components (no client insert).
 
-### 8) care_home_settings
+### 8) resident_contact_playback_state
+
+Purpose: Persist unread/playback state per resident-contact channel so queue behavior is deterministic across sessions.
+
+Fields (minimum):
+- resident_id (uuid, fk -> residents.id)
+- care_home_id (uuid, fk -> care_homes.id)
+- contact_user_id (uuid, fk -> auth.users.id)
+- last_played_recorded_at (timestamptz)
+- updated_at (timestamptz)
+
+Constraints:
+- primary key (resident_id, contact_user_id)
+
+Notes:
+- Stores playback state only; no message content is stored.
+- Supports unread tally behavior where only newly recorded contact messages remain unread after prior playback.
+
+### 9) care_home_settings
 
 Purpose: Operational security configuration per care home.
 

@@ -2124,68 +2124,7 @@ def has_message_been_played_since_recorded(
                     recorded_dt = recorded_dt.replace(tzinfo=dt_mod.timezone.utc)
                 if played_dt >= recorded_dt:
                     return True
-
-        # Contact-based unread/read tracking:
-        # A contact is read when we have ever played a message for that contact
-        # with recorded_at >= current latest recorded_at.
-        played_log_query = (
-            supabase.table("audit_log")
-            .select("target_id")
-            .eq("action", "message_played")
-            .eq("resident_id", resident_id)
-            .eq("care_home_id", care_home_id)
-            .order("created_at", desc=True)
-            .limit(500)
-        )
-        played_log_resp = played_log_query.execute()
-        played_rows = played_log_resp.data or []
-        if not played_rows:
-            return False
-        target_ids: list[str] = []
-        seen_target_ids: set[str] = set()
-        for row in played_rows:
-            target_id = str(row.get("target_id") or "").strip()
-            # Guard against legacy/non-UUID target values that can break .in_ lookups.
-            if (
-                not target_id
-                or len(target_id) != 36
-                or target_id.count("-") != 4
-                or target_id in seen_target_ids
-            ):
-                continue
-            seen_target_ids.add(target_id)
-            target_ids.append(target_id)
-        if not target_ids:
-            return False
-        played_messages_resp = (
-            supabase.table("messages")
-            .select("id, contact_user_id, recorded_at")
-            .in_("id", target_ids)
-            .eq("resident_id", resident_id)
-            .eq("direction", "to_resident")
-            .eq("channel", "resident_family")
-            .execute()
-        )
-        played_messages = played_messages_resp.data or []
-        if not played_messages:
-            return False
-
-        # If contact metadata is missing on the candidate message, fall back to
-        # direct message-id match.
-        if not message_contact_user_id:
-            return any(str(row.get("id") or "").strip() == message_id for row in played_messages)
-
-        latest_played_recorded_at_for_contact = ""
-        for row in played_messages:
-            row_contact_user_id = str(row.get("contact_user_id") or "").strip()
-            if row_contact_user_id != message_contact_user_id:
-                continue
-            row_recorded_at = str(row.get("recorded_at") or "").strip()
-            if row_recorded_at and row_recorded_at > latest_played_recorded_at_for_contact:
-                latest_played_recorded_at_for_contact = row_recorded_at
-        if not latest_played_recorded_at_for_contact or not message_recorded_at:
-            return False
-        return latest_played_recorded_at_for_contact >= message_recorded_at
+        return False
     except Exception:
         return False
 
@@ -2406,6 +2345,25 @@ def set_contact_last_played_recorded_at(
         ).execute()
     except Exception:
         return
+
+
+def clear_resident_contact_playback_state(
+    resident_id: str,
+    care_home_id: str,
+    access_token: str | None,
+) -> bool:
+    if not resident_id or not care_home_id:
+        return False
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False
+    try:
+        supabase.table("resident_contact_playback_state").delete().eq(
+            "resident_id", resident_id
+        ).eq("care_home_id", care_home_id).execute()
+        return True
+    except Exception:
+        return False
 
 
 def select_next_family_message_for_mobile(
@@ -7674,6 +7632,35 @@ def render_care_hub() -> None:
                         else f"{unread_name} (Family contact)"
                     )
                     st.markdown(f"- {unread_display}")
+            if is_office_variant:
+                with st.expander("Queue testing tools"):
+                    st.caption(
+                        "Testing only: clears saved played/unread state for this resident and resets queue pointer."
+                    )
+                    if st.button(
+                        "Reset resident queue state",
+                        key=f"office_reset_queue_state_{resident_id}",
+                        use_container_width=True,
+                    ):
+                        cleared = clear_resident_contact_playback_state(
+                            resident_id,
+                            resident["care_home_id"],
+                            access_token,
+                        )
+                        set_resident_playback_pointer(
+                            resident_id,
+                            resident["care_home_id"],
+                            None,
+                            access_token,
+                        )
+                        st.session_state.pop(f"care_mobile_pointer_{resident_id}", None)
+                        st.session_state.pop(f"care_mobile_played_cache_{resident_id}", None)
+                        st.session_state.pop(f"care_mobile_last_played_{resident_id}", None)
+                        if cleared:
+                            st.success("Resident queue state reset.")
+                        else:
+                            st.warning("Queue state reset request completed with no DB rows changed.")
+                        st.rerun()
             playlist_contacts = sort_contacts_for_playback(contacts)
             if playlist_contacts:
                 with st.expander("Select from family playlist"):
