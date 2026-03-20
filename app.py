@@ -2291,6 +2291,9 @@ def select_next_family_message_for_mobile(
         ).strip()
         if not contact_user_id:
             continue
+        if str(latest.get("contact_user_id") or "").strip() != contact_user_id:
+            latest = dict(latest)
+            latest["contact_user_id"] = contact_user_id
         contact["auth_user_id"] = contact_user_id
         is_unread = not has_message_been_played_since_recorded(
             latest,
@@ -5814,7 +5817,11 @@ def render_family_send() -> None:
                     native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
                 else:
                     native_fp = None
-                if native_bytes and native_fp != state.get("recording_fingerprint"):
+                if not native_bytes:
+                    st.warning(
+                        "That recording could not be captured correctly. Please record again."
+                    )
+                elif native_fp != state.get("recording_fingerprint"):
                     reset_outbox_state_on_new_recording(
                         state,
                         ack_widget_key=f"family_listened_{resident_id}",
@@ -5834,6 +5841,20 @@ def render_family_send() -> None:
                 state["recording_bytes"],
                 format=state.get("recording_mime_type") or "audio/wav",
             )
+            if st.button(
+                "Discard recording and try again",
+                key=f"family_discard_recording_{resident_id}",
+                use_container_width=True,
+            ):
+                state["recording_bytes"] = None
+                state["recording_mime_type"] = "audio/wav"
+                state["recording_fingerprint"] = None
+                reset_outbox_state_on_new_recording(
+                    state,
+                    ack_widget_key=f"family_listened_{resident_id}",
+                )
+                st.session_state.pop(f"family_audio_input_{resident_id}", None)
+                st.rerun()
             state["preview_confirmed"] = st.checkbox(
                 "I have listened to this message.",
                 value=state.get("preview_confirmed", False),
@@ -7547,8 +7568,13 @@ def render_care_hub() -> None:
                         access_token,
                     )
                     if selected_contact:
+                        selected_contact_user_id = str(
+                            (latest or {}).get("contact_user_id")
+                            or selected_contact.get("auth_user_id")
+                            or ""
+                        ).strip()
                         state["selected_contact_id"] = selected_contact.get("id")
-                        state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
+                        state["selected_contact_user_id"] = selected_contact_user_id
                         st.session_state[mobile_play_requested_key] = True
                         st.session_state[mobile_advance_pointer_key] = True
                     else:
@@ -7639,7 +7665,11 @@ def render_care_hub() -> None:
                             latest_message_id,
                             resident_id=resident_id,
                         )
-                    latest_contact_user_id = str((latest or {}).get("contact_user_id") or "").strip()
+                    latest_contact_user_id = str(
+                        (latest or {}).get("contact_user_id")
+                        or state.get("selected_contact_user_id")
+                        or ""
+                    ).strip()
                     latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
                     if latest_contact_user_id and latest_recorded_at:
                         cache_key = f"care_mobile_played_cache_{resident_id}"
@@ -7713,7 +7743,11 @@ def render_care_hub() -> None:
                         native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
                     else:
                         native_fp = None
-                    if native_bytes and native_fp != state.get("recording_fingerprint"):
+                    if not native_bytes:
+                        st.warning(
+                            "That recording could not be captured correctly. Please record again."
+                        )
+                    elif native_fp != state.get("recording_fingerprint"):
                         reset_outbox_state_on_new_recording(
                             state,
                             ack_widget_key=f"care_listened_{resident_id}",
