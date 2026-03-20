@@ -2194,20 +2194,23 @@ def get_next_contact_user_id_with_message(
     access_token: str,
     current_contact_user_id: str | None,
 ) -> str | None:
-    contacts_sorted = dedupe_contacts_by_auth_user_id(contacts)
+    contacts_sorted = sort_contacts_for_playback(contacts)
     ordered_user_ids: list[str] = []
     for contact in contacts_sorted:
-        contact_user_id = str(contact.get("auth_user_id") or "").strip()
-        if not contact_user_id:
-            continue
-        latest = fetch_latest_message(
+        latest = fetch_latest_message_for_contact_with_mapping_repair(
             resident_id,
-            "to_resident",
             access_token,
-            contact_user_id=contact_user_id,
+            contact,
             channel="resident_family",
         )
-        if latest:
+        if not latest:
+            continue
+        contact_user_id = str(
+            (latest.get("contact_user_id") or contact.get("auth_user_id") or "")
+        ).strip()
+        if not contact_user_id:
+            continue
+        if contact_user_id not in ordered_user_ids:
             ordered_user_ids.append(contact_user_id)
     if not ordered_user_ids:
         return None
@@ -2269,7 +2272,7 @@ def select_next_family_message_for_mobile(
     contacts: list[dict],
     access_token: str,
 ) -> tuple[dict | None, dict | None, str]:
-    contacts_sorted = dedupe_contacts_by_auth_user_id(contacts)
+    contacts_sorted = sort_contacts_for_playback(contacts)
     if not contacts_sorted:
         return None, None, "No linked family contacts."
 
@@ -2283,6 +2286,12 @@ def select_next_family_message_for_mobile(
         )
         if not latest:
             continue
+        contact_user_id = str(
+            (latest.get("contact_user_id") or contact.get("auth_user_id") or "")
+        ).strip()
+        if not contact_user_id:
+            continue
+        contact["auth_user_id"] = contact_user_id
         is_unread = not has_message_been_played_since_recorded(
             latest,
             resident_id=resident_id,
@@ -2298,6 +2307,7 @@ def select_next_family_message_for_mobile(
                 "contact": contact,
                 "message": latest,
                 "is_unread": is_unread,
+                "contact_user_id": contact_user_id,
             }
         )
 
@@ -2311,19 +2321,19 @@ def select_next_family_message_for_mobile(
     if session_pointer:
         pointer = session_pointer
     by_contact_user_id = {
-        str(item["contact"].get("auth_user_id") or "").strip(): item for item in queued_items
+        str(item.get("contact_user_id") or "").strip(): item for item in queued_items
     }
-    ordered_user_ids = [
-        str(c.get("auth_user_id") or "").strip()
-        for c in contacts_sorted
-        if str(c.get("auth_user_id") or "").strip() in by_contact_user_id
-    ]
+    ordered_user_ids: list[str] = []
+    for contact in contacts_sorted:
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        if contact_user_id and contact_user_id in by_contact_user_id and contact_user_id not in ordered_user_ids:
+            ordered_user_ids.append(contact_user_id)
     if not ordered_user_ids:
         return queued_items[0]["contact"], queued_items[0]["message"], "Played cycle"
 
     min_play_count = min(0 if bool(item.get("is_unread")) else 1 for item in queued_items)
     active_round_user_ids = {
-        str(item["contact"].get("auth_user_id") or "").strip()
+        str(item.get("contact_user_id") or "").strip()
         for item in queued_items
         if (0 if bool(item.get("is_unread")) else 1) == min_play_count
     }
@@ -2365,7 +2375,7 @@ def get_family_queue_status_for_resident(
     contacts: list[dict],
     access_token: str,
 ) -> tuple[int, dict | None, list[dict]]:
-    contacts_sorted = dedupe_contacts_by_auth_user_id(contacts)
+    contacts_sorted = sort_contacts_for_playback(contacts)
     if not contacts_sorted:
         return 0, None, []
     unread_count = 0
@@ -7349,7 +7359,7 @@ def render_care_hub() -> None:
                             None,
                         )
                 if selected_contact is None:
-                    sorted_contacts = dedupe_contacts_by_auth_user_id(contacts)
+                    sorted_contacts = sort_contacts_for_playback(contacts)
                     selected_contact = sorted_contacts[0] if sorted_contacts else None
                 if selected_contact:
                     state["selected_contact_id"] = selected_contact.get("id")
@@ -7465,7 +7475,7 @@ def render_care_hub() -> None:
                         else f"{unread_name} (Family contact)"
                     )
                     st.markdown(f"- {unread_display}")
-            playlist_contacts = dedupe_contacts_by_auth_user_id(contacts)
+            playlist_contacts = sort_contacts_for_playback(contacts)
             if playlist_contacts:
                 with st.expander("Select from family playlist"):
                     playlist_options = []
