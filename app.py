@@ -2073,7 +2073,9 @@ def has_message_been_played_since_recorded(
     care_home_id: str | None = None,
 ) -> bool:
     message_id = str((message or {}).get("id") or "").strip()
-    if not message_id:
+    message_contact_user_id = str((message or {}).get("contact_user_id") or "").strip()
+    message_recorded_at = str((message or {}).get("recorded_at") or "").strip()
+    if not message_id and not (message_contact_user_id and message_recorded_at):
         return False
     supabase, error = get_supabase_client()
     if error:
@@ -2081,50 +2083,22 @@ def has_message_been_played_since_recorded(
     access_token = st.session_state.get("access_token")
     if not access_token:
         return False
-    contact_user_id = str((message or {}).get("contact_user_id") or "").strip()
     try:
         supabase.postgrest.auth(access_token)
-        query = (
-            supabase.table("audit_log")
-            .select("created_at")
-            .eq("action", "message_played")
-            .eq("target_id", message_id)
-            .order("created_at", desc=True)
-            .limit(1)
-        )
-        if resident_id:
-            query = query.eq("resident_id", resident_id)
-        if care_home_id:
-            query = query.eq("care_home_id", care_home_id)
-        resp = query.execute()
-        recorded_at = str((message or {}).get("recorded_at") or "").strip()
-        if resp.data:
-            latest_played_at = str(resp.data[0].get("created_at") or "").strip()
-            if not latest_played_at or not recorded_at:
-                return True
-            dt_mod = __import__("datetime")
-            played_dt = dt_mod.datetime.fromisoformat(latest_played_at.replace("Z", "+00:00"))
-            recorded_dt = dt_mod.datetime.fromisoformat(recorded_at.replace("Z", "+00:00"))
-            if played_dt.tzinfo is None:
-                played_dt = played_dt.replace(tzinfo=dt_mod.timezone.utc)
-            if recorded_dt.tzinfo is None:
-                recorded_dt = recorded_dt.replace(tzinfo=dt_mod.timezone.utc)
-            return played_dt >= recorded_dt
-
-        # Fallback: message IDs can change after mapping repair/upsert drift.
-        # Preserve unread/read continuity by checking played history against the
-        # same contact_user_id since this message was recorded.
-        if not (resident_id and care_home_id and contact_user_id and recorded_at):
+        if not (resident_id and care_home_id):
             return False
+
+        # Contact-based unread/read tracking:
+        # A contact is read when we have ever played a message for that contact
+        # with recorded_at >= current latest recorded_at.
         played_log_query = (
             supabase.table("audit_log")
-            .select("target_id, created_at")
+            .select("target_id")
             .eq("action", "message_played")
             .eq("resident_id", resident_id)
             .eq("care_home_id", care_home_id)
-            .gte("created_at", recorded_at)
             .order("created_at", desc=True)
-            .limit(200)
+            .limit(500)
         )
         played_log_resp = played_log_query.execute()
         played_rows = played_log_resp.data or []
@@ -2142,7 +2116,7 @@ def has_message_been_played_since_recorded(
             return False
         played_messages_resp = (
             supabase.table("messages")
-            .select("id, contact_user_id")
+            .select("id, contact_user_id, recorded_at")
             .in_("id", target_ids)
             .eq("resident_id", resident_id)
             .eq("direction", "to_resident")
@@ -2152,12 +2126,23 @@ def has_message_been_played_since_recorded(
         played_messages = played_messages_resp.data or []
         if not played_messages:
             return False
-        played_message_ids_for_contact = {
-            str(row.get("id") or "").strip()
-            for row in played_messages
-            if str(row.get("contact_user_id") or "").strip() == contact_user_id
-        }
-        return bool(played_message_ids_for_contact)
+
+        # If contact metadata is missing on the candidate message, fall back to
+        # direct message-id match.
+        if not message_contact_user_id:
+            return any(str(row.get("id") or "").strip() == message_id for row in played_messages)
+
+        latest_played_recorded_at_for_contact = ""
+        for row in played_messages:
+            row_contact_user_id = str(row.get("contact_user_id") or "").strip()
+            if row_contact_user_id != message_contact_user_id:
+                continue
+            row_recorded_at = str(row.get("recorded_at") or "").strip()
+            if row_recorded_at and row_recorded_at > latest_played_recorded_at_for_contact:
+                latest_played_recorded_at_for_contact = row_recorded_at
+        if not latest_played_recorded_at_for_contact or not message_recorded_at:
+            return False
+        return latest_played_recorded_at_for_contact >= message_recorded_at
     except Exception:
         return False
 
