@@ -2261,9 +2261,18 @@ def set_resident_playback_pointer(
         "updated_at": __import__("datetime").datetime.utcnow().isoformat(),
     }
     try:
-        supabase.table("resident_playback_state").upsert(payload, on_conflict="resident_id").execute()
+        supabase.table("resident_playback_state").upsert(
+            payload,
+            on_conflict="resident_id,care_home_id",
+        ).execute()
     except Exception:
-        return
+        try:
+            supabase.table("resident_playback_state").upsert(
+                payload,
+                on_conflict="resident_id",
+            ).execute()
+        except Exception:
+            return
 
 
 def select_next_family_message_for_mobile(
@@ -2341,10 +2350,9 @@ def select_next_family_message_for_mobile(
         if (0 if bool(item.get("is_unread")) else 1) == min_play_count
     }
     if active_round_user_ids:
-        # Rule: unread round should follow fixed contact order from the start,
-        # not from the rolling pointer.
+        # Unread round uses fixed contact order, but continue from saved pointer.
         start_idx = 0
-        if min_play_count != 0 and pointer and pointer in ordered_user_ids:
+        if pointer and pointer in ordered_user_ids:
             start_idx = ordered_user_ids.index(pointer)
         for offset in range(len(ordered_user_ids)):
             candidate_user_id = ordered_user_ids[(start_idx + offset) % len(ordered_user_ids)]
