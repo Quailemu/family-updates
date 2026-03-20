@@ -2087,6 +2087,15 @@ def has_message_been_played_since_recorded(
         supabase.postgrest.auth(access_token)
         if not (resident_id and care_home_id):
             return False
+        if message_contact_user_id and message_recorded_at:
+            last_played_recorded_at = get_contact_last_played_recorded_at(
+                resident_id,
+                care_home_id,
+                message_contact_user_id,
+                access_token,
+            )
+            if last_played_recorded_at:
+                return last_played_recorded_at >= message_recorded_at
 
         # Fast path: if this exact message id has a played audit row after recorded_at,
         # it is read regardless of any historical target_id noise.
@@ -2340,6 +2349,63 @@ def set_resident_playback_pointer(
             ).execute()
         except Exception:
             return
+
+
+def get_contact_last_played_recorded_at(
+    resident_id: str,
+    care_home_id: str,
+    contact_user_id: str,
+    access_token: str | None,
+) -> str:
+    if not resident_id or not care_home_id or not contact_user_id:
+        return ""
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return ""
+    try:
+        resp = (
+            supabase.table("resident_contact_playback_state")
+            .select("last_played_recorded_at")
+            .eq("resident_id", resident_id)
+            .eq("care_home_id", care_home_id)
+            .eq("contact_user_id", contact_user_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception:
+        return ""
+    if not resp.data:
+        return ""
+    return str(resp.data[0].get("last_played_recorded_at") or "").strip()
+
+
+def set_contact_last_played_recorded_at(
+    resident_id: str,
+    care_home_id: str,
+    contact_user_id: str,
+    played_recorded_at: str | None,
+    access_token: str | None,
+) -> None:
+    played_value = str(played_recorded_at or "").strip()
+    if not resident_id or not care_home_id or not contact_user_id or not played_value:
+        return
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return
+    payload = {
+        "resident_id": resident_id,
+        "care_home_id": care_home_id,
+        "contact_user_id": contact_user_id,
+        "last_played_recorded_at": played_value,
+        "updated_at": __import__("datetime").datetime.utcnow().isoformat(),
+    }
+    try:
+        supabase.table("resident_contact_playback_state").upsert(
+            payload,
+            on_conflict="resident_id,contact_user_id",
+        ).execute()
+    except Exception:
+        return
 
 
 def select_next_family_message_for_mobile(
@@ -7450,12 +7516,25 @@ def render_care_hub() -> None:
                         resident_id=resident_id,
                         care_home_id=resident["care_home_id"],
                     ):
+                        latest_contact_user_id = str(
+                            (latest or {}).get("contact_user_id")
+                            or selected_contact.get("auth_user_id")
+                            or ""
+                        ).strip()
+                        latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
                         log_audit_event(
                             "message_played",
                             "care_hub",
                             resident["care_home_id"],
                             latest_message_id,
                             resident_id=resident_id,
+                        )
+                        set_contact_last_played_recorded_at(
+                            resident_id,
+                            resident["care_home_id"],
+                            latest_contact_user_id,
+                            latest_recorded_at,
+                            access_token,
                         )
                     # Advance Office session pointer so each click moves through queue order.
                     office_next_contact_user_id = get_next_contact_user_id_with_message(
@@ -7642,12 +7721,25 @@ def render_care_hub() -> None:
                                 resident_id=resident_id,
                                 care_home_id=resident["care_home_id"],
                             ):
+                                latest_contact_user_id = str(
+                                    (latest or {}).get("contact_user_id")
+                                    or selected_contact.get("auth_user_id")
+                                    or ""
+                                ).strip()
+                                latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
                                 log_audit_event(
                                     "message_played",
                                     "care_hub",
                                     resident["care_home_id"],
                                     latest_message_id,
                                     resident_id=resident_id,
+                                )
+                                set_contact_last_played_recorded_at(
+                                    resident_id,
+                                    resident["care_home_id"],
+                                    latest_contact_user_id,
+                                    latest_recorded_at,
+                                    access_token,
                                 )
                             if is_mobile_variant:
                                 st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
@@ -7771,6 +7863,13 @@ def render_care_hub() -> None:
                     ).strip()
                     latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
                     if latest_contact_user_id and latest_recorded_at:
+                        set_contact_last_played_recorded_at(
+                            resident_id,
+                            resident["care_home_id"],
+                            latest_contact_user_id,
+                            latest_recorded_at,
+                            access_token,
+                        )
                         cache_key = f"care_mobile_played_cache_{resident_id}"
                         cache = st.session_state.get(cache_key)
                         if not isinstance(cache, dict):
