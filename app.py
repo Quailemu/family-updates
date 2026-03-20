@@ -2374,6 +2374,14 @@ def select_next_family_message_for_mobile(
     if not queued_items:
         return None, None, "No family messages available."
 
+    last_played_cache = st.session_state.get(f"care_mobile_last_played_{resident_id}")
+    if isinstance(last_played_cache, dict):
+        last_played_contact_user_id = str(last_played_cache.get("contact_user_id") or "").strip()
+        last_played_recorded_at = str(last_played_cache.get("recorded_at") or "").strip()
+    else:
+        last_played_contact_user_id = ""
+        last_played_recorded_at = ""
+
     pointer = get_resident_playback_pointer(resident_id, care_home_id, access_token)
     # Prefer session pointer for active runtime progression; DB pointer can be stale.
     session_pointer_key = f"care_mobile_pointer_{resident_id}"
@@ -2407,6 +2415,16 @@ def select_next_family_message_for_mobile(
             if candidate_user_id in active_round_user_ids:
                 chosen = by_contact_user_id.get(candidate_user_id)
                 if chosen:
+                    chosen_recorded_at = str(
+                        ((chosen.get("message") or {}).get("recorded_at") or "")
+                    ).strip()
+                    if (
+                        len(active_round_user_ids) > 1
+                        and candidate_user_id == last_played_contact_user_id
+                        and chosen_recorded_at
+                        and chosen_recorded_at == last_played_recorded_at
+                    ):
+                        continue
                     queue_label = (
                         "Unplayed first (round 0)"
                         if min_play_count == 0
@@ -7740,6 +7758,10 @@ def render_care_hub() -> None:
                             cache = {}
                         cache[latest_contact_user_id] = latest_recorded_at
                         st.session_state[cache_key] = cache
+                        st.session_state[f"care_mobile_last_played_{resident_id}"] = {
+                            "contact_user_id": latest_contact_user_id,
+                            "recorded_at": latest_recorded_at,
+                        }
                     next_contact_user_id = get_next_contact_user_id_with_message(
                         resident_id,
                         contacts,
