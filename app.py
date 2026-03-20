@@ -2088,6 +2088,34 @@ def has_message_been_played_since_recorded(
         if not (resident_id and care_home_id):
             return False
 
+        # Fast path: if this exact message id has a played audit row after recorded_at,
+        # it is read regardless of any historical target_id noise.
+        if message_id:
+            exact_query = (
+                supabase.table("audit_log")
+                .select("created_at")
+                .eq("action", "message_played")
+                .eq("resident_id", resident_id)
+                .eq("care_home_id", care_home_id)
+                .eq("target_id", message_id)
+                .order("created_at", desc=True)
+                .limit(1)
+            )
+            exact_resp = exact_query.execute()
+            if exact_resp.data:
+                latest_played_at = str(exact_resp.data[0].get("created_at") or "").strip()
+                if not latest_played_at or not message_recorded_at:
+                    return True
+                dt_mod = __import__("datetime")
+                played_dt = dt_mod.datetime.fromisoformat(latest_played_at.replace("Z", "+00:00"))
+                recorded_dt = dt_mod.datetime.fromisoformat(message_recorded_at.replace("Z", "+00:00"))
+                if played_dt.tzinfo is None:
+                    played_dt = played_dt.replace(tzinfo=dt_mod.timezone.utc)
+                if recorded_dt.tzinfo is None:
+                    recorded_dt = recorded_dt.replace(tzinfo=dt_mod.timezone.utc)
+                if played_dt >= recorded_dt:
+                    return True
+
         # Contact-based unread/read tracking:
         # A contact is read when we have ever played a message for that contact
         # with recorded_at >= current latest recorded_at.
@@ -2108,7 +2136,13 @@ def has_message_been_played_since_recorded(
         seen_target_ids: set[str] = set()
         for row in played_rows:
             target_id = str(row.get("target_id") or "").strip()
-            if not target_id or target_id in seen_target_ids:
+            # Guard against legacy/non-UUID target values that can break .in_ lookups.
+            if (
+                not target_id
+                or len(target_id) != 36
+                or target_id.count("-") != 4
+                or target_id in seen_target_ids
+            ):
                 continue
             seen_target_ids.add(target_id)
             target_ids.append(target_id)
