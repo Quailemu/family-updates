@@ -5296,11 +5296,18 @@ def render_public_walkthrough_page(
     video_env_var: str,
     local_video_path: str,
     role_summary: list[str],
-    back_route: str = "/public/service-overview",
+    back_route: str | None = None,
 ) -> None:
+    effective_back_route = back_route
+    if not effective_back_route:
+        app_variant = get_app_variant()
+        if app_variant == VARIANT_PUBLIC:
+            effective_back_route = "/public/service-overview"
+        else:
+            effective_back_route = get_how_it_works_route(app_variant)
     render_route_link(
         "← Back",
-        back_route,
+        effective_back_route,
         key=f"walkthrough_back_{page_title.lower().replace(' ', '_').replace('–', '-')}",
     )
     render_page_header(page_title, show_menu=False, show_variant_subheading=False)
