@@ -4882,6 +4882,15 @@ def render_home(active: str) -> None:
                 "Each authorised contact channel keeps only the latest message. "
                 "A new message replaces only the previous message in that channel."
             )
+            st.markdown("### Start here: Service flow overview (90 seconds)")
+            overview_video = resolve_public_video_source(
+                "PUBLIC_VIDEO_OVERVIEW_URL",
+                "assets/voice-message-flow-overview-v1.mp4",
+            )
+            if overview_video:
+                st.video(overview_video)
+            else:
+                st.caption("Overall walkthrough video will appear here when available.")
     st.markdown("### Service overview")
     st.markdown(
         "voice-message.com  \n"
@@ -4951,6 +4960,9 @@ OFFICE_PUBLIC_ROUTES = {
     "/public/family-terms-of-use",
     "/public/complaints-and-concerns",
     "/public/safeguarding-and-consent",
+    "/public/walkthrough-family",
+    "/public/walkthrough-mobile",
+    "/public/walkthrough-office",
     "/care-hub/mobile/qa",
 }
 MOBILE_PUBLIC_ROUTES = {
@@ -4968,6 +4980,9 @@ MOBILE_PUBLIC_ROUTES = {
     "/public/family-terms-of-use",
     "/public/complaints-and-concerns",
     "/public/safeguarding-and-consent",
+    "/public/walkthrough-family",
+    "/public/walkthrough-mobile",
+    "/public/walkthrough-office",
 }
 
 VARIANT_CONFIG = {
@@ -4996,6 +5011,9 @@ VARIANT_CONFIG = {
             "/public/family-terms-of-use",
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
+            "/public/walkthrough-family",
+            "/public/walkthrough-mobile",
+            "/public/walkthrough-office",
             "/pr-home",
             "/service-overview",
         },
@@ -5025,6 +5043,9 @@ VARIANT_CONFIG = {
             "/public/family-terms-of-use",
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
+            "/public/walkthrough-family",
+            "/public/walkthrough-mobile",
+            "/public/walkthrough-office",
             "/pr-home",
             "/service-overview",
         },
@@ -5080,6 +5101,9 @@ VARIANT_CONFIG = {
             "/public/family-terms-of-use",
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
+            "/public/walkthrough-family",
+            "/public/walkthrough-mobile",
+            "/public/walkthrough-office",
         },
     },
 }
@@ -5219,25 +5243,50 @@ def get_public_app_url(variant: str) -> str:
     return ""
 
 
+def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
+    url = os.getenv(env_var, "").strip()
+    if url:
+        return url
+    local_file = Path(local_path)
+    if local_file.exists():
+        return str(local_file)
+    return None
+
+
 def render_public_app_buttons(cols: list) -> None:
     entries = [
-        (VARIANT_FAMILY, "Family"),
-        (VARIANT_MOBILE, "Care Hub – Mobile"),
-        (VARIANT_OFFICE, "Care Hub – Office"),
+        ("Family", "/public/walkthrough-family"),
+        ("Care Hub – Mobile", "/public/walkthrough-mobile"),
+        ("Care Hub – Office", "/public/walkthrough-office"),
     ]
-    for idx, (variant, label) in enumerate(entries):
-        url = get_public_app_url(variant)
+    for idx, (label, route) in enumerate(entries):
         with cols[idx]:
-            if url:
-                if hasattr(st, "link_button"):
-                    st.link_button(label, url, use_container_width=True)
-                else:
-                    st.markdown(
-                        f'<a href="{url}" target="_self"><button style="width:100%">{label}</button></a>',
-                        unsafe_allow_html=True,
-                    )
-            else:
-                st.button(label, key=f"public_{variant}_disabled", disabled=True, use_container_width=True)
+            if st.button(label, key=f"public_walkthrough_{idx}", use_container_width=True):
+                set_route(route)
+
+
+def render_public_walkthrough_page(
+    page_title: str,
+    video_env_var: str,
+    local_video_path: str,
+    role_summary: list[str],
+    back_route: str = "/public/service-overview",
+) -> None:
+    st.markdown(f"[← Back to Service overview](?route={back_route})")
+    render_page_header(page_title, show_menu=False, show_variant_subheading=False)
+    video_source = resolve_public_video_source(video_env_var, local_video_path)
+    if video_source:
+        st.video(video_source)
+    else:
+        st.warning(
+            f"Video not found. Set {video_env_var} or add {local_video_path}."
+        )
+    st.markdown("### What this walkthrough shows")
+    for line in role_summary:
+        st.markdown(f"- {line}")
+    st.markdown(
+        "For urgent, medical, safeguarding, or emergency matters, contact the care home directly."
+    )
 
 
 def get_how_it_works_route(app_variant: str) -> str:
@@ -8846,6 +8895,42 @@ def main() -> None:
         render_public_document("docs/public/complaints_and_concerns.md")
     elif route == "/public/safeguarding-and-consent":
         render_public_document("docs/public/safeguarding_and_consent.md")
+    elif route == "/public/walkthrough-family":
+        render_public_walkthrough_page(
+            "Family walkthrough",
+            "PUBLIC_VIDEO_FAMILY_URL",
+            "assets/voice-message-family-walkthrough-v1.mp4",
+            [
+                "How an authorised contact sends Family -> Resident voice messages.",
+                "How family listens to the resident's current shared message.",
+                "How Office updates and practical structured replies appear in Family.",
+                "Non-live expectations and calm communication boundaries.",
+            ],
+        )
+    elif route == "/public/walkthrough-mobile":
+        render_public_walkthrough_page(
+            "Care Hub – Mobile walkthrough",
+            "PUBLIC_VIDEO_MOBILE_URL",
+            "assets/voice-message-mobile-walkthrough-v1.mp4",
+            [
+                "How staff play Family -> Resident messages to the resident.",
+                "Queue behaviour: unplayed first, then fair rotating replay.",
+                "How staff support Resident -> Family recording.",
+                "How playback and recording fit around care routines.",
+            ],
+        )
+    elif route == "/public/walkthrough-office":
+        render_public_walkthrough_page(
+            "Care Hub – Office walkthrough",
+            "PUBLIC_VIDEO_OFFICE_URL",
+            "assets/voice-message-office-walkthrough-v1.mp4",
+            [
+                "How Office reviews resident-linked family messages.",
+                "How Office publishes one-way voice updates to all authorised contacts.",
+                "How Office sends practical text requests and reviews structured replies.",
+                "How Office oversight supports low-pressure, non-urgent communication.",
+            ],
+        )
     elif route == "/public-privacy":
         set_route("/public/privacy-notice")
     elif route == "/public-complaints":
