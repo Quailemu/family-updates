@@ -5298,7 +5298,11 @@ def render_public_walkthrough_page(
     role_summary: list[str],
     back_route: str = "/public/service-overview",
 ) -> None:
-    st.markdown(f"[← Back to Service overview](?route={back_route})")
+    render_route_link(
+        "← Back",
+        back_route,
+        key=f"walkthrough_back_{page_title.lower().replace(' ', '_').replace('–', '-')}",
+    )
     render_page_header(page_title, show_menu=False, show_variant_subheading=False)
     video_source = resolve_public_video_source(video_env_var, local_video_path)
     if video_source:
