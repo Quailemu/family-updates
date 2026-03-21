@@ -4693,6 +4693,8 @@ def render_home(active: str) -> None:
 
         st.markdown('<div class="public-section public-app-buttons">', unsafe_allow_html=True)
         st.markdown("<h2>Choose your app</h2>", unsafe_allow_html=True)
+        if st.button("Watch universal service overview", key="public_watch_overview", use_container_width=True):
+            set_route("/public/walkthrough-overview")
         app_cols = st.columns(3, gap="small")
         app_entries = [
             (
@@ -4736,11 +4738,6 @@ def render_home(active: str) -> None:
                 st.markdown('<div class="pr-recording-card">', unsafe_allow_html=True)
                 st.markdown(f"<h3>{label}</h3>", unsafe_allow_html=True)
                 st.markdown(f"<p>{summary}</p>", unsafe_allow_html=True)
-                video_source = resolve_public_video_source(video_env_var, local_video_path)
-                if video_source:
-                    st.video(video_source)
-                else:
-                    st.caption("Walkthrough video not available yet.")
                 st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
