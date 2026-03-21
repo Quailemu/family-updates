@@ -4666,46 +4666,49 @@ def render_home(active: str) -> None:
             (
                 VARIANT_FAMILY,
                 "Family",
-                "family",
                 "For families and friends to send and hear non-urgent messages.",
-                Path("assets/recordings/family-overview.mp4"),
+                "/public/walkthrough-family",
+                "PUBLIC_VIDEO_FAMILY_URL",
+                "assets/voice-message-family-walkthrough-v1.mp4",
             ),
             (
                 VARIANT_MOBILE,
                 "Care Hub – Mobile",
-                "mobile",
                 "For care staff to play family messages and support resident recordings.",
-                Path("assets/recordings/mobile-overview.mp4"),
+                "/public/walkthrough-mobile",
+                "PUBLIC_VIDEO_MOBILE_URL",
+                "assets/voice-message-mobile-walkthrough-v1.mp4",
             ),
             (
                 VARIANT_OFFICE,
                 "Care Hub – Office",
-                "office",
                 "For office oversight, one-way updates, and practical structured messages.",
-                Path("assets/recordings/office-overview.mp4"),
+                "/public/walkthrough-office",
+                "PUBLIC_VIDEO_OFFICE_URL",
+                "assets/voice-message-office-walkthrough-v1.mp4",
             ),
         ]
-        for idx, (variant, label, css_class, summary, recording_path) in enumerate(app_entries):
+        for idx, (variant, label, summary, walkthrough_route, video_env_var, local_video_path) in enumerate(app_entries):
             target_url = get_public_app_url(variant)
             with app_cols[idx]:
+                if st.button(f"Watch {label}", key=f"public_watch_{variant}", use_container_width=True):
+                    set_route(walkthrough_route)
                 if target_url:
-                    st.markdown(
-                        f'<a class="pr-app-btn {css_class}" href="{target_url}" target="_self">{label}</a>',
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.markdown(
-                        f'<div class="pr-app-btn {css_class} disabled">{label}</div>',
-                        unsafe_allow_html=True,
-                    )
-                    st.caption("Link will appear when this app URL is configured.")
+                    if hasattr(st, "link_button"):
+                        st.link_button(f"Open {label} app", target_url, use_container_width=True)
+                    else:
+                        st.markdown(
+                            f'<a href="{target_url}" target="_self">Open {label} app</a>',
+                            unsafe_allow_html=True,
+                        )
                 st.markdown('<div class="pr-recording-card">', unsafe_allow_html=True)
                 st.markdown(f"<h3>{label}</h3>", unsafe_allow_html=True)
                 st.markdown(f"<p>{summary}</p>", unsafe_allow_html=True)
-                if recording_path.exists():
-                    st.video(str(recording_path))
+                video_source = resolve_public_video_source(video_env_var, local_video_path)
+                if video_source:
+                    st.video(video_source)
                 else:
-                    st.caption("Screen recording coming soon.")
+                    st.caption("Walkthrough video not available yet.")
                 st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
