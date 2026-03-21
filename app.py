@@ -1604,7 +1604,7 @@ def render_how_it_works_video_links(
     with video_cols[0]:
         render_route_link(
             "Universal overview video",
-            "/public/service-overview",
+            "/public/walkthrough-overview",
             key=f"{key_prefix}_video_overview_link",
         )
     with video_cols[1]:
@@ -4998,6 +4998,7 @@ OFFICE_PUBLIC_ROUTES = {
     "/public/walkthrough-family",
     "/public/walkthrough-mobile",
     "/public/walkthrough-office",
+    "/public/walkthrough-overview",
     "/care-hub/mobile/qa",
 }
 MOBILE_PUBLIC_ROUTES = {
@@ -5018,6 +5019,7 @@ MOBILE_PUBLIC_ROUTES = {
     "/public/walkthrough-family",
     "/public/walkthrough-mobile",
     "/public/walkthrough-office",
+    "/public/walkthrough-overview",
 }
 
 VARIANT_CONFIG = {
@@ -5049,6 +5051,7 @@ VARIANT_CONFIG = {
             "/public/walkthrough-family",
             "/public/walkthrough-mobile",
             "/public/walkthrough-office",
+            "/public/walkthrough-overview",
             "/pr-home",
             "/service-overview",
         },
@@ -5081,6 +5084,7 @@ VARIANT_CONFIG = {
             "/public/walkthrough-family",
             "/public/walkthrough-mobile",
             "/public/walkthrough-office",
+            "/public/walkthrough-overview",
             "/pr-home",
             "/service-overview",
         },
@@ -5139,6 +5143,7 @@ VARIANT_CONFIG = {
             "/public/walkthrough-family",
             "/public/walkthrough-mobile",
             "/public/walkthrough-office",
+            "/public/walkthrough-overview",
         },
     },
 }
@@ -8940,6 +8945,18 @@ def main() -> None:
                 "How family listens to the resident's current shared message.",
                 "How Office updates and practical structured replies appear in Family.",
                 "Non-live expectations and calm communication boundaries.",
+            ],
+        )
+    elif route == "/public/walkthrough-overview":
+        render_public_walkthrough_page(
+            "Universal service overview walkthrough",
+            "PUBLIC_VIDEO_OVERVIEW_URL",
+            "assets/voice-message-flow-overview-v1.mp4",
+            [
+                "How the overall service flow works across Family, Mobile, and Office.",
+                "Channel boundaries, replacement rules, and playback order.",
+                "Where Office updates and practical structured messages fit.",
+                "Non-live, non-urgent communication boundaries.",
             ],
         )
     elif route == "/public/walkthrough-mobile":
