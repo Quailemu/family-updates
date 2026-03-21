@@ -4936,18 +4936,7 @@ def render_home(active: str) -> None:
     )
 
     button_cols = st.columns(3, gap="small")
-    if get_app_variant() == "public":
-        render_public_app_buttons(button_cols)
-    else:
-        with button_cols[0]:
-            if st.button("Family", key="tab_family", use_container_width=True):
-                set_route("/public/family-guide")
-        with button_cols[1]:
-            if st.button("Care Hub – Mobile", key="tab_care_mobile", use_container_width=True):
-                set_route("/public/how-it-works")
-        with button_cols[2]:
-            if st.button("Care Hub – Office", key="tab_care_office", use_container_width=True):
-                set_route("/public/service-overview")
+    render_public_app_buttons(button_cols)
 
     # Homepage buttons are handled above (Family / Care Hub – Mobile / Care Hub – Office).
 
