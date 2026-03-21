@@ -1594,6 +1594,27 @@ def render_how_it_works_diagram_and_notes() -> None:
     )
 
 
+def render_how_it_works_video_links(
+    specific_label: str,
+    specific_route: str,
+    key_prefix: str,
+) -> None:
+    st.markdown("### Watch walkthroughs")
+    video_cols = st.columns(2, gap="small")
+    with video_cols[0]:
+        render_route_link(
+            "Universal overview video",
+            "/public/service-overview",
+            key=f"{key_prefix}_video_overview_link",
+        )
+    with video_cols[1]:
+        render_route_link(
+            f"{specific_label} walkthrough video",
+            specific_route,
+            key=f"{key_prefix}_video_specific_link",
+        )
+
+
 def render_how_it_works_family() -> None:
     render_page_header("How it works — Family")
     st.markdown(
@@ -1620,6 +1641,7 @@ def render_how_it_works_family() -> None:
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
+    render_how_it_works_video_links("Family", "/public/walkthrough-family", "how_family")
     render_how_it_works_diagram_and_notes()
     family_back_route = (
         get_home_route(VARIANT_FAMILY)
@@ -1656,6 +1678,11 @@ def render_how_it_works_mobile() -> None:
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
+    render_how_it_works_video_links(
+        "Care Hub – Mobile",
+        "/public/walkthrough-mobile",
+        "how_mobile",
+    )
     render_how_it_works_diagram_and_notes()
     render_route_link(
         "Back to Care Hub – Mobile",
@@ -1692,6 +1719,11 @@ def render_how_it_works_office_overview() -> None:
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
+    render_how_it_works_video_links(
+        "Care Hub – Office",
+        "/public/walkthrough-office",
+        "how_office",
+    )
     render_how_it_works_diagram_and_notes()
 
 
