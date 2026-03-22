@@ -2825,7 +2825,18 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
             .limit(1)
             .execute()
         )
-        row = (resp.data or [{}])[0]
+        row = (resp.data or [None])[0]
+        if not row:
+            # Some datasets may not have the care_home `active` flag set consistently.
+            # Fall back to id-only lookup so the identity banner can still render.
+            fallback_resp = (
+                supabase.table("care_homes")
+                .select("name, branding_banner_title, branding_banner_text, branding_banner_artwork_url")
+                .eq("id", care_home_id)
+                .limit(1)
+                .execute()
+            )
+            row = (fallback_resp.data or [{}])[0]
         profile = {
             "name": str(row.get("name") or "").strip(),
             "branding_banner_title": str(row.get("branding_banner_title") or "").strip(),
