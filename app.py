@@ -9,6 +9,7 @@ import hashlib
 import hmac
 import json
 import re
+import html
 from pathlib import Path
 
 import streamlit as st
@@ -1078,10 +1079,12 @@ def render_office_family_registration_form(
         resident_id = str(resident.get("id") or "")
         if not resident_id:
             continue
-        label = resident.get("preferred_name", "Resident")
-        room = str(resident.get("room") or "").strip()
-        if room:
-            label = f"{label} ({room})"
+        label = format_resident_identity_label(
+            resident,
+            include_room=True,
+            include_care_home=True,
+            separator=" | ",
+        )
         resident_options.append(resident_id)
         resident_by_id[resident_id] = resident
         resident_label_by_id[resident_id] = label
@@ -2765,6 +2768,19 @@ def fetch_care_home_residents(access_token: str) -> list[dict]:
             .eq("active", True)
             .execute()
         )
+        care_home_name = ""
+        try:
+            care_home_resp = (
+                supabase.table("care_homes")
+                .select("name")
+                .eq("id", care_home_id)
+                .eq("active", True)
+                .limit(1)
+                .execute()
+            )
+            care_home_name = str(((care_home_resp.data or [{}])[0].get("name") or "")).strip()
+        except Exception:
+            care_home_name = ""
         residents = []
         for resident in resident_resp.data or []:
             display_name = resident.get("preferred_display_name", "Resident")
@@ -2774,7 +2790,7 @@ def fetch_care_home_residents(access_token: str) -> list[dict]:
                     "preferred_name": display_name,
                     "surname": "",
                     "room": resident.get("care_home_reference", ""),
-                    "care_home": "",
+                    "care_home": care_home_name,
                     "family_id": resident.get("id"),
                     "care_home_id": resident.get("care_home_id"),
                 }
@@ -2785,40 +2801,173 @@ def fetch_care_home_residents(access_token: str) -> list[dict]:
 
 
 def fetch_active_care_home_name(access_token: str | None) -> str:
+    profile = fetch_active_care_home_profile(access_token)
+    return str(profile.get("name") or "").strip()
+
+
+def fetch_active_care_home_profile(access_token: str | None) -> dict:
     care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
     if not care_home_id or not access_token:
-        return ""
-    cache_key = f"care_home_name_{care_home_id}"
-    cached_name = st.session_state.get(cache_key)
-    if isinstance(cached_name, str) and cached_name.strip():
-        return cached_name.strip()
+        return {}
+    cache_key = f"care_home_profile_{care_home_id}"
+    cached_profile = st.session_state.get(cache_key)
+    if isinstance(cached_profile, dict) and str(cached_profile.get("name") or "").strip():
+        return cached_profile
     supabase, error = get_authed_supabase(access_token)
     if error:
-        return ""
+        return {}
     try:
         resp = (
             supabase.table("care_homes")
-            .select("name")
+            .select("name, branding_banner_title, branding_banner_text, branding_banner_artwork_url")
             .eq("id", care_home_id)
             .eq("active", True)
             .limit(1)
             .execute()
         )
-        name = ((resp.data or [{}])[0].get("name") or "").strip()
-        if name:
-            st.session_state[cache_key] = name
-        return name
+        row = (resp.data or [{}])[0]
+        profile = {
+            "name": str(row.get("name") or "").strip(),
+            "branding_banner_title": str(row.get("branding_banner_title") or "").strip(),
+            "branding_banner_text": str(row.get("branding_banner_text") or "").strip(),
+            "branding_banner_artwork_url": str(row.get("branding_banner_artwork_url") or "").strip(),
+        }
+        if profile["name"]:
+            st.session_state[cache_key] = profile
+        return profile
     except Exception:
-        return ""
+        return {}
+
+
+def update_active_care_home_branding(
+    access_token: str | None,
+    *,
+    banner_title: str,
+    banner_text: str,
+    banner_artwork_url: str,
+) -> tuple[bool, str]:
+    care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
+    if not care_home_id:
+        return False, "No active care home is linked to this session."
+    if not access_token:
+        return False, "Session is missing access credentials. Please sign in again."
+    title_value = str(banner_title or "").strip()
+    text_value = str(banner_text or "").strip()
+    artwork_value = str(banner_artwork_url or "").strip()
+    if len(title_value) > 120:
+        return False, "Banner title must be 120 characters or fewer."
+    if len(text_value) > 800:
+        return False, "Banner text must be 800 characters or fewer."
+    if artwork_value and not re.match(r"^https?://", artwork_value, re.IGNORECASE):
+        return False, "Artwork URL must start with http:// or https://"
+    if len(artwork_value) > 1000:
+        return False, "Artwork URL must be 1000 characters or fewer."
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, error
+    try:
+        (
+            supabase.table("care_homes")
+            .update(
+                {
+                    "branding_banner_title": title_value or None,
+                    "branding_banner_text": text_value or None,
+                    "branding_banner_artwork_url": artwork_value or None,
+                }
+            )
+            .eq("id", care_home_id)
+            .execute()
+        )
+        st.session_state.pop(f"care_home_profile_{care_home_id}", None)
+        return True, "Care home banner updated."
+    except Exception as exc:
+        return False, str(exc)
 
 
 def render_care_home_identity_banner(access_token: str | None) -> None:
     care_home_name = fetch_active_care_home_name(access_token)
     if care_home_name:
-        st.caption(f"Care home: {care_home_name}")
         st.caption("You are signed in to this care home.")
     else:
         st.caption("You are signed in.")
+
+
+def render_active_care_home_name_caption() -> None:
+    app_variant = get_app_variant()
+    if app_variant not in {VARIANT_MOBILE, VARIANT_OFFICE}:
+        return
+    if not st.session_state.get("auth_uid"):
+        return
+    access_token = str(st.session_state.get("access_token") or "").strip()
+    if not access_token:
+        return
+    care_home_profile = fetch_active_care_home_profile(access_token)
+    care_home_name = str(care_home_profile.get("name") or "").strip()
+    if care_home_name:
+        st.markdown(
+            (
+                '<div class="vm-care-home-banner">'
+                f"<strong>Care home:</strong> {care_home_name}"
+                "</div>"
+            ),
+            unsafe_allow_html=True,
+        )
+    render_active_care_home_custom_banner(care_home_profile)
+
+
+def render_active_care_home_custom_banner(care_home_profile: dict) -> None:
+    if not isinstance(care_home_profile, dict):
+        return
+    banner_title = str(care_home_profile.get("branding_banner_title") or "").strip()
+    banner_text = str(care_home_profile.get("branding_banner_text") or "").strip()
+    banner_artwork_url = str(care_home_profile.get("branding_banner_artwork_url") or "").strip()
+    if not banner_title and not banner_text and not banner_artwork_url:
+        return
+    escaped_title = html.escape(banner_title)
+    escaped_text = html.escape(banner_text)
+    st.markdown('<div class="vm-care-home-custom-banner">', unsafe_allow_html=True)
+    if escaped_title:
+        st.markdown(
+            f'<div class="vm-care-home-custom-banner-title">{escaped_title}</div>',
+            unsafe_allow_html=True,
+        )
+    if escaped_text:
+        st.markdown(
+            f'<div class="vm-care-home-custom-banner-text">{escaped_text}</div>',
+            unsafe_allow_html=True,
+        )
+    if banner_artwork_url:
+        try:
+            st.image(banner_artwork_url, use_container_width=True)
+        except Exception:
+            st.caption("Custom artwork could not be loaded.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def get_resident_full_name(resident: dict) -> str:
+    preferred_name = str(resident.get("preferred_name") or "").strip()
+    surname = str(resident.get("surname") or "").strip()
+    full_name = " ".join(part for part in (preferred_name, surname) if part).strip()
+    return full_name or "Resident"
+
+
+def format_resident_identity_label(
+    resident: dict,
+    *,
+    include_room: bool = True,
+    include_care_home: bool = True,
+    separator: str = " | ",
+) -> str:
+    parts = [get_resident_full_name(resident)]
+    if include_room:
+        room = str(resident.get("room") or "").strip()
+        if room:
+            parts.append(f"Room {room}")
+    if include_care_home:
+        care_home_name = str(resident.get("care_home") or "").strip()
+        if care_home_name:
+            parts.append(care_home_name)
+    return separator.join(parts)
 
 
 def fetch_family_contacts_for_resident(
@@ -3896,6 +4045,33 @@ def render_page_header(
     line-height: 1.2;
     font-weight: 700 !important;
   }}
+  .vm-care-home-banner {{
+    margin: -2px 0 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(31,31,31,0.2);
+    background: rgba(153, 255, 255, 0.2);
+    font-size: 0.95rem;
+    line-height: 1.35;
+  }}
+  .vm-care-home-custom-banner {{
+    margin: 0 0 12px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(31,31,31,0.18);
+    background: rgba(255, 255, 255, 0.9);
+  }}
+  .vm-care-home-custom-banner-title {{
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }}
+  .vm-care-home-custom-banner-text {{
+    font-size: 0.92rem;
+    line-height: 1.4;
+    margin: 0 0 8px;
+    color: rgba(31,31,31,0.86);
+  }}
   @media (max-width: 768px) {{
     .vm-header-strip {{
       padding: 4px 0 6px;
@@ -3907,6 +4083,22 @@ def render_page_header(
     .vm-page-title {{
       margin: 10px 0 8px;
       font-size: 1.22rem !important;
+    }}
+    .vm-care-home-banner {{
+      margin: -1px 0 8px;
+      padding: 7px 9px;
+      font-size: 0.9rem;
+    }}
+    .vm-care-home-custom-banner {{
+      margin: 0 0 10px;
+      padding: 9px;
+    }}
+    .vm-care-home-custom-banner-title {{
+      font-size: 0.95rem;
+    }}
+    .vm-care-home-custom-banner-text {{
+      font-size: 0.88rem;
+      margin: 0 0 7px;
     }}
   }}
 </style>
@@ -3925,6 +4117,7 @@ def render_page_header(
             st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown(f'<h2 class="vm-page-title">{page_title}</h2>', unsafe_allow_html=True)
+    render_active_care_home_name_caption()
 
 
 def render_front_page_descriptor() -> None:
@@ -6780,6 +6973,42 @@ def render_care_hub_security() -> None:
         os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in {"1", "true", "yes", "on"}
     )
 
+    st.markdown("### Care home banner")
+    care_home_profile = fetch_active_care_home_profile(access_token)
+    with st.form("office_care_home_banner_form"):
+        banner_title_value = st.text_input(
+            "Banner title (optional)",
+            value=str(care_home_profile.get("branding_banner_title") or ""),
+            max_chars=120,
+            key="office_branding_banner_title",
+        )
+        banner_text_value = st.text_area(
+            "Banner text (optional)",
+            value=str(care_home_profile.get("branding_banner_text") or ""),
+            height=120,
+            max_chars=800,
+            key="office_branding_banner_text",
+        )
+        banner_artwork_value = st.text_input(
+            "Banner artwork URL (optional)",
+            value=str(care_home_profile.get("branding_banner_artwork_url") or ""),
+            key="office_branding_banner_artwork_url",
+            help="Use a full http(s) image URL.",
+        )
+        save_banner = st.form_submit_button("Save care home banner")
+    if save_banner:
+        saved, message = update_active_care_home_branding(
+            access_token,
+            banner_title=banner_title_value,
+            banner_text=banner_text_value,
+            banner_artwork_url=banner_artwork_value,
+        )
+        if saved:
+            st.success(message)
+            st.rerun()
+        else:
+            st.error(message)
+
     st.markdown("### Two-factor authentication (TOTP)")
     if enabled:
         st.success("Two-factor authentication is enabled.")
@@ -7351,6 +7580,7 @@ def render_care_hub() -> None:
             if search_lower in resident["preferred_name"].lower()
             or search_lower in resident["surname"].lower()
             or (resident.get("room") and search_lower in resident["room"])
+            or (resident.get("care_home") and search_lower in resident["care_home"].lower())
         ]
 
     if not residents:
@@ -7362,9 +7592,12 @@ def render_care_hub() -> None:
         resident_option_ids = [resident["id"] for resident in residents]
         resident_label_by_id = {}
         for resident in residents:
-            full_name = f"{resident['preferred_name']} {resident['surname']}"
-            room_suffix = f" (Room {resident['room']})" if resident.get("room") else ""
-            resident_label_by_id[resident["id"]] = f"{full_name}{room_suffix}"
+            resident_label_by_id[resident["id"]] = format_resident_identity_label(
+                resident,
+                include_room=True,
+                include_care_home=True,
+                separator=" | ",
+            )
         selected_resident_id = st.selectbox(
             "Select resident",
             resident_option_ids,
@@ -7450,14 +7683,12 @@ def render_care_hub() -> None:
                 "office_update_category": OFFICE_UPDATE_CATEGORIES[0],
             },
         )
-        full_name = f"{resident['preferred_name']} {resident['surname']}"
-        room_label = f"Room {resident['room']}" if resident.get("room") else ""
-
+        full_name = get_resident_full_name(resident)
         st.markdown('<div class="vm-resident-card">', unsafe_allow_html=True)
         st.markdown("**Resident:**")
-        st.markdown(f"**{full_name}**")
-        if room_label:
-            st.markdown(f"Room {resident.get('room')}")
+        st.markdown(
+            f"**{format_resident_identity_label(resident, include_room=True, include_care_home=True, separator=' | ')}**"
+        )
 
         contacts = contacts_by_resident.get(resident_id, [])
         is_mobile_variant = get_app_variant() == VARIANT_MOBILE
@@ -8056,9 +8287,10 @@ def render_care_hub() -> None:
 
             sent_now = False
             room_display = f"Room {resident.get('room')}" if resident.get("room") else "Room not set"
+            care_home_display = str(resident.get("care_home") or "").strip() or "Care home not set"
             confirmation_line = (
                 "Sending on behalf of:<br/>"
-                f"{full_name} — {room_display} \u2192 all authorised family contacts"
+                f"{full_name} — {room_display} — {care_home_display} \u2192 all authorised family contacts"
             )
             st.markdown(
                 f'<div class="vm-muted-line">{confirmation_line}</div>',
