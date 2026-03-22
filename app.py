@@ -3952,11 +3952,11 @@ def render_header_menu(menu_key: str) -> None:
                 return
         if app_variant not in (VARIANT_OFFICE, VARIANT_MOBILE, VARIANT_FAMILY):
             if st.button("Public documents", key=f"{menu_key}_public_docs"):
-                set_route("/public/service-overview")
+                set_route("/public-docs")
                 return
         if app_variant == VARIANT_MOBILE:
             if st.button("Public documents", key=f"{menu_key}_mobile_public_docs"):
-                set_route("/public/service-overview")
+                set_route("/public-docs")
                 return
             if st.button("Mobile Q&A", key=f"{menu_key}_mobile_qa"):
                 set_route("/care-hub/mobile/qa")
@@ -5145,6 +5145,13 @@ def render_home(active: str) -> None:
             else:
                 st.caption("Overall walkthrough video will appear here when available.")
     st.markdown("### Service overview")
+    current_variant = get_app_variant()
+    if current_variant in (VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE):
+        render_route_link(
+            "← Back to Public documents",
+            "/public-docs",
+            key=f"service_overview_back_to_public_docs_{current_variant}",
+        )
     st.markdown(
         "voice-message.com  \n"
         "One message in. One message out.  \n"
@@ -6764,9 +6771,6 @@ def render_public_document(doc_path: str, back_route: str = "/service-overview")
 
 def render_public_docs() -> None:
     app_variant = get_app_variant()
-    if app_variant == VARIANT_PUBLIC:
-        set_route("/public/service-overview")
-        st.stop()
 
     render_page_header("Public Documents")
     if app_variant == VARIANT_FAMILY:
