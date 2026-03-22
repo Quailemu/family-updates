@@ -83,6 +83,10 @@ OFFICE_PRACTICAL_CHECKBOX_OPTIONS = (
 )
 OFFICE_PRACTICAL_CONTEXT_GENERAL = "general"
 OFFICE_PRACTICAL_CONTEXT_VISIT = "visit"
+SEND_ACTION_GUARD_SECONDS = max(
+    int(os.getenv("SEND_ACTION_GUARD_SECONDS", "5")),
+    3,
+)
 
 ALLOWED_VARIANT_VALUES_TEXT = "public, family, mobile, office"
 AUTH_COOKIE_NAME = "vm_auth_rt"
@@ -335,6 +339,67 @@ def render_route_link(label: str, route: str, key: str, use_container_width: boo
     target = normalize_route(route) or "/"
     if st.button(label, key=key, use_container_width=use_container_width):
         set_route(target)
+
+
+def get_send_guard_remaining_seconds(scope_key: str) -> int:
+    guard_until = st.session_state.get(f"{scope_key}_guard_until", 0.0)
+    try:
+        remaining = float(guard_until) - time.time()
+    except Exception:
+        return 0
+    if remaining <= 0:
+        return 0
+    return int(remaining) if remaining.is_integer() else int(remaining) + 1
+
+
+def activate_send_guard(scope_key: str) -> None:
+    st.session_state[f"{scope_key}_guard_until"] = time.time() + float(SEND_ACTION_GUARD_SECONDS)
+
+
+def _is_missing_conflict_constraint_error(exc: Exception) -> bool:
+    message = str(exc or "").lower()
+    return (
+        "42p10" in message
+        or "no unique or exclusion constraint matching the on conflict specification" in message
+    )
+
+
+def upsert_latest_message_with_fallback(
+    supabase: object,
+    payload: dict,
+    conflict_columns: str,
+    lookup_filters: dict,
+) -> tuple[object | None, str | None]:
+    conflict_supported = st.session_state.get("_messages_conflict_upsert_supported")
+    if conflict_supported is not False:
+        try:
+            response = supabase.table("messages").upsert(payload, on_conflict=conflict_columns).execute()
+            st.session_state["_messages_conflict_upsert_supported"] = True
+            return response, None
+        except Exception as exc:
+            if not _is_missing_conflict_constraint_error(exc):
+                return None, str(exc)
+            st.session_state["_messages_conflict_upsert_supported"] = False
+
+    try:
+        existing_query = supabase.table("messages").select("id")
+        for key, value in lookup_filters.items():
+            existing_query = existing_query.eq(key, value)
+        existing_response = existing_query.order("recorded_at", desc=True).limit(1).execute()
+        existing_id = (
+            existing_response.data[0].get("id")
+            if hasattr(existing_response, "data")
+            and isinstance(existing_response.data, list)
+            and existing_response.data
+            else None
+        )
+        if existing_id:
+            response = supabase.table("messages").update(payload).eq("id", existing_id).execute()
+        else:
+            response = supabase.table("messages").insert(payload).execute()
+        return response, None
+    except Exception as exc:
+        return None, str(exc)
 
 def get_supabase_client() -> tuple[object | None, str | None]:
     url, key = get_supabase_config()
@@ -6340,18 +6405,19 @@ def render_family_send() -> None:
                         "audio_bytes": len(audio_bytes),
                         "recorded_at": now_iso,
                     }
-                    try:
-                        # Write directly to messages to avoid environment-specific RPC drift.
-                        resp = (
-                            supabase.table("messages")
-                            .upsert(
-                                payload,
-                                on_conflict="resident_id,contact_user_id,direction,channel",
-                            )
-                            .execute()
-                        )
-                    except Exception as exc:  # pragma: no cover - Supabase runtime error
-                        st.error(str(exc))
+                    resp, upsert_error = upsert_latest_message_with_fallback(
+                        supabase,
+                        payload,
+                        "resident_id,contact_user_id,direction,channel",
+                        {
+                            "resident_id": resident_id,
+                            "contact_user_id": st.session_state.get("auth_uid"),
+                            "channel": "resident_family",
+                            "direction": "to_resident",
+                        },
+                    )
+                    if upsert_error:
+                        st.error(upsert_error)
                     else:
                         message_id = (
                             (
@@ -8051,6 +8117,15 @@ def render_care_hub() -> None:
                         else:
                             st.warning("Queue state reset request completed with no DB rows changed.")
                         st.rerun()
+            send_guard_scope = f"care_send_{resident_id}"
+            send_guard_remaining = get_send_guard_remaining_seconds(send_guard_scope)
+            send_guard_active = send_guard_remaining > 0
+            if send_guard_active:
+                st.warning(
+                    "Please wait until you see the sent confirmation before playing another message. "
+                    f"({send_guard_remaining}s)"
+                )
+
             playlist_contacts = sort_contacts_for_playback(contacts)
             if playlist_contacts:
                 with st.expander("Select from family playlist"):
@@ -8072,6 +8147,7 @@ def render_care_hub() -> None:
                     if st.button(
                         "Play selected family message",
                         key=f"care_playlist_play_{resident_id}",
+                        disabled=send_guard_active,
                         use_container_width=True,
                     ):
                         selected_contact = next(
@@ -8127,6 +8203,7 @@ def render_care_hub() -> None:
                 if st.button(
                     "Play next family message",
                     key=f"care_play_next_{resident_id}",
+                    disabled=send_guard_active,
                     use_container_width=True,
                 ):
                     selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
@@ -8377,6 +8454,9 @@ def render_care_hub() -> None:
                 f'<div class="vm-muted-line">{confirmation_line}</div>',
                 unsafe_allow_html=True,
             )
+            st.caption(
+                "After pressing Send, wait for the sent confirmation before playing another message."
+            )
             last_sent = st.session_state.get("care_last_sent")
             if sent_now:
                 st.success("Message sent.")
@@ -8414,55 +8494,19 @@ def render_care_hub() -> None:
                             "audio_bytes": len(audio_bytes),
                             "recorded_at": now_iso,
                         }
-                        try:
-                            try:
-                                resp = (
-                                    supabase.table("messages")
-                                    .upsert(
-                                        payload,
-                                        on_conflict="resident_id,family_id,direction,channel",
-                                    )
-                                    .execute()
-                                )
-                            except Exception as broadcast_upsert_exc:
-                                broadcast_upsert_msg = str(broadcast_upsert_exc)
-                                broadcast_upsert_msg_l = broadcast_upsert_msg.lower()
-                                missing_conflict_constraint = (
-                                    "42p10" in broadcast_upsert_msg_l
-                                    or "no unique or exclusion constraint matching the on conflict specification"
-                                    in broadcast_upsert_msg_l
-                                )
-                                if not missing_conflict_constraint:
-                                    raise
-                                existing_broadcast = (
-                                    supabase.table("messages")
-                                    .select("id")
-                                    .eq("resident_id", resident_id)
-                                    .eq("family_id", resident.get("family_id") or resident_id)
-                                    .eq("channel", "resident_family")
-                                    .eq("direction", "from_resident")
-                                    .order("recorded_at", desc=True)
-                                    .limit(1)
-                                    .execute()
-                                )
-                                existing_broadcast_id = (
-                                    existing_broadcast.data[0].get("id")
-                                    if hasattr(existing_broadcast, "data")
-                                    and isinstance(existing_broadcast.data, list)
-                                    and existing_broadcast.data
-                                    else None
-                                )
-                                if existing_broadcast_id:
-                                    resp = (
-                                        supabase.table("messages")
-                                        .update(payload)
-                                        .eq("id", existing_broadcast_id)
-                                        .execute()
-                                    )
-                                else:
-                                    resp = supabase.table("messages").insert(payload).execute()
-                        except Exception as exc:  # pragma: no cover - Supabase runtime error
-                            st.error(str(exc))
+                        resp, upsert_error = upsert_latest_message_with_fallback(
+                            supabase,
+                            payload,
+                            "resident_id,family_id,direction,channel",
+                            {
+                                "resident_id": resident_id,
+                                "family_id": resident.get("family_id") or resident_id,
+                                "channel": "resident_family",
+                                "direction": "from_resident",
+                            },
+                        )
+                        if upsert_error:
+                            st.error(upsert_error)
                         else:
                             message_id = (
                                 (
@@ -8497,6 +8541,7 @@ def render_care_hub() -> None:
                                 "contact_id": None,
                                 "message": "Message sent to all authorised family contacts.",
                             }
+                            activate_send_guard(send_guard_scope)
                             state["recording_input_nonce"] = (
                                 int(state.get("recording_input_nonce", 0)) + 1
                             )
@@ -8603,6 +8648,9 @@ def render_care_hub() -> None:
                 st.caption(
                     "Office updates are non-urgent, one-way updates from the care team (no replies). For any queries, please contact the care home directly."
                 )
+                st.caption(
+                    "After pressing Send, wait for the sent confirmation before playing another message."
+                )
                 selected_office_category = st.selectbox(
                     "Office update category (non-urgent)",
                     options=list(OFFICE_UPDATE_CATEGORIES),
@@ -8649,62 +8697,19 @@ def render_care_hub() -> None:
                             "audio_bytes": len(office_audio_bytes),
                             "recorded_at": office_now_iso,
                         }
-                        try:
-                            try:
-                                office_resp = (
-                                    supabase.table("messages")
-                                    .upsert(
-                                        office_payload,
-                                        on_conflict="resident_id,family_id,direction,channel",
-                                    )
-                                    .execute()
-                                )
-                            except Exception as office_upsert_exc:
-                                # Some deployments may not yet have the exact unique constraint
-                                # for on_conflict; fall back to update-or-insert without showing
-                                # a transient error popup to staff.
-                                office_upsert_msg = str(office_upsert_exc)
-                                office_upsert_msg_l = office_upsert_msg.lower()
-                                missing_conflict_constraint = (
-                                    "42p10" in office_upsert_msg_l
-                                    or "no unique or exclusion constraint matching the on conflict specification"
-                                    in office_upsert_msg_l
-                                )
-                                if not missing_conflict_constraint:
-                                    raise
-                                existing_office = (
-                                    supabase.table("messages")
-                                    .select("id")
-                                    .eq("resident_id", resident_id)
-                                    .eq("family_id", resident.get("family_id") or resident_id)
-                                    .eq("channel", "office_family")
-                                    .eq("direction", "office_to_family")
-                                    .order("recorded_at", desc=True)
-                                    .limit(1)
-                                    .execute()
-                                )
-                                existing_office_id = (
-                                    existing_office.data[0].get("id")
-                                    if hasattr(existing_office, "data")
-                                    and isinstance(existing_office.data, list)
-                                    and existing_office.data
-                                    else None
-                                )
-                                if existing_office_id:
-                                    office_resp = (
-                                        supabase.table("messages")
-                                        .update(office_payload)
-                                        .eq("id", existing_office_id)
-                                        .execute()
-                                    )
-                                else:
-                                    office_resp = (
-                                        supabase.table("messages")
-                                        .insert(office_payload)
-                                        .execute()
-                                    )
-                        except Exception as exc:  # pragma: no cover - Supabase runtime error
-                            st.error(str(exc))
+                        office_resp, upsert_error = upsert_latest_message_with_fallback(
+                            supabase,
+                            office_payload,
+                            "resident_id,family_id,direction,channel",
+                            {
+                                "resident_id": resident_id,
+                                "family_id": resident.get("family_id") or resident_id,
+                                "channel": "office_family",
+                                "direction": "office_to_family",
+                            },
+                        )
+                        if upsert_error:
+                            st.error(upsert_error)
                         else:
                             office_message_id = (
                                 (
@@ -8743,6 +8748,7 @@ def render_care_hub() -> None:
                                 else f"{category_label} update sent to all authorised family contacts."
                             )
                             state["office_last_sent_fingerprint"] = sent_office_fp
+                            activate_send_guard(send_guard_scope)
                             st.rerun()
 
             if get_app_variant() == VARIANT_OFFICE:
