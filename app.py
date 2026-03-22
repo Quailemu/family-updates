@@ -2842,6 +2842,7 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
 def update_active_care_home_branding(
     access_token: str | None,
     *,
+    care_home_name: str,
     banner_title: str,
     banner_text: str,
     banner_artwork_url: str,
@@ -2851,9 +2852,14 @@ def update_active_care_home_branding(
         return False, "No active care home is linked to this session."
     if not access_token:
         return False, "Session is missing access credentials. Please sign in again."
+    name_value = str(care_home_name or "").strip()
     title_value = str(banner_title or "").strip()
     text_value = str(banner_text or "").strip()
     artwork_value = str(banner_artwork_url or "").strip()
+    if not name_value:
+        return False, "Care home name is required."
+    if len(name_value) > 160:
+        return False, "Care home name must be 160 characters or fewer."
     if len(title_value) > 120:
         return False, "Banner title must be 120 characters or fewer."
     if len(text_value) > 800:
@@ -2870,6 +2876,7 @@ def update_active_care_home_branding(
             supabase.table("care_homes")
             .update(
                 {
+                    "name": name_value,
                     "branding_banner_title": title_value or None,
                     "branding_banner_text": text_value or None,
                     "branding_banner_artwork_url": artwork_value or None,
@@ -2879,7 +2886,7 @@ def update_active_care_home_branding(
             .execute()
         )
         st.session_state.pop(f"care_home_profile_{care_home_id}", None)
-        return True, "Care home banner updated."
+        return True, "Care home profile updated."
     except Exception as exc:
         return False, str(exc)
 
@@ -6976,6 +6983,12 @@ def render_care_hub_security() -> None:
     st.markdown("### Care home banner")
     care_home_profile = fetch_active_care_home_profile(access_token)
     with st.form("office_care_home_banner_form"):
+        care_home_name_value = st.text_input(
+            "Care home name",
+            value=str(care_home_profile.get("name") or ""),
+            max_chars=160,
+            key="office_care_home_name",
+        )
         banner_title_value = st.text_input(
             "Banner title (optional)",
             value=str(care_home_profile.get("branding_banner_title") or ""),
@@ -6999,6 +7012,7 @@ def render_care_hub_security() -> None:
     if save_banner:
         saved, message = update_active_care_home_branding(
             access_token,
+            care_home_name=care_home_name_value,
             banner_title=banner_title_value,
             banner_text=banner_text_value,
             banner_artwork_url=banner_artwork_value,
