@@ -2310,21 +2310,29 @@ def get_next_contact_user_id_with_message(
     current_contact_user_id: str | None,
 ) -> str | None:
     contacts_sorted = sort_contacts_for_playback(contacts)
+    resolved_contact_user_ids: list[str] = []
+    for contact in contacts_sorted:
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        if not contact_user_id:
+            contact_email = str(contact.get("email") or "").strip().lower()
+            if contact_email:
+                contact_user_id = _get_contact_auth_user_id_via_email(contact_email).strip()
+                if contact_user_id:
+                    contact["auth_user_id"] = contact_user_id
+        if contact_user_id:
+            resolved_contact_user_ids.append(contact_user_id)
+    latest_by_contact = fetch_latest_messages_for_contact_user_ids(
+        resident_id,
+        access_token,
+        resolved_contact_user_ids,
+        channel="resident_family",
+        include_audio=False,
+    )
     ordered_user_ids: list[str] = []
     for contact in contacts_sorted:
-        latest = fetch_latest_message_for_contact_with_mapping_repair(
-            resident_id,
-            access_token,
-            contact,
-            channel="resident_family",
-            include_audio=False,
-        )
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        latest = latest_by_contact.get(contact_user_id)
         if not latest:
-            continue
-        contact_user_id = str(
-            (latest.get("contact_user_id") or contact.get("auth_user_id") or "")
-        ).strip()
-        if not contact_user_id:
             continue
         if contact_user_id not in ordered_user_ids:
             ordered_user_ids.append(contact_user_id)
@@ -2477,20 +2485,31 @@ def select_next_family_message_for_mobile(
     if not contacts_sorted:
         return None, None, "No linked family contacts."
 
+    resolved_contact_user_ids: list[str] = []
+    for contact in contacts_sorted:
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        if not contact_user_id:
+            contact_email = str(contact.get("email") or "").strip().lower()
+            if contact_email:
+                contact_user_id = _get_contact_auth_user_id_via_email(contact_email).strip()
+                if contact_user_id:
+                    contact["auth_user_id"] = contact_user_id
+        if contact_user_id:
+            resolved_contact_user_ids.append(contact_user_id)
+    latest_by_contact = fetch_latest_messages_for_contact_user_ids(
+        resident_id,
+        access_token,
+        resolved_contact_user_ids,
+        channel="resident_family",
+        include_audio=False,
+    )
+
     queued_items: list[dict] = []
     for contact in contacts_sorted:
-        latest = fetch_latest_message_for_contact_with_mapping_repair(
-            resident_id,
-            access_token,
-            contact,
-            channel="resident_family",
-            include_audio=False,
-        )
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        latest = latest_by_contact.get(contact_user_id)
         if not latest:
             continue
-        contact_user_id = str(
-            (latest.get("contact_user_id") or contact.get("auth_user_id") or "")
-        ).strip()
         if not contact_user_id:
             continue
         if str(latest.get("contact_user_id") or "").strip() != contact_user_id:
@@ -2600,21 +2619,31 @@ def get_family_queue_status_for_resident(
     contacts_sorted = sort_contacts_for_playback(contacts)
     if not contacts_sorted:
         return 0, None, []
+    resolved_contact_user_ids: list[str] = []
+    for contact in contacts_sorted:
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        if not contact_user_id:
+            contact_email = str(contact.get("email") or "").strip().lower()
+            if contact_email:
+                contact_user_id = _get_contact_auth_user_id_via_email(contact_email).strip()
+                if contact_user_id:
+                    contact["auth_user_id"] = contact_user_id
+        if contact_user_id:
+            resolved_contact_user_ids.append(contact_user_id)
+    latest_by_contact = fetch_latest_messages_for_contact_user_ids(
+        resident_id,
+        access_token,
+        resolved_contact_user_ids,
+        channel="resident_family",
+        include_audio=False,
+    )
     unread_count = 0
     unread_contacts: list[dict] = []
     for contact in contacts_sorted:
-        latest = fetch_latest_message_for_contact_with_mapping_repair(
-            resident_id,
-            access_token,
-            contact,
-            channel="resident_family",
-            include_audio=False,
-        )
+        contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        latest = latest_by_contact.get(contact_user_id)
         if not latest:
             continue
-        contact_user_id = str(
-            (latest.get("contact_user_id") or contact.get("auth_user_id") or "")
-        ).strip()
         if contact_user_id and str(latest.get("contact_user_id") or "").strip() != contact_user_id:
             latest = dict(latest)
             latest["contact_user_id"] = contact_user_id
@@ -3233,6 +3262,60 @@ def fetch_latest_message(
         return latest
     except Exception:
         return None
+
+
+def fetch_latest_messages_for_contact_user_ids(
+    resident_id: str,
+    access_token: str,
+    contact_user_ids: list[str],
+    *,
+    channel: str = "resident_family",
+    include_audio: bool = False,
+) -> dict[str, dict]:
+    if not resident_id or not contact_user_ids:
+        return {}
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return {}
+    unique_ids: list[str] = []
+    seen_ids: set[str] = set()
+    for raw_id in contact_user_ids:
+        user_id = str(raw_id or "").strip()
+        if not user_id or user_id in seen_ids:
+            continue
+        seen_ids.add(user_id)
+        unique_ids.append(user_id)
+    if not unique_ids:
+        return {}
+    try:
+        select_fields = (
+            "id, resident_id, contact_user_id, family_id, channel, direction, "
+            + (
+                "audio_storage_path, audio_mime_type, audio_bytes, "
+                if include_audio
+                else ""
+            )
+            + "recorded_at"
+        )
+        resp = (
+            supabase.table("messages")
+            .select(select_fields)
+            .eq("resident_id", resident_id)
+            .eq("direction", "to_resident")
+            .eq("channel", channel)
+            .in_("contact_user_id", unique_ids)
+            .order("recorded_at", desc=True)
+            .execute()
+        )
+        latest_by_contact: dict[str, dict] = {}
+        for row in resp.data or []:
+            contact_user_id = str(row.get("contact_user_id") or "").strip()
+            if not contact_user_id or contact_user_id in latest_by_contact:
+                continue
+            latest_by_contact[contact_user_id] = row
+        return latest_by_contact
+    except Exception:
+        return {}
 
 
 def get_family_contact_for_session(access_token: str | None) -> dict | None:
