@@ -2894,7 +2894,17 @@ def update_active_care_home_branding(
 def render_care_home_identity_banner(access_token: str | None) -> None:
     care_home_name = fetch_active_care_home_name(access_token)
     if care_home_name:
-        st.caption("You are signed in to this care home.")
+        safe_name = html.escape(care_home_name)
+        st.markdown(
+            (
+                '<div style="margin:6px 0 12px 0;padding:8px 10px;'
+                'border:1px solid rgba(31,31,31,0.12);border-radius:10px;'
+                'background:rgba(153,255,255,0.18);font-size:0.92rem;">'
+                f"<strong>Care home:</strong> {safe_name}"
+                "</div>"
+            ),
+            unsafe_allow_html=True,
+        )
     else:
         st.caption("You are signed in.")
 
