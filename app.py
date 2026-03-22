@@ -5518,6 +5518,7 @@ def render_public_walkthrough_page(
     local_video_path: str,
     role_summary: list[str],
     back_route: str | None = None,
+    fallback_doc_path: str | None = None,
 ) -> None:
     effective_back_route = back_route
     if not effective_back_route:
@@ -5539,6 +5540,9 @@ def render_public_walkthrough_page(
         st.warning(
             f"Video not found. Set {video_env_var} or add {local_video_path}."
         )
+        if fallback_doc_path:
+            st.caption("Showing written guide instead:")
+            render_document_boxes(fallback_doc_path, strip_first_heading=True)
     st.markdown("### What this walkthrough shows")
     for line in role_summary:
         st.markdown(f"- {line}")
@@ -9248,6 +9252,7 @@ def main() -> None:
                 "How Office updates and practical structured replies appear in Family.",
                 "Non-live expectations and calm communication boundaries.",
             ],
+            fallback_doc_path="docs/public/06_family_guide.md",
         )
     elif route == "/public/walkthrough-overview":
         render_public_walkthrough_page(
@@ -9272,6 +9277,7 @@ def main() -> None:
                 "How staff support Resident -> Family recording.",
                 "How playback and recording fit around care routines.",
             ],
+            fallback_doc_path="docs/public/02_how_it_works.md",
         )
     elif route == "/public/walkthrough-office":
         render_public_walkthrough_page(
@@ -9284,6 +9290,7 @@ def main() -> None:
                 "How Office sends practical text requests and reviews structured replies.",
                 "How Office oversight supports low-pressure, non-urgent communication.",
             ],
+            fallback_doc_path="docs/public/02_how_it_works.md",
         )
     elif route == "/public-privacy":
         set_route("/public/privacy-notice")
