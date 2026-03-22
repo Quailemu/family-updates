@@ -2971,6 +2971,11 @@ def update_active_care_home_branding(
 
 
 def render_care_home_identity_banner(access_token: str | None) -> None:
+    if (
+        get_app_variant() in {VARIANT_MOBILE, VARIANT_OFFICE}
+        and st.session_state.get("_care_home_banner_rendered_in_header")
+    ):
+        return
     care_home_name = fetch_active_care_home_name(access_token)
     if care_home_name:
         safe_name = html.escape(care_home_name)
@@ -2989,6 +2994,7 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
 
 
 def render_active_care_home_name_caption() -> None:
+    st.session_state["_care_home_banner_rendered_in_header"] = False
     app_variant = get_app_variant()
     if app_variant not in {VARIANT_MOBILE, VARIANT_OFFICE}:
         return
@@ -3008,6 +3014,7 @@ def render_active_care_home_name_caption() -> None:
             ),
             unsafe_allow_html=True,
         )
+        st.session_state["_care_home_banner_rendered_in_header"] = True
     render_active_care_home_custom_banner(care_home_profile)
 
 
