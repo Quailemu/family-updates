@@ -2317,6 +2317,7 @@ def get_next_contact_user_id_with_message(
             access_token,
             contact,
             channel="resident_family",
+            include_audio=False,
         )
         if not latest:
             continue
@@ -2483,6 +2484,7 @@ def select_next_family_message_for_mobile(
             access_token,
             contact,
             channel="resident_family",
+            include_audio=False,
         )
         if not latest:
             continue
@@ -2606,6 +2608,7 @@ def get_family_queue_status_for_resident(
             access_token,
             contact,
             channel="resident_family",
+            include_audio=False,
         )
         if not latest:
             continue
@@ -3125,6 +3128,7 @@ def fetch_latest_message_for_contact_with_mapping_repair(
     contact: dict,
     *,
     channel: str = "resident_family",
+    include_audio: bool = True,
 ) -> dict | None:
     contact_user_id = str(contact.get("auth_user_id") or "").strip()
     if contact_user_id:
@@ -3134,6 +3138,7 @@ def fetch_latest_message_for_contact_with_mapping_repair(
             access_token,
             contact_user_id=contact_user_id,
             channel=channel,
+            include_audio=include_audio,
         )
         if latest:
             return latest
@@ -3164,6 +3169,7 @@ def fetch_latest_message_for_contact_with_mapping_repair(
         access_token,
         contact_user_id=resolved_user_id,
         channel=channel,
+        include_audio=include_audio,
     )
 
 
@@ -3174,6 +3180,7 @@ def fetch_latest_message(
     contact_user_id: str | None = None,
     family_id: str | None = None,
     channel: str = "resident_family",
+    include_audio: bool = True,
 ) -> dict | None:
     supabase, error = get_authed_supabase(access_token)
     if error:
@@ -3182,7 +3189,13 @@ def fetch_latest_message(
         query = (
             supabase.table("messages")
             .select(
-                "id, resident_id, contact_user_id, family_id, channel, direction, audio_storage_path, audio_mime_type, audio_bytes, recorded_at"
+                "id, resident_id, contact_user_id, family_id, channel, direction, "
+                + (
+                    "audio_storage_path, audio_mime_type, audio_bytes, "
+                    if include_audio
+                    else ""
+                )
+                + "recorded_at"
             )
             .eq("resident_id", resident_id)
             .eq("direction", direction)
@@ -8233,6 +8246,15 @@ def render_care_hub() -> None:
                     access_token,
                     contact_user_id=state.get("selected_contact_user_id"),
                     channel="resident_family",
+                )
+            elif not latest.get("audio_storage_path"):
+                latest = fetch_latest_message(
+                    resident_id,
+                    "to_resident",
+                    access_token,
+                    contact_user_id=state.get("selected_contact_user_id"),
+                    channel="resident_family",
+                    include_audio=True,
                 )
             latest_contact_user_id = str((latest or {}).get("contact_user_id") or "").strip()
             if latest_contact_user_id:
