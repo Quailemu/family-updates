@@ -7102,6 +7102,7 @@ def render_care_hub_mfa() -> None:
             st.info("Two-factor authentication is not enabled for this account.")
             if st.button("Continue", key="mfa_not_enabled_continue"):
                 set_route(get_home_route(get_app_variant()))
+                st.rerun()
             return
         st.info("Two-factor authentication is required for Care Hub - Office.")
         st.write("Set up your authenticator app to continue.")
@@ -7174,6 +7175,7 @@ def render_care_hub_mfa() -> None:
         if verified:
             st.session_state["mfa_verified"] = True
             set_route(get_home_route(get_app_variant()))
+            st.rerun()
         else:
             st.error("Invalid code.")
     if st.button("Sign out", key="mfa_login_sign_out"):
@@ -7705,6 +7707,13 @@ def render_care_hub() -> None:
                     "No authorised family contacts are linked to this resident yet. "
                     "Register a family member in Care Hub – Office before sending messages."
                 )
+                if st.button(
+                    "Register family member now",
+                    key=f"care_register_family_cta_{resident_id}",
+                    use_container_width=True,
+                ):
+                    set_route("/care-hub/register-family")
+                    st.rerun()
             else:
                 st.warning(
                     "No authorised family contacts are linked to this resident yet. "
