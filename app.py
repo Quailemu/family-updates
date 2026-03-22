@@ -1082,7 +1082,7 @@ def render_office_family_registration_form(
         label = format_resident_identity_label(
             resident,
             include_room=True,
-            include_care_home=True,
+            include_care_home=False,
             separator=" | ",
         )
         resident_options.append(resident_id)
@@ -7589,21 +7589,29 @@ def render_care_hub() -> None:
         return
 
     if is_care_queue_variant_screen:
+        include_care_home_in_resident_labels = get_app_variant() == VARIANT_MOBILE
         resident_option_ids = [resident["id"] for resident in residents]
         resident_label_by_id = {}
         for resident in residents:
             resident_label_by_id[resident["id"]] = format_resident_identity_label(
                 resident,
                 include_room=True,
-                include_care_home=True,
+                include_care_home=include_care_home_in_resident_labels,
                 separator=" | ",
             )
-        selected_resident_id = st.selectbox(
-            "Select resident",
-            resident_option_ids,
-            format_func=lambda resident_id: resident_label_by_id.get(resident_id, "Resident"),
-            key="care_selected_resident_id",
-        )
+        if len(resident_option_ids) == 1:
+            selected_resident_id = resident_option_ids[0]
+            st.caption(
+                "Resident selected: "
+                + resident_label_by_id.get(selected_resident_id, "Resident")
+            )
+        else:
+            selected_resident_id = st.selectbox(
+                "Select resident",
+                resident_option_ids,
+                format_func=lambda resident_id: resident_label_by_id.get(resident_id, "Resident"),
+                key="care_selected_resident_id",
+            )
         residents = [
             resident for resident in residents if resident["id"] == selected_resident_id
         ]
@@ -7687,10 +7695,23 @@ def render_care_hub() -> None:
         st.markdown('<div class="vm-resident-card">', unsafe_allow_html=True)
         st.markdown("**Resident:**")
         st.markdown(
-            f"**{format_resident_identity_label(resident, include_room=True, include_care_home=True, separator=' | ')}**"
+            f"**{format_resident_identity_label(resident, include_room=True, include_care_home=include_care_home_in_resident_labels, separator=' | ')}**"
         )
 
         contacts = contacts_by_resident.get(resident_id, [])
+        if not contacts:
+            if get_app_variant() == VARIANT_OFFICE:
+                st.warning(
+                    "No authorised family contacts are linked to this resident yet. "
+                    "Register a family member in Care Hub – Office before sending messages."
+                )
+            else:
+                st.warning(
+                    "No authorised family contacts are linked to this resident yet. "
+                    "Ask Office staff to register a family member."
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+            continue
         is_mobile_variant = get_app_variant() == VARIANT_MOBILE
         is_office_variant = get_app_variant() == VARIANT_OFFICE
         is_queue_playback_variant = is_mobile_variant
@@ -8287,11 +8308,19 @@ def render_care_hub() -> None:
 
             sent_now = False
             room_display = f"Room {resident.get('room')}" if resident.get("room") else "Room not set"
-            care_home_display = str(resident.get("care_home") or "").strip() or "Care home not set"
-            confirmation_line = (
-                "Sending on behalf of:<br/>"
-                f"{full_name} — {room_display} — {care_home_display} \u2192 all authorised family contacts"
-            )
+            if is_office_variant:
+                confirmation_line = (
+                    "Sending on behalf of:<br/>"
+                    f"{full_name} — {room_display} \u2192 all authorised family contacts"
+                )
+            else:
+                care_home_display = (
+                    str(resident.get("care_home") or "").strip() or "Care home not set"
+                )
+                confirmation_line = (
+                    "Sending on behalf of:<br/>"
+                    f"{full_name} — {room_display} — {care_home_display} \u2192 all authorised family contacts"
+                )
             st.markdown(
                 f'<div class="vm-muted-line">{confirmation_line}</div>',
                 unsafe_allow_html=True,
