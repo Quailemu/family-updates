@@ -6957,6 +6957,39 @@ def render_docs() -> None:
     require_care_access()
     render_page_header("Documents")
     render_care_home_identity_banner(st.session_state.get("access_token"))
+    st.markdown("### Walkthrough videos")
+    st.caption("Open current walkthrough videos for each app role.")
+    walkthrough_cols_top = st.columns(2, gap="small")
+    with walkthrough_cols_top[0]:
+        if st.button(
+            "Care Hub – Office walkthrough",
+            key="docs_walkthrough_office",
+            use_container_width=True,
+        ):
+            set_route("/public/walkthrough-office")
+    with walkthrough_cols_top[1]:
+        if st.button(
+            "Care Hub – Mobile walkthrough",
+            key="docs_walkthrough_mobile",
+            use_container_width=True,
+        ):
+            set_route("/public/walkthrough-mobile")
+    walkthrough_cols_bottom = st.columns(2, gap="small")
+    with walkthrough_cols_bottom[0]:
+        if st.button(
+            "Family walkthrough",
+            key="docs_walkthrough_family",
+            use_container_width=True,
+        ):
+            set_route("/public/walkthrough-family")
+    with walkthrough_cols_bottom[1]:
+        if st.button(
+            "Universal overview walkthrough",
+            key="docs_walkthrough_overview",
+            use_container_width=True,
+        ):
+            set_route("/public/walkthrough-overview")
+    st.write("")
 
     docs = [
         {
