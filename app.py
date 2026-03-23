@@ -48,8 +48,12 @@ APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
     "on",
 }
 APP_LIVE_REFRESH_INTERVAL_MS = max(
-    int(os.getenv("APP_LIVE_REFRESH_INTERVAL_MS", "20000")),
+    int(os.getenv("APP_LIVE_REFRESH_INTERVAL_MS", "30000")),
     7000,
+)
+APP_MESSAGE_CACHE_SECONDS = max(
+    int(os.getenv("APP_MESSAGE_CACHE_SECONDS", "15")),
+    0,
 )
 APP_FAMILY_LIVE_REFRESH = os.getenv("APP_FAMILY_LIVE_REFRESH", "0").strip().lower() in {
     "1",
@@ -359,6 +363,54 @@ def get_send_guard_remaining_seconds(scope_key: str) -> int:
 
 def activate_send_guard(scope_key: str) -> None:
     st.session_state[f"{scope_key}_guard_until"] = time.time() + float(SEND_ACTION_GUARD_SECONDS)
+
+
+def _get_message_cache_store() -> dict:
+    cache = st.session_state.get("_messages_query_cache")
+    if not isinstance(cache, dict):
+        cache = {}
+        st.session_state["_messages_query_cache"] = cache
+    return cache
+
+
+def _get_message_cache_epoch() -> int:
+    try:
+        return int(st.session_state.get("_messages_cache_epoch", 0))
+    except Exception:
+        return 0
+
+
+def bump_message_cache_epoch() -> None:
+    st.session_state["_messages_cache_epoch"] = _get_message_cache_epoch() + 1
+
+
+def _get_cached_message_query_result(cache_key: tuple):
+    if APP_MESSAGE_CACHE_SECONDS <= 0:
+        return None
+    cache = _get_message_cache_store()
+    payload = cache.get(cache_key)
+    if not isinstance(payload, tuple) or len(payload) != 3:
+        return None
+    cached_epoch, cached_at, cached_value = payload
+    if cached_epoch != _get_message_cache_epoch():
+        return None
+    if (time.time() - float(cached_at)) > float(APP_MESSAGE_CACHE_SECONDS):
+        return None
+    return cached_value
+
+
+def _set_cached_message_query_result(cache_key: tuple, value) -> None:
+    if APP_MESSAGE_CACHE_SECONDS <= 0:
+        return
+    cache = _get_message_cache_store()
+    cache[cache_key] = (_get_message_cache_epoch(), time.time(), value)
+    if len(cache) > 800:
+        try:
+            for key in list(cache.keys())[:200]:
+                cache.pop(key, None)
+        except Exception:
+            pass
+    st.session_state["_messages_query_cache"] = cache
 
 
 def _is_missing_conflict_constraint_error(exc: Exception) -> bool:
@@ -3388,6 +3440,19 @@ def fetch_latest_message(
     channel: str = "resident_family",
     include_audio: bool = False,
 ) -> dict | None:
+    cache_key = (
+        "fetch_latest_message",
+        str(st.session_state.get("auth_uid") or ""),
+        resident_id,
+        direction,
+        str(contact_user_id or ""),
+        str(family_id or ""),
+        channel,
+        bool(include_audio),
+    )
+    cached = _get_cached_message_query_result(cache_key)
+    if cached is not None:
+        return cached
     supabase, error = get_authed_supabase(access_token)
     if error:
         return None
@@ -3452,6 +3517,7 @@ def fetch_latest_message(
                     resident_id,
                     contact_user_id,
                 )
+        _set_cached_message_query_result(cache_key, latest)
         return latest
     except Exception:
         return None
@@ -3467,6 +3533,25 @@ def fetch_latest_messages_for_contact_user_ids(
 ) -> dict[str, dict]:
     if not resident_id or not contact_user_ids:
         return {}
+    unique_ids_for_cache: list[str] = []
+    seen_for_cache: set[str] = set()
+    for raw_id in contact_user_ids:
+        user_id = str(raw_id or "").strip()
+        if not user_id or user_id in seen_for_cache:
+            continue
+        seen_for_cache.add(user_id)
+        unique_ids_for_cache.append(user_id)
+    cache_key = (
+        "fetch_latest_messages_for_contact_user_ids",
+        str(st.session_state.get("auth_uid") or ""),
+        resident_id,
+        channel,
+        bool(include_audio),
+        tuple(sorted(unique_ids_for_cache)),
+    )
+    cached = _get_cached_message_query_result(cache_key)
+    if isinstance(cached, dict):
+        return cached
     supabase, error = get_authed_supabase(access_token)
     if error:
         return {}
@@ -3524,6 +3609,7 @@ def fetch_latest_messages_for_contact_user_ids(
             if not contact_user_id or contact_user_id in latest_by_contact:
                 continue
             latest_by_contact[contact_user_id] = row
+        _set_cached_message_query_result(cache_key, latest_by_contact)
         return latest_by_contact
     except Exception:
         return {}
@@ -6788,6 +6874,7 @@ def render_family_send() -> None:
                             resident["care_home_id"],
                             message_id,
                         )
+                        bump_message_cache_epoch()
                         state["recording_bytes"] = None
                         state["recording_mime_type"] = "audio/wav"
                         state["preview_confirmed"] = False
@@ -8907,6 +8994,7 @@ def render_care_hub() -> None:
                                 resident["care_home_id"],
                                 message_id,
                             )
+                            bump_message_cache_epoch()
                             if APP_DEBUG:
                                 print(
                                     "Saving Resident→Family message:",
@@ -9131,6 +9219,7 @@ def render_care_hub() -> None:
                                 resident["care_home_id"],
                                 office_message_id,
                             )
+                            bump_message_cache_epoch()
                             state["office_recording_bytes"] = None
                             state["office_recording_mime_type"] = "audio/wav"
                             state["office_preview_confirmed"] = False
