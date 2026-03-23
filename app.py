@@ -5629,7 +5629,10 @@ def render_home(active: str) -> None:
                 "assets/voice-message-flow-overview-v1.mp4",
             )
             if overview_video:
-                st.video(overview_video)
+                try:
+                    st.video(overview_video)
+                except Exception:
+                    st.caption("Overview video is configured but could not be loaded.")
             else:
                 st.caption("Overall walkthrough video will appear here when available.")
     st.markdown("### Service overview")
@@ -5989,8 +5992,22 @@ def get_public_app_url(variant: str) -> str:
     return ""
 
 
+def normalize_public_video_url(raw_value: str) -> str:
+    value = (raw_value or "").strip()
+    if not value:
+        return ""
+    # Allow env var values copied as "URL=https://...".
+    lowered = value.lower()
+    if lowered.startswith("url="):
+        value = value[4:].strip()
+    # Strip accidental wrapping quotes.
+    if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+        value = value[1:-1].strip()
+    return value
+
+
 def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
-    url = os.getenv(env_var, "").strip()
+    url = normalize_public_video_url(os.getenv(env_var, ""))
     if url:
         return url
     local_file = Path(local_path)
@@ -6034,7 +6051,15 @@ def render_public_walkthrough_page(
     render_page_header(page_title, show_menu=False, show_variant_subheading=False)
     video_source = resolve_public_video_source(video_env_var, local_video_path)
     if video_source:
-        st.video(video_source)
+        try:
+            st.video(video_source)
+        except Exception:
+            st.warning(
+                f"Video failed to load from {video_env_var}. Check the URL format and permissions."
+            )
+            if fallback_doc_path:
+                st.caption("Showing written guide instead:")
+                render_document_boxes(fallback_doc_path, strip_first_heading=True)
     else:
         st.warning(
             f"Video not found. Set {video_env_var} or add {local_video_path}."
