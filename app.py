@@ -1784,7 +1784,7 @@ def render_wrong_variant(
     if app_variant == "public":
         render_page_header("Wrong app variant", show_menu=False, show_variant_subheading=False)
         st.markdown("This page belongs to a different app.")
-        render_route_link("Back to service overview", "/service-overview", key="public_wrong_back_link")
+        render_route_link("Back to walkthroughs", "/public/walkthrough-overview", key="public_wrong_back_link")
         if expected_variants:
             for variant in expected_variants:
                 url = get_public_app_url(variant)
@@ -1822,8 +1822,14 @@ def wrong_variant_screen(route: str, detail: str | None = None) -> None:
     if detail:
         st.markdown(detail)
     st.caption(f"Blocked route: {normalized_route}")
-    if st.button("Return to Public", key=f"wrong_variant_public_{normalized_route.replace('/', '_')}"):
-        set_route(PUBLIC_HOME_ROUTE)
+    if st.button("Return", key=f"wrong_variant_public_{normalized_route.replace('/', '_')}"):
+        app_variant = get_app_variant()
+        if app_variant == VARIANT_OFFICE and st.session_state.get("auth_uid"):
+            set_route("/docs")
+        elif app_variant in {VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE}:
+            set_route("/public-docs")
+        else:
+            set_route("/public/walkthrough-overview")
     st.stop()
 
 
@@ -2140,8 +2146,8 @@ def render_care_hub_nav() -> None:
             if st.button("Inbox", key="care_hub_nav_inbox", use_container_width=True):
                 set_route(get_home_route(app_variant))
         with nav_cols[1]:
-            if st.button("Service overview", key="care_hub_nav_service_overview", use_container_width=True):
-                set_route("/public/service-overview")
+            if st.button("Walkthroughs", key="care_hub_nav_service_overview", use_container_width=True):
+                set_route("/public/walkthrough-overview")
         with nav_cols[2]:
             if st.button("Contracts", key="care_hub_nav_contracts", use_container_width=True):
                 set_route("/contracts")
@@ -4367,8 +4373,8 @@ def render_header_menu(menu_key: str) -> None:
                 if st.button("Privacy Notice", key=f"{menu_key}_office_privacy_public"):
                     set_route("/public/privacy-notice")
                     return
-                if st.button("Service overview", key=f"{menu_key}_office_service_overview_public"):
-                    set_route("/public/service-overview")
+                if st.button("Walkthroughs", key=f"{menu_key}_office_service_overview_public"):
+                    set_route("/public/walkthrough-overview")
                     return
                 return
         if app_variant not in (VARIANT_OFFICE, VARIANT_FAMILY, VARIANT_MOBILE) and prev_route and prev_route != current_route:
@@ -4403,8 +4409,8 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", "/care-hub/office/qa")
 
             st.markdown("— Governance —")
-            if st.button("Service overview", key=f"{menu_key}_office_service_overview"):
-                clicked_action = ("route", "/public/service-overview")
+            if st.button("Walkthroughs", key=f"{menu_key}_office_service_overview"):
+                clicked_action = ("route", "/public/walkthrough-overview")
             if st.button("Care home responsibilities", key=f"{menu_key}_office_doc_responsibilities"):
                 clicked_action = ("doc", "docs/office/04_care_home_responsibilities.md")
             if st.button("Safeguarding & consent", key=f"{menu_key}_office_doc_safeguarding"):
@@ -4486,8 +4492,8 @@ def render_header_menu(menu_key: str) -> None:
                 key=f"{menu_key}_family_how_link",
             )
             render_route_link(
-                "Service overview",
-                "/public/service-overview",
+                "Walkthroughs",
+                "/public/walkthrough-overview",
                 key=f"{menu_key}_family_service_overview_link",
             )
             render_route_link("Family Q&A", "/family/qa", key=f"{menu_key}_family_qa_link")
@@ -6017,7 +6023,7 @@ def render_public_walkthrough_page(
     if not effective_back_route:
         app_variant = get_app_variant()
         if app_variant == VARIANT_PUBLIC:
-            effective_back_route = "/public/service-overview"
+            effective_back_route = "/public/walkthrough-overview"
         else:
             effective_back_route = get_how_it_works_route(app_variant)
     render_route_link(
@@ -7233,13 +7239,13 @@ def get_public_document_title(doc_path: str) -> str:
     return "Service overview"
 
 
-def render_public_document(doc_path: str, back_route: str = "/service-overview") -> None:
+def render_public_document(doc_path: str, back_route: str = "/public/walkthrough-overview") -> None:
     # Render all public documents in the boxed style for consistency.
     use_boxes = True
     use_qa_search = doc_path.endswith("10_faq.md")
     app_variant = get_app_variant()
     if app_variant == VARIANT_PUBLIC:
-        st.markdown(f"[← Back to Service overview](?route={back_route})")
+        st.markdown(f"[← Back to walkthroughs](?route={back_route})")
         render_page_header(get_public_document_title(doc_path), show_menu=False, show_variant_subheading=False)
         if use_qa_search:
             render_qa_document(doc_path, search_key="public_faq_search")
@@ -7293,7 +7299,7 @@ def render_public_document(doc_path: str, back_route: str = "/service-overview")
             render_document_content(doc_path)
         return
     render_route_link(
-        "← Back to Service overview",
+        "← Back to walkthroughs",
         back_route,
         key="public_doc_back_service_overview_top",
     )
@@ -7305,7 +7311,7 @@ def render_public_document(doc_path: str, back_route: str = "/service-overview")
     else:
         render_document_content(doc_path)
     render_route_link(
-        "← Back to Service overview",
+        "← Back to walkthroughs",
         back_route,
         key="public_doc_back_service_overview_bottom",
     )
@@ -7330,10 +7336,10 @@ def render_public_docs() -> None:
     st.write("Select a public document to view.")
 
     public_docs = [
-        ("Service overview", "/public/service-overview"),
-        ("How it works", "/public/how-it-works"),
-        ("Resident participation", "/public/resident-participation"),
-        ("Family guide", "/public/family-guide"),
+        ("Universal service overview walkthrough", "/public/walkthrough-overview"),
+        ("Family walkthrough", "/public/walkthrough-family"),
+        ("Care Hub – Mobile walkthrough", "/public/walkthrough-mobile"),
+        ("Care Hub – Office walkthrough", "/public/walkthrough-office"),
         ("Public Q&A", "/public/qa"),
         ("Privacy notice", "/public/privacy-notice"),
         ("Family terms of use", "/public/family-terms-of-use"),
@@ -7497,15 +7503,15 @@ For urgent, medical, safeguarding, or emergency matters, contact the care home d
     info_cols = st.columns(3, gap="small")
     with info_cols[0]:
         if st.button("Learn about Family app", key="pr_info_family", use_container_width=True):
-            set_route("/public/family-guide")
+            set_route("/public/walkthrough-family")
             st.stop()
     with info_cols[1]:
         if st.button("Learn about Care Hub - Mobile", key="pr_info_mobile", use_container_width=True):
-            set_route("/public/how-it-works")
+            set_route("/public/walkthrough-mobile")
             st.stop()
     with info_cols[2]:
         if st.button("Learn about Care Hub - Office", key="pr_info_office", use_container_width=True):
-            set_route("/public/service-overview")
+            set_route("/public/walkthrough-office")
             st.stop()
     st.markdown(
         "**Family app**: non-urgent social voice messages between authorised contacts and residents, "
@@ -9761,13 +9767,13 @@ def main() -> None:
     elif route == "/public-docs":
         render_public_docs()
     elif route == "/public/service-overview":
-        render_home("public")
+        set_route("/public/walkthrough-overview")
     elif route == "/public/how-it-works":
-        render_public_document("docs/public/02_how_it_works.md")
+        set_route("/public/walkthrough-overview")
     elif route == "/public/resident-participation":
-        render_public_document("docs/public/07_resident_participation.md")
+        set_route("/public/walkthrough-overview")
     elif route == "/public/family-guide":
-        render_public_document("docs/public/06_family_guide.md")
+        set_route("/public/walkthrough-family")
     elif route == "/public/qa":
         render_public_document("docs/public/10_faq.md")
     elif route == "/public/faq":
