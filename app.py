@@ -5996,10 +5996,13 @@ def normalize_public_video_url(raw_value: str) -> str:
     value = (raw_value or "").strip()
     if not value:
         return ""
-    # Allow env var values copied as "URL=https://...".
-    lowered = value.lower()
-    if lowered.startswith("url="):
-        value = value[4:].strip()
+    # Allow values copied as "URL=https://..." or "PUBLIC_VIDEO_...=https://...".
+    if "=" in value:
+        lhs, rhs = value.split("=", 1)
+        lhs = lhs.strip().lower()
+        rhs = rhs.strip()
+        if lhs.endswith("url") and rhs.startswith(("http://", "https://")):
+            value = rhs
     # Strip accidental wrapping quotes.
     if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
         value = value[1:-1].strip()
