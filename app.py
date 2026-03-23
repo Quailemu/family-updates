@@ -47,6 +47,10 @@ APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
     "yes",
     "on",
 }
+APP_LIVE_REFRESH_INTERVAL_MS = max(
+    int(os.getenv("APP_LIVE_REFRESH_INTERVAL_MS", "20000")),
+    7000,
+)
 APP_FAMILY_LIVE_REFRESH = os.getenv("APP_FAMILY_LIVE_REFRESH", "0").strip().lower() in {
     "1",
     "true",
@@ -54,6 +58,7 @@ APP_FAMILY_LIVE_REFRESH = os.getenv("APP_FAMILY_LIVE_REFRESH", "0").strip().lowe
     "on",
 }
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+SUPABASE_AUDIO_BUCKET = os.getenv("SUPABASE_AUDIO_BUCKET", "voice-messages").strip() or "voice-messages"
 OFFICE_UPDATE_CATEGORIES = (
     "General reassurance",
     "Daily life",
@@ -364,6 +369,135 @@ def _is_missing_conflict_constraint_error(exc: Exception) -> bool:
     )
 
 
+def _is_missing_column_error(exc: Exception, column_name: str) -> bool:
+    message = str(exc or "").lower()
+    column_key = str(column_name or "").strip().lower()
+    if not column_key:
+        return False
+    return column_key in message and (
+        "does not exist" in message
+        or "could not find the" in message
+        or "schema cache" in message
+        or "undefined column" in message
+        or "42703" in message
+    )
+
+
+def _strip_optional_message_audio_columns(payload: dict) -> dict:
+    cleaned = dict(payload or {})
+    cleaned.pop("audio_object_path", None)
+    cleaned.pop("audio_source", None)
+    return cleaned
+
+
+def _looks_like_base64_payload(value: str) -> bool:
+    normalized = str(value or "").strip()
+    if len(normalized) < 32:
+        return False
+    if len(normalized) % 4 != 0:
+        return False
+    return bool(re.fullmatch(r"[A-Za-z0-9+/=]+", normalized))
+
+
+def _message_select_fields(include_audio: bool, include_optional_storage_columns: bool = True) -> str:
+    fields = "id, resident_id, contact_user_id, family_id, channel, direction, recorded_at"
+    if include_audio:
+        audio_fields = ["audio_storage_path", "audio_mime_type", "audio_bytes"]
+        if include_optional_storage_columns:
+            audio_fields.extend(["audio_object_path", "audio_source"])
+        fields = (
+            "id, resident_id, contact_user_id, family_id, channel, direction, "
+            + ", ".join(audio_fields)
+            + ", recorded_at"
+        )
+    return fields
+
+
+def upload_audio_to_storage(
+    audio_bytes: bytes,
+    audio_mime_type: str,
+    *,
+    resident_id: str,
+    direction: str,
+) -> tuple[str | None, str | None]:
+    if not audio_bytes:
+        return None, "No audio bytes to upload."
+    admin_client, admin_error = get_admin_client()
+    if admin_error or admin_client is None:
+        return None, admin_error or "Supabase admin client is unavailable."
+    mime = str(audio_mime_type or "audio/wav").strip().lower()
+    extension = "wav"
+    if "mpeg" in mime or "mp3" in mime:
+        extension = "mp3"
+    elif "webm" in mime:
+        extension = "webm"
+    elif "ogg" in mime:
+        extension = "ogg"
+    elif "mp4" in mime or "m4a" in mime:
+        extension = "m4a"
+    now = __import__("datetime").datetime.utcnow()
+    resident_key = str(resident_id or "unknown").strip() or "unknown"
+    direction_key = str(direction or "unknown").strip() or "unknown"
+    object_path = (
+        f"messages/{now.strftime('%Y/%m/%d')}/{resident_key}/{direction_key}/{uuid.uuid4().hex}.{extension}"
+    )
+    try:
+        try:
+            admin_client.storage.from_(SUPABASE_AUDIO_BUCKET).upload(
+                object_path,
+                audio_bytes,
+                {"content-type": mime, "cache-control": "3600", "upsert": "false"},
+            )
+        except TypeError:
+            admin_client.storage.from_(SUPABASE_AUDIO_BUCKET).upload(
+                object_path,
+                audio_bytes,
+                {"contentType": mime, "cacheControl": "3600", "upsert": False},
+            )
+        return object_path, None
+    except Exception as exc:
+        return None, str(exc)
+
+
+def _download_audio_from_storage(
+    object_path: str, access_token: str | None = None
+) -> bytes | None:
+    path = str(object_path or "").strip()
+    if not path:
+        return None
+    cache = st.session_state.get("_audio_storage_blob_cache")
+    if not isinstance(cache, dict):
+        cache = {}
+    cached = cache.get(path)
+    if isinstance(cached, (bytes, bytearray)):
+        return bytes(cached)
+
+    clients: list[object] = []
+    if access_token:
+        authed_client, authed_error = get_authed_supabase(access_token)
+        if not authed_error and authed_client is not None:
+            clients.append(authed_client)
+    anon_client, anon_error = get_supabase_client()
+    if not anon_error and anon_client is not None:
+        clients.append(anon_client)
+    admin_client, admin_error = get_admin_client()
+    if not admin_error and admin_client is not None:
+        clients.append(admin_client)
+
+    for client in clients:
+        try:
+            data = client.storage.from_(SUPABASE_AUDIO_BUCKET).download(path)
+            if isinstance(data, bytearray):
+                data = bytes(data)
+            if isinstance(data, bytes) and data:
+                cache[path] = data
+                st.session_state["_audio_storage_blob_cache"] = cache
+                return data
+        except Exception:
+            continue
+    return None
+
+
 def upsert_latest_message_with_fallback(
     supabase: object,
     payload: dict,
@@ -377,6 +511,20 @@ def upsert_latest_message_with_fallback(
             st.session_state["_messages_conflict_upsert_supported"] = True
             return response, None
         except Exception as exc:
+            if _is_missing_column_error(exc, "audio_object_path") or _is_missing_column_error(
+                exc, "audio_source"
+            ):
+                legacy_payload = _strip_optional_message_audio_columns(payload)
+                try:
+                    response = (
+                        supabase.table("messages")
+                        .upsert(legacy_payload, on_conflict=conflict_columns)
+                        .execute()
+                    )
+                    st.session_state["_messages_conflict_upsert_supported"] = True
+                    return response, None
+                except Exception as legacy_exc:
+                    return None, str(legacy_exc)
             if not _is_missing_conflict_constraint_error(exc):
                 return None, str(exc)
             st.session_state["_messages_conflict_upsert_supported"] = False
@@ -393,10 +541,31 @@ def upsert_latest_message_with_fallback(
             and existing_response.data
             else None
         )
+        write_payload = dict(payload)
         if existing_id:
-            response = supabase.table("messages").update(payload).eq("id", existing_id).execute()
+            try:
+                response = supabase.table("messages").update(write_payload).eq("id", existing_id).execute()
+            except Exception as exc:
+                if _is_missing_column_error(exc, "audio_object_path") or _is_missing_column_error(
+                    exc, "audio_source"
+                ):
+                    write_payload = _strip_optional_message_audio_columns(write_payload)
+                    response = (
+                        supabase.table("messages").update(write_payload).eq("id", existing_id).execute()
+                    )
+                else:
+                    raise
         else:
-            response = supabase.table("messages").insert(payload).execute()
+            try:
+                response = supabase.table("messages").insert(write_payload).execute()
+            except Exception as exc:
+                if _is_missing_column_error(exc, "audio_object_path") or _is_missing_column_error(
+                    exc, "audio_source"
+                ):
+                    write_payload = _strip_optional_message_audio_columns(write_payload)
+                    response = supabase.table("messages").insert(write_payload).execute()
+                else:
+                    raise
         return response, None
     except Exception as exc:
         return None, str(exc)
@@ -2639,11 +2808,14 @@ def get_family_queue_status_for_resident(
     )
     unread_count = 0
     unread_contacts: list[dict] = []
+    next_contact: dict | None = None
     for contact in contacts_sorted:
         contact_user_id = str(contact.get("auth_user_id") or "").strip()
         latest = latest_by_contact.get(contact_user_id)
         if not latest:
             continue
+        if next_contact is None:
+            next_contact = contact
         if contact_user_id and str(latest.get("contact_user_id") or "").strip() != contact_user_id:
             latest = dict(latest)
             latest["contact_user_id"] = contact_user_id
@@ -2655,12 +2827,10 @@ def get_family_queue_status_for_resident(
         if is_unread:
             unread_count += 1
             unread_contacts.append(contact)
-    next_contact, _, _ = select_next_family_message_for_mobile(
-        resident_id,
-        care_home_id,
-        contacts_sorted,
-        access_token,
-    )
+            if next_contact is None:
+                next_contact = contact
+    if unread_contacts:
+        next_contact = unread_contacts[0]
     return unread_count, next_contact, unread_contacts
 
 
@@ -2769,7 +2939,7 @@ def enforce_session_timeout() -> None:
 def trigger_live_message_refresh(key: str, disabled: bool) -> None:
     if disabled or st_autorefresh is None or not APP_LIVE_REFRESH:
         return
-    st_autorefresh(interval=7000, key=key)
+    st_autorefresh(interval=APP_LIVE_REFRESH_INTERVAL_MS, key=key)
 
 
 def reset_outbox_state_on_new_recording(
@@ -3216,23 +3386,19 @@ def fetch_latest_message(
     contact_user_id: str | None = None,
     family_id: str | None = None,
     channel: str = "resident_family",
-    include_audio: bool = True,
+    include_audio: bool = False,
 ) -> dict | None:
     supabase, error = get_authed_supabase(access_token)
     if error:
         return None
     try:
+        select_fields = _message_select_fields(
+            include_audio=include_audio,
+            include_optional_storage_columns=True,
+        )
         query = (
             supabase.table("messages")
-            .select(
-                "id, resident_id, contact_user_id, family_id, channel, direction, "
-                + (
-                    "audio_storage_path, audio_mime_type, audio_bytes, "
-                    if include_audio
-                    else ""
-                )
-                + "recorded_at"
-            )
+            .select(select_fields)
             .eq("resident_id", resident_id)
             .eq("direction", direction)
             .eq("channel", channel)
@@ -3243,7 +3409,34 @@ def fetch_latest_message(
             query = query.eq("contact_user_id", contact_user_id)
         if family_id is not None:
             query = query.eq("family_id", family_id)
-        resp = query.execute()
+        try:
+            resp = query.execute()
+        except Exception as exc:
+            if include_audio and (
+                _is_missing_column_error(exc, "audio_object_path")
+                or _is_missing_column_error(exc, "audio_source")
+            ):
+                fallback_query = (
+                    supabase.table("messages")
+                    .select(
+                        _message_select_fields(
+                            include_audio=include_audio,
+                            include_optional_storage_columns=False,
+                        )
+                    )
+                    .eq("resident_id", resident_id)
+                    .eq("direction", direction)
+                    .eq("channel", channel)
+                    .order("recorded_at", desc=True)
+                    .limit(1)
+                )
+                if contact_user_id is not None:
+                    fallback_query = fallback_query.eq("contact_user_id", contact_user_id)
+                if family_id is not None:
+                    fallback_query = fallback_query.eq("family_id", family_id)
+                resp = fallback_query.execute()
+            else:
+                raise
         latest = resp.data[0] if resp.data else None
         if APP_DEBUG and direction == "from_resident":
             if latest:
@@ -3288,16 +3481,11 @@ def fetch_latest_messages_for_contact_user_ids(
     if not unique_ids:
         return {}
     try:
-        select_fields = (
-            "id, resident_id, contact_user_id, family_id, channel, direction, "
-            + (
-                "audio_storage_path, audio_mime_type, audio_bytes, "
-                if include_audio
-                else ""
-            )
-            + "recorded_at"
+        select_fields = _message_select_fields(
+            include_audio=include_audio,
+            include_optional_storage_columns=True,
         )
-        resp = (
+        query = (
             supabase.table("messages")
             .select(select_fields)
             .eq("resident_id", resident_id)
@@ -3305,8 +3493,31 @@ def fetch_latest_messages_for_contact_user_ids(
             .eq("channel", channel)
             .in_("contact_user_id", unique_ids)
             .order("recorded_at", desc=True)
-            .execute()
         )
+        try:
+            resp = query.execute()
+        except Exception as exc:
+            if include_audio and (
+                _is_missing_column_error(exc, "audio_object_path")
+                or _is_missing_column_error(exc, "audio_source")
+            ):
+                resp = (
+                    supabase.table("messages")
+                    .select(
+                        _message_select_fields(
+                            include_audio=include_audio,
+                            include_optional_storage_columns=False,
+                        )
+                    )
+                    .eq("resident_id", resident_id)
+                    .eq("direction", "to_resident")
+                    .eq("channel", channel)
+                    .in_("contact_user_id", unique_ids)
+                    .order("recorded_at", desc=True)
+                    .execute()
+                )
+            else:
+                raise
         latest_by_contact: dict[str, dict] = {}
         for row in resp.data or []:
             contact_user_id = str(row.get("contact_user_id") or "").strip()
@@ -3844,11 +4055,28 @@ def fetch_office_practical_response_summary(
         return summary
 
 
-def decode_audio_payload(message: dict) -> bytes | None:
+def decode_audio_payload(message: dict, access_token: str | None = None) -> bytes | None:
     if not message:
         return None
-    payload = message.get("audio_storage_path")
+    audio_source = str(message.get("audio_source") or "").strip().lower()
+    object_path = str(message.get("audio_object_path") or "").strip()
+    if object_path and (audio_source == "storage" or not message.get("audio_storage_path")):
+        downloaded = _download_audio_from_storage(
+            object_path,
+            access_token=access_token or st.session_state.get("access_token"),
+        )
+        if downloaded:
+            return downloaded
+    payload = str(message.get("audio_storage_path") or "").strip()
     if not payload:
+        return None
+    if not _looks_like_base64_payload(payload):
+        downloaded = _download_audio_from_storage(
+            payload,
+            access_token=access_token or st.session_state.get("access_token"),
+        )
+        if downloaded:
+            return downloaded
         return None
     try:
         return base64.b64decode(payload)
@@ -6182,8 +6410,9 @@ def render_family_send() -> None:
             access_token,
             family_id=resident.get("family_id") or resident_id,
             channel="resident_family",
+            include_audio=True,
         )
-        audio_bytes = decode_audio_payload(latest)
+        audio_bytes = decode_audio_payload(latest, access_token=access_token)
         if audio_bytes:
             st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
             resident_sent_label = format_soft_message_period_label(latest.get("recorded_at"))
@@ -6203,8 +6432,12 @@ def render_family_send() -> None:
             access_token,
             family_id=resident.get("family_id") or resident_id,
             channel="office_family",
+            include_audio=True,
         )
-        latest_office_audio = decode_audio_payload(latest_office_update)
+        latest_office_audio = decode_audio_payload(
+            latest_office_update,
+            access_token=access_token,
+        )
         if latest_office_audio:
             st.audio(
                 latest_office_audio,
@@ -6364,6 +6597,7 @@ def render_family_send() -> None:
             access_token,
             contact_user_id=st.session_state.get("auth_uid"),
             channel="resident_family",
+            include_audio=True,
         )
         if not latest_sent:
             latest_sent = fetch_latest_message(
@@ -6371,8 +6605,9 @@ def render_family_send() -> None:
                 "to_resident",
                 access_token,
                 channel="resident_family",
+                include_audio=True,
             )
-        latest_sent_audio = decode_audio_payload(latest_sent)
+        latest_sent_audio = decode_audio_payload(latest_sent, access_token=access_token)
         show_recent_send_feedback = bool(
             (state.get("last_message") or {}) and not state.get("recording_bytes")
         )
@@ -6495,15 +6730,29 @@ def render_family_send() -> None:
                 else:
                     audio_bytes = state["recording_bytes"] or b""
                     audio_mime_type = state.get("recording_mime_type") or "audio/wav"
-                    audio_b64 = base64.b64encode(audio_bytes).decode("ascii")
                     now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                    audio_object_path, upload_error = upload_audio_to_storage(
+                        audio_bytes,
+                        audio_mime_type,
+                        resident_id=resident_id,
+                        direction="to_resident",
+                    )
+                    use_inline_fallback = not bool(audio_object_path)
+                    if APP_DEBUG and upload_error:
+                        print(f"[audio-upload] to_resident fallback to inline payload: {upload_error}")
                     payload = {
                         "resident_id": resident_id,
                         "contact_user_id": st.session_state.get("auth_uid"),
                         "family_id": resident.get("family_id") or resident_id,
                         "channel": "resident_family",
                         "direction": "to_resident",
-                        "audio_storage_path": audio_b64,
+                        "audio_storage_path": (
+                            base64.b64encode(audio_bytes).decode("ascii")
+                            if use_inline_fallback
+                            else ""
+                        ),
+                        "audio_object_path": audio_object_path,
+                        "audio_source": "inline" if use_inline_fallback else "storage",
                         "audio_mime_type": audio_mime_type,
                         "audio_bytes": len(audio_bytes),
                         "recorded_at": now_iso,
@@ -7780,10 +8029,7 @@ def render_care_hub() -> None:
     render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
     is_care_queue_variant_screen = get_app_variant() in {VARIANT_MOBILE, VARIANT_OFFICE}
-    contacts_by_resident = {
-        resident["id"]: fetch_family_contacts_for_resident(resident["id"], access_token)
-        for resident in residents
-    }
+    contacts_by_resident: dict[str, list[dict]] = {}
 
     search_value = st.text_input("Search residents", key="care_resident_search")
     if search_value:
@@ -7912,7 +8158,10 @@ def render_care_hub() -> None:
             f"**{format_resident_identity_label(resident, include_room=True, include_care_home=include_care_home_in_resident_labels, separator=' | ')}**"
         )
 
-        contacts = contacts_by_resident.get(resident_id, [])
+        contacts = contacts_by_resident.get(resident_id)
+        if contacts is None:
+            contacts = fetch_family_contacts_for_resident(resident_id, access_token)
+            contacts_by_resident[resident_id] = contacts
         if not contacts:
             if get_app_variant() == VARIANT_OFFICE:
                 st.warning(
@@ -8337,7 +8586,10 @@ def render_care_hub() -> None:
                     contact_user_id=state.get("selected_contact_user_id"),
                     channel="resident_family",
                 )
-            elif not latest.get("audio_storage_path"):
+            elif not (
+                latest.get("audio_storage_path")
+                or latest.get("audio_object_path")
+            ):
                 latest = fetch_latest_message(
                     resident_id,
                     "to_resident",
@@ -8380,7 +8632,7 @@ def render_care_hub() -> None:
                 st.caption(f"Office review playing: {selected_contact_display}")
 
             st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
-            audio_bytes = decode_audio_payload(latest)
+            audio_bytes = decode_audio_payload(latest, access_token=access_token)
             should_show_message = True
             if is_mobile_variant:
                 should_show_message = bool(st.session_state.get(mobile_play_requested_key, False))
@@ -8482,9 +8734,10 @@ def render_care_hub() -> None:
             access_token,
             family_id=resident.get("family_id") or resident_id,
             channel="resident_family",
+            include_audio=True,
         )
         latest_sent_audio = None
-        latest_sent_audio = decode_audio_payload(latest_sent)
+        latest_sent_audio = decode_audio_payload(latest_sent, access_token=access_token)
         if latest_sent and not state.get("recording_bytes"):
             if latest_sent_audio:
                 st.audio(
@@ -8593,15 +8846,32 @@ def render_care_hub() -> None:
                     else:
                         audio_bytes = state.get("recording_bytes") or b""
                         audio_mime_type = state.get("recording_mime_type") or "audio/wav"
-                        audio_b64 = base64.b64encode(audio_bytes).decode("ascii")
                         now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                        audio_object_path, upload_error = upload_audio_to_storage(
+                            audio_bytes,
+                            audio_mime_type,
+                            resident_id=resident_id,
+                            direction="from_resident",
+                        )
+                        use_inline_fallback = not bool(audio_object_path)
+                        if APP_DEBUG and upload_error:
+                            print(
+                                "[audio-upload] from_resident fallback to inline payload:",
+                                upload_error,
+                            )
                         payload = {
                             "resident_id": resident_id,
                             "contact_user_id": None,
                             "family_id": resident.get("family_id") or resident_id,
                             "channel": "resident_family",
                             "direction": "from_resident",
-                            "audio_storage_path": audio_b64,
+                            "audio_storage_path": (
+                                base64.b64encode(audio_bytes).decode("ascii")
+                                if use_inline_fallback
+                                else ""
+                            ),
+                            "audio_object_path": audio_object_path,
+                            "audio_source": "inline" if use_inline_fallback else "storage",
                             "audio_mime_type": audio_mime_type,
                             "audio_bytes": len(audio_bytes),
                             "recorded_at": now_iso,
@@ -8668,8 +8938,12 @@ def render_care_hub() -> None:
                 access_token,
                 family_id=resident.get("family_id") or resident_id,
                 channel="office_family",
+                include_audio=True,
             )
-            latest_office_audio = decode_audio_payload(latest_office_update)
+            latest_office_audio = decode_audio_payload(
+                latest_office_update,
+                access_token=access_token,
+            )
             if latest_office_audio:
                 st.audio(
                     latest_office_audio,
@@ -8797,14 +9071,31 @@ def render_care_hub() -> None:
                     else:
                         office_audio_bytes = state.get("office_recording_bytes") or b""
                         office_audio_mime = state.get("office_recording_mime_type") or "audio/wav"
-                        office_audio_b64 = base64.b64encode(office_audio_bytes).decode("ascii")
                         office_now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                        office_audio_object_path, office_upload_error = upload_audio_to_storage(
+                            office_audio_bytes,
+                            office_audio_mime,
+                            resident_id=resident_id,
+                            direction="office_to_family",
+                        )
+                        office_inline_fallback = not bool(office_audio_object_path)
+                        if APP_DEBUG and office_upload_error:
+                            print(
+                                "[audio-upload] office_to_family fallback to inline payload:",
+                                office_upload_error,
+                            )
                         office_payload = {
                             "resident_id": resident_id,
                             "family_id": resident.get("family_id") or resident_id,
                             "channel": "office_family",
                             "direction": "office_to_family",
-                            "audio_storage_path": office_audio_b64,
+                            "audio_storage_path": (
+                                base64.b64encode(office_audio_bytes).decode("ascii")
+                                if office_inline_fallback
+                                else ""
+                            ),
+                            "audio_object_path": office_audio_object_path,
+                            "audio_source": "inline" if office_inline_fallback else "storage",
                             "audio_mime_type": office_audio_mime,
                             "audio_bytes": len(office_audio_bytes),
                             "recorded_at": office_now_iso,
