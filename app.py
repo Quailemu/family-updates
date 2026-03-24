@@ -7409,17 +7409,45 @@ def render_public_docs() -> None:
         )
     st.write("Select a public document to view.")
 
-    public_docs = [
-        ("Universal service flow walkthrough", "/public/walkthrough-overview"),
-        ("Family audio walkthrough", "/public/walkthrough-family"),
-        ("Care Hub – Mobile audio walkthrough", "/public/walkthrough-mobile"),
-        ("Care Hub – Office audio walkthrough", "/public/walkthrough-office"),
-        ("Public Q&A", "/public/qa"),
-        ("Privacy notice", "/public/privacy-notice"),
-        ("Family terms of use", "/public/family-terms-of-use"),
-        ("Complaints and concerns", "/public/complaints-and-concerns"),
-        ("Safeguarding and consent", "/public/safeguarding-and-consent"),
-    ]
+    if app_variant == VARIANT_FAMILY:
+        public_docs = [
+            ("Universal service flow walkthrough", "/public/walkthrough-overview"),
+            ("Family service flow walkthrough", "/public/walkthrough-family-flow"),
+            ("Family audio walkthrough", "/public/walkthrough-family"),
+        ]
+    elif app_variant == VARIANT_MOBILE:
+        public_docs = [
+            ("Universal service flow walkthrough", "/public/walkthrough-overview"),
+            ("Care Hub – Mobile service flow walkthrough", "/public/walkthrough-mobile-flow"),
+            ("Care Hub – Mobile audio walkthrough", "/public/walkthrough-mobile"),
+        ]
+    elif app_variant == VARIANT_OFFICE:
+        public_docs = [
+            ("Universal service flow walkthrough", "/public/walkthrough-overview"),
+            ("Family service flow walkthrough", "/public/walkthrough-family-flow"),
+            ("Care Hub – Mobile service flow walkthrough", "/public/walkthrough-mobile-flow"),
+            ("Care Hub – Office service flow walkthrough", "/public/walkthrough-office-flow"),
+            ("Care Hub – Office audio walkthrough", "/public/walkthrough-office"),
+        ]
+    else:
+        public_docs = [
+            ("Universal service flow walkthrough", "/public/walkthrough-overview"),
+            ("Family service flow walkthrough", "/public/walkthrough-family-flow"),
+            ("Care Hub – Mobile service flow walkthrough", "/public/walkthrough-mobile-flow"),
+            ("Care Hub – Office service flow walkthrough", "/public/walkthrough-office-flow"),
+            ("Family audio walkthrough", "/public/walkthrough-family"),
+            ("Care Hub – Mobile audio walkthrough", "/public/walkthrough-mobile"),
+            ("Care Hub – Office audio walkthrough", "/public/walkthrough-office"),
+        ]
+    public_docs.extend(
+        [
+            ("Public Q&A", "/public/qa"),
+            ("Privacy notice", "/public/privacy-notice"),
+            ("Family terms of use", "/public/family-terms-of-use"),
+            ("Complaints and concerns", "/public/complaints-and-concerns"),
+            ("Safeguarding and consent", "/public/safeguarding-and-consent"),
+        ]
+    )
 
     for idx, (label, route) in enumerate(public_docs):
         if st.button(label, key=f"public_docs_open_{idx}", use_container_width=True):
