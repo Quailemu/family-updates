@@ -6033,6 +6033,14 @@ def normalize_public_video_url(raw_value: str) -> str:
 
 
 DEFAULT_PUBLIC_VIDEO_URLS: dict[str, str] = {
+    "PUBLIC_VIDEO_FAMILY_URL": (
+        "https://www.dropbox.com/scl/fi/74rq3lb9oe2jw3ka8ru81/family-page-screen-recording-220326.mp4"
+        "?rlkey=u1m7g9jatgk31mu5iadly4ze4&st=d4hx3kgd&raw=1"
+    ),
+    "PUBLIC_VIDEO_MOBILE_URL": (
+        "https://www.dropbox.com/scl/fi/8yhsz3u1w5q2j5mzjfzlq/mobile-screen-recording-voice-message.com.mp4"
+        "?rlkey=d0r8ng3ghjnidzay1brmtox6u&st=jalrytjq&raw=1"
+    ),
     "PUBLIC_VIDEO_OFFICE_URL": (
         "https://www.dropbox.com/scl/fi/szdmrv8u3skia02avuxgb/office-screen-recording-24324.mp4"
         "?rlkey=6lynsqocd0umoknzgbt46ogno&st=n86d8qyp&raw=1"
