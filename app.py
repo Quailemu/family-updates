@@ -5720,8 +5720,11 @@ OFFICE_PUBLIC_ROUTES = {
     "/public/complaints-and-concerns",
     "/public/safeguarding-and-consent",
     "/public/walkthrough-family",
+    "/public/walkthrough-family-flow",
     "/public/walkthrough-mobile",
+    "/public/walkthrough-mobile-flow",
     "/public/walkthrough-office",
+    "/public/walkthrough-office-flow",
     "/public/walkthrough-overview",
     "/care-hub/mobile/qa",
 }
@@ -5741,8 +5744,11 @@ MOBILE_PUBLIC_ROUTES = {
     "/public/complaints-and-concerns",
     "/public/safeguarding-and-consent",
     "/public/walkthrough-family",
+    "/public/walkthrough-family-flow",
     "/public/walkthrough-mobile",
+    "/public/walkthrough-mobile-flow",
     "/public/walkthrough-office",
+    "/public/walkthrough-office-flow",
     "/public/walkthrough-overview",
 }
 
@@ -5773,8 +5779,11 @@ VARIANT_CONFIG = {
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             "/public/walkthrough-family",
+            "/public/walkthrough-family-flow",
             "/public/walkthrough-mobile",
+            "/public/walkthrough-mobile-flow",
             "/public/walkthrough-office",
+            "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
             "/pr-home",
             "/service-overview",
@@ -5806,8 +5815,11 @@ VARIANT_CONFIG = {
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             "/public/walkthrough-family",
+            "/public/walkthrough-family-flow",
             "/public/walkthrough-mobile",
+            "/public/walkthrough-mobile-flow",
             "/public/walkthrough-office",
+            "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
             "/pr-home",
             "/service-overview",
@@ -5843,8 +5855,11 @@ VARIANT_CONFIG = {
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             "/public/walkthrough-family",
+            "/public/walkthrough-family-flow",
             "/public/walkthrough-mobile",
+            "/public/walkthrough-mobile-flow",
             "/public/walkthrough-office",
+            "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
             "/pr-home",
             "/service-overview",
@@ -5869,8 +5884,11 @@ VARIANT_CONFIG = {
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             "/public/walkthrough-family",
+            "/public/walkthrough-family-flow",
             "/public/walkthrough-mobile",
+            "/public/walkthrough-mobile-flow",
             "/public/walkthrough-office",
+            "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
         },
     },
@@ -7016,37 +7034,45 @@ def render_docs() -> None:
     render_page_header("Documents")
     render_care_home_identity_banner(st.session_state.get("access_token"))
     st.markdown("### Walkthrough videos")
-    st.caption("Open service-flow and app-audio walkthrough videos for each app role.")
+    st.caption("Service flow (diagram) walkthroughs plus Office app audio walkthrough.")
     walkthrough_cols_top = st.columns(2, gap="small")
     with walkthrough_cols_top[0]:
-        if st.button(
-            "Care Hub – Office audio walkthrough",
-            key="docs_walkthrough_office",
-            use_container_width=True,
-        ):
-            set_route("/public/walkthrough-office")
-    with walkthrough_cols_top[1]:
-        if st.button(
-            "Care Hub – Mobile audio walkthrough",
-            key="docs_walkthrough_mobile",
-            use_container_width=True,
-        ):
-            set_route("/public/walkthrough-mobile")
-    walkthrough_cols_bottom = st.columns(2, gap="small")
-    with walkthrough_cols_bottom[0]:
-        if st.button(
-            "Family audio walkthrough",
-            key="docs_walkthrough_family",
-            use_container_width=True,
-        ):
-            set_route("/public/walkthrough-family")
-    with walkthrough_cols_bottom[1]:
         if st.button(
             "Universal service flow walkthrough",
             key="docs_walkthrough_overview",
             use_container_width=True,
         ):
             set_route("/public/walkthrough-overview")
+    with walkthrough_cols_top[1]:
+        if st.button(
+            "Family service flow walkthrough",
+            key="docs_walkthrough_family_flow",
+            use_container_width=True,
+        ):
+            set_route("/public/walkthrough-family-flow")
+    walkthrough_cols_mid = st.columns(2, gap="small")
+    with walkthrough_cols_mid[0]:
+        if st.button(
+            "Care Hub – Mobile service flow walkthrough",
+            key="docs_walkthrough_mobile_flow",
+            use_container_width=True,
+        ):
+            set_route("/public/walkthrough-mobile-flow")
+    with walkthrough_cols_mid[1]:
+        if st.button(
+            "Care Hub – Office service flow walkthrough",
+            key="docs_walkthrough_office_flow",
+            use_container_width=True,
+        ):
+            set_route("/public/walkthrough-office-flow")
+    walkthrough_cols_bottom = st.columns(1, gap="small")
+    with walkthrough_cols_bottom[0]:
+        if st.button(
+            "Care Hub – Office audio walkthrough",
+            key="docs_walkthrough_office_audio",
+            use_container_width=True,
+        ):
+            set_route("/public/walkthrough-office")
     st.write("")
 
     docs = [
@@ -9900,6 +9926,19 @@ def main() -> None:
             ],
             fallback_doc_path="docs/public/06_family_guide.md",
         )
+    elif route == "/public/walkthrough-family-flow":
+        render_public_walkthrough_page(
+            "Family service flow walkthrough",
+            "PUBLIC_VIDEO_FAMILY_FLOW_WALKTHROUGH_URL,PUBLIC_VIDEO_FAMILY_URL",
+            "assets/voice-message-family-walkthrough-v1.mp4",
+            [
+                "How Family fits into the overall service flow diagram.",
+                "How Family channels map to Resident and Office channels.",
+                "How replacement-only message rules work in Family direction.",
+                "How non-live communication boundaries are applied.",
+            ],
+            fallback_doc_path="docs/public/06_family_guide.md",
+        )
     elif route == "/public/walkthrough-overview":
         render_public_walkthrough_page(
             "Universal service flow walkthrough",
@@ -9925,6 +9964,19 @@ def main() -> None:
             ],
             fallback_doc_path="docs/public/02_how_it_works.md",
         )
+    elif route == "/public/walkthrough-mobile-flow":
+        render_public_walkthrough_page(
+            "Care Hub – Mobile service flow walkthrough",
+            "PUBLIC_VIDEO_MOBILE_FLOW_WALKTHROUGH_URL,PUBLIC_VIDEO_MOBILE_URL",
+            "assets/voice-message-mobile-walkthrough-v1.mp4",
+            [
+                "How Mobile sits within the service flow diagram.",
+                "How queue order and channel boundaries fit the flow model.",
+                "How Mobile playback and recording map to Family and Office channels.",
+                "How non-live care-routine delivery is represented in the flow.",
+            ],
+            fallback_doc_path="docs/public/02_how_it_works.md",
+        )
     elif route == "/public/walkthrough-office":
         render_public_walkthrough_page(
             "Care Hub – Office audio walkthrough",
@@ -9935,6 +9987,19 @@ def main() -> None:
                 "How Office publishes one-way voice updates to all authorised contacts.",
                 "How Office sends practical text requests and reviews structured replies.",
                 "How Office oversight supports low-pressure, non-urgent communication.",
+            ],
+            fallback_doc_path="docs/public/02_how_it_works.md",
+        )
+    elif route == "/public/walkthrough-office-flow":
+        render_public_walkthrough_page(
+            "Care Hub – Office service flow walkthrough",
+            "PUBLIC_VIDEO_OFFICE_FLOW_WALKTHROUGH_URL,PUBLIC_VIDEO_OFFICE_URL",
+            "assets/voice-message-office-walkthrough-v1.mp4",
+            [
+                "How Office governance and oversight appear in the service flow diagram.",
+                "How Office updates and practical messages connect to Family and Mobile.",
+                "How one-way Office updates are represented in channel structure.",
+                "How calm, non-urgent communication boundaries are enforced.",
             ],
             fallback_doc_path="docs/public/02_how_it_works.md",
         )
