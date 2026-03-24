@@ -2223,6 +2223,25 @@ def require_care_access() -> None:
         st.stop()
     family_found, care_found, error, _, care_record = get_mapping_status()
     if error:
+        normalized_error = str(error).strip().lower()
+        transient_session_error = (
+            "resource temporarily unavailable" in normalized_error
+            or "errno 11" in normalized_error
+        )
+        if transient_session_error:
+            for key in (
+                "auth_uid",
+                "access_token",
+                "refresh_token",
+                "auth_email",
+                "active_role",
+                "active_care_home_id",
+                "mfa_verified",
+            ):
+                st.session_state.pop(key, None)
+            persist_auth_cookie(None)
+            set_route(get_login_route(get_app_variant()))
+            st.stop()
         if (
             st.session_state.get("active_role") == "care_hub"
             and st.session_state.get("access_token")
