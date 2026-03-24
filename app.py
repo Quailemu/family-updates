@@ -8023,8 +8023,8 @@ def render_care_login() -> None:
                     ):
                         st.session_state.pop(key, None)
                     persist_auth_cookie(None)
-                    st.warning("Session check temporarily unavailable. Please log in again.")
-                    allow_manual_login = True
+                    set_route(get_login_route(app_variant))
+                    st.rerun()
                 else:
                     st.error(error)
                     st.info("Please sign in again.")
