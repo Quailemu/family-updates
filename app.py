@@ -6137,12 +6137,12 @@ def get_care_hub_label() -> str:
 def get_channel_label_and_icon(channel_role: str) -> tuple[str, str]:
     role = (channel_role or "").strip().lower()
     if role == "family":
-        return "Family", "👥"
+        return "Family", ""
     if role == "care_hub":
-        return "Care Hub", "🏠"
+        return "Care Hub", ""
     if role == "resident":
-        return "Resident", "🧓"
-    return "System", "⚙️"
+        return "Resident", ""
+    return "System", ""
 
 
 def render_message_direction_header(
@@ -6155,10 +6155,12 @@ def render_message_direction_header(
 ) -> None:
     from_label, from_icon = get_channel_label_and_icon(from_channel_role)
     to_label, to_icon = get_channel_label_and_icon(to_channel_role)
+    from_prefix = f"{from_icon} " if from_icon else ""
+    to_prefix = f"{to_icon} " if to_icon else ""
     heading_text = (
-        f"From: {from_icon} {from_label} &rarr; To: {to_icon} {to_label}"
+        f"From: {from_prefix}{from_label} &rarr; To: {to_prefix}{to_label}"
         if use_from_to_heading
-        else f"{from_icon} {from_label} &rarr; {to_icon} {to_label}"
+        else f"{from_prefix}{from_label} &rarr; {to_prefix}{to_label}"
     )
     st.markdown(
         f'<div class="vm-section-title">{heading_text}</div>',
