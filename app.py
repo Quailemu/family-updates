@@ -8366,6 +8366,7 @@ def render_care_hub() -> None:
         is_mobile_variant = get_app_variant() == VARIANT_MOBILE
         is_office_variant = get_app_variant() == VARIANT_OFFICE
         is_queue_playback_variant = is_mobile_variant
+        manual_selection_key = f"care_manual_selected_{resident_id}"
         queue_unread_count = 0
         queue_next_contact = None
         queue_unread_contacts: list[dict] = []
@@ -8397,13 +8398,34 @@ def render_care_hub() -> None:
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             keep_current_after_start = bool(st.session_state.get(mobile_play_requested_key, False))
             current_user_id = str(state.get("selected_contact_user_id") or "").strip()
+            manual_selected = bool(st.session_state.get(manual_selection_key, False))
+            if manual_selected and current_user_id:
+                selected_contact = next(
+                    (
+                        c
+                        for c in contacts
+                        if str(c.get("auth_user_id") or "").strip() == current_user_id
+                    ),
+                    None,
+                )
+                if selected_contact:
+                    latest = fetch_latest_message(
+                        resident_id,
+                        "to_resident",
+                        access_token,
+                        contact_user_id=current_user_id,
+                        channel="resident_family",
+                    )
+                    queue_mode_label = "Manual selection"
+                else:
+                    st.session_state[manual_selection_key] = False
             queue_selected_contact, queue_latest, queue_mode_label = select_next_family_message_for_mobile(
                 resident_id,
                 resident["care_home_id"],
                 contacts,
                 access_token,
             )
-            if keep_current_after_start and current_user_id:
+            if selected_contact is None and keep_current_after_start and current_user_id:
                 queue_user_id = str((queue_selected_contact or {}).get("auth_user_id") or "").strip()
                 if queue_user_id and queue_user_id == current_user_id:
                     selected_contact = next(
@@ -8427,7 +8449,7 @@ def render_care_hub() -> None:
                         selected_contact, latest = queue_selected_contact, queue_latest
                 else:
                     selected_contact, latest = queue_selected_contact, queue_latest
-            else:
+            elif selected_contact is None:
                 selected_contact, latest = queue_selected_contact, queue_latest
             state["selected_contact_id"] = (selected_contact or {}).get("id")
             state["selected_contact_user_id"] = (selected_contact or {}).get("auth_user_id")
@@ -8441,6 +8463,7 @@ def render_care_hub() -> None:
                 key=f"office_play_next_{resident_id}",
                 use_container_width=True,
             ):
+                st.session_state[manual_selection_key] = False
                 selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
                     resident_id,
                     resident["care_home_id"],
@@ -8484,26 +8507,27 @@ def render_care_hub() -> None:
                             access_token,
                         )
                     # Advance Office session pointer so each click moves through queue order.
-                    office_next_contact_user_id = get_next_contact_user_id_with_message(
-                        resident_id,
-                        contacts,
-                        access_token,
-                        state.get("selected_contact_user_id"),
-                    )
+                        office_next_contact_user_id = get_next_contact_user_id_with_message(
+                            resident_id,
+                            contacts,
+                            access_token,
+                            state.get("selected_contact_user_id"),
+                        )
                     st.session_state[f"care_mobile_pointer_{resident_id}"] = (
                         office_next_contact_user_id or ""
                     )
+                    st.rerun()
             if selected_contact is None:
-                # Default Office review to queue-next (fixed order + unread-first) instead of stale session pick.
-                selected_contact = queue_next_contact
+                # Respect explicit manual selection first; otherwise default to queue-next.
+                if state.get("selected_contact_id"):
+                    selected_contact = next(
+                        (c for c in contacts if c.get("id") == state.get("selected_contact_id")),
+                        None,
+                    )
+                if selected_contact is None:
+                    selected_contact = queue_next_contact
                 if selected_contact is None and queue_unread_contacts:
                     selected_contact = queue_unread_contacts[0]
-                if selected_contact is None:
-                    if state.get("selected_contact_id"):
-                        selected_contact = next(
-                            (c for c in contacts if c.get("id") == state.get("selected_contact_id")),
-                            None,
-                        )
                 if selected_contact is None:
                     sorted_contacts = sort_contacts_for_playback(contacts)
                     selected_contact = sorted_contacts[0] if sorted_contacts else None
@@ -8692,6 +8716,7 @@ def render_care_hub() -> None:
                             None,
                         )
                         if selected_contact:
+                            st.session_state[manual_selection_key] = True
                             state["selected_contact_id"] = selected_contact.get("id")
                             state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
                             latest = fetch_latest_message(
@@ -8729,6 +8754,7 @@ def render_care_hub() -> None:
                                 )
                             if is_mobile_variant:
                                 st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
+                            st.rerun()
         if is_mobile_variant or is_office_variant:
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
@@ -8739,6 +8765,7 @@ def render_care_hub() -> None:
                     disabled=send_guard_active,
                     use_container_width=True,
                 ):
+                    st.session_state[manual_selection_key] = False
                     selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
                         resident_id,
                         resident["care_home_id"],
@@ -8758,6 +8785,7 @@ def render_care_hub() -> None:
                     else:
                         st.session_state[mobile_play_requested_key] = False
                         st.session_state[mobile_advance_pointer_key] = False
+                    st.rerun()
 
             if latest is None:
                 latest = fetch_latest_message(
