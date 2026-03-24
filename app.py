@@ -1898,13 +1898,13 @@ def render_how_it_works_video_links(
     video_cols = st.columns(2, gap="small")
     with video_cols[0]:
         render_route_link(
-            "Universal overview video",
+            "Universal service flow walkthrough",
             "/public/walkthrough-overview",
             key=f"{key_prefix}_video_overview_link",
         )
     with video_cols[1]:
         render_route_link(
-            f"{specific_label} walkthrough video",
+            f"{specific_label} audio walkthrough",
             specific_route,
             key=f"{key_prefix}_video_specific_link",
         )
@@ -7016,18 +7016,18 @@ def render_docs() -> None:
     render_page_header("Documents")
     render_care_home_identity_banner(st.session_state.get("access_token"))
     st.markdown("### Walkthrough videos")
-    st.caption("Open current walkthrough videos for each app role.")
+    st.caption("Open service-flow and app-audio walkthrough videos for each app role.")
     walkthrough_cols_top = st.columns(2, gap="small")
     with walkthrough_cols_top[0]:
         if st.button(
-            "Care Hub – Office walkthrough",
+            "Care Hub – Office audio walkthrough",
             key="docs_walkthrough_office",
             use_container_width=True,
         ):
             set_route("/public/walkthrough-office")
     with walkthrough_cols_top[1]:
         if st.button(
-            "Care Hub – Mobile walkthrough",
+            "Care Hub – Mobile audio walkthrough",
             key="docs_walkthrough_mobile",
             use_container_width=True,
         ):
@@ -7035,14 +7035,14 @@ def render_docs() -> None:
     walkthrough_cols_bottom = st.columns(2, gap="small")
     with walkthrough_cols_bottom[0]:
         if st.button(
-            "Family walkthrough",
+            "Family audio walkthrough",
             key="docs_walkthrough_family",
             use_container_width=True,
         ):
             set_route("/public/walkthrough-family")
     with walkthrough_cols_bottom[1]:
         if st.button(
-            "Universal overview walkthrough",
+            "Universal service flow walkthrough",
             key="docs_walkthrough_overview",
             use_container_width=True,
         ):
@@ -7384,10 +7384,10 @@ def render_public_docs() -> None:
     st.write("Select a public document to view.")
 
     public_docs = [
-        ("Universal service overview walkthrough", "/public/walkthrough-overview"),
-        ("Family walkthrough", "/public/walkthrough-family"),
-        ("Care Hub – Mobile walkthrough", "/public/walkthrough-mobile"),
-        ("Care Hub – Office walkthrough", "/public/walkthrough-office"),
+        ("Universal service flow walkthrough", "/public/walkthrough-overview"),
+        ("Family audio walkthrough", "/public/walkthrough-family"),
+        ("Care Hub – Mobile audio walkthrough", "/public/walkthrough-mobile"),
+        ("Care Hub – Office audio walkthrough", "/public/walkthrough-office"),
         ("Public Q&A", "/public/qa"),
         ("Privacy notice", "/public/privacy-notice"),
         ("Family terms of use", "/public/family-terms-of-use"),
@@ -9889,7 +9889,7 @@ def main() -> None:
         render_public_document("docs/public/safeguarding_and_consent.md")
     elif route == "/public/walkthrough-family":
         render_public_walkthrough_page(
-            "Family walkthrough",
+            "Family audio walkthrough",
             "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_FAMILY_URL",
             "assets/voice-message-family-walkthrough-v1.mp4",
             [
@@ -9902,7 +9902,7 @@ def main() -> None:
         )
     elif route == "/public/walkthrough-overview":
         render_public_walkthrough_page(
-            "Universal service overview walkthrough",
+            "Universal service flow walkthrough",
             "PUBLIC_VIDEO_OVERVIEW_URL",
             "assets/voice-message-flow-overview-v1.mp4",
             [
@@ -9914,7 +9914,7 @@ def main() -> None:
         )
     elif route == "/public/walkthrough-mobile":
         render_public_walkthrough_page(
-            "Care Hub – Mobile walkthrough",
+            "Care Hub – Mobile audio walkthrough",
             "PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_MOBILE_URL",
             "assets/voice-message-mobile-walkthrough-v1.mp4",
             [
@@ -9927,7 +9927,7 @@ def main() -> None:
         )
     elif route == "/public/walkthrough-office":
         render_public_walkthrough_page(
-            "Care Hub – Office walkthrough",
+            "Care Hub – Office audio walkthrough",
             "PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_OFFICE_URL",
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
