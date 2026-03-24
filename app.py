@@ -6032,10 +6032,21 @@ def normalize_public_video_url(raw_value: str) -> str:
     return value
 
 
+DEFAULT_PUBLIC_VIDEO_URLS: dict[str, str] = {
+    "PUBLIC_VIDEO_OFFICE_URL": (
+        "https://www.dropbox.com/scl/fi/szdmrv8u3skia02avuxgb/office-screen-recording-24324.mp4"
+        "?rlkey=6lynsqocd0umoknzgbt46ogno&st=n86d8qyp&raw=1"
+    ),
+}
+
+
 def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
     url = normalize_public_video_url(os.getenv(env_var, ""))
     if url:
         return url
+    fallback_url = normalize_public_video_url(DEFAULT_PUBLIC_VIDEO_URLS.get(env_var, ""))
+    if fallback_url:
+        return fallback_url
     local_file = Path(local_path)
     if local_file.exists():
         return str(local_file)
