@@ -5430,7 +5430,7 @@ def render_home(active: str) -> None:
                 "Family",
                 "For families and friends to send and hear non-urgent messages.",
                 "/public/walkthrough-family",
-                "PUBLIC_VIDEO_FAMILY_URL",
+                "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_FAMILY_URL",
                 "assets/voice-message-family-walkthrough-v1.mp4",
             ),
             (
@@ -5438,7 +5438,7 @@ def render_home(active: str) -> None:
                 "Care Hub – Mobile",
                 "For care staff to play family messages and support resident recordings.",
                 "/public/walkthrough-mobile",
-                "PUBLIC_VIDEO_MOBILE_URL",
+                "PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_MOBILE_URL",
                 "assets/voice-message-mobile-walkthrough-v1.mp4",
             ),
             (
@@ -5446,7 +5446,7 @@ def render_home(active: str) -> None:
                 "Care Hub – Office",
                 "For office oversight, one-way updates, and practical structured messages.",
                 "/public/walkthrough-office",
-                "PUBLIC_VIDEO_OFFICE_URL",
+                "PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_OFFICE_URL",
                 "assets/voice-message-office-walkthrough-v1.mp4",
             ),
         ]
@@ -6033,15 +6033,15 @@ def normalize_public_video_url(raw_value: str) -> str:
 
 
 DEFAULT_PUBLIC_VIDEO_URLS: dict[str, str] = {
-    "PUBLIC_VIDEO_FAMILY_URL": (
+    "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL": (
         "https://www.dropbox.com/scl/fi/74rq3lb9oe2jw3ka8ru81/family-page-screen-recording-220326.mp4"
         "?rlkey=u1m7g9jatgk31mu5iadly4ze4&st=d4hx3kgd&raw=1"
     ),
-    "PUBLIC_VIDEO_MOBILE_URL": (
+    "PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL": (
         "https://www.dropbox.com/scl/fi/8yhsz3u1w5q2j5mzjfzlq/mobile-screen-recording-voice-message.com.mp4"
         "?rlkey=d0r8ng3ghjnidzay1brmtox6u&st=jalrytjq&raw=1"
     ),
-    "PUBLIC_VIDEO_OFFICE_URL": (
+    "PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL": (
         "https://www.dropbox.com/scl/fi/szdmrv8u3skia02avuxgb/office-screen-recording-24324.mp4"
         "?rlkey=6lynsqocd0umoknzgbt46ogno&st=n86d8qyp&raw=1"
     ),
@@ -6049,12 +6049,15 @@ DEFAULT_PUBLIC_VIDEO_URLS: dict[str, str] = {
 
 
 def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
-    url = normalize_public_video_url(os.getenv(env_var, ""))
-    if url:
-        return url
-    fallback_url = normalize_public_video_url(DEFAULT_PUBLIC_VIDEO_URLS.get(env_var, ""))
-    if fallback_url:
-        return fallback_url
+    candidate_vars = [candidate.strip() for candidate in str(env_var).split(",") if candidate.strip()]
+    for candidate in candidate_vars:
+        url = normalize_public_video_url(os.getenv(candidate, ""))
+        if url:
+            return url
+    for candidate in candidate_vars:
+        fallback_url = normalize_public_video_url(DEFAULT_PUBLIC_VIDEO_URLS.get(candidate, ""))
+        if fallback_url:
+            return fallback_url
     local_file = Path(local_path)
     if local_file.exists():
         return str(local_file)
@@ -9887,7 +9890,7 @@ def main() -> None:
     elif route == "/public/walkthrough-family":
         render_public_walkthrough_page(
             "Family walkthrough",
-            "PUBLIC_VIDEO_FAMILY_URL",
+            "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_FAMILY_URL",
             "assets/voice-message-family-walkthrough-v1.mp4",
             [
                 "How an authorised contact sends Family -> Resident voice messages.",
@@ -9912,7 +9915,7 @@ def main() -> None:
     elif route == "/public/walkthrough-mobile":
         render_public_walkthrough_page(
             "Care Hub – Mobile walkthrough",
-            "PUBLIC_VIDEO_MOBILE_URL",
+            "PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_MOBILE_URL",
             "assets/voice-message-mobile-walkthrough-v1.mp4",
             [
                 "How staff play Family -> Resident messages to the resident.",
@@ -9925,7 +9928,7 @@ def main() -> None:
     elif route == "/public/walkthrough-office":
         render_public_walkthrough_page(
             "Care Hub – Office walkthrough",
-            "PUBLIC_VIDEO_OFFICE_URL",
+            "PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_OFFICE_URL",
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
                 "How Office reviews resident-linked family messages.",
