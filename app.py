@@ -5950,6 +5950,10 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
         st.stop()
         return True
     if is_variant_authed and is_login_route_for_variant(app_variant, current_route):
+        if app_variant == VARIANT_OFFICE and is_office_mfa_required():
+            set_route("/care-hub/mfa")
+            st.stop()
+            return True
         # Mobile must stay on login route until individual PIN gate is completed.
         # Otherwise route can bounce between login and inbox before PIN verification.
         if app_variant == VARIANT_MOBILE and not is_mobile_pin_verified_for_session():
@@ -8005,6 +8009,7 @@ def render_care_login() -> None:
                     set_route(get_home_route(app_variant))
             elif app_variant == VARIANT_OFFICE and is_office_mfa_required():
                 set_route("/care-hub/mfa")
+                st.rerun()
             else:
                 set_route(get_home_route(app_variant))
         elif family_found:
@@ -8105,6 +8110,7 @@ def render_care_login() -> None:
                         )
                         if is_office_mfa_required():
                             set_route("/care-hub/mfa")
+                            st.rerun()
                         else:
                             set_route(get_home_route(VARIANT_OFFICE))
                     elif family_found:
