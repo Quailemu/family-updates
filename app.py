@@ -6176,37 +6176,11 @@ def render_slow_speech_hint() -> None:
   .vm-slow-hint {
     display: flex;
     align-items: center;
-    gap: 8px;
     margin: 6px 0 10px 0;
-  }
-  .vm-slow-face {
-    width: 36px;
-    height: 36px;
-    flex: 0 0 36px;
-  }
-  .vm-slow-face svg {
-    width: 36px;
-    height: 36px;
-    display: block;
-  }
-  .vm-slow-mouth {
-    transform-box: fill-box;
-    transform-origin: center top;
-    animation: vmSlowMouth 2s ease-in-out infinite;
   }
   .vm-slow-text {
     font-size: 0.9rem;
     color: #111;
-  }
-  @keyframes vmSlowMouth {
-    0%, 100% { transform: scaleY(0.3); }
-    50% { transform: scaleY(1); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .vm-slow-mouth {
-      animation: none;
-      transform: scaleY(0.6);
-    }
   }
 </style>
 """,
@@ -6215,14 +6189,6 @@ def render_slow_speech_hint() -> None:
     st.markdown(
         """
 <div class="vm-slow-hint" aria-label="Speak slowly and clearly">
-  <div class="vm-slow-face" aria-hidden="true">
-    <svg viewBox="0 0 48 48" role="img" aria-hidden="true">
-      <circle cx="24" cy="24" r="21" fill="#fff" stroke="#111" stroke-width="2"/>
-      <circle cx="17" cy="19" r="2.2" fill="#111"/>
-      <circle cx="31" cy="19" r="2.2" fill="#111"/>
-      <rect class="vm-slow-mouth" x="18" y="27" width="12" height="8" rx="4" fill="#111"/>
-    </svg>
-  </div>
   <div class="vm-slow-text">Speak slowly and clearly.</div>
 </div>
 """,
