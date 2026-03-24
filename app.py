@@ -7998,6 +7998,7 @@ def render_care_login() -> None:
         st.caption("Office login is a separate staff/admin access path.")
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
     if st.session_state.get("auth_uid"):
+        allow_manual_login = False
         family_found, care_found, error, family_record, care_record = get_mapping_status()
         if care_found:
             if care_record:
@@ -8019,11 +8020,33 @@ def render_care_login() -> None:
                 sign_out_user("care_hub")
         else:
             if error:
-                st.error(error)
-                st.info("Please sign in again.")
+                normalized_error = str(error).strip().lower()
+                transient_session_error = (
+                    "resource temporarily unavailable" in normalized_error
+                    or "errno 11" in normalized_error
+                )
+                if transient_session_error:
+                    # Recover from transient runtime/session errors by forcing a clean login form.
+                    for key in (
+                        "auth_uid",
+                        "access_token",
+                        "refresh_token",
+                        "auth_email",
+                        "active_role",
+                        "active_care_home_id",
+                        "mfa_verified",
+                    ):
+                        st.session_state.pop(key, None)
+                    persist_auth_cookie(None)
+                    st.warning("Session check temporarily unavailable. Please log in again.")
+                    allow_manual_login = True
+                else:
+                    st.error(error)
+                    st.info("Please sign in again.")
             else:
                 st.error("Account not set up yet.")
-        return
+        if not allow_manual_login:
+            return
 
     if app_variant == VARIANT_MOBILE:
         email = st.text_input("Staff email", key="care_mobile_login_email")
