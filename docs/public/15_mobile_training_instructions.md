@@ -4,11 +4,11 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Communication participants: residents, authorised family contacts, and Care Hub (Office and Mobile).
+Communication participants: residents, Family Members with Resident Access, and Care Hub (Office and Mobile).
 
-This diagram shows how voice messages and updates are organised across channels. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
+This diagram shows how voice messages and updates are organised across channels. Each Family Member with Resident Access has their own channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-Resident -> Family channel keeps only the latest resident message shared to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. Each authorised contact channel keeps only the latest Family -> Resident message. A new message replaces the previous message in that channel.
+Resident -> Family channel keeps only the latest resident message shared to all Family Members with Resident Access. The care home can also send a one-way Office update to all Family Members with Resident Access. Each Family Member channel keeps only the latest Family -> Resident message. A new message replaces the previous message in that channel.
 
 ## Who this is for
 
@@ -25,7 +25,7 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 ## Resident and Family messages
 
 - Play the latest family messages for the resident in the app's fair rotating order (unplayed first).
-- Record and send the latest resident message to all authorised contacts.
+- Record and send the latest resident message to all Family Members with Resident Access.
 - A new message replaces the previous message in that channel.
 
 ## Office update (read-only in Mobile)
@@ -35,7 +35,7 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 
 ## Contact labels and message order
 
-- Relationship labels (for example: daughter, son, spouse, friend) help staff identify each authorised contact.
+- Relationship labels (for example: daughter, son, spouse, friend) help staff identify each Family Member with Resident Access.
 - Family messages are played in a fair rotating order, with unplayed messages first.
 - Mobile PINs must be unique per staff account within the care home.
 

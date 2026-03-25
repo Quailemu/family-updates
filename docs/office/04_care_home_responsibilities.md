@@ -11,9 +11,9 @@ In practice, this includes responsibility for:
 
 - Supervising the recording and playback of messages
 - Managing devices and user access
-- Adding and removing residents and approved family members or other authorised contacts
+- Adding and removing residents and Family Members with Resident Access
 - Ensuring appropriate consent and authority are in place, including LPA where relevant
-- Managing complaints, disagreements, or disputes raised by family members, friends, or other authorised contacts
+- Managing complaints, disagreements, or disputes raised by family members, friends, or other individuals granted resident access
 - Ensuring messages are used only for non-urgent, social contact
 
 Safeguarding duties remain with the care home.
@@ -23,7 +23,7 @@ The service is not a safeguarding system and is not designed to provide alerts, 
 
 To maintain clarity and safety, roles are strictly separated:
 
-- Approved family members or other authorised contacts use the Family app only
+- Family Members with Resident Access use the Family app only
 - Carers use Care Hub – Mobile only
 - Office staff use Care Hub – Office only
 
@@ -38,6 +38,7 @@ The platform does not:
 - Make care decisions
 - Supervise recordings or listening
 - Verify consent or legal authority
+- Verify identity, authority, entitlement, and appropriateness for resident access decisions
 - Review, interpret, or monitor message content
 - Manage relationships, complaints, or disputes between contacts
 

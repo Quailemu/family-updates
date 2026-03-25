@@ -4,7 +4,7 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Communication participants: residents, authorised family contacts, and Care Hub channels (Office and Mobile).
+Communication participants: residents, Family Members with Resident Access, and Care Hub channels (Office and Mobile).
 
 Start with the diagram. It shows the communication channels and message directions.
 
@@ -20,21 +20,21 @@ Each interface is role-based and separate.
 
 ### 1) Family -> Resident
 
-Each authorised contact channel keeps only the latest Family -> Resident message.  
+Each Family Member channel keeps only the latest Family -> Resident message.  
 Care Hub - Mobile plays family messages one-at-a-time in a fair rotating order, with unplayed messages first.
 
 ### 2) Resident -> Family
 
-Resident -> Family channel keeps only the latest resident message shared to all authorised contacts.
+Resident -> Family channel keeps only the latest resident message shared to all Family Members with Resident Access.
 
 ### 3) Office -> Family (general update)
 
-Office can send one-way general updates to all authorised contacts.
+Office can send one-way general updates to all Family Members with Resident Access.
 
 ### 4) Office practical message (structured reply)
 
 Office can send a practical non-urgent message for a resident.  
-Each authorised contact can submit a structured reply:
+Each Family Member with Resident Access can submit a structured reply:
 
 - Yes / No / Maybe
 - Optional tick-boxes

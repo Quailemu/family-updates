@@ -30,4 +30,4 @@ In addition, Office may publish a practical non-urgent message that supports str
 
 ## Roles and responsibility
 
-Care homes are responsible for resident identification, obtaining and recording consent (including any LPA verification), supervising recordings and playback, managing access for approved family members or other authorised contacts, and handling contact-related disputes. The platform does not perform these checks and does not provide professional judgement.
+Care homes are responsible for resident identification, obtaining and recording consent (including any LPA verification), supervising recordings and playback, and deciding which individuals are permitted resident access. The care home is solely responsible for granting, maintaining, and revoking resident access, and for handling access-related disputes. The platform does not perform these checks and does not provide professional judgement.

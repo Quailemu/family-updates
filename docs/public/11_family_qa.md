@@ -4,13 +4,13 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Communication participants: residents, authorised family contacts, and Care Hub (Office and Mobile).
+Communication participants: residents, Family Members with Resident Access, and Care Hub (Office and Mobile).
 
 Q: Is this a live messaging service?  
 A: No. It is not live. Messages are handled when staff are available.
 
 Q: What is this service for?  
-A: Non-urgent social voice messages between residents and authorised contacts, plus non-urgent Office communication.
+A: Non-urgent social voice messages between residents and Family Members with Resident Access, plus non-urgent Office communication.
 
 Q: Can I send urgent updates here?  
 A: No. For urgent, clinical, safeguarding, or emergency matters, contact the care home directly.
@@ -22,7 +22,7 @@ Q: Can I see a message timeline?
 A: No. There is no archive and no scrolling thread.
 
 Q: What is an Office general update?  
-A: A one-way Office broadcast to all authorised contacts for non-urgent general information.
+A: A one-way Office broadcast to all Family Members with Resident Access for non-urgent general information.
 
 Q: What is an Office practical message?  
 A: A practical Office request linked to a resident (for example visits, attendance, reminders, or item requests) that allows a structured family reply.

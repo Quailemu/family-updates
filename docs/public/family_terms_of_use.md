@@ -4,7 +4,7 @@
 
 ## Purpose
 
-These terms apply to authorised contacts using the Family app.
+These terms apply to Family Members with Resident Access using the Family app.
 
 ## Service type
 
@@ -36,7 +36,8 @@ No archive or message history is provided.
 
 ## Access and oversight
 
-The care home controls who is authorised, who can participate, and how the service is used in practice.
+The care home controls resident access, including who can participate and how the service is used in practice.
+voice-message does not verify or validate the identity, authority, or entitlement of individuals granted resident access by the care home and relies on the care home's instructions.
 
 voice-message.com provides technical infrastructure only.
 

@@ -19,7 +19,7 @@ This outline must be read with:
 
 ## 2. Roles and responsibility
 
-The care home is the operator of the service and the Data Controller. The care home controls access, supervises use, and decides how the service is used within the home.
+The care home is the operator of the service and the Data Controller. The care home controls resident access, supervises use, and decides how the service is used within the home.
 
 The service provider supplies the technical platform only and acts as Data Processor.
 
@@ -30,20 +30,22 @@ The care home is responsible for:
 - resident identification
 - consent and authority, including LPA where applicable
 - supervision of recordings and playback
-- managing access and contacts
-- handling disputes and complaints raised by family members, friends, or other authorised contacts
+- managing resident access
+- handling disputes and complaints raised by family members, friends, or other individuals granted resident access by the care home
 - safeguarding under its existing procedures
 
 ## 4. Platform limitations
 
-The platform does not provide care updates or health information. It does not monitor or review message content. It is not a safeguarding or alerting system. It does not verify consent, capacity, or authority.
+The platform does not provide care updates or health information. It does not monitor or review message content. It is not a safeguarding or alerting system. It does not verify consent, capacity, authority, identity, entitlement, or appropriateness for resident access.
+
+The Customer is solely responsible for determining which individuals are permitted to have access to a resident within the Service, and for granting, maintaining, and revoking that access as appropriate. voice-message does not verify or validate the identity, authority, or entitlement of any individual granted access by the Customer and relies on the Customer’s instructions in this regard.
 
 ## 5. Use of the service
 
 The service is for non-urgent, social voice messages only. It is not intended for care updates, health information, or safeguarding concerns. The care home decides how the service is used in practice.
 
 Role separation applies:
-- Approved family members or other authorised contacts use the Family app only.
+- Family Members with Resident Access use the Family app only.
 - Carers use Care Hub – Mobile only.
 - Office staff use Care Hub – Office only.
 
@@ -67,7 +69,7 @@ Default service position to align with existing public documents:
 
 ## 7. Access, support, and changes
 
-The service provider provides access to the platform and technical support to the care home. The care home manages end-user access.
+The service provider provides access to the platform and technical support to the care home. The care home grants, maintains, and revokes resident access.
 
 Either party may suspend or terminate use of the service where necessary, for example if the service is being used outside the agreed scope. Any suspension or termination will be handled in a reasonable and non-punitive way, with details to be agreed.
 

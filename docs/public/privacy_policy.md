@@ -22,7 +22,7 @@ The care home decides access, participation, and day-to-day use in its service.
 
 ## Why data is used
 
-Data is used to deliver non-urgent social voice messaging between residents and authorised contacts in a care setting.
+Data is used to deliver non-urgent social voice messaging between residents and Family Members with Resident Access in a care setting.
 
 The service is not for medical updates, safeguarding reporting, or urgent enquiries.
 
