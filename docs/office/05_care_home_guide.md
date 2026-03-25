@@ -88,25 +88,21 @@ These admin tasks are handled in Care Hub – Office, not on Care Hub – Mobile
 
 ### Registering a Family Member
 
-Purpose
-
+**Purpose**  
 Care Hub staff can securely invite authorised family contacts to access the Family app.
 
-Steps
-
-1. Open Care Hub – Office.
-2. Go to "Register a Family Member".
-3. Enter contact details, including relationship to the resident where known (for example: daughter, son, spouse, friend).
-4. Select resident.
-5. Confirm authorisation.
+**Steps**  
+1. Open Care Hub – Office.  
+2. Go to "Register a Family Member".  
+3. Enter contact details, including relationship to the resident where known (for example: daughter, son, spouse, friend).  
+4. Select resident.  
+5. Confirm authorisation.  
 6. Click "Send invitation".
 
-What Happens Next
-
+**What happens next**  
 The family contact receives an email invitation. They click a secure email login link to sign in. No password is required. They log into the Family app. Access is restricted to the selected resident.
 
-Important notes
-
+**Important notes**  
 This service is for non-urgent social communication only. Only authorised contacts should be registered. Duplicate registrations are prevented automatically. Relationship labels help staff identify the right contact in daily workflows.
 
 ### Resident list and cards (Care Hub)
