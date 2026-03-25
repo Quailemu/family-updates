@@ -149,11 +149,15 @@ Care Hub – Mobile devices typically use an inactivity warning and lock after a
 
 ### Locking sessions and device security
 
-When a device is left unattended, staff may lock the session so that access is limited until the device is in use again.
+Care Hub sessions should not be left open on unattended devices.
 
-The care home typically uses the device's own lock (PIN, password, or similar) and supervises devices in line with its usual procedures.
+When stepping away, staff should lock the screen or sign out in line with the care home's normal security procedures.
 
-If a quick lock option is used, it is typically a single shared code per care home rather than staff-specific accounts.
+Care Hub – Mobile is used on the dedicated voice-message mobile device supplied for this service. That device should stay under staff supervision during use and be stored securely when not in use.
+
+Care Hub – Office is used on office-managed devices. Access should be limited to authorised office staff, with desk sessions locked when unattended.
+
+If a device is lost, misplaced, or access is suspected to be compromised, staff should follow the care home's incident process immediately.
 
 ### Operational settings
 
@@ -177,4 +181,4 @@ For consent, authority, and safeguarding governance, refer to the Safeguarding a
 
 ## Time display
 
-Where timing labels are shown in care communication views, the system uses simple AM/PM language (for example: Today AM, Today PM, Yesterday AM, Yesterday PM, or a simple older date + AM/PM). Exact clock times are intentionally not shown in these views.
+Where timing labels are shown in care communication views, the app uses date-only labels. Exact clock times and AM/PM markers are not shown.
