@@ -123,7 +123,13 @@ Mobile users can play this Office message but cannot replace it.
 
 ### Assisting residents to record messages
 
-Staff may help residents record short social messages. This assistance is part of normal day-to-day support and is carried out on behalf of the care home.
+Staff may help residents record short social messages as part of normal day-to-day support, carried out on behalf of the care home.
+
+When a resident message is sent, it is shared as one latest Resident -> Family message to all authorised contacts for that resident.
+
+This channel is one-way from resident to authorised contacts (it is not a live conversation thread). A new resident message replaces the previous shared resident message.
+
+Recording and playback are done when staff are available, to fit normal care routines.
 
 ### Managing access
 
