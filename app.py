@@ -261,8 +261,9 @@ def restore_auth_session_from_cookie() -> None:
         try:
             supabase.postgrest.auth(st.session_state["access_token"])
             auth_uid = st.session_state.get("auth_uid")
+            family_table = _family_user_table_name(supabase)
             family_resp = (
-                supabase.table("family_user")
+                supabase.table(family_table)
                 .select("care_home_id")
                 .eq("auth_user_id", auth_uid)
                 .eq("active", True)
@@ -442,6 +443,81 @@ def _is_missing_column_error(exc: Exception, column_name: str) -> bool:
         or "undefined column" in message
         or "42703" in message
     )
+
+
+def _is_missing_table_error(exc: Exception, table_name: str) -> bool:
+    message = str(exc or "").lower()
+    table_key = str(table_name or "").strip().lower()
+    if not table_key:
+        return False
+    return table_key in message and (
+        "could not find the table" in message
+        or "schema cache" in message
+        or "does not exist" in message
+        or "42p01" in message
+        or "pgrst205" in message
+    )
+
+
+def _resolve_table_name(supabase: object, cache_key: str, candidates: list[str]) -> str:
+    cache = st.session_state.setdefault("_schema_name_cache", {})
+    cached = str(cache.get(cache_key) or "").strip()
+    if cached:
+        return cached
+    for candidate in candidates:
+        try:
+            supabase.table(candidate).select("id").limit(1).execute()
+            cache[cache_key] = candidate
+            st.session_state["_schema_name_cache"] = cache
+            return candidate
+        except Exception as exc:
+            if _is_missing_table_error(exc, candidate):
+                continue
+            # For non-missing-table errors (for example transient permission/runtime),
+            # keep the preferred candidate to avoid blocking auth flow entirely.
+            cache[cache_key] = candidate
+            st.session_state["_schema_name_cache"] = cache
+            return candidate
+    fallback = candidates[-1] if candidates else ""
+    cache[cache_key] = fallback
+    st.session_state["_schema_name_cache"] = cache
+    return fallback
+
+
+def _family_user_table_name(supabase: object) -> str:
+    return _resolve_table_name(supabase, "family_user_table", ["family_user", "family_contacts"])
+
+
+def _resident_access_table_name(supabase: object) -> str:
+    return _resolve_table_name(
+        supabase, "resident_access_table", ["resident_access", "family_contact_access"]
+    )
+
+
+def _family_user_relation_name(supabase: object) -> str:
+    table_name = _family_user_table_name(supabase)
+    return "family_user" if table_name == "family_user" else "family_contacts"
+
+
+def _resident_access_family_user_column(supabase: object) -> str:
+    access_table = _resident_access_table_name(supabase)
+    return "family_user_id" if access_table == "resident_access" else "family_contact_id"
+
+
+def _office_practical_family_user_column(supabase: object) -> str:
+    cache = st.session_state.setdefault("_schema_name_cache", {})
+    cache_key = "office_practical_family_user_column"
+    cached = str(cache.get(cache_key) or "").strip()
+    if cached:
+        return cached
+    try:
+        supabase.table("office_practical_responses").select("id, family_user_id").limit(1).execute()
+        resolved = "family_user_id"
+    except Exception as exc:
+        resolved = "family_contact_id" if _is_missing_column_error(exc, "family_user_id") else "family_user_id"
+    cache[cache_key] = resolved
+    st.session_state["_schema_name_cache"] = cache
+    return resolved
 
 
 def _strip_optional_message_audio_columns(payload: dict) -> dict:
@@ -1255,16 +1331,17 @@ def upsert_family_user(
         "relationship": relationship.strip(),
         "active": True,
     }
-    try:
-        # Older supabase-py versions do not support `.select()` chained after `.upsert()`.
-        supabase.table("family_user").upsert(
-            payload, on_conflict="auth_user_id"
-        ).execute()
-        resp = (
-            supabase.table("family_user")
-            .select("id, auth_user_id, care_home_id, email, display_name, relationship, active")
-            .eq("auth_user_id", auth_user_id)
-            .eq("care_home_id", care_home_id)
+        try:
+            family_table = _family_user_table_name(supabase)
+            # Older supabase-py versions do not support `.select()` chained after `.upsert()`.
+            supabase.table(family_table).upsert(
+                payload, on_conflict="auth_user_id"
+            ).execute()
+            resp = (
+                supabase.table(family_table)
+                .select("id, auth_user_id, care_home_id, email, display_name, relationship, active")
+                .eq("auth_user_id", auth_user_id)
+                .eq("care_home_id", care_home_id)
             .limit(1)
             .execute()
         )
@@ -1284,21 +1361,23 @@ def grant_resident_access(
     supabase, error = get_authed_supabase(access_token)
     if error:
         return None, error
+    access_table = _resident_access_table_name(supabase)
+    family_col = _resident_access_family_user_column(supabase)
     payload = {
         "resident_id": resident_id,
-        "family_user_id": family_user_id,
+        family_col: family_user_id,
         "active": True,
     }
     try:
         # Older supabase-py versions do not support `.select()` chained after `.upsert()`.
-        supabase.table("resident_access").upsert(
-            payload, on_conflict="resident_id,family_user_id"
+        supabase.table(access_table).upsert(
+            payload, on_conflict=f"resident_id,{family_col}"
         ).execute()
         resp = (
-            supabase.table("resident_access")
-            .select("id, resident_id, family_user_id, active")
+            supabase.table(access_table)
+            .select(f"id, resident_id, {family_col}, active")
             .eq("resident_id", resident_id)
-            .eq("family_user_id", family_user_id)
+            .eq(family_col, family_user_id)
             .limit(1)
             .execute()
         )
@@ -1485,8 +1564,9 @@ def render_office_family_registration_form(
         return
 
     try:
+        family_table = _family_user_table_name(supabase)
         existing_contact_resp = (
-            supabase.table("family_user")
+            supabase.table(family_table)
             .select("id")
             .eq("care_home_id", care_home_id)
             .eq("email", normalized_email)
@@ -1667,8 +1747,9 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
             if not auth_uid:
                 return False, False, "Authenticated user identity could not be resolved.", None, None
             auth_email = str(st.session_state.get("auth_email") or "").strip().lower()
+            family_table = _family_user_table_name(supabase)
             family_resp = (
-                supabase.table("family_user")
+                supabase.table(family_table)
                 .select("id, care_home_id, display_name, auth_user_id, email")
                 .eq("auth_user_id", auth_uid)
                 .eq("active", True)
@@ -1678,7 +1759,7 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
             family_record = family_resp.data[0] if family_resp.data else None
             if not family_record and auth_email:
                 email_resp = (
-                    supabase.table("family_user")
+                    supabase.table(family_table)
                     .select("id, care_home_id, display_name, auth_user_id, email")
                     .eq("email", auth_email)
                     .eq("active", True)
@@ -1688,7 +1769,7 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
                 if not email_resp.data:
                     # Some legacy rows may have non-normalized email casing.
                     email_resp = (
-                        supabase.table("family_user")
+                        supabase.table(family_table)
                         .select("id, care_home_id, display_name, auth_user_id, email")
                         .ilike("email", auth_email)
                         .eq("active", True)
@@ -1700,7 +1781,7 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
                     existing_uid = str(family_record.get("auth_user_id") or "").strip()
                     if existing_uid != auth_uid:
                         try:
-                            supabase.table("family_user").update({"auth_user_id": auth_uid}).eq(
+                            supabase.table(family_table).update({"auth_user_id": auth_uid}).eq(
                                 "id", family_record.get("id")
                             ).execute()
                             family_record["auth_user_id"] = auth_uid
@@ -3134,8 +3215,11 @@ def fetch_family_residents(user_id: str, access_token: str) -> list[dict]:
     if error:
         return []
     try:
+        family_table = _family_user_table_name(supabase)
+        access_table = _resident_access_table_name(supabase)
+        family_col = _resident_access_family_user_column(supabase)
         contact_resp = (
-            supabase.table("family_user")
+            supabase.table(family_table)
             .select("id, display_name")
             .eq("auth_user_id", user_id)
             .eq("active", True)
@@ -3146,11 +3230,11 @@ def fetch_family_residents(user_id: str, access_token: str) -> list[dict]:
             return []
         contact_id = contact_resp.data[0]["id"]
         access_resp = (
-            supabase.table("resident_access")
+            supabase.table(access_table)
             .select(
                 "resident_id, residents(id, preferred_display_name, care_home_reference, care_home_id)"
             )
-            .eq("family_user_id", contact_id)
+            .eq(family_col, contact_id)
             .eq("active", True)
             .execute()
         )
@@ -3468,10 +3552,13 @@ def fetch_family_users_for_resident(
     if error:
         return []
     try:
+        access_table = _resident_access_table_name(supabase)
+        family_col = _resident_access_family_user_column(supabase)
+        family_rel = _family_user_relation_name(supabase)
         contact_resp = (
-            supabase.table("resident_access")
+            supabase.table(access_table)
             .select(
-                "family_user_id, family_user(id, display_name, relationship, auth_user_id, email)"
+                f"{family_col}, {family_rel}(id, display_name, relationship, auth_user_id, email)"
             )
             .eq("resident_id", resident_id)
             .eq("active", True)
@@ -3479,7 +3566,7 @@ def fetch_family_users_for_resident(
         )
         contacts = []
         for row in contact_resp.data or []:
-            contact = row.get("family_user") or {}
+            contact = row.get(family_rel) or {}
             if not contact:
                 continue
             contacts.append(
@@ -3552,7 +3639,8 @@ def fetch_latest_message_for_contact_with_mapping_repair(
             supabase, error = get_authed_supabase(access_token)
             if not error:
                 try:
-                    supabase.table("family_user").update({"auth_user_id": resolved_user_id}).eq(
+                    family_table = _family_user_table_name(supabase)
+                    supabase.table(family_table).update({"auth_user_id": resolved_user_id}).eq(
                         "id", contact_id
                     ).execute()
                 except Exception:
@@ -3760,8 +3848,9 @@ def get_family_user_for_session(access_token: str | None) -> dict | None:
     if error:
         return None
     try:
+        family_table = _family_user_table_name(supabase)
         resp = (
-            supabase.table("family_user")
+            supabase.table(family_table)
             .select("id, care_home_id, display_name")
             .eq("auth_user_id", auth_uid)
             .eq("active", True)
@@ -3845,13 +3934,14 @@ def fetch_family_practical_response(
     supabase, error = get_authed_supabase(access_token)
     if error:
         return None
+    family_col = _office_practical_family_user_column(supabase)
     try:
         try:
             response_resp = (
                 supabase.table("office_practical_responses")
                 .select("id, primary_choice, note, response_status, planned_visit_time, share_with_family")
                 .eq("message_id", message_id)
-                .eq("family_user_id", family_user_id)
+                .eq(family_col, family_user_id)
                 .limit(1)
                 .execute()
             )
@@ -3860,7 +3950,7 @@ def fetch_family_practical_response(
                 supabase.table("office_practical_responses")
                 .select("id, primary_choice, note, response_status")
                 .eq("message_id", message_id)
-                .eq("family_user_id", family_user_id)
+                .eq(family_col, family_user_id)
                 .limit(1)
                 .execute()
             )
@@ -3904,11 +3994,13 @@ def fetch_shared_family_practical_responses(
     supabase, error = get_authed_supabase(access_token)
     if error:
         return []
+    family_col = _office_practical_family_user_column(supabase)
+    family_rel = _family_user_relation_name(supabase)
     try:
         try:
             resp = (
                 supabase.table("office_practical_responses")
-                .select("family_user_id, primary_choice, planned_visit_time, note, family_user(display_name)")
+                .select(f"{family_col}, primary_choice, planned_visit_time, note, {family_rel}(display_name)")
                 .eq("message_id", message_id)
                 .eq("share_with_family", True)
                 .order("updated_at", desc=True)
@@ -3919,10 +4011,10 @@ def fetch_shared_family_practical_responses(
         rows = []
         current_id = str(current_family_user_id or "").strip()
         for row in resp.data or []:
-            family_user_id = str(row.get("family_user_id") or "").strip()
+            family_user_id = str(row.get(family_col) or "").strip()
             if current_id and family_user_id == current_id:
                 continue
-            family_details = row.get("family_user") or {}
+            family_details = row.get(family_rel) or {}
             rows.append(
                 {
                     "contact_name": str(family_details.get("display_name") or "Family Member"),
@@ -3951,6 +4043,7 @@ def upsert_family_practical_response(
         return False, error
     if primary_choice not in {"yes", "no", "maybe"}:
         return False, "Please choose Yes, No, or Maybe."
+    family_col = _office_practical_family_user_column(supabase)
     try:
         message_resp = (
             supabase.table("office_practical_messages")
@@ -3994,7 +4087,7 @@ def upsert_family_practical_response(
             supabase.table("office_practical_responses")
             .select("id")
             .eq("message_id", message_id)
-            .eq("family_user_id", family_user_id)
+            .eq(family_col, family_user_id)
             .limit(1)
             .execute()
         )
@@ -4005,7 +4098,7 @@ def upsert_family_practical_response(
         )
         response_payload = {
             "message_id": message_id,
-            "family_user_id": family_user_id,
+            family_col: family_user_id,
             "primary_choice": primary_choice,
             "note": note_value,
             "planned_visit_time": (planned_visit_time or "").strip()[:80],
@@ -4207,6 +4300,8 @@ def fetch_office_practical_response_summary(
     if error:
         return summary
     try:
+        family_col = _office_practical_family_user_column(supabase)
+        family_rel = _family_user_relation_name(supabase)
         options = fetch_office_practical_message_options(message_id, access_token)
         option_label_by_id = {
             str(option.get("id") or "").strip(): str(option.get("option_label") or "").strip()
@@ -4216,8 +4311,8 @@ def fetch_office_practical_response_summary(
             responses_resp = (
                 supabase.table("office_practical_responses")
                 .select(
-                    "id, family_user_id, primary_choice, note, response_status, planned_visit_time, "
-                    "share_with_family, family_user(display_name)"
+                    f"id, {family_col}, primary_choice, note, response_status, planned_visit_time, "
+                    f"share_with_family, {family_rel}(display_name)"
                 )
                 .eq("message_id", message_id)
                 .order("updated_at", desc=True)
@@ -4226,7 +4321,7 @@ def fetch_office_practical_response_summary(
         except Exception:
             responses_resp = (
                 supabase.table("office_practical_responses")
-                .select("id, family_user_id, primary_choice, note, response_status, family_user(display_name)")
+                .select(f"id, {family_col}, primary_choice, note, response_status, {family_rel}(display_name)")
                 .eq("message_id", message_id)
                 .order("updated_at", desc=True)
                 .execute()
@@ -4261,7 +4356,7 @@ def fetch_office_practical_response_summary(
             if choice in summary["choice_counts"]:
                 summary["choice_counts"][choice] += 1
             response_id = str(row.get("id") or "").strip()
-            family_details = row.get("family_user") or {}
+            family_details = row.get(family_rel) or {}
             summary["responses"].append(
                 {
                     "contact_name": str(family_details.get("display_name") or "Family Member"),
