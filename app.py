@@ -2261,18 +2261,17 @@ def require_care_access() -> None:
             or "errno 11" in normalized_error
         )
         if transient_session_error:
-            for key in (
-                "auth_uid",
-                "access_token",
-                "refresh_token",
-                "auth_email",
-                "active_role",
-                "active_care_home_id",
-                "mfa_verified",
+            # Keep active sessions on transient backend/runtime errors instead of forcing logout.
+            if (
+                st.session_state.get("active_role") == "care_hub"
+                and st.session_state.get("access_token")
             ):
-                st.session_state.pop(key, None)
-            persist_auth_cookie(None)
-            set_route(get_login_route(get_app_variant()))
+                return
+            render_access_gate(
+                "Temporary session check issue. Please retry.",
+                get_login_route(get_app_variant()),
+                "care_hub",
+            )
             st.stop()
         if (
             st.session_state.get("active_role") == "care_hub"
@@ -8244,20 +8243,9 @@ def render_care_login() -> None:
                     or "errno 11" in normalized_error
                 )
                 if transient_session_error:
-                    # Recover from transient runtime/session errors by forcing a clean login form.
-                    for key in (
-                        "auth_uid",
-                        "access_token",
-                        "refresh_token",
-                        "auth_email",
-                        "active_role",
-                        "active_care_home_id",
-                        "mfa_verified",
-                    ):
-                        st.session_state.pop(key, None)
-                    persist_auth_cookie(None)
-                    set_route(get_login_route(app_variant))
-                    st.rerun()
+                    st.warning(
+                        "Temporary session check issue detected. Your session is still active; please retry."
+                    )
                 else:
                     st.error(error)
                     st.info("Please sign in again.")
