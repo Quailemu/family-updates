@@ -15,6 +15,8 @@ The service provides three user interfaces connected to a resident's care circle
 
 Each interface has its own controls for creating and managing the messages it sends.
 
+In this guide, **authorised contact** means a family member, friend, or other approved person who the care home has registered for a resident.
+
 The messaging system uses four channel types linked to each resident:
 
 - Authorised contact channels for Family/Friend -> Resident messages
@@ -115,7 +117,7 @@ Staff can record an outgoing message for a resident from the Send section. The c
 
 ### Office update message
 
-Office can record a current Office -> Family/Friend update for a resident.
+Office can record a current Office -> authorised contact update for a resident.
 This update is playable in Office, Mobile, and Family.
 Mobile users can play this Office message but cannot replace it.
 
