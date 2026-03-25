@@ -5,16 +5,19 @@
 Date:
 Care home name:
 Care home ID in use:
-Shared operator login email:
+Office staff/admin login email:
 
 ## Setup and access
 
-- [ ] One shared operator login is in use (no staff accounts).
+- [ ] Care Hub – Office login is set up for office staff/admin users.
+- [ ] Care Hub – Mobile uses individual staff Mobile PIN access (no shared Mobile PIN).
 - [ ] Device PIN/password is enabled on all devices used for recordings/playback.
 - [ ] Desk devices have a visible "Lock session" step and staff use it when stepping away.
-- [ ] Care Hub – Mobile devices are set to lock after inactivity (15-20 minutes).
+- [ ] Care Hub – Mobile idle sign-out time is set in Operational settings (Care home banner page).
 - [ ] Only approved staff devices are used for the service.
+- [ ] Dedicated Care Hub – Mobile device supplied for this service (with lanyard) is in use.
 - [ ] Role separation confirmed: approved family members or other authorised contacts use Family app only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
+- [ ] Operational setup variables reviewed on the Care home banner page (name, banner settings, idle sign-out time).
 
 ## Residents and consent
 
@@ -32,9 +35,10 @@ Shared operator login email:
 ## Message handling (scope controls)
 
 - [ ] Audio-only messages (no text, no video, no live calls).
-- [ ] Only the current message is visible (no history or timeline).
-- [ ] New messages replace the previous one (overwrite confirmed).
+- [ ] Only the latest message is visible per channel (no history or archive).
+- [ ] New messages replace the previous message in the same channel (overwrite confirmed).
 - [ ] Staff understand the platform is not for care updates or monitoring.
+- [ ] Family and care views use date-only labels (no exact times or AM/PM timestamps).
 
 ## Office documents and oversight
 
