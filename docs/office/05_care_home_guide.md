@@ -66,6 +66,8 @@ Office practical text messages are separate from voice channels and support stru
 - Reducing repeated non-urgent inbound enquiries to office staff.
 - Keeping message handling simple by retaining only the latest message in each channel.
 - Giving authorised contacts clear one-way office information without response workflows.
+- Sending practical Office text messages when a quick structured family response is needed (for example Yes/No/Maybe, tick-box options, and an optional short note).
+- Reviewing structured family replies in Office to support practical planning and follow-up.
 
 ### Access model
 
