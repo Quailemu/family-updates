@@ -157,11 +157,13 @@ If a quick lock option is used, it is typically a single shared code per care ho
 
 ### Operational settings
 
-Operational settings are chosen by each care home to match day-to-day practice.
+Each care home chooses a few practical security settings for its Care Hub devices.
 
-This includes how long a session stays open before staff are asked to unlock again.
+In everyday use, this means deciding how long the app can stay open if no one is using it, and when staff must unlock it again.
 
-The aim is to balance safety and convenience: quick access during care work, with session locking when devices are left unattended.
+If a device is left idle, it should lock after a short time so messages and resident details are not left visible.
+
+The setting is chosen to support normal care work: easy to re-open during routines, but locked when a device is unattended.
 
 ## Responsibility and governance
 
