@@ -1331,17 +1331,17 @@ def upsert_family_user(
         "relationship": relationship.strip(),
         "active": True,
     }
-        try:
-            family_table = _family_user_table_name(supabase)
-            # Older supabase-py versions do not support `.select()` chained after `.upsert()`.
-            supabase.table(family_table).upsert(
-                payload, on_conflict="auth_user_id"
-            ).execute()
-            resp = (
-                supabase.table(family_table)
-                .select("id, auth_user_id, care_home_id, email, display_name, relationship, active")
-                .eq("auth_user_id", auth_user_id)
-                .eq("care_home_id", care_home_id)
+    try:
+        family_table = _family_user_table_name(supabase)
+        # Older supabase-py versions do not support `.select()` chained after `.upsert()`.
+        supabase.table(family_table).upsert(
+            payload, on_conflict="auth_user_id"
+        ).execute()
+        resp = (
+            supabase.table(family_table)
+            .select("id, auth_user_id, care_home_id, email, display_name, relationship, active")
+            .eq("auth_user_id", auth_user_id)
+            .eq("care_home_id", care_home_id)
             .limit(1)
             .execute()
         )
