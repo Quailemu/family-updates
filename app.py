@@ -1192,6 +1192,38 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
     return is_mobile_pin_verified_for_session()
 
 
+def fetch_care_home_staff_mobile_pin_status(
+    access_token: str | None,
+) -> tuple[list[dict], str | None]:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return [], error
+    try:
+        response = supabase.rpc("list_care_home_staff_mobile_pin_status").execute()
+    except Exception as exc:  # pragma: no cover - Supabase runtime error
+        return [], str(exc)
+    rows = response.data if isinstance(response.data, list) else []
+    return rows, None
+
+
+def reset_care_home_staff_mobile_pin(
+    access_token: str | None, staff_auth_user_id: str
+) -> tuple[bool, str]:
+    target_user_id = str(staff_auth_user_id or "").strip()
+    if not target_user_id:
+        return False, "Select a staff account first."
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, error
+    try:
+        supabase.rpc(
+            "reset_staff_mobile_pin", {"p_staff_auth_user_id": target_user_id}
+        ).execute()
+        return True, "Mobile PIN reset. Staff member must set a new PIN at next Mobile login."
+    except Exception as exc:  # pragma: no cover - Supabase runtime error
+        return False, str(exc)
+
+
 def upsert_family_contact(
     access_token: str | None,
     *,
@@ -1354,7 +1386,6 @@ def render_office_family_registration_form(
             else:
                 st.error(mapping_error or "Retry failed. Please try again.")
 
-    st.markdown("### Register a Family Member")
     st.caption(
         "Register an authorised family contact for a resident. We will send a secure email login link. No password required."
     )
@@ -7701,6 +7732,57 @@ def render_care_hub_security() -> None:
             st.rerun()
         else:
             st.error(message)
+
+    st.markdown("### Mobile staff PIN management")
+    st.caption(
+        "Each staff member has their own Mobile PIN. Reset clears a selected staff PIN; they will set a new PIN at next Mobile login."
+    )
+    staff_rows, staff_rows_error = fetch_care_home_staff_mobile_pin_status(access_token)
+    if staff_rows_error:
+        st.error(staff_rows_error)
+    elif not staff_rows:
+        st.info("No staff accounts found for this care home.")
+    else:
+        current_auth_uid = str(st.session_state.get("auth_uid") or "").strip()
+        selectable_staff_ids = []
+        staff_label_by_id: dict[str, str] = {}
+        for row in staff_rows:
+            staff_auth_user_id = str(row.get("auth_user_id") or "").strip()
+            if not staff_auth_user_id:
+                continue
+            selectable_staff_ids.append(staff_auth_user_id)
+            staff_email = str(row.get("staff_email") or "").strip() or "No email"
+            pin_set = bool(row.get("mobile_pin_set"))
+            pin_label = "PIN set" if pin_set else "PIN not set"
+            current_label = " (you)" if staff_auth_user_id == current_auth_uid else ""
+            staff_label_by_id[staff_auth_user_id] = f"{staff_email} | {pin_label}{current_label}"
+        if selectable_staff_ids:
+            selected_staff_auth_user_id = st.selectbox(
+                "Staff account",
+                options=selectable_staff_ids,
+                format_func=lambda value: staff_label_by_id.get(value, value),
+                key="office_mobile_pin_reset_target",
+            )
+            confirm_staff_pin_reset = st.checkbox(
+                "I confirm I want to reset this staff Mobile PIN.",
+                key="office_mobile_pin_reset_confirm",
+            )
+            if st.button(
+                "Reset selected staff Mobile PIN",
+                key="office_mobile_pin_reset_button",
+                use_container_width=True,
+            ):
+                if not confirm_staff_pin_reset:
+                    st.error("Please confirm before resetting the staff PIN.")
+                else:
+                    ok, reset_message = reset_care_home_staff_mobile_pin(
+                        access_token, selected_staff_auth_user_id
+                    )
+                    if ok:
+                        st.success(reset_message)
+                        st.rerun()
+                    else:
+                        st.error(reset_message)
 
     st.markdown("### Two-factor authentication (TOTP)")
     if enabled:
