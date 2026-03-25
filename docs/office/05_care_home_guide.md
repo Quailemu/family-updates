@@ -105,17 +105,17 @@ The family contact receives an email invitation. They click a secure email login
 **Important notes**  
 This service is for non-urgent social communication only. Only authorised contacts should be registered. Duplicate registrations are prevented automatically. Relationship labels help staff identify the right contact in daily workflows.
 
-### Resident list and cards (Care Hub)
+### Resident list and communication areas (Care Hub)
 
 Care Hub users see a scrollable list of residents. In both Care Hub – Office and Care Hub – Mobile, each resident has one communication area showing the latest message in each channel.
 
 ### Mobile send section
 
-Staff can record an outgoing message for that resident from the Send section. The card includes a single recorder/player and an "I have listened to this message." checkbox before sending. The resident message is then sent to all authorised contacts as the latest shared resident message.
+Staff can record an outgoing message for a resident from the Send section. The communication area includes a single recorder/player and an "I have listened to this message." checkbox before sending. The resident message is then sent to all authorised contacts as the latest shared resident message.
 
 ### Office update message
 
-Office can record a current Office -> Family/Friend update for that resident.
+Office can record a current Office -> Family/Friend update for a resident.
 This update is playable in Office, Mobile, and Family.
 Mobile users can play this Office message but cannot replace it.
 
