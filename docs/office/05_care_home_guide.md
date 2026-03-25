@@ -137,7 +137,9 @@ The care home controls who has access. Only Care Hub – Office staff may add or
 
 ### Managing devices
 
-Homes typically use a desk device for admin tasks (Care Hub – Office) and a Care Hub – Mobile device for recording and listening. The care home decides how devices are used and supervised.
+Homes typically use a desk device for admin tasks (Care Hub – Office). Care Hub – Mobile is used on the dedicated voice-message mobile device supplied for this service, with lanyard, for recording and listening.
+
+The care home decides how the supplied Care Hub – Mobile device is supervised and used during normal care routines.
 
 ### Care Hub – Mobile and Care Hub – Office devices
 
@@ -155,7 +157,11 @@ If a quick lock option is used, it is typically a single shared code per care ho
 
 ### Operational settings
 
-Operational security settings (such as lock timeouts) are managed per care home to support the shared operator login model.
+Operational settings are chosen by each care home to match day-to-day practice.
+
+This includes how long a session stays open before staff are asked to unlock again.
+
+The aim is to balance safety and convenience: quick access during care work, with session locking when devices are left unattended.
 
 ## Responsibility and governance
 
