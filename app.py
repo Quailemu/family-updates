@@ -262,7 +262,7 @@ def restore_auth_session_from_cookie() -> None:
             supabase.postgrest.auth(st.session_state["access_token"])
             auth_uid = st.session_state.get("auth_uid")
             family_resp = (
-                supabase.table("family_contacts")
+                supabase.table("family_user")
                 .select("care_home_id")
                 .eq("auth_user_id", auth_uid)
                 .eq("active", True)
@@ -1233,7 +1233,7 @@ def reset_care_home_staff_mobile_pin(
         return False, str(exc)
 
 
-def upsert_family_contact(
+def upsert_family_user(
     access_token: str | None,
     *,
     care_home_id: str,
@@ -1251,17 +1251,17 @@ def upsert_family_contact(
         "care_home_id": care_home_id,
         "auth_user_id": auth_user_id,
         "email": email.strip().lower(),
-        "display_name": display_name or "Family contact",
+        "display_name": display_name or "Family Member",
         "relationship": relationship.strip(),
         "active": True,
     }
     try:
         # Older supabase-py versions do not support `.select()` chained after `.upsert()`.
-        supabase.table("family_contacts").upsert(
+        supabase.table("family_user").upsert(
             payload, on_conflict="auth_user_id"
         ).execute()
         resp = (
-            supabase.table("family_contacts")
+            supabase.table("family_user")
             .select("id, auth_user_id, care_home_id, email, display_name, relationship, active")
             .eq("auth_user_id", auth_user_id)
             .eq("care_home_id", care_home_id)
@@ -1271,7 +1271,7 @@ def upsert_family_contact(
     except Exception as exc:  # pragma: no cover - Supabase runtime error
         return None, str(exc)
     if not resp.data:
-        return None, "Could not create family contact mapping."
+        return None, "Could not create Family Member mapping."
     return resp.data[0], None
 
 
@@ -1279,26 +1279,26 @@ def grant_resident_access(
     access_token: str | None,
     *,
     resident_id: str,
-    family_contact_id: str,
+    family_user_id: str,
 ) -> tuple[dict | None, str | None]:
     supabase, error = get_authed_supabase(access_token)
     if error:
         return None, error
     payload = {
         "resident_id": resident_id,
-        "family_contact_id": family_contact_id,
+        "family_user_id": family_user_id,
         "active": True,
     }
     try:
         # Older supabase-py versions do not support `.select()` chained after `.upsert()`.
-        supabase.table("family_contact_access").upsert(
-            payload, on_conflict="resident_id,family_contact_id"
+        supabase.table("resident_access").upsert(
+            payload, on_conflict="resident_id,family_user_id"
         ).execute()
         resp = (
-            supabase.table("family_contact_access")
-            .select("id, resident_id, family_contact_id, active")
+            supabase.table("resident_access")
+            .select("id, resident_id, family_user_id, active")
             .eq("resident_id", resident_id)
-            .eq("family_contact_id", family_contact_id)
+            .eq("family_user_id", family_user_id)
             .limit(1)
             .execute()
         )
@@ -1312,7 +1312,7 @@ def grant_resident_access(
 def _apply_family_registration_mapping(
     access_token: str | None, payload: dict
 ) -> tuple[bool, str | None]:
-    contact_row, contact_error = upsert_family_contact(
+    contact_row, contact_error = upsert_family_user(
         access_token,
         care_home_id=str(payload.get("care_home_id") or ""),
         auth_user_id=str(payload.get("auth_user_id") or ""),
@@ -1322,11 +1322,11 @@ def _apply_family_registration_mapping(
         relationship=str(payload.get("relationship") or ""),
     )
     if contact_error or not contact_row:
-        return False, contact_error or "Failed to upsert family contact."
+        return False, contact_error or "Failed to upsert Family Member."
     _, access_error = grant_resident_access(
         access_token,
         resident_id=str(payload.get("resident_id") or ""),
-        family_contact_id=str(contact_row.get("id") or ""),
+        family_user_id=str(contact_row.get("id") or ""),
     )
     if access_error:
         return False, access_error
@@ -1396,7 +1396,7 @@ def render_office_family_registration_form(
                 st.error(mapping_error or "Retry failed. Please try again.")
 
     st.caption(
-        "Register an authorised family contact for a resident. We will send a secure email login link. No password required."
+        "Register a Family Member for a resident and grant Resident Access. We will send a secure email login link. No password required."
     )
     resident_options = []
     resident_by_id = {}
@@ -1431,7 +1431,7 @@ def render_office_family_registration_form(
         )
 
     with st.form("office_register_family_member_form"):
-        st.markdown("#### Section 1 — Family Contact Details")
+        st.markdown("#### Section 1 — Family Member Details")
         first_name = st.text_input("First name", key="office_family_first_name")
         last_name = st.text_input("Last name", key="office_family_last_name")
         email = st.text_input("Email", key="office_family_email")
@@ -1451,8 +1451,8 @@ def render_office_family_registration_form(
             key="office_family_resident_select",
         )
         st.markdown("#### Section 3 — Confirmation")
-        authorised_confirmed = st.checkbox(
-            "I confirm this person is authorised by the resident (or their representative) to receive and send social voice messages.",
+        resident_access_confirmed = st.checkbox(
+            "I confirm the care home has granted this person Resident Access to receive and send social voice messages.",
             key="office_family_authorisation_confirm",
         )
         st.caption(
@@ -1475,8 +1475,8 @@ def render_office_family_registration_form(
     if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", normalized_email):
         st.error("Enter a valid email address.")
         return
-    if not authorised_confirmed:
-        st.error("Please confirm authorisation before sending the invitation.")
+    if not resident_access_confirmed:
+        st.error("Please confirm Resident Access before sending the invitation.")
         return
 
     resident = resident_by_id.get(resident_id)
@@ -1486,7 +1486,7 @@ def render_office_family_registration_form(
 
     try:
         existing_contact_resp = (
-            supabase.table("family_contacts")
+            supabase.table("family_user")
             .select("id")
             .eq("care_home_id", care_home_id)
             .eq("email", normalized_email)
@@ -1668,7 +1668,7 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
                 return False, False, "Authenticated user identity could not be resolved.", None, None
             auth_email = str(st.session_state.get("auth_email") or "").strip().lower()
             family_resp = (
-                supabase.table("family_contacts")
+                supabase.table("family_user")
                 .select("id, care_home_id, display_name, auth_user_id, email")
                 .eq("auth_user_id", auth_uid)
                 .eq("active", True)
@@ -1678,7 +1678,7 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
             family_record = family_resp.data[0] if family_resp.data else None
             if not family_record and auth_email:
                 email_resp = (
-                    supabase.table("family_contacts")
+                    supabase.table("family_user")
                     .select("id, care_home_id, display_name, auth_user_id, email")
                     .eq("email", auth_email)
                     .eq("active", True)
@@ -1688,7 +1688,7 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
                 if not email_resp.data:
                     # Some legacy rows may have non-normalized email casing.
                     email_resp = (
-                        supabase.table("family_contacts")
+                        supabase.table("family_user")
                         .select("id, care_home_id, display_name, auth_user_id, email")
                         .ilike("email", auth_email)
                         .eq("active", True)
@@ -1700,7 +1700,7 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
                     existing_uid = str(family_record.get("auth_user_id") or "").strip()
                     if existing_uid != auth_uid:
                         try:
-                            supabase.table("family_contacts").update({"auth_user_id": auth_uid}).eq(
+                            supabase.table("family_user").update({"auth_user_id": auth_uid}).eq(
                                 "id", family_record.get("id")
                             ).execute()
                             family_record["auth_user_id"] = auth_uid
@@ -1971,7 +1971,7 @@ def render_how_it_works_diagram_and_notes() -> None:
         st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
     st.markdown(
         "- The diagram shows the three app areas: Family, Care Hub – Mobile, and Care Hub – Office.\n"
-        "- Each family member authorised by the care home has their own individual communication channel to the resident.\n"
+        "- Each Family Member with Resident Access has their own individual communication channel to the resident.\n"
         "- Office practical messages collect quick structured family responses to support efficient, inclusive practical decision-making.\n"
         "- The care home reviews responses and makes the final operational decision.\n"
         "- Each channel keeps only the latest message, and a new message replaces the previous one in that channel."
@@ -2019,8 +2019,8 @@ def render_how_it_works_family() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages between residents and authorised contacts.",
-        "Family -> Resident uses separate per-contact channels. Resident -> Family channel keeps the latest shared resident message for all authorised contacts. No threads.",
+        "voice-message.com — for non-urgent social voice messages between residents and Family Members with Resident Access.",
+        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members with Resident Access. No threads.",
         "Family access uses secure email login links. No SMS and no phone-number login.",
     ]
     for box in info_boxes:
@@ -2055,8 +2055,8 @@ def render_how_it_works_mobile() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages between residents and authorised contacts.",
-        "Family -> Resident uses separate per-contact channels. Resident -> Family channel keeps the latest shared resident message for all authorised contacts. No threads.",
+        "voice-message.com — for non-urgent social voice messages between residents and Family Members with Resident Access.",
+        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members with Resident Access. No threads.",
         "Care Hub – Mobile uses individual staff PIN access for day-to-day use.",
         "Secure email link is used only for first sign-in or expired-session recovery.",
     ]
@@ -2095,8 +2095,8 @@ def render_how_it_works_office_overview() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages between residents and authorised contacts.",
-        "Family -> Resident uses separate per-contact channels. Resident -> Family channel keeps the latest shared resident message for all authorised contacts. No threads.",
+        "voice-message.com — for non-urgent social voice messages between residents and Family Members with Resident Access.",
+        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members with Resident Access. No threads.",
         "Care Hub – Office is a separate staff/admin access path.",
         "Office authentication is distinct from Family email links and Mobile staff PIN access.",
         "If Office 2FA is enabled, users complete Office verification after login.",
@@ -3135,7 +3135,7 @@ def fetch_family_residents(user_id: str, access_token: str) -> list[dict]:
         return []
     try:
         contact_resp = (
-            supabase.table("family_contacts")
+            supabase.table("family_user")
             .select("id, display_name")
             .eq("auth_user_id", user_id)
             .eq("active", True)
@@ -3146,11 +3146,11 @@ def fetch_family_residents(user_id: str, access_token: str) -> list[dict]:
             return []
         contact_id = contact_resp.data[0]["id"]
         access_resp = (
-            supabase.table("family_contact_access")
+            supabase.table("resident_access")
             .select(
                 "resident_id, residents(id, preferred_display_name, care_home_reference, care_home_id)"
             )
-            .eq("family_contact_id", contact_id)
+            .eq("family_user_id", contact_id)
             .eq("active", True)
             .execute()
         )
@@ -3461,7 +3461,7 @@ def format_resident_identity_label(
     return separator.join(parts)
 
 
-def fetch_family_contacts_for_resident(
+def fetch_family_users_for_resident(
     resident_id: str, access_token: str
 ) -> list[dict]:
     supabase, error = get_authed_supabase(access_token)
@@ -3469,9 +3469,9 @@ def fetch_family_contacts_for_resident(
         return []
     try:
         contact_resp = (
-            supabase.table("family_contact_access")
+            supabase.table("resident_access")
             .select(
-                "family_contact_id, family_contacts(id, display_name, relationship, auth_user_id, email)"
+                "family_user_id, family_user(id, display_name, relationship, auth_user_id, email)"
             )
             .eq("resident_id", resident_id)
             .eq("active", True)
@@ -3479,13 +3479,13 @@ def fetch_family_contacts_for_resident(
         )
         contacts = []
         for row in contact_resp.data or []:
-            contact = row.get("family_contacts") or {}
+            contact = row.get("family_user") or {}
             if not contact:
                 continue
             contacts.append(
                 {
                     "id": contact.get("id"),
-                    "full_name": contact.get("display_name", "Family contact"),
+                    "full_name": contact.get("display_name", "Family Member"),
                     "relationship": contact.get("relationship") or "",
                     "auth_user_id": contact.get("auth_user_id"),
                     "email": contact.get("email") or "",
@@ -3552,7 +3552,7 @@ def fetch_latest_message_for_contact_with_mapping_repair(
             supabase, error = get_authed_supabase(access_token)
             if not error:
                 try:
-                    supabase.table("family_contacts").update({"auth_user_id": resolved_user_id}).eq(
+                    supabase.table("family_user").update({"auth_user_id": resolved_user_id}).eq(
                         "id", contact_id
                     ).execute()
                 except Exception:
@@ -3752,7 +3752,7 @@ def fetch_latest_messages_for_contact_user_ids(
         return {}
 
 
-def get_family_contact_for_session(access_token: str | None) -> dict | None:
+def get_family_user_for_session(access_token: str | None) -> dict | None:
     auth_uid = str(st.session_state.get("auth_uid") or "").strip()
     if not auth_uid:
         return None
@@ -3761,7 +3761,7 @@ def get_family_contact_for_session(access_token: str | None) -> dict | None:
         return None
     try:
         resp = (
-            supabase.table("family_contacts")
+            supabase.table("family_user")
             .select("id, care_home_id, display_name")
             .eq("auth_user_id", auth_uid)
             .eq("active", True)
@@ -3837,10 +3837,10 @@ def fetch_office_practical_message_options(
 
 def fetch_family_practical_response(
     message_id: str,
-    family_contact_id: str,
+    family_user_id: str,
     access_token: str | None,
 ) -> dict | None:
-    if not message_id or not family_contact_id:
+    if not message_id or not family_user_id:
         return None
     supabase, error = get_authed_supabase(access_token)
     if error:
@@ -3851,7 +3851,7 @@ def fetch_family_practical_response(
                 supabase.table("office_practical_responses")
                 .select("id, primary_choice, note, response_status, planned_visit_time, share_with_family")
                 .eq("message_id", message_id)
-                .eq("family_contact_id", family_contact_id)
+                .eq("family_user_id", family_user_id)
                 .limit(1)
                 .execute()
             )
@@ -3860,7 +3860,7 @@ def fetch_family_practical_response(
                 supabase.table("office_practical_responses")
                 .select("id, primary_choice, note, response_status")
                 .eq("message_id", message_id)
-                .eq("family_contact_id", family_contact_id)
+                .eq("family_user_id", family_user_id)
                 .limit(1)
                 .execute()
             )
@@ -3896,7 +3896,7 @@ def fetch_family_practical_response(
 
 def fetch_shared_family_practical_responses(
     message_id: str,
-    current_family_contact_id: str,
+    current_family_user_id: str,
     access_token: str | None,
 ) -> list[dict]:
     if not message_id:
@@ -3908,7 +3908,7 @@ def fetch_shared_family_practical_responses(
         try:
             resp = (
                 supabase.table("office_practical_responses")
-                .select("family_contact_id, primary_choice, planned_visit_time, note, family_contacts(display_name)")
+                .select("family_user_id, primary_choice, planned_visit_time, note, family_user(display_name)")
                 .eq("message_id", message_id)
                 .eq("share_with_family", True)
                 .order("updated_at", desc=True)
@@ -3917,15 +3917,15 @@ def fetch_shared_family_practical_responses(
         except Exception:
             return []
         rows = []
-        current_id = str(current_family_contact_id or "").strip()
+        current_id = str(current_family_user_id or "").strip()
         for row in resp.data or []:
-            family_contact_id = str(row.get("family_contact_id") or "").strip()
-            if current_id and family_contact_id == current_id:
+            family_user_id = str(row.get("family_user_id") or "").strip()
+            if current_id and family_user_id == current_id:
                 continue
-            family_details = row.get("family_contacts") or {}
+            family_details = row.get("family_user") or {}
             rows.append(
                 {
-                    "contact_name": str(family_details.get("display_name") or "Authorised contact"),
+                    "contact_name": str(family_details.get("display_name") or "Family Member"),
                     "primary_choice": str(row.get("primary_choice") or "").strip().lower(),
                     "planned_visit_time": str(row.get("planned_visit_time") or "").strip(),
                     "note": str(row.get("note") or "").strip(),
@@ -3938,7 +3938,7 @@ def fetch_shared_family_practical_responses(
 
 def upsert_family_practical_response(
     message_id: str,
-    family_contact_id: str,
+    family_user_id: str,
     primary_choice: str,
     note: str,
     selected_option_ids: list[str],
@@ -3994,7 +3994,7 @@ def upsert_family_practical_response(
             supabase.table("office_practical_responses")
             .select("id")
             .eq("message_id", message_id)
-            .eq("family_contact_id", family_contact_id)
+            .eq("family_user_id", family_user_id)
             .limit(1)
             .execute()
         )
@@ -4005,7 +4005,7 @@ def upsert_family_practical_response(
         )
         response_payload = {
             "message_id": message_id,
-            "family_contact_id": family_contact_id,
+            "family_user_id": family_user_id,
             "primary_choice": primary_choice,
             "note": note_value,
             "planned_visit_time": (planned_visit_time or "").strip()[:80],
@@ -4216,8 +4216,8 @@ def fetch_office_practical_response_summary(
             responses_resp = (
                 supabase.table("office_practical_responses")
                 .select(
-                    "id, family_contact_id, primary_choice, note, response_status, planned_visit_time, "
-                    "share_with_family, family_contacts(display_name)"
+                    "id, family_user_id, primary_choice, note, response_status, planned_visit_time, "
+                    "share_with_family, family_user(display_name)"
                 )
                 .eq("message_id", message_id)
                 .order("updated_at", desc=True)
@@ -4226,7 +4226,7 @@ def fetch_office_practical_response_summary(
         except Exception:
             responses_resp = (
                 supabase.table("office_practical_responses")
-                .select("id, family_contact_id, primary_choice, note, response_status, family_contacts(display_name)")
+                .select("id, family_user_id, primary_choice, note, response_status, family_user(display_name)")
                 .eq("message_id", message_id)
                 .order("updated_at", desc=True)
                 .execute()
@@ -4261,10 +4261,10 @@ def fetch_office_practical_response_summary(
             if choice in summary["choice_counts"]:
                 summary["choice_counts"][choice] += 1
             response_id = str(row.get("id") or "").strip()
-            family_details = row.get("family_contacts") or {}
+            family_details = row.get("family_user") or {}
             summary["responses"].append(
                 {
-                    "contact_name": str(family_details.get("display_name") or "Authorised contact"),
+                    "contact_name": str(family_details.get("display_name") or "Family Member"),
                     "primary_choice": choice,
                     "note": str(row.get("note") or "").strip(),
                     "planned_visit_time": str(row.get("planned_visit_time") or "").strip(),
@@ -4790,7 +4790,7 @@ def render_front_page_descriptor() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="front-page-info-box">One message kept at a time in each direction (between each authorised contact and each resident), with no threads.</div>',
+        '<div class="front-page-info-box">One message kept at a time in each direction (between each Family Member with Resident Access and each resident), with no threads.</div>',
         unsafe_allow_html=True,
     )
 
@@ -5610,7 +5610,7 @@ def render_home(active: str) -> None:
         st.markdown("- Residents")
         st.markdown("- Families")
         st.markdown("- Care Hub (Office and Mobile)")
-        st.caption("Here, families means authorised contacts approved by the care home.")
+        st.caption("Here, families means Family Members with Resident Access granted by the care home.")
         st.markdown(
             "Each channel keeps only the latest message. A new message replaces the previous message in that channel."
         )
@@ -5621,7 +5621,7 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>Office -&gt; Family (one-way updates)</h3>
-              <div>Care Hub – Office sends the latest general update voice message to all authorised contacts. No replies in this general update channel. A new update replaces the previous general update.</div>
+              <div>Care Hub – Office sends the latest general update voice message to all Family Members with Resident Access. No replies in this general update channel. A new update replaces the previous general update.</div>
             </div>
             <div class="public-card">
               <h3>Office practical text message (structured replies from family)</h3>
@@ -5629,11 +5629,11 @@ def render_home(active: str) -> None:
             </div>
             <div class="public-card pink">
               <h3>Resident -&gt; Family (one message out)</h3>
-              <div>Care Hub – Mobile supports the resident to record the latest message to all authorised family contacts. A new recording replaces the previous resident message.</div>
+              <div>Care Hub – Mobile supports the resident to record the latest message to all Family Members with Resident Access. A new recording replaces the previous resident message.</div>
             </div>
             <div class="public-card">
               <h3>Family -&gt; Resident (one message each)</h3>
-              <div>Each authorised family contact channel keeps only the latest message to the resident. Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.</div>
+              <div>Each Family Member with Resident Access channel keeps only the latest message to the resident. Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -5663,7 +5663,7 @@ def render_home(active: str) -> None:
             <div class="public-roles">
               <div class="public-card">
                 <h3>Family privacy boundary</h3>
-                <div>Family members do not hear each other's Family -&gt; Resident messages. Each authorised contact channel is separate.</div>
+                <div>Family members do not hear each other's Family -&gt; Resident messages. Each Family Member channel is separate.</div>
               </div>
               <div class="public-card pink">
                 <h3>Care Hub playback</h3>
@@ -5684,7 +5684,7 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>Roles and important boundaries</h3>
-              <div><strong>Family (authorised contacts):</strong> authorised contacts send messages and listen to the resident's current shared reply.</div>
+              <div><strong>Family Members:</strong> Family Members with Resident Access send messages and listen to the resident's current shared reply.</div>
               <div><strong>Care Hub – Mobile:</strong> staff play family messages and support resident recordings.</div>
               <div><strong>Care Hub – Office:</strong> oversight plus one-way updates to family.</div>
               <div style="margin-top:8px;">This service is for social communication only. It is not for medical updates, health information, safeguarding communication, or urgent enquiries. For those matters, contact the care home directly using normal channels.</div>
@@ -5743,15 +5743,15 @@ def render_home(active: str) -> None:
             st.markdown("Communication participants")
             st.markdown(
                 "This diagram shows how voice messages and updates are organised across channels. "
-                "Each family member authorised by the care home has their own individual channel for "
+                "Each Family Member with Resident Access has their own individual channel for "
                 "Family/Friend -> Resident messages, managed by the care home. Care Hub – Mobile plays these family messages in a "
                 "fair rotating order, with unplayed messages first."
             )
             st.markdown(
-                "Resident -> Family channel keeps the latest resident message shared to all authorised contacts. "
-                "The care home can also send a one-way Office update to all authorised contacts. "
+                "Resident -> Family channel keeps the latest resident message shared to all Family Members with Resident Access. "
+                "The care home can also send a one-way Office update to all Family Members with Resident Access. "
                 "Office practical messages collect quick structured family responses, and the care home makes the final operational decision. "
-                "Each authorised contact channel keeps only the latest message. "
+                "Each Family Member channel keeps only the latest message. "
                 "A new message replaces only the previous message in that channel."
             )
             st.markdown("### Start here: Service flow overview (90 seconds)")
@@ -5778,7 +5778,7 @@ def render_home(active: str) -> None:
         "voice-message.com  \n"
         "One message in. One message out.  \n"
         "No threads. No pressure.\n\n"
-        "The service supports non-urgent social voice messages between residents and authorised contacts.  \n"
+        "The service supports non-urgent social voice messages between residents and Family Members with Resident Access.  \n"
         "The care home office may also send non-urgent general updates about daily life in the home.  \n"
         "Office updates are one-way informational messages.\n\n"
         "This is not a live service. Messages are played when staff are available, to fit around care routines.  \n"
@@ -6583,24 +6583,24 @@ def render_family_send() -> None:
 
     access_token = st.session_state.get("access_token")
     care_home_name = fetch_active_care_home_name(access_token)
-    family_contact_record = get_family_contact_for_session(access_token)
-    family_contact_id = str((family_contact_record or {}).get("id") or "").strip()
+    family_user_record = get_family_user_for_session(access_token)
+    family_user_id = str((family_user_record or {}).get("id") or "").strip()
     render_care_home_identity_banner(access_token)
     residents = fetch_family_residents(
         st.session_state.get("auth_uid", ""), access_token
     )
 
     if not residents:
-        st.info("No residents are currently linked to your authorised contact.")
+        st.info("No residents are currently linked to your Family Member account.")
         return
 
-    authorised_resident_names = [
+    resident_access_names = [
         f"{resident['preferred_name']} {resident['surname']}" for resident in residents
     ]
-    if len(authorised_resident_names) == 1:
-        st.caption(f"Authorised resident: {authorised_resident_names[0]}")
+    if len(resident_access_names) == 1:
+        st.caption(f"Resident Access: {resident_access_names[0]}")
     else:
-        st.caption("Authorised residents: " + ", ".join(authorised_resident_names))
+        st.caption("Residents you can access: " + ", ".join(resident_access_names))
         resident_option_ids = [resident["id"] for resident in residents]
         resident_label_by_id = {
             resident["id"]: f"{resident['preferred_name']} {resident['surname']}"
@@ -6678,7 +6678,7 @@ def render_family_send() -> None:
         if room_label:
             st.markdown(f"*{room_label}*")
 
-        st.markdown(f"**Latest message from {full_name} to authorised family contacts**")
+        st.markdown(f"**Latest message from {full_name} to Family Members with Resident Access**")
         latest = fetch_latest_message(
             resident_id,
             "from_resident",
@@ -6756,7 +6756,7 @@ def render_family_send() -> None:
             )
             existing_response = fetch_family_practical_response(
                 practical_message_id,
-                family_contact_id,
+                family_user_id,
                 access_token,
             )
             response_choice = (
@@ -6809,7 +6809,7 @@ def render_family_send() -> None:
                     placeholder="Example: Saturday about 11am",
                 )
             share_with_family_value = st.checkbox(
-                "Share this response with all authorised contacts",
+                "Share this response with all Family Members with Resident Access",
                 value=bool((existing_response or {}).get("share_with_family", False)),
                 key=f"family_practical_share_{resident_id}_{practical_message_id}",
             )
@@ -6817,12 +6817,12 @@ def render_family_send() -> None:
                 "Send response",
                 key=f"family_practical_submit_{resident_id}_{practical_message_id}",
             ):
-                if not family_contact_id:
-                    st.error("Your authorised contact mapping could not be found. Please sign in again.")
+                if not family_user_id:
+                    st.error("Your Family Member mapping could not be found. Please sign in again.")
                 else:
                     ok, message = upsert_family_practical_response(
                         practical_message_id,
-                        family_contact_id,
+                        family_user_id,
                         choice_to_value.get(selected_choice_label, "maybe"),
                         note_value,
                         selected_option_ids,
@@ -6836,22 +6836,22 @@ def render_family_send() -> None:
                         st.error(message)
             existing_response = fetch_family_practical_response(
                 practical_message_id,
-                family_contact_id,
+                family_user_id,
                 access_token,
             )
             shared_responses = fetch_shared_family_practical_responses(
                 practical_message_id,
-                family_contact_id,
+                family_user_id,
                 access_token,
             )
             if existing_response:
                 own_choice = str(existing_response.get("primary_choice") or "").strip().title()
                 if own_choice:
                     st.caption(f"Your current response: {own_choice}")
-            st.caption("Shared responses from other authorised contacts:")
+            st.caption("Shared responses from other Family Members with Resident Access:")
             if shared_responses:
                 for shared_response in shared_responses:
-                    contact_name = str(shared_response.get("contact_name") or "Authorised contact")
+                    contact_name = str(shared_response.get("contact_name") or "Family Member")
                     choice_label = str(shared_response.get("primary_choice") or "").strip().title()
                     st.markdown(f"- {contact_name}: {choice_label}")
                     shared_visit = str(shared_response.get("planned_visit_time") or "").strip()
@@ -7202,7 +7202,7 @@ def render_docs() -> None:
         {
             "title": "Registering a family member",
             "path": "docs/office/10_registering_family_member.md",
-            "summary": "How to invite and link an authorised family contact.",
+            "summary": "How to invite a Family Member and grant Resident Access.",
         },
         {
             "title": "Safeguarding and consent",
@@ -7686,7 +7686,7 @@ def render_pr_homepage() -> None:
     st.markdown('<div class="pr-hero">', unsafe_allow_html=True)
     st.markdown("<h1>One message in. One message out.</h1>", unsafe_allow_html=True)
     st.markdown(
-        '<div class="pr-subheading">Non-urgent social voice messages between residents and authorised contacts, with optional structured Office practical replies.</div>',
+        '<div class="pr-subheading">Non-urgent social voice messages between residents and Family Members with Resident Access, with optional structured Office practical replies.</div>',
         unsafe_allow_html=True,
     )
     st.markdown('<div class="pr-calm">No threads. No pressure.</div>', unsafe_allow_html=True)
@@ -7724,7 +7724,7 @@ For urgent, medical, safeguarding, or emergency matters, contact the care home d
             set_route("/public/walkthrough-office")
             st.stop()
     st.markdown(
-        "**Family app**: non-urgent social voice messages between authorised contacts and residents, "
+        "**Family app**: non-urgent social voice messages between Family Members with Resident Access and residents, "
         "plus structured replies to Office practical messages."
     )
     st.markdown(
@@ -8637,12 +8637,12 @@ def render_care_hub() -> None:
 
         contacts = contacts_by_resident.get(resident_id)
         if contacts is None:
-            contacts = fetch_family_contacts_for_resident(resident_id, access_token)
+            contacts = fetch_family_users_for_resident(resident_id, access_token)
             contacts_by_resident[resident_id] = contacts
         if not contacts:
             if get_app_variant() == VARIANT_OFFICE:
                 st.warning(
-                    "No authorised family contacts are linked to this resident yet. "
+                    "No Family Members with Resident Access are linked to this resident yet. "
                     "Register a family member in Care Hub – Office before sending messages."
                 )
                 if st.button(
@@ -8654,7 +8654,7 @@ def render_care_hub() -> None:
                     st.rerun()
             else:
                 st.warning(
-                    "No authorised family contacts are linked to this resident yet. "
+                    "No Family Members with Resident Access are linked to this resident yet. "
                     "Ask Office staff to register a family member."
                 )
             st.markdown("</div>", unsafe_allow_html=True)
@@ -8879,7 +8879,7 @@ def render_care_hub() -> None:
                 if relationship:
                     contact_options.append(f"{contact['full_name']} — {relationship.title()}")
                 else:
-                    contact_options.append(f"{contact['full_name']} — Family contact")
+                    contact_options.append(f"{contact['full_name']} — Family Member")
 
             current_selected_id = state.get("selected_contact_id")
             default_index = 0
@@ -8925,7 +8925,7 @@ def render_care_hub() -> None:
                 next_display = (
                     f"{next_name} ({next_relationship.title()})"
                     if next_relationship
-                    else f"{next_name} (Family contact)"
+                    else f"{next_name} (Family Member)"
                 )
                 st.caption(f"Next in queue: {next_display}")
             else:
@@ -8938,7 +8938,7 @@ def render_care_hub() -> None:
                     unread_display = (
                         f"{unread_name} ({unread_relationship.title()})"
                         if unread_relationship
-                        else f"{unread_name} (Family contact)"
+                        else f"{unread_name} (Family Member)"
                     )
                     st.markdown(f"- {unread_display}")
             if is_office_variant:
@@ -8989,11 +8989,11 @@ def render_care_hub() -> None:
                         playlist_label = (
                             f"{playlist_name} ({playlist_relationship.title()})"
                             if playlist_relationship
-                            else f"{playlist_name} (Family contact)"
+                            else f"{playlist_name} (Family Member)"
                         )
                         playlist_options.append((playlist_label, playlist_contact))
                     selected_playlist_label = st.selectbox(
-                        "Family contact",
+                        "Family Member",
                         options=[label for label, _ in playlist_options],
                         key=f"care_playlist_select_{resident_id}",
                     )
@@ -9127,7 +9127,7 @@ def render_care_hub() -> None:
             selected_contact_display = (
                 f"{selected_contact_name} ({selected_contact_relationship.title()})"
                 if selected_contact_relationship
-                else f"{selected_contact_name} (Family contact)"
+                else f"{selected_contact_name} (Family Member)"
             )
             if is_queue_playback_variant and queue_mode_label:
                 st.caption(f"Queue mode: {queue_mode_label}")
@@ -9229,7 +9229,7 @@ def render_care_hub() -> None:
                     st.session_state[mobile_advance_pointer_key] = False
 
         if is_mobile_variant or is_office_variant:
-            st.markdown(f"**Latest message from {full_name} to all authorised family contacts**")
+            st.markdown(f"**Latest message from {full_name} to all Family Members with Resident Access**")
         else:
             st.markdown(f"**Latest message from {full_name} to {selected_contact_name}**")
 
@@ -9259,7 +9259,7 @@ def render_care_hub() -> None:
         if is_mobile_variant:
             if hasattr(st, "audio_input"):
                 recorded_from_native = st.audio_input(
-                    f"Record voice message from {full_name} to all authorised family contacts",
+                    f"Record voice message from {full_name} to all Family Members with Resident Access",
                     key=f"care_audio_input_{resident_id}_{state.get('recording_input_nonce', 0)}",
                 )
                 render_slow_speech_hint()
@@ -9310,7 +9310,7 @@ def render_care_hub() -> None:
             if is_office_variant:
                 confirmation_line = (
                     "Sending on behalf of:<br/>"
-                    f"{full_name} — {room_display} \u2192 all authorised family contacts"
+                    f"{full_name} — {room_display} \u2192 all Family Members with Resident Access"
                 )
             else:
                 care_home_display = (
@@ -9318,7 +9318,7 @@ def render_care_hub() -> None:
                 )
                 confirmation_line = (
                     "Sending on behalf of:<br/>"
-                    f"{full_name} — {room_display} — {care_home_display} \u2192 all authorised family contacts"
+                    f"{full_name} — {room_display} — {care_home_display} \u2192 all Family Members with Resident Access"
                 )
             st.markdown(
                 f'<div class="vm-muted-line">{confirmation_line}</div>',
@@ -9427,7 +9427,7 @@ def render_care_hub() -> None:
                             st.session_state["care_last_sent"] = {
                                 "resident_id": resident_id,
                                 "contact_id": None,
-                                "message": "Message sent to all authorised family contacts.",
+                                "message": "Message sent to all Family Members with Resident Access.",
                             }
                             activate_send_guard(send_guard_scope)
                             state["recording_input_nonce"] = (
@@ -9535,7 +9535,7 @@ def render_care_hub() -> None:
             if get_app_variant() == VARIANT_OFFICE:
                 st.markdown("**Office update**")
                 st.caption(
-                    "This update will be sent to all authorised family contacts for this resident and will appear in Care Hub Mobile."
+                    "This update will be sent to all Family Members with Resident Access for this resident and will appear in Care Hub Mobile."
                 )
                 st.caption(
                     "Office updates are non-urgent, one-way updates from the care team (no replies). For any queries, please contact the care home directly."
@@ -9653,9 +9653,9 @@ def render_care_hub() -> None:
                                 or OFFICE_UPDATE_CATEGORIES[0]
                             )
                             state["office_last_sent_label"] = (
-                                f"{category_label} update sent to all authorised family contacts. {soft_sent_label}"
+                                f"{category_label} update sent to all Family Members with Resident Access. {soft_sent_label}"
                                 if soft_sent_label
-                                else f"{category_label} update sent to all authorised family contacts."
+                                else f"{category_label} update sent to all Family Members with Resident Access."
                             )
                             state["office_last_sent_fingerprint"] = sent_office_fp
                             activate_send_guard(send_guard_scope)
@@ -9786,7 +9786,7 @@ def render_care_hub() -> None:
                     if responses:
                         st.caption("Family responses:")
                         for response in responses:
-                            contact_name = str(response.get("contact_name") or "Authorised contact")
+                            contact_name = str(response.get("contact_name") or "Family Member")
                             choice_label = str(response.get("primary_choice") or "").strip().title()
                             st.markdown(f"- {contact_name}: {choice_label}")
                             selected_labels = response.get("selected_labels") or []
@@ -9799,7 +9799,7 @@ def render_care_hub() -> None:
                             if note_value:
                                 st.caption(f"Note: {note_value}")
                             if bool(response.get("share_with_family", False)):
-                                st.caption("Shared with all authorised contacts.")
+                                st.caption("Shared with all Family Members with Resident Access.")
                     if st.button(
                         "Close responses for this practical message",
                         key=f"office_practical_close_{resident_id}_{active_message_id}",
@@ -10171,7 +10171,7 @@ def main() -> None:
             "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_FAMILY_URL",
             "assets/voice-message-family-walkthrough-v1.mp4",
             [
-                "How an authorised contact sends Family -> Resident voice messages.",
+                "How a Family Member with Resident Access sends Family -> Resident voice messages.",
                 "How family listens to the resident's current shared message.",
                 "How Office updates and practical structured replies appear in Family.",
                 "Non-live expectations and calm communication boundaries.",
@@ -10236,7 +10236,7 @@ def main() -> None:
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
                 "How Office reviews resident-linked family messages.",
-                "How Office publishes one-way voice updates to all authorised contacts.",
+                "How Office publishes one-way voice updates to all Family Members with Resident Access.",
                 "How Office sends practical text requests and reviews structured replies.",
                 "How Office oversight supports low-pressure, non-urgent communication.",
             ],
