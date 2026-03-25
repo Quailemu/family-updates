@@ -4464,8 +4464,8 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", get_home_route(app_variant))
             if st.button("Register family member", key=f"{menu_key}_register_family"):
                 clicked_action = ("route", "/care-hub/register-family")
-            if st.button("Care home banner", key=f"{menu_key}_care_home_banner"):
-                clicked_action = ("route", "/care-hub/care-home-banner")
+            if st.button("Operational variables", key=f"{menu_key}_operational_variables"):
+                clicked_action = ("route", "/care-hub/operational-variables")
             if st.button("Account & Security", key=f"{menu_key}_security"):
                 clicked_action = ("route", "/care-hub/security")
             if st.button("Subscription & Billing", key=f"{menu_key}_billing"):
@@ -5889,7 +5889,7 @@ VARIANT_CONFIG = {
             OFFICE_LOGIN_ROUTE,
             OFFICE_HOME_ROUTE,
             "/care-hub/register-family",
-            "/care-hub/care-home-banner",
+            "/care-hub/operational-variables",
             "/care-hub/instructions",
             "/care-hub/training",
             "/care-hub/security",
@@ -7698,9 +7698,9 @@ For urgent, medical, safeguarding, or emergency matters, contact the care home d
 def render_care_hub_banner_settings() -> None:
     require_care_access()
     if get_app_variant() != VARIANT_OFFICE:
-        render_wrong_variant("Care home banner settings are only available in Care Hub – Office.")
+        render_wrong_variant("Operational variables are only available in Care Hub – Office.")
         return
-    render_page_header("Care Home Banner")
+    render_page_header("Operational Variables")
     access_token = st.session_state.get("access_token")
     render_care_home_identity_banner(access_token)
     st.markdown("### Operational setup variables")
@@ -7714,7 +7714,7 @@ def render_care_hub_banner_settings() -> None:
     st.caption(
         "Review and confirm these settings during setup so day-to-day use is consistent from launch."
     )
-    st.markdown("### Add your business banner design")
+    st.markdown("### Office care home banner")
     st.caption("Add your logo or your own banner design for Care Hub – Office and Family views.")
     st.markdown("### Operational settings")
     st.caption(
@@ -7799,11 +7799,11 @@ def render_care_hub_security() -> None:
     mfa_required = (
         os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in {"1", "true", "yes", "on"}
     )
-    st.caption("Care home banner settings have moved to the dedicated Care home banner page.")
+    st.caption("Operational variables are managed on the dedicated Operational variables page.")
     render_route_link(
-        "Open Care home banner settings",
-        "/care-hub/care-home-banner",
-        key="office_security_open_banner_settings",
+        "Open Operational variables",
+        "/care-hub/operational-variables",
+        key="office_security_open_operational_variables",
     )
 
     st.markdown("### Mobile staff PIN management")
@@ -10052,6 +10052,8 @@ def main() -> None:
     elif route == "/care-hub/training":
         render_care_hub_training()
     elif route == "/care-hub/care-home-banner":
+        set_route("/care-hub/operational-variables")
+    elif route == "/care-hub/operational-variables":
         render_care_hub_banner_settings()
     elif route == "/care-hub/security":
         render_care_hub_security()
