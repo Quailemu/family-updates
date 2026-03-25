@@ -107,7 +107,7 @@ This service is for non-urgent social communication only. Only authorised contac
 
 ### Resident list and cards (Care Hub)
 
-Care Hub users see a scrollable list of residents. Each resident has one communication area showing the latest messages relevant to that role.
+Care Hub users see a scrollable list of residents. In both Care Hub – Office and Care Hub – Mobile, each resident has one communication area showing the latest message in each channel.
 
 ### Mobile send section
 
