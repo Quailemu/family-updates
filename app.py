@@ -8120,6 +8120,16 @@ def render_contracts() -> None:
             "path": "docs/contracts/care_home_contract_template.md",
             "summary": "Template agreement for care home partners.",
         },
+        {
+            "title": "Data Processing Agreement (DPA) template",
+            "path": "docs/contracts/data_processing_agreement_template.md",
+            "summary": "UK GDPR controller/processor terms for pilot and live service.",
+        },
+        {
+            "title": "Pilot legal and insurance readiness checklist",
+            "path": "docs/contracts/pilot_legal_insurance_readiness_checklist.md",
+            "summary": "Pre-go-live legal, insurance, and incident readiness checks.",
+        },
     ]
 
     if "contracts_active" not in st.session_state:

@@ -82,3 +82,16 @@ Answer: "Playback is arranged by the care home, so it may not be immediate."
 
 Q: "What if I want to change who receives a message?"
 Answer: "Please ask the care home. Staff manage access and contacts."
+
+---
+
+## 6) Incident and escalation contacts (pilot setup)
+
+Before pilot go-live, confirm and record:
+
+- Care home operational contact
+- Care home safeguarding/governance contact
+- Platform operational support contact
+- Platform legal/privacy contact
+
+If there is a suspected data/security incident, use agreed escalation contacts immediately and follow the pilot incident process.

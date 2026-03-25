@@ -14,6 +14,12 @@ This page links the security and compliance documents for the service and provid
 - Handover checklist
 - Scope compliance checklist
 
+## Legal and insurance
+
+- Care home contract template (outline)
+- Data Processing Agreement (DPA) template
+- Pilot legal and insurance readiness checklist
+
 ## UI
 
 - UI page map
@@ -24,6 +30,7 @@ This page links the security and compliance documents for the service and provid
 ## Testing
 
 - Test walkthrough
+- Weekly ops audit checklist
 
 ## Review
 

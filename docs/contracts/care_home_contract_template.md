@@ -2,7 +2,7 @@
 
 # Care home contract template (outline)
 
-Version: v0.1
+Version: v0.2
 Effective date: TBD
 
 ## 1. Introduction and scope
@@ -12,6 +12,10 @@ This document is a draft outline for a contract between the care home and voice-
 It reflects the scope set out in the handbook documents, the Privacy Policy, and the end-user terms summary. It is not a final contract and is intended for legal review and refinement.
 
 This service has three distinct app versions: Family app, Care Hub – Mobile, and Care Hub – Office. Care Hub – Office provides full access and includes Care Hub – Mobile functionality. Care Hub – Mobile is a restricted operational view used by carers.
+
+This outline must be read with:
+- `docs/contracts/data_processing_agreement_template.md` (DPA schedule)
+- `docs/contracts/pilot_legal_insurance_readiness_checklist.md` (pilot legal/insurance readiness)
 
 ## 2. Roles and responsibility
 
@@ -49,12 +53,46 @@ The care home is the Data Controller and the service provider is the Data Proces
 
 Messages are replaced when new ones are recorded and there is no message history within the service. Data minimisation is a core principle of the service design.
 
+The parties must sign a Data Processing Agreement (DPA) before go-live. The DPA should include, at minimum:
+- UK GDPR Article 28 processor clauses
+- list of approved sub-processors and change-notice process
+- personal data breach notification timing
+- return/deletion obligations on termination
+
+Default service position to align with existing public documents:
+- UK hosting
+- controller = care home
+- processor = platform
+- deletion within 30 days after termination (including normal backup/retention cycles)
+
 ## 7. Access, support, and changes
 
 The service provider provides access to the platform and technical support to the care home. The care home manages end-user access.
 
 Either party may suspend or terminate use of the service where necessary, for example if the service is being used outside the agreed scope. Any suspension or termination will be handled in a reasonable and non-punitive way, with details to be agreed.
 
-## 8. General terms
+For incident handling, both parties must maintain named contacts (operational + legal/privacy) and an agreed notification route.
+
+Minimum incident commitments should be stated in final terms, including:
+- initial acknowledgement window
+- update frequency while incident remains open
+- closure summary/evidence
+
+## 8. Insurance requirements (provider)
+
+Before pilot go-live, the provider should hold and evidence:
+- Cyber/privacy liability insurance (data breach, incident response, security liability)
+- Professional indemnity / Tech E&O insurance (service errors, negligence allegations)
+
+Public liability insurance is required where delivery model includes onsite activity, device handling, or installation risk.
+
+Recommended policy limits for pilot contracting discussion (to be agreed with legal/broker):
+- Cyber/privacy: at least GBP 1,000,000 each claim
+- Professional indemnity / Tech E&O: at least GBP 1,000,000 each claim
+- Public liability (if applicable): at least GBP 1,000,000 each claim
+
+Provider should supply current certificate(s) and policy schedule(s) before pilot start.
+
+## 9. General terms
 
 This draft outline does not include pricing, payment terms, or service level commitments. It is intended to be expanded into a full agreement with legal advice.
