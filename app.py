@@ -103,7 +103,15 @@ AUTH_COOKIE_NAME = "vm_auth_rt"
 AUTH_COOKIE_MAX_AGE_SECONDS = int(os.getenv("AUTH_COOKIE_MAX_AGE_SECONDS", str(60 * 60 * 24 * 14)))
 AUTH_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "1").strip().lower() in {"1", "true", "yes", "on"}
 AUTH_COOKIE_SIGNING_KEY = os.getenv("AUTH_COOKIE_SIGNING_KEY", "").strip()
-AUTH_COOKIE_PERSISTENCE_ENABLED = os.getenv("AUTH_COOKIE_PERSISTENCE_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+AUTH_COOKIE_PERSISTENCE_MODE = os.getenv("AUTH_COOKIE_PERSISTENCE_ENABLED", "auto").strip().lower()
+if AUTH_COOKIE_PERSISTENCE_MODE in {"1", "true", "yes", "on"}:
+    AUTH_COOKIE_PERSISTENCE_ENABLED = True
+elif AUTH_COOKIE_PERSISTENCE_MODE in {"0", "false", "no", "off"}:
+    AUTH_COOKIE_PERSISTENCE_ENABLED = False
+else:
+    # Default to persistence when signing is configured so short Streamlit session resets
+    # do not force users to log in again.
+    AUTH_COOKIE_PERSISTENCE_ENABLED = bool(AUTH_COOKIE_SIGNING_KEY)
 AUTH_STATE_KEYS = (
     "auth_uid",
     "access_token",
@@ -1582,90 +1590,139 @@ def send_password_reset_email(email: str, app_variant: str = "") -> tuple[bool, 
     return True, "If this email is registered, a password reset link has been sent."
 
 
+def try_refresh_session_from_state() -> bool:
+    refresh_token = str(st.session_state.get("refresh_token") or "").strip()
+    if not refresh_token:
+        return False
+    supabase, error = get_supabase_client()
+    if error:
+        return False
+    try:
+        try:
+            auth_result = supabase.auth.refresh_session(refresh_token)
+        except TypeError:
+            auth_result = supabase.auth.refresh_session()
+        session = getattr(auth_result, "session", None)
+        user = getattr(auth_result, "user", None)
+        if not session:
+            return False
+        access_token = str(getattr(session, "access_token", "") or "")
+        new_refresh_token = str(getattr(session, "refresh_token", "") or "")
+        if isinstance(session, dict):
+            access_token = access_token or str(session.get("access_token") or "")
+            new_refresh_token = new_refresh_token or str(session.get("refresh_token") or "")
+            if user is None:
+                user = session.get("user")
+        if not access_token or not new_refresh_token:
+            return False
+        st.session_state["access_token"] = access_token
+        st.session_state["refresh_token"] = new_refresh_token
+        if user is not None:
+            user_id = str(getattr(user, "id", "") or "")
+            user_email = str(getattr(user, "email", "") or "")
+            if isinstance(user, dict):
+                user_id = user_id or str(user.get("id") or "")
+                user_email = user_email or str(user.get("email") or "")
+            if user_id:
+                st.session_state["auth_uid"] = user_id
+            if user_email:
+                st.session_state["auth_email"] = user_email
+        persist_auth_cookie(new_refresh_token)
+        return True
+    except Exception:
+        return False
+
+
 def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | None]:
     supabase, error = get_supabase_client()
     if error:
         return False, False, error, None, None
-    access_token = st.session_state.get("access_token")
-    if not access_token:
-        return False, False, "No access token in session.", None, None
-    try:
-        supabase.postgrest.auth(access_token)
-        auth_uid = str(st.session_state.get("auth_uid") or "").strip()
-        if not auth_uid:
-            try:
-                user_result = supabase.auth.get_user(access_token)
-                user_obj = getattr(user_result, "user", None)
-                if user_obj is None and isinstance(user_result, dict):
-                    user_obj = user_result.get("user")
-                if user_obj is not None:
-                    auth_uid = str(getattr(user_obj, "id", "") or "")
-                    auth_email = str(getattr(user_obj, "email", "") or "")
-                    if isinstance(user_obj, dict):
-                        auth_uid = auth_uid or str(user_obj.get("id") or "")
-                        auth_email = auth_email or str(user_obj.get("email") or "")
-                    if auth_uid:
-                        st.session_state["auth_uid"] = auth_uid
-                    if auth_email:
-                        st.session_state["auth_email"] = auth_email
-            except Exception:
-                pass
-        if not auth_uid:
-            return False, False, "Authenticated user identity could not be resolved.", None, None
-        auth_email = str(st.session_state.get("auth_email") or "").strip().lower()
-        family_resp = (
-            supabase.table("family_contacts")
-            .select("id, care_home_id, display_name, auth_user_id, email")
-            .eq("auth_user_id", auth_uid)
-            .eq("active", True)
-            .limit(1)
-            .execute()
-        )
-        family_record = family_resp.data[0] if family_resp.data else None
-        if not family_record and auth_email:
-            email_resp = (
+    for attempt in range(2):
+        access_token = st.session_state.get("access_token")
+        if not access_token:
+            if attempt == 0 and try_refresh_session_from_state():
+                continue
+            return False, False, "No access token in session.", None, None
+        try:
+            supabase.postgrest.auth(access_token)
+            auth_uid = str(st.session_state.get("auth_uid") or "").strip()
+            if not auth_uid:
+                try:
+                    user_result = supabase.auth.get_user(access_token)
+                    user_obj = getattr(user_result, "user", None)
+                    if user_obj is None and isinstance(user_result, dict):
+                        user_obj = user_result.get("user")
+                    if user_obj is not None:
+                        auth_uid = str(getattr(user_obj, "id", "") or "")
+                        auth_email = str(getattr(user_obj, "email", "") or "")
+                        if isinstance(user_obj, dict):
+                            auth_uid = auth_uid or str(user_obj.get("id") or "")
+                            auth_email = auth_email or str(user_obj.get("email") or "")
+                        if auth_uid:
+                            st.session_state["auth_uid"] = auth_uid
+                        if auth_email:
+                            st.session_state["auth_email"] = auth_email
+                except Exception:
+                    pass
+            if not auth_uid:
+                return False, False, "Authenticated user identity could not be resolved.", None, None
+            auth_email = str(st.session_state.get("auth_email") or "").strip().lower()
+            family_resp = (
                 supabase.table("family_contacts")
                 .select("id, care_home_id, display_name, auth_user_id, email")
-                .eq("email", auth_email)
+                .eq("auth_user_id", auth_uid)
                 .eq("active", True)
                 .limit(1)
                 .execute()
             )
-            if not email_resp.data:
-                # Some legacy rows may have non-normalized email casing.
+            family_record = family_resp.data[0] if family_resp.data else None
+            if not family_record and auth_email:
                 email_resp = (
                     supabase.table("family_contacts")
                     .select("id, care_home_id, display_name, auth_user_id, email")
-                    .ilike("email", auth_email)
+                    .eq("email", auth_email)
                     .eq("active", True)
                     .limit(1)
                     .execute()
                 )
-            if email_resp.data:
-                family_record = email_resp.data[0]
-                existing_uid = str(family_record.get("auth_user_id") or "").strip()
-                if existing_uid != auth_uid:
-                    try:
-                        supabase.table("family_contacts").update({"auth_user_id": auth_uid}).eq(
-                            "id", family_record.get("id")
-                        ).execute()
-                        family_record["auth_user_id"] = auth_uid
-                    except Exception:
-                        pass
-        care_resp = (
-            supabase.table("care_home_users")
-            .select("id, care_home_id")
-            .eq("auth_user_id", auth_uid)
-            .eq("active", True)
-            .limit(1)
-            .execute()
-        )
-        care_record = care_resp.data[0] if care_resp.data else None
-        family_found = family_record is not None
-        care_found = care_record is not None
-        return family_found, care_found, None, family_record, care_record
-    except Exception as exc:  # pragma: no cover - Supabase runtime error
-        return False, False, str(exc), None, None
+                if not email_resp.data:
+                    # Some legacy rows may have non-normalized email casing.
+                    email_resp = (
+                        supabase.table("family_contacts")
+                        .select("id, care_home_id, display_name, auth_user_id, email")
+                        .ilike("email", auth_email)
+                        .eq("active", True)
+                        .limit(1)
+                        .execute()
+                    )
+                if email_resp.data:
+                    family_record = email_resp.data[0]
+                    existing_uid = str(family_record.get("auth_user_id") or "").strip()
+                    if existing_uid != auth_uid:
+                        try:
+                            supabase.table("family_contacts").update({"auth_user_id": auth_uid}).eq(
+                                "id", family_record.get("id")
+                            ).execute()
+                            family_record["auth_user_id"] = auth_uid
+                        except Exception:
+                            pass
+            care_resp = (
+                supabase.table("care_home_users")
+                .select("id, care_home_id")
+                .eq("auth_user_id", auth_uid)
+                .eq("active", True)
+                .limit(1)
+                .execute()
+            )
+            care_record = care_resp.data[0] if care_resp.data else None
+            family_found = family_record is not None
+            care_found = care_record is not None
+            return family_found, care_found, None, family_record, care_record
+        except Exception as exc:  # pragma: no cover - Supabase runtime error
+            if attempt == 0 and try_refresh_session_from_state():
+                continue
+            return False, False, str(exc), None, None
+    return False, False, "Session mapping check failed.", None, None
 
 
 def get_authed_supabase(access_token: str | None) -> tuple[object | None, str | None]:
