@@ -2,13 +2,12 @@
 
 # Office completed docs (care home records)
 
-This folder stores completed/signed documents associated with the care home's Office-side use of voice-message.com.
+This folder stores completed/signed records managed by the care home in Care Hub – Office.
 
 ## Subfolders
 
-- `authorised_contact_registrations/`
-- `signed_agreements_with_voice_message/`
-- `agreement_supporting_documents/`
+- `registration_records/`
+- `agreement_records/`
 
 ## Handling rules
 

@@ -17,9 +17,9 @@ Status: working register (update when documents are added, revised, signed, or r
 
 ## Signed document storage (recommended convention)
 
-- Signed care-home service agreements: `docs/office/completed_docs/signed_agreements_with_voice_message/`
-- Signed DPAs and privacy schedules: `docs/office/completed_docs/agreement_supporting_documents/`
-- Insurance evidence and legal correspondence: `docs/office/completed_docs/agreement_supporting_documents/`
+- Signed care-home service agreements: `docs/office/completed_docs/agreement_records/`
+- Signed DPAs and privacy schedules: `docs/office/completed_docs/agreement_records/`
+- Insurance evidence and legal correspondence: `docs/office/completed_docs/agreement_records/`
 
 ## Change control
 
