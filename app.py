@@ -7703,6 +7703,17 @@ def render_care_hub_banner_settings() -> None:
     render_page_header("Care Home Banner")
     access_token = st.session_state.get("access_token")
     render_care_home_identity_banner(access_token)
+    st.markdown("### Operational setup variables")
+    st.markdown(
+        "- Care home name\n"
+        "- Business banner heading (optional)\n"
+        "- Business banner message (optional)\n"
+        "- Business banner image URL (optional)\n"
+        "- Idle sign-out time for Care Hub sessions"
+    )
+    st.caption(
+        "Review and confirm these settings during setup so day-to-day use is consistent from launch."
+    )
     st.markdown("### Add your business banner design")
     st.caption("Add your logo or your own banner design for Care Hub – Office and Family views.")
     st.markdown("### Operational settings")
