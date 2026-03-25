@@ -133,7 +133,7 @@ Recording and playback are done when staff are available, to fit normal care rou
 
 ### Managing access
 
-The care home controls who has access. Staff may add or remove contacts as directed by the care home and in line with its usual processes.
+The care home controls who has access. Only Care Hub – Office staff may add or remove authorised contacts, in line with the care home's usual processes.
 
 ### Managing devices
 
