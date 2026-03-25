@@ -40,6 +40,7 @@ CARE_HUB_SESSION_TIMEOUT_SECONDS = max(
     int(os.getenv("CARE_HUB_SESSION_TIMEOUT_SECONDS", str(60 * 30))),
     60 * 30,
 )
+CARE_HUB_IDLE_TIMEOUT_OPTIONS_SECONDS = (60 * 30, 60 * 60, 60 * 90, 60 * 120)
 APP_DEBUG = os.getenv("APP_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
 APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
     "1",
@@ -3025,11 +3026,10 @@ def enforce_session_timeout() -> None:
         st.session_state["last_active_at"] = now
         return
     active_role = st.session_state.get("active_role")
-    timeout_seconds = (
-        FAMILY_SESSION_TIMEOUT_SECONDS
-        if active_role == "family"
-        else CARE_HUB_SESSION_TIMEOUT_SECONDS
-    )
+    if active_role == "family":
+        timeout_seconds = FAMILY_SESSION_TIMEOUT_SECONDS
+    else:
+        timeout_seconds = get_care_hub_idle_timeout_seconds(st.session_state.get("access_token"))
     if last_active and (now - last_active) > timeout_seconds:
         role = st.session_state.get("active_role")
         if role:
@@ -3180,6 +3180,21 @@ def fetch_active_care_home_name(access_token: str | None) -> str:
     return str(profile.get("name") or "").strip()
 
 
+def normalize_care_hub_idle_timeout_seconds(timeout_value: object) -> int:
+    try:
+        parsed = int(timeout_value)
+    except (TypeError, ValueError):
+        parsed = CARE_HUB_SESSION_TIMEOUT_SECONDS
+    allowed_values = set(CARE_HUB_IDLE_TIMEOUT_OPTIONS_SECONDS)
+    return parsed if parsed in allowed_values else CARE_HUB_SESSION_TIMEOUT_SECONDS
+
+
+def get_care_hub_idle_timeout_seconds(access_token: str | None) -> int:
+    profile = fetch_active_care_home_profile(access_token)
+    timeout_value = profile.get("care_hub_idle_timeout_seconds")
+    return normalize_care_hub_idle_timeout_seconds(timeout_value)
+
+
 def fetch_active_care_home_profile(access_token: str | None) -> dict:
     care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
     if not care_home_id or not access_token:
@@ -3194,7 +3209,9 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
     try:
         resp = (
             supabase.table("care_homes")
-            .select("name, branding_banner_title, branding_banner_text, branding_banner_artwork_url")
+            .select(
+                "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, care_hub_idle_timeout_seconds"
+            )
             .eq("id", care_home_id)
             .eq("active", True)
             .limit(1)
@@ -3206,7 +3223,9 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
             # Fall back to id-only lookup so the identity banner can still render.
             fallback_resp = (
                 supabase.table("care_homes")
-                .select("name, branding_banner_title, branding_banner_text, branding_banner_artwork_url")
+                .select(
+                    "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, care_hub_idle_timeout_seconds"
+                )
                 .eq("id", care_home_id)
                 .limit(1)
                 .execute()
@@ -3217,6 +3236,9 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
             "branding_banner_title": str(row.get("branding_banner_title") or "").strip(),
             "branding_banner_text": str(row.get("branding_banner_text") or "").strip(),
             "branding_banner_artwork_url": str(row.get("branding_banner_artwork_url") or "").strip(),
+            "care_hub_idle_timeout_seconds": normalize_care_hub_idle_timeout_seconds(
+                row.get("care_hub_idle_timeout_seconds")
+            ),
         }
         if profile["name"]:
             st.session_state[cache_key] = profile
@@ -3232,6 +3254,7 @@ def update_active_care_home_branding(
     banner_title: str,
     banner_text: str,
     banner_artwork_url: str,
+    care_hub_idle_timeout_seconds: int,
 ) -> tuple[bool, str]:
     care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
     if not care_home_id:
@@ -3242,6 +3265,7 @@ def update_active_care_home_branding(
     title_value = str(banner_title or "").strip()
     text_value = str(banner_text or "").strip()
     artwork_value = str(banner_artwork_url or "").strip()
+    timeout_value = normalize_care_hub_idle_timeout_seconds(care_hub_idle_timeout_seconds)
     if not name_value:
         return False, "Care home name is required."
     if len(name_value) > 160:
@@ -3266,6 +3290,7 @@ def update_active_care_home_branding(
                     "branding_banner_title": title_value or None,
                     "branding_banner_text": text_value or None,
                     "branding_banner_artwork_url": artwork_value or None,
+                    "care_hub_idle_timeout_seconds": timeout_value,
                 }
             )
             .eq("id", care_home_id)
@@ -7687,8 +7712,23 @@ def render_care_hub_banner_settings() -> None:
     render_care_home_identity_banner(access_token)
     st.markdown("### Add your business banner design")
     st.caption("Add your logo or your own banner design for Care Hub – Office and Family views.")
+    st.markdown("### Operational settings")
+    st.caption(
+        "Choose how long Care Hub can stay idle before it signs out. This applies to Care Hub – Office and Care Hub – Mobile."
+    )
 
     care_home_profile = fetch_active_care_home_profile(access_token)
+    timeout_options = list(CARE_HUB_IDLE_TIMEOUT_OPTIONS_SECONDS)
+    timeout_labels = {
+        60 * 30: "30 minutes",
+        60 * 60: "60 minutes",
+        60 * 90: "90 minutes",
+        60 * 120: "120 minutes",
+    }
+    current_timeout = normalize_care_hub_idle_timeout_seconds(
+        care_home_profile.get("care_hub_idle_timeout_seconds")
+    )
+    timeout_index = timeout_options.index(current_timeout)
     with st.form("office_care_home_banner_page_form"):
         care_home_name_value = st.text_input(
             "Care home name",
@@ -7715,7 +7755,15 @@ def render_care_hub_banner_settings() -> None:
             key="office_branding_banner_artwork_url_page",
             help="Use a full https:// image URL for your logo or banner artwork.",
         )
-        save_banner = st.form_submit_button("Save banner design")
+        selected_idle_timeout = st.selectbox(
+            "Idle sign-out time",
+            options=timeout_options,
+            index=timeout_index,
+            format_func=lambda value: timeout_labels.get(value, f"{int(value // 60)} minutes"),
+            key="office_care_hub_idle_timeout_seconds",
+            help="If no activity is detected for this period, the app signs out for security.",
+        )
+        save_banner = st.form_submit_button("Save banner and operational settings")
     if save_banner:
         saved, message = update_active_care_home_branding(
             access_token,
@@ -7723,6 +7771,7 @@ def render_care_hub_banner_settings() -> None:
             banner_title=banner_title_value,
             banner_text=banner_text_value,
             banner_artwork_url=banner_artwork_value,
+            care_hub_idle_timeout_seconds=int(selected_idle_timeout),
         )
         if saved:
             st.success(message)
