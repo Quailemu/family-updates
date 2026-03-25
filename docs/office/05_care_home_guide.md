@@ -50,10 +50,7 @@ Resident -> Family channel keeps the latest resident message shared to all autho
 
 For each resident, communication with family and friends is organised through authorised contact channels.
 
-An authorised contact channel may contain:
-
-- a single authorised contact, or
-- multiple authorised contacts where the care home configures a shared channel
+Each authorised contact channel contains one authorised contact only (no shared multi-contact channels).
 
 Family/Friend -> Resident messages are kept per authorised contact channel.
 Resident -> Family channel keeps the latest shared resident message to all authorised contacts.
