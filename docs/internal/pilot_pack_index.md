@@ -19,6 +19,8 @@ This page links the security and compliance documents for the service and provid
 - Care home contract template (outline)
 - Data Processing Agreement (DPA) template
 - Pilot legal and insurance readiness checklist
+- Legal documents register
+- External services and subscriptions register
 
 ## UI
 

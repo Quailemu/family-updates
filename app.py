@@ -8130,6 +8130,16 @@ def render_contracts() -> None:
             "path": "docs/contracts/pilot_legal_insurance_readiness_checklist.md",
             "summary": "Pre-go-live legal, insurance, and incident readiness checks.",
         },
+        {
+            "title": "Legal documents register",
+            "path": "docs/contracts/registers/voice_message_legal_documents_register.md",
+            "summary": "Master register of contract, DPA, and related legal records.",
+        },
+        {
+            "title": "External services and subscriptions register",
+            "path": "docs/contracts/registers/external_services_and_subscriptions_register.md",
+            "summary": "Register of third-party websites/apps used by voice-message.com.",
+        },
     ]
 
     if "contracts_active" not in st.session_state:
