@@ -4439,6 +4439,8 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", get_home_route(app_variant))
             if st.button("Register family member", key=f"{menu_key}_register_family"):
                 clicked_action = ("route", "/care-hub/register-family")
+            if st.button("Care home banner", key=f"{menu_key}_care_home_banner"):
+                clicked_action = ("route", "/care-hub/care-home-banner")
             if st.button("Account & Security", key=f"{menu_key}_security"):
                 clicked_action = ("route", "/care-hub/security")
             if st.button("Subscription & Billing", key=f"{menu_key}_billing"):
@@ -5864,6 +5866,7 @@ VARIANT_CONFIG = {
             OFFICE_LOGIN_ROUTE,
             OFFICE_HOME_ROUTE,
             "/care-hub/register-family",
+            "/care-hub/care-home-banner",
             "/care-hub/instructions",
             "/care-hub/training",
             "/care-hub/security",
@@ -7674,6 +7677,60 @@ For urgent, medical, safeguarding, or emergency matters, contact the care home d
     st.markdown("</div></div>", unsafe_allow_html=True)
 
 
+def render_care_hub_banner_settings() -> None:
+    require_care_access()
+    if get_app_variant() != VARIANT_OFFICE:
+        render_wrong_variant("Care home banner settings are only available in Care Hub – Office.")
+        return
+    render_page_header("Care Home Banner")
+    access_token = st.session_state.get("access_token")
+    render_care_home_identity_banner(access_token)
+    st.markdown("### Add your business banner design")
+    st.caption("Add your logo or your own banner design for Care Hub – Office and Family views.")
+
+    care_home_profile = fetch_active_care_home_profile(access_token)
+    with st.form("office_care_home_banner_page_form"):
+        care_home_name_value = st.text_input(
+            "Care home name",
+            value=str(care_home_profile.get("name") or ""),
+            max_chars=160,
+            key="office_care_home_name_page",
+        )
+        banner_title_value = st.text_input(
+            "Banner heading (optional)",
+            value=str(care_home_profile.get("branding_banner_title") or ""),
+            max_chars=120,
+            key="office_branding_banner_title_page",
+        )
+        banner_text_value = st.text_area(
+            "Banner message (optional)",
+            value=str(care_home_profile.get("branding_banner_text") or ""),
+            height=120,
+            max_chars=800,
+            key="office_branding_banner_text_page",
+        )
+        banner_artwork_value = st.text_input(
+            "Banner image URL (optional)",
+            value=str(care_home_profile.get("branding_banner_artwork_url") or ""),
+            key="office_branding_banner_artwork_url_page",
+            help="Use a full https:// image URL for your logo or banner artwork.",
+        )
+        save_banner = st.form_submit_button("Save banner design")
+    if save_banner:
+        saved, message = update_active_care_home_branding(
+            access_token,
+            care_home_name=care_home_name_value,
+            banner_title=banner_title_value,
+            banner_text=banner_text_value,
+            banner_artwork_url=banner_artwork_value,
+        )
+        if saved:
+            st.success(message)
+            st.rerun()
+        else:
+            st.error(message)
+
+
 def render_care_hub_security() -> None:
     require_care_access()
     if get_app_variant() != VARIANT_OFFICE:
@@ -7689,49 +7746,12 @@ def render_care_hub_security() -> None:
     mfa_required = (
         os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in {"1", "true", "yes", "on"}
     )
-
-    st.markdown("### Care home banner")
-    care_home_profile = fetch_active_care_home_profile(access_token)
-    with st.form("office_care_home_banner_form"):
-        care_home_name_value = st.text_input(
-            "Care home name",
-            value=str(care_home_profile.get("name") or ""),
-            max_chars=160,
-            key="office_care_home_name",
-        )
-        banner_title_value = st.text_input(
-            "Banner title (optional)",
-            value=str(care_home_profile.get("branding_banner_title") or ""),
-            max_chars=120,
-            key="office_branding_banner_title",
-        )
-        banner_text_value = st.text_area(
-            "Banner text (optional)",
-            value=str(care_home_profile.get("branding_banner_text") or ""),
-            height=120,
-            max_chars=800,
-            key="office_branding_banner_text",
-        )
-        banner_artwork_value = st.text_input(
-            "Banner artwork URL (optional)",
-            value=str(care_home_profile.get("branding_banner_artwork_url") or ""),
-            key="office_branding_banner_artwork_url",
-            help="Use a full http(s) image URL.",
-        )
-        save_banner = st.form_submit_button("Save care home banner")
-    if save_banner:
-        saved, message = update_active_care_home_branding(
-            access_token,
-            care_home_name=care_home_name_value,
-            banner_title=banner_title_value,
-            banner_text=banner_text_value,
-            banner_artwork_url=banner_artwork_value,
-        )
-        if saved:
-            st.success(message)
-            st.rerun()
-        else:
-            st.error(message)
+    st.caption("Care home banner settings have moved to the dedicated Care home banner page.")
+    render_route_link(
+        "Open Care home banner settings",
+        "/care-hub/care-home-banner",
+        key="office_security_open_banner_settings",
+    )
 
     st.markdown("### Mobile staff PIN management")
     st.caption(
@@ -9978,6 +9998,8 @@ def main() -> None:
         render_care_hub_instructions()
     elif route == "/care-hub/training":
         render_care_hub_training()
+    elif route == "/care-hub/care-home-banner":
+        render_care_hub_banner_settings()
     elif route == "/care-hub/security":
         render_care_hub_security()
     elif route == "/care-hub/office/qa":
