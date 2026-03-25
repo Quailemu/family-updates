@@ -4478,8 +4478,6 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("doc", "docs/office/05_care_home_guide.md")
             if st.button("Registering a family member", key=f"{menu_key}_office_doc_register_family"):
                 clicked_action = ("doc", "docs/office/10_registering_family_member.md")
-            if st.button("Access summary (1 page)", key=f"{menu_key}_office_doc_access_summary"):
-                clicked_action = ("doc", "docs/office/08_care_hub_access_summary.md")
             if st.button("Handover checklist", key=f"{menu_key}_office_doc_handover"):
                 clicked_action = ("doc", "docs/office/care_home_handover_checklist.md")
             if st.button("Office Q&A", key=f"{menu_key}_office_doc_qa"):
@@ -7154,11 +7152,6 @@ def render_docs() -> None:
             "title": "Safeguarding and consent",
             "path": "docs/office/09_safeguarding_consent.md",
             "summary": "Consent, authority, and safeguarding guidance.",
-        },
-        {
-            "title": "Care Hub access summary",
-            "path": "docs/office/08_care_hub_access_summary.md",
-            "summary": "Office-facing access summary and responsibilities.",
         },
         {
             "title": "Care home onboarding script",
