@@ -15,11 +15,12 @@ The service provides three user interfaces connected to a resident's care circle
 
 Each interface has its own controls for creating and managing the messages it sends.
 
-The messaging system uses three channel types linked to each resident:
+The messaging system uses four channel types linked to each resident:
 
 - Authorised contact channels for Family/Friend -> Resident messages
 - A shared Resident -> Family message channel to all authorised contacts
 - A one-way Office update channel used by the care home to send updates to authorised contacts
+- An Office practical text message channel used by the care home to request structured family replies
 
 ## Message playback and control
 
@@ -43,7 +44,7 @@ Example resident flow
 
 This diagram shows how voice messages and updates are organised for a single resident. Each authorised contact has their own contact channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-Resident -> Family channel keeps the latest resident message shared to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. Each authorised contact channel keeps only the latest Family/Friend -> Resident message. A new message replaces only the previous message in that channel.
+Resident -> Family channel keeps the latest resident message shared to all authorised contacts. The care home can also send a one-way Office update to all authorised contacts. Office can additionally send a practical text message to gather structured family responses (for example yes/no/maybe, tick-box options, and an optional short note). Each authorised contact channel keeps only the latest Family/Friend -> Resident message. A new message replaces only the previous message in that channel.
 
 ## Authorised contact channel structure
 
@@ -57,6 +58,7 @@ An authorised contact channel may contain:
 Family/Friend -> Resident messages are kept per authorised contact channel.
 Resident -> Family channel keeps the latest shared resident message to all authorised contacts.
 The Office update channel is separate and one-way from the care home to authorised contacts.
+Office practical text messages are separate from voice channels and support structured family replies.
 
 ## Day-to-day use
 
