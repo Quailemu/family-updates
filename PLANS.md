@@ -13,7 +13,7 @@ Homepage buttons (only):
 - Care Hub – Office
 
 Short Explanation (homepage section):
-The system has three application interfaces for groups associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, and other family members, friends, or other individuals designated by the care home).  
+The system has three application interfaces for groups associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, or other individuals designated by the care home).  
 Messages are organised into channels. Each channel keeps only the latest message.  
 When a new message is recorded in a channel, the previous message in that channel is replaced.  
 No archive. No message history. No scrolling thread.
@@ -28,7 +28,7 @@ Role-based access (Family vs Care Hub):
 Family and Care Hub are separate, role-based experiences.
 
 Playback and control statement:
-All current messages for that resident may be played by care-home-designated users across Mobile, Office, and Family, but no group can alter another group's message. Each message may only be replaced by the interface that created it.
+All current messages for that resident may be played by users designated by the care home across Mobile, Office, and Family, but no group can alter another group's message. Each message may only be replaced by the interface that created it.
 
 Office update statement:
 General updates are sent from the care home to keep families informed about day-to-day events. General updates are one-way and are for non-urgent, non-medical information only.
@@ -162,18 +162,18 @@ Channel directions:
 Each channel keeps only the latest message.  
 When a new message is sent in a channel, the previous message in that channel is replaced.
 
-Messages in a contact channel may only be played by care-home-designated users of that specific channel. Other family members, friends, or other individuals designated by the care home cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
+Messages in a contact channel may only be played by users designated by the care home for that specific channel. Other family members, friends, or other individuals designated by the care home cannot access those messages. Care home staff using Care Hub – Mobile and Care Hub – Office may also play messages for operational support.
 
 This structure helps keep communication simple and manageable within care settings.
 
 ## Management Functions
-Care Hub – Office allows care-home-designated personnel to:
+Care Hub – Office allows personnel designated by the care home to:
 • Manage staff access  
 • Enable or disable resident participation  
 • Monitor platform usage  
 • Maintain oversight of subscription status  
 
-Access is restricted to care-home-designated management users.
+Access is restricted to management users designated by the care home.
 
 ## Governance Position
 voice-message.com provides a communication platform.
@@ -266,7 +266,7 @@ For information on consent and safeguarding responsibilities, refer to the Safeg
 This guide explains how Care Hub – Mobile is used within the care home to support residents in sending and receiving simple, non-urgent voice messages.
 
 ## App Version
-Care Hub – Mobile is used by care-home-designated staff on care home devices.
+Care Hub – Mobile is used by staff designated by the care home on care home devices.
 It does not include Office-level administrative features.
 
 ## How the Service Works
@@ -297,7 +297,7 @@ Care-related matters must be handled through the care home’s existing procedur
 ## Staff Responsibilities
 Staff are responsible for:
 • Supporting residents appropriately  
-• Using care-home-designated devices only  
+• Using devices designated by the care home only  
 • Logging out where required  
 • Following the care home’s internal policies  
 

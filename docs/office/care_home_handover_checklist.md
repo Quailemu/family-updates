@@ -14,7 +14,7 @@ Office staff/admin login email:
 - [ ] Device PIN/password is enabled on all devices used for recordings/playback.
 - [ ] Desk devices have a visible "Lock session" step and staff use it when stepping away.
 - [ ] Care Hub – Mobile idle sign-out time is set in Operational Variables.
-- [ ] Only care-home-designated staff devices are used for the service.
+- [ ] Only devices designated by the care home are used for the service.
 - [ ] Dedicated Care Hub – Mobile device supplied for this service (with lanyard) is in use.
 - [ ] Role separation confirmed: Family Members use Family app only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
 - [ ] Operational setup variables reviewed on the Operational Variables page (name, banner settings, idle sign-out time).

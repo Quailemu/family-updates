@@ -11,7 +11,7 @@ The service provides three user interfaces connected to a resident's care circle
 
 - Care Hub – Mobile: the operational interface used by carers to support the resident and manage voice messaging
 - Care Hub – Office: the office/administration interface used by care-home staff
-- Family App: used by Family Members granted by the care home
+- Family App: used by Family Members registered by the care home
 
 Each interface has its own controls for creating and managing the messages it sends.
 
@@ -84,7 +84,7 @@ Office staff use Care Hub – Office only.
 
 ### Setting up residents and contacts
 
-Managers and staff may add residents and Family Members to the service. The care home decides how residents are identified and who is granted access.
+Managers and staff may add residents and Family Members to the service. The care home decides how residents are identified and who is added.
 
 These admin tasks are handled in Care Hub – Office, not on Care Hub – Mobile.
 
@@ -156,7 +156,7 @@ When stepping away, staff should lock the screen or sign out in line with the ca
 
 Care Hub – Mobile is used on the dedicated voice-message mobile device supplied for this service. That device should stay under staff supervision during use and be stored securely when not in use.
 
-Care Hub – Office is used on office-managed devices. Access should be limited to care-home-designated office staff, with desk sessions locked when unattended.
+Care Hub – Office is used on office-managed devices. Access should be limited to office staff designated by the care home, with desk sessions locked when unattended.
 
 If a device is lost, misplaced, or access is suspected to be compromised, staff should follow the care home's incident process immediately.
 
