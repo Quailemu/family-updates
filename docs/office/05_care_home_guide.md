@@ -98,14 +98,14 @@ Care Hub staff can securely invite and register Family Members in the service.
 2. Go to "Register a Family Member".  
 3. Enter first name, last name, and email.  
 4. Select resident.  
-5. Confirm the care home has approved this registration.  
+5. Confirm the person is being registered by the care home.  
 6. Click "Send invitation".
 
 **What happens next**  
 The family contact receives an email invitation. They click a secure email login link to sign in. No password is required. They log into the Family app. Access is restricted to the selected resident.
 
 **Important notes**  
-This service is for non-urgent social communication only. Only individuals approved by the care home should be registered. Duplicate registrations are prevented automatically.
+This service is for non-urgent social communication only. Only individuals designated by the care home should be registered. Duplicate registrations are prevented automatically.
 
 ### Resident list and communication areas (Care Hub)
 
@@ -156,7 +156,7 @@ When stepping away, staff should lock the screen or sign out in line with the ca
 
 Care Hub – Mobile is used on the dedicated voice-message mobile device supplied for this service. That device should stay under staff supervision during use and be stored securely when not in use.
 
-Care Hub – Office is used on office-managed devices. Access should be limited to authorised office staff, with desk sessions locked when unattended.
+Care Hub – Office is used on office-managed devices. Access should be limited to care-home-designated office staff, with desk sessions locked when unattended.
 
 If a device is lost, misplaced, or access is suspected to be compromised, staff should follow the care home's incident process immediately.
 

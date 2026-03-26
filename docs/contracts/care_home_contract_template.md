@@ -40,6 +40,8 @@ The platform does not provide care updates or health information. It does not mo
 
 The Customer is solely responsible for determining which individuals are permitted to have access to a resident within the Service, and for granting, maintaining, and revoking that access as appropriate. voice-message does not verify or validate the identity, authority, or entitlement of any individual granted access by the Customer and relies on the Customer’s instructions in this regard.
 
+For clarity, voice-message has no independent duty to assess or approve any individual's eligibility to communicate in relation to a resident. The Customer warrants that it has made all required checks and decisions before instructing registration or access changes in the Service.
+
 ## 5. Use of the service
 
 The service is for non-urgent, social voice messages only. It is not intended for care updates, health information, or safeguarding concerns. The care home decides how the service is used in practice.

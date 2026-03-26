@@ -43,7 +43,7 @@ Steps
 2. Go to "Register a Family Member".
 3. Enter contact details.
 4. Select resident.
-5. Confirm the care home has approved this registration.
+5. Confirm the person is being registered by the care home.
 6. Click "Send invitation".
 
 What Happens Next
@@ -57,7 +57,7 @@ Access is restricted to the selected resident.
 Important Notes
 
 This service is for non-urgent social communication only.
-Only individuals approved by the care home should be registered.
+Only individuals designated by the care home should be registered.
 voice-message does not verify or manage authorisation decisions.
 Duplicate registrations are prevented automatically.
 

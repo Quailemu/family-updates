@@ -51,6 +51,7 @@ Processor must:
 
 Customer responsibility for access to residents:  
 The Customer is solely responsible for determining which individuals are permitted to have access to a resident within the Service, and for granting, maintaining, and revoking that access as appropriate. voice-message does not verify or validate the identity, authority, or entitlement of any individual granted access by the Customer and relies on the Customer’s instructions in this regard.
+For clarity, the Processor has no independent duty to assess or approve any individual's eligibility to communicate in relation to a resident and acts only on documented Controller instructions.
 - implement appropriate technical and organisational security measures
 - assist Controller with data subject rights requests where applicable
 - assist Controller with security incidents, DPIA support requests, and regulator/cooperation duties where required

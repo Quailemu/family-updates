@@ -1480,7 +1480,7 @@ def render_office_family_registration_form(
         or "this care home"
     ).strip()
     st.caption(
-        "Care home staff are registering a Family Member for a resident. "
+        "Care home staff are adding a Family Member for a resident using the voice-message platform. "
         "voice-message sends a secure email login link and enables the account."
     )
     resident_options = []
@@ -1529,8 +1529,8 @@ def render_office_family_registration_form(
         )
         st.markdown("#### Section 3 — Confirmation")
         resident_access_confirmed = st.checkbox(
-            f"I confirm that {active_care_home_name} has authorised this person to be "
-            "registered as a family member for this resident and is solely responsible "
+            f"I confirm that {active_care_home_name} has decided this person may be added "
+            "as a Family Member for this resident and is solely responsible "
             "for determining, granting, and maintaining their access to the resident.",
             key="office_family_authorisation_confirm",
         )

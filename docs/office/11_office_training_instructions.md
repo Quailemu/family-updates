@@ -25,7 +25,7 @@ This guide is for office and admin staff using Care Hub - Office.
 1. Open Register a Family Member.
 2. Enter first name, last name, and email.
 3. Select the resident.
-4. Confirm the care home has approved this registration.
+4. Confirm the person is being registered by the care home.
 5. Confirm that voice-message does not verify or manage authorisation decisions.
 6. Send invitation.
 

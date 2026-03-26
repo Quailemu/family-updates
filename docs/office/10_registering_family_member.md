@@ -12,7 +12,7 @@ Care Hub staff can securely invite and register a Family Member for a resident.
 2. Go to "Register a Family Member".
 3. Enter first name, last name, and email.
 4. Select resident.
-5. Confirm the care home has approved this registration and remains responsible for access decisions.
+5. Confirm the person is being registered by the care home and the care home remains responsible for access decisions.
 6. Click "Send invitation".
 
 ## What Happens Next
@@ -26,6 +26,6 @@ Access is restricted to the selected resident.
 ## Important Notes
 
 This service is for non-urgent social communication only.
-Only individuals approved by the care home should be registered.
+Only individuals designated by the care home should be registered.
 voice-message does not verify or validate identity, authority, or entitlement decisions; it enforces the care home's registration and access configuration.
 Duplicate registrations are prevented automatically.
