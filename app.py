@@ -3339,6 +3339,15 @@ def get_care_hub_idle_timeout_seconds(access_token: str | None) -> int:
     return normalize_care_hub_idle_timeout_seconds(timeout_value)
 
 
+def _is_missing_column_error(exc: Exception, column_name: str) -> bool:
+    message = str(exc)
+    return (
+        "PGRST204" in message
+        and "schema cache" in message.lower()
+        and column_name in message
+    )
+
+
 def fetch_active_care_home_profile(access_token: str | None) -> dict:
     care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
     if not care_home_id or not access_token:
@@ -3350,30 +3359,56 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
     supabase, error = get_authed_supabase(access_token)
     if error:
         return {}
+    select_fields = (
+        "name, branding_banner_title, branding_banner_text, "
+        "branding_banner_artwork_url, care_hub_idle_timeout_seconds"
+    )
+    fallback_select_fields = (
+        "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url"
+    )
     try:
-        resp = (
-            supabase.table("care_homes")
-            .select(
-                "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, care_hub_idle_timeout_seconds"
+        try:
+            resp = (
+                supabase.table("care_homes")
+                .select(select_fields)
+                .eq("id", care_home_id)
+                .eq("active", True)
+                .limit(1)
+                .execute()
             )
-            .eq("id", care_home_id)
-            .eq("active", True)
-            .limit(1)
-            .execute()
-        )
+        except Exception as exc:
+            if not _is_missing_column_error(exc, "care_hub_idle_timeout_seconds"):
+                raise
+            resp = (
+                supabase.table("care_homes")
+                .select(fallback_select_fields)
+                .eq("id", care_home_id)
+                .eq("active", True)
+                .limit(1)
+                .execute()
+            )
         row = (resp.data or [None])[0]
         if not row:
             # Some datasets may not have the care_home `active` flag set consistently.
             # Fall back to id-only lookup so the identity banner can still render.
-            fallback_resp = (
-                supabase.table("care_homes")
-                .select(
-                    "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, care_hub_idle_timeout_seconds"
+            try:
+                fallback_resp = (
+                    supabase.table("care_homes")
+                    .select(select_fields)
+                    .eq("id", care_home_id)
+                    .limit(1)
+                    .execute()
                 )
-                .eq("id", care_home_id)
-                .limit(1)
-                .execute()
-            )
+            except Exception as exc:
+                if not _is_missing_column_error(exc, "care_hub_idle_timeout_seconds"):
+                    raise
+                fallback_resp = (
+                    supabase.table("care_homes")
+                    .select(fallback_select_fields)
+                    .eq("id", care_home_id)
+                    .limit(1)
+                    .execute()
+                )
             row = (fallback_resp.data or [{}])[0]
         profile = {
             "name": str(row.get("name") or "").strip(),
@@ -3425,21 +3460,31 @@ def update_active_care_home_branding(
     supabase, error = get_authed_supabase(access_token)
     if error:
         return False, error
+    update_payload = {
+        "name": name_value,
+        "branding_banner_title": title_value or None,
+        "branding_banner_text": text_value or None,
+        "branding_banner_artwork_url": artwork_value or None,
+        "care_hub_idle_timeout_seconds": timeout_value,
+    }
     try:
-        (
-            supabase.table("care_homes")
-            .update(
-                {
-                    "name": name_value,
-                    "branding_banner_title": title_value or None,
-                    "branding_banner_text": text_value or None,
-                    "branding_banner_artwork_url": artwork_value or None,
-                    "care_hub_idle_timeout_seconds": timeout_value,
-                }
+        try:
+            (
+                supabase.table("care_homes")
+                .update(update_payload)
+                .eq("id", care_home_id)
+                .execute()
             )
-            .eq("id", care_home_id)
-            .execute()
-        )
+        except Exception as exc:
+            if not _is_missing_column_error(exc, "care_hub_idle_timeout_seconds"):
+                raise
+            update_payload.pop("care_hub_idle_timeout_seconds", None)
+            (
+                supabase.table("care_homes")
+                .update(update_payload)
+                .eq("id", care_home_id)
+                .execute()
+            )
         st.session_state.pop(f"care_home_profile_{care_home_id}", None)
         return True, "Care home profile updated."
     except Exception as exc:
