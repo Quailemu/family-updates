@@ -2381,6 +2381,10 @@ def require_family_access() -> None:
 def require_care_access() -> None:
     if get_app_variant() not in {VARIANT_MOBILE, VARIANT_OFFICE}:
         wrong_variant_screen(get_route(), "Care Hub pages are not available in this app.")
+    if get_app_variant() == VARIANT_OFFICE and not bool(st.session_state.get("office_login_explicit")):
+        if get_route() != get_login_route(VARIANT_OFFICE):
+            set_route(get_login_route(VARIANT_OFFICE))
+        st.stop()
     active_role = st.session_state.get("active_role")
     if st.session_state.get("auth_uid") and active_role and active_role != "care_hub":
         wrong_variant_screen(get_route(), "This signed-in session belongs to Family.")
@@ -6194,6 +6198,14 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
         set_route(home_route)
         st.stop()
         return True
+    if (
+        app_variant == VARIANT_OFFICE
+        and is_variant_authed
+        and is_login_route_for_variant(app_variant, current_route)
+        and not bool(st.session_state.get("office_login_explicit"))
+    ):
+        # Office should always present credential login before MFA/home routing.
+        return False
     if is_variant_authed and is_login_route_for_variant(app_variant, current_route):
         if app_variant == VARIANT_OFFICE and is_office_mfa_required():
             set_route("/care-hub/mfa")
@@ -8386,7 +8398,11 @@ def render_care_login() -> None:
     elif app_variant == VARIANT_OFFICE:
         st.caption("Office login is a separate staff/admin access path.")
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
-    if st.session_state.get("auth_uid"):
+    office_requires_explicit_login = (
+        app_variant == VARIANT_OFFICE
+        and not bool(st.session_state.get("office_login_explicit"))
+    )
+    if st.session_state.get("auth_uid") and not office_requires_explicit_login:
         allow_manual_login = False
         family_found, care_found, error, family_record, care_record = get_mapping_status()
         if care_found:
@@ -8504,6 +8520,8 @@ def render_care_login() -> None:
                             st.session_state["active_care_home_id"] = care_record.get(
                                 "care_home_id"
                             )
+                        if app_variant == VARIANT_OFFICE:
+                            st.session_state["office_login_explicit"] = True
                         log_audit_event(
                             "login_success",
                             "care_hub",
@@ -9953,7 +9971,11 @@ def main() -> None:
     except ValueError as exc:
         st.error(str(exc))
         st.stop()
-    if variant_requires_auth(app_variant) and AUTH_COOKIE_PERSISTENCE_ENABLED:
+    if (
+        variant_requires_auth(app_variant)
+        and AUTH_COOKIE_PERSISTENCE_ENABLED
+        and app_variant == VARIANT_FAMILY
+    ):
         if not AUTH_COOKIE_SIGNING_KEY:
             st.error("Configuration error: AUTH_COOKIE_SIGNING_KEY is required for secure session cookies.")
             st.stop()
