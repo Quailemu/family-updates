@@ -4,11 +4,11 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Communication participants: residents, Family Members with Resident Access, and Care Hub (Office and Mobile).
+Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
 ## What is voice-message.com for?
 
-Non-urgent social voice messaging between residents and Family Members with Resident Access, plus non-urgent Office communication to family.
+Non-urgent social voice messaging between residents and Family Members, plus non-urgent Office communication to family.
 
 ## Is this a live chat?
 
@@ -20,7 +20,7 @@ Three: Family app, Care Hub - Mobile, and Care Hub - Office.
 
 ## What is an Office general update?
 
-A one-way Office message broadcast to all Family Members with Resident Access for non-urgent general information.
+A one-way Office message broadcast to all Family Members for non-urgent general information.
 
 ## Can family reply to Office messages?
 

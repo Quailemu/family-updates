@@ -16,13 +16,13 @@ The care home decides access, participation, and day-to-day use in its service.
 
 - Care home account and access data
 - Resident identifiers set by the care home
-- Authorised contact details (for example, name and email)
+- Family Member details (for example, name and email)
 - Voice messages (latest message only per channel)
 - Security and operational logs needed to run the service safely
 
 ## Why data is used
 
-Data is used to deliver non-urgent social voice messaging between residents and Family Members with Resident Access in a care setting.
+Data is used to deliver non-urgent social voice messaging between residents and Family Members in a care setting.
 
 The service is not for medical updates, safeguarding reporting, or urgent enquiries.
 

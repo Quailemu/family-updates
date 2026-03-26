@@ -22,7 +22,7 @@ Duration: from contract effective date until termination and completion of retur
 ## 3. Nature and purpose of processing
 
 - account and access management
-- resident access linking (Family Member account to resident access)
+- linking Family Member accounts to residents within the care home's configuration
 - voice message transport and latest-message replacement model
 - operational and security logging needed to run the service
 
@@ -32,7 +32,7 @@ The Processor does not provide live monitoring, safeguarding moderation, or cont
 
 Data subjects:
 - residents
-- Family Members with Resident Access (family/friends/other individuals granted resident access by the care home)
+- Family Members (family members, friends, or other individuals designated by the care home)
 - care home staff/admin users
 
 Personal data categories:
@@ -49,7 +49,7 @@ Processor must:
 - process personal data only on documented Controller instructions
 - ensure confidentiality obligations for authorised personnel
 
-Customer responsibility for resident access:  
+Customer responsibility for access to residents:  
 The Customer is solely responsible for determining which individuals are permitted to have access to a resident within the Service, and for granting, maintaining, and revoking that access as appropriate. voice-message does not verify or validate the identity, authority, or entitlement of any individual granted access by the Customer and relies on the Customer’s instructions in this regard.
 - implement appropriate technical and organisational security measures
 - assist Controller with data subject rights requests where applicable

@@ -7,15 +7,15 @@
 voice-message.com. One message in. One message out.
 
 This service is for non-urgent social voice messages between residents in care homes and Family.
-In this service, 'Family' means Family Members with Resident Access granted by the care home, such as family members or close friends.
+In this service, 'Family' means Family Members granted by the care home, such as family members or close friends.
 It is not live messaging.
 
 The model is simple and clear.
-Each Family Member with Resident Access has their own channel to the resident for Family to resident messages.
+Each Family Member has their own channel to the resident for Family to resident messages.
 Care Hub - Mobile plays those family messages in a fair rotating order, with unplayed messages first.
 
-Resident-to-family channel keeps the latest resident message shared to all Family Members with Resident Access.
-Office updates are one-way and shared to all Family Members with Resident Access.
+Resident-to-family channel keeps the latest resident message shared to all Family Members.
+Office updates are one-way and shared to all Family Members.
 
 Each channel keeps only the latest message.
 When a new message is recorded, it replaces the previous message in that channel.

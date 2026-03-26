@@ -1384,7 +1384,7 @@ def grant_resident_access(
     except Exception as exc:  # pragma: no cover - Supabase runtime error
         return None, str(exc)
     if not resp.data:
-        return None, "Could not create resident access mapping."
+        return None, "Could not create family member mapping."
     return resp.data[0], None
 
 
@@ -1398,7 +1398,7 @@ def _apply_family_registration_mapping(
         email=str(payload.get("email") or ""),
         first_name=str(payload.get("first_name") or ""),
         last_name=str(payload.get("last_name") or ""),
-        relationship=str(payload.get("relationship") or ""),
+        relationship="",
     )
     if contact_error or not contact_row:
         return False, contact_error or "Failed to upsert Family Member."
@@ -1474,8 +1474,14 @@ def render_office_family_registration_form(
             else:
                 st.error(mapping_error or "Retry failed. Please try again.")
 
+    active_care_home_name = str(
+        st.session_state.get("active_care_home_name")
+        or st.session_state.get("care_home_name")
+        or "this care home"
+    ).strip()
     st.caption(
-        "Register a Family Member for a resident and grant Resident Access. We will send a secure email login link. No password required."
+        "Care home staff are registering a Family Member for a resident. "
+        "voice-message sends a secure email login link and enables the account."
     )
     resident_options = []
     resident_by_id = {}
@@ -1514,14 +1520,6 @@ def render_office_family_registration_form(
         first_name = st.text_input("First name", key="office_family_first_name")
         last_name = st.text_input("Last name", key="office_family_last_name")
         email = st.text_input("Email", key="office_family_email")
-        relationship = st.text_input(
-            "Relationship (optional)",
-            key="office_family_relationship",
-        )
-        st.caption(
-            "Examples: daughter, son, spouse, niece, friend, neighbour. "
-            "This helps staff select the right contact."
-        )
         st.markdown("#### Section 2 — Link to Resident")
         resident_id = st.selectbox(
             "Resident",
@@ -1531,9 +1529,12 @@ def render_office_family_registration_form(
         )
         st.markdown("#### Section 3 — Confirmation")
         resident_access_confirmed = st.checkbox(
-            "I confirm the care home has granted this person Resident Access to receive and send social voice messages.",
+            f"I confirm that {active_care_home_name} has authorised this person to be "
+            "registered as a family member for this resident and is solely responsible "
+            "for determining, granting, and maintaining their access to the resident.",
             key="office_family_authorisation_confirm",
         )
+        st.caption("voice-message does not verify or manage authorisation decisions.")
         st.caption(
             "Security note: after sending an invite, wait for the countdown before retrying."
         )
@@ -1555,7 +1556,7 @@ def render_office_family_registration_form(
         st.error("Enter a valid email address.")
         return
     if not resident_access_confirmed:
-        st.error("Please confirm Resident Access before sending the invitation.")
+        st.error("Please confirm care home authorisation before sending the invitation.")
         return
 
     resident = resident_by_id.get(resident_id)
@@ -1623,7 +1624,6 @@ def render_office_family_registration_form(
         "email": normalized_email,
         "first_name": first_value,
         "last_name": last_value,
-        "relationship": relationship.strip(),
     }
     mapping_ok, mapping_error = _apply_family_registration_mapping(access_token, payload)
     if mapping_ok:
@@ -2052,7 +2052,7 @@ def render_how_it_works_diagram_and_notes() -> None:
         st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
     st.markdown(
         "- The diagram shows the three app areas: Family, Care Hub – Mobile, and Care Hub – Office.\n"
-        "- Each Family Member with Resident Access has their own individual communication channel to the resident.\n"
+        "- Each Family Member has their own individual communication channel to the resident.\n"
         "- Office practical messages collect quick structured family responses to support efficient, inclusive practical decision-making.\n"
         "- The care home reviews responses and makes the final operational decision.\n"
         "- Each channel keeps only the latest message, and a new message replaces the previous one in that channel."
@@ -2100,8 +2100,8 @@ def render_how_it_works_family() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages between residents and Family Members with Resident Access.",
-        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members with Resident Access. No threads.",
+        "voice-message.com — for non-urgent social voice messages between residents and Family Members.",
+        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
         "Family access uses secure email login links. No SMS and no phone-number login.",
     ]
     for box in info_boxes:
@@ -2136,8 +2136,8 @@ def render_how_it_works_mobile() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages between residents and Family Members with Resident Access.",
-        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members with Resident Access. No threads.",
+        "voice-message.com — for non-urgent social voice messages between residents and Family Members.",
+        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
         "Care Hub – Mobile uses individual staff PIN access for day-to-day use.",
         "Secure email link is used only for first sign-in or expired-session recovery.",
     ]
@@ -2176,8 +2176,8 @@ def render_how_it_works_office_overview() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages between residents and Family Members with Resident Access.",
-        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members with Resident Access. No threads.",
+        "voice-message.com — for non-urgent social voice messages between residents and Family Members.",
+        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
         "Care Hub – Office is a separate staff/admin access path.",
         "Office authentication is distinct from Family email links and Mobile staff PIN access.",
         "If Office 2FA is enabled, users complete Office verification after login.",
@@ -4889,7 +4889,7 @@ def render_front_page_descriptor() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="front-page-info-box">One message kept at a time in each direction (between each Family Member with Resident Access and each resident), with no threads.</div>',
+        '<div class="front-page-info-box">One message kept at a time in each direction (between each Family Member and each resident), with no threads.</div>',
         unsafe_allow_html=True,
     )
 
@@ -5709,7 +5709,7 @@ def render_home(active: str) -> None:
         st.markdown("- Residents")
         st.markdown("- Families")
         st.markdown("- Care Hub (Office and Mobile)")
-        st.caption("Here, families means Family Members with Resident Access granted by the care home.")
+        st.caption("Here, families means Family Members registered by the care home.")
         st.markdown(
             "Each channel keeps only the latest message. A new message replaces the previous message in that channel."
         )
@@ -5720,7 +5720,7 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>Office -&gt; Family (one-way updates)</h3>
-              <div>Care Hub – Office sends the latest general update voice message to all Family Members with Resident Access. No replies in this general update channel. A new update replaces the previous general update.</div>
+              <div>Care Hub – Office sends the latest general update voice message to all Family Members. No replies in this general update channel. A new update replaces the previous general update.</div>
             </div>
             <div class="public-card">
               <h3>Office practical text message (structured replies from family)</h3>
@@ -5728,11 +5728,11 @@ def render_home(active: str) -> None:
             </div>
             <div class="public-card pink">
               <h3>Resident -&gt; Family (one message out)</h3>
-              <div>Care Hub – Mobile supports the resident to record the latest message to all Family Members with Resident Access. A new recording replaces the previous resident message.</div>
+              <div>Care Hub – Mobile supports the resident to record the latest message to all Family Members. A new recording replaces the previous resident message.</div>
             </div>
             <div class="public-card">
               <h3>Family -&gt; Resident (one message each)</h3>
-              <div>Each Family Member with Resident Access channel keeps only the latest message to the resident. Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.</div>
+              <div>Each Family Member channel keeps only the latest message to the resident. Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -5783,7 +5783,7 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>Roles and important boundaries</h3>
-              <div><strong>Family Members:</strong> Family Members with Resident Access send messages and listen to the resident's current shared reply.</div>
+              <div><strong>Family Members:</strong> Family Members send messages and listen to the resident's current shared reply.</div>
               <div><strong>Care Hub – Mobile:</strong> staff play family messages and support resident recordings.</div>
               <div><strong>Care Hub – Office:</strong> oversight plus one-way updates to family.</div>
               <div style="margin-top:8px;">This service is for social communication only. It is not for medical updates, health information, safeguarding communication, or urgent enquiries. For those matters, contact the care home directly using normal channels.</div>
@@ -5842,13 +5842,13 @@ def render_home(active: str) -> None:
             st.markdown("Communication participants")
             st.markdown(
                 "This diagram shows how voice messages and updates are organised across channels. "
-                "Each Family Member with Resident Access has their own individual channel for "
+                "Each Family Member has their own individual channel for "
                 "Family/Friend -> Resident messages, managed by the care home. Care Hub – Mobile plays these family messages in a "
                 "fair rotating order, with unplayed messages first."
             )
             st.markdown(
-                "Resident -> Family channel keeps the latest resident message shared to all Family Members with Resident Access. "
-                "The care home can also send a one-way Office update to all Family Members with Resident Access. "
+                "Resident -> Family channel keeps the latest resident message shared to all Family Members. "
+                "The care home can also send a one-way Office update to all Family Members. "
                 "Office practical messages collect quick structured family responses, and the care home makes the final operational decision. "
                 "Each Family Member channel keeps only the latest message. "
                 "A new message replaces only the previous message in that channel."
@@ -5877,7 +5877,7 @@ def render_home(active: str) -> None:
         "voice-message.com  \n"
         "One message in. One message out.  \n"
         "No threads. No pressure.\n\n"
-        "The service supports non-urgent social voice messages between residents and Family Members with Resident Access.  \n"
+        "The service supports non-urgent social voice messages between residents and Family Members.  \n"
         "The care home office may also send non-urgent general updates about daily life in the home.  \n"
         "Office updates are one-way informational messages.\n\n"
         "This is not a live service. Messages are played when staff are available, to fit around care routines.  \n"
@@ -6705,7 +6705,7 @@ def render_family_send() -> None:
         f"{resident['preferred_name']} {resident['surname']}" for resident in residents
     ]
     if len(resident_access_names) == 1:
-        st.caption(f"Resident Access: {resident_access_names[0]}")
+        st.caption(f"Registered residents: {resident_access_names[0]}")
     else:
         st.caption("Residents you can access: " + ", ".join(resident_access_names))
         resident_option_ids = [resident["id"] for resident in residents]
@@ -6785,7 +6785,7 @@ def render_family_send() -> None:
         if room_label:
             st.markdown(f"*{room_label}*")
 
-        st.markdown(f"**Latest message from {full_name} to Family Members with Resident Access**")
+        st.markdown(f"**Latest message from {full_name} to Family Members**")
         latest = fetch_latest_message(
             resident_id,
             "from_resident",
@@ -6916,7 +6916,7 @@ def render_family_send() -> None:
                     placeholder="Example: Saturday about 11am",
                 )
             share_with_family_value = st.checkbox(
-                "Share this response with all Family Members with Resident Access",
+                "Share this response with all Family Members",
                 value=bool((existing_response or {}).get("share_with_family", False)),
                 key=f"family_practical_share_{resident_id}_{practical_message_id}",
             )
@@ -6955,7 +6955,7 @@ def render_family_send() -> None:
                 own_choice = str(existing_response.get("primary_choice") or "").strip().title()
                 if own_choice:
                     st.caption(f"Your current response: {own_choice}")
-            st.caption("Shared responses from other Family Members with Resident Access:")
+            st.caption("Shared responses from other Family Members:")
             if shared_responses:
                 for shared_response in shared_responses:
                     contact_name = str(shared_response.get("contact_name") or "Family Member")
@@ -7309,7 +7309,7 @@ def render_docs() -> None:
         {
             "title": "Registering a family member",
             "path": "docs/office/10_registering_family_member.md",
-            "summary": "How to invite a Family Member and grant Resident Access.",
+            "summary": "How to invite and register a Family Member.",
         },
         {
             "title": "Safeguarding and consent",
@@ -7793,7 +7793,7 @@ def render_pr_homepage() -> None:
     st.markdown('<div class="pr-hero">', unsafe_allow_html=True)
     st.markdown("<h1>One message in. One message out.</h1>", unsafe_allow_html=True)
     st.markdown(
-        '<div class="pr-subheading">Non-urgent social voice messages between residents and Family Members with Resident Access, with optional structured Office practical replies.</div>',
+        '<div class="pr-subheading">Non-urgent social voice messages between residents and Family Members, with optional structured Office practical replies.</div>',
         unsafe_allow_html=True,
     )
     st.markdown('<div class="pr-calm">No threads. No pressure.</div>', unsafe_allow_html=True)
@@ -7831,7 +7831,7 @@ For urgent, medical, safeguarding, or emergency matters, contact the care home d
             set_route("/public/walkthrough-office")
             st.stop()
     st.markdown(
-        "**Family app**: non-urgent social voice messages between Family Members with Resident Access and residents, "
+        "**Family app**: non-urgent social voice messages between Family Members and residents, "
         "plus structured replies to Office practical messages."
     )
     st.markdown(
@@ -8755,7 +8755,7 @@ def render_care_hub() -> None:
         if not contacts:
             if get_app_variant() == VARIANT_OFFICE:
                 st.warning(
-                    "No Family Members with Resident Access are linked to this resident yet. "
+                    "No Family Members are linked to this resident yet. "
                     "Register a family member in Care Hub – Office before sending messages."
                 )
                 if st.button(
@@ -8767,7 +8767,7 @@ def render_care_hub() -> None:
                     st.rerun()
             else:
                 st.warning(
-                    "No Family Members with Resident Access are linked to this resident yet. "
+                    "No Family Members are linked to this resident yet. "
                     "Ask Office staff to register a family member."
                 )
             st.markdown("</div>", unsafe_allow_html=True)
@@ -9342,7 +9342,7 @@ def render_care_hub() -> None:
                     st.session_state[mobile_advance_pointer_key] = False
 
         if is_mobile_variant or is_office_variant:
-            st.markdown(f"**Latest message from {full_name} to all Family Members with Resident Access**")
+            st.markdown(f"**Latest message from {full_name} to all Family Members**")
         else:
             st.markdown(f"**Latest message from {full_name} to {selected_contact_name}**")
 
@@ -9372,7 +9372,7 @@ def render_care_hub() -> None:
         if is_mobile_variant:
             if hasattr(st, "audio_input"):
                 recorded_from_native = st.audio_input(
-                    f"Record voice message from {full_name} to all Family Members with Resident Access",
+                    f"Record voice message from {full_name} to all Family Members",
                     key=f"care_audio_input_{resident_id}_{state.get('recording_input_nonce', 0)}",
                 )
                 render_slow_speech_hint()
@@ -9423,7 +9423,7 @@ def render_care_hub() -> None:
             if is_office_variant:
                 confirmation_line = (
                     "Sending on behalf of:<br/>"
-                    f"{full_name} — {room_display} \u2192 all Family Members with Resident Access"
+                    f"{full_name} — {room_display} \u2192 all Family Members"
                 )
             else:
                 care_home_display = (
@@ -9431,7 +9431,7 @@ def render_care_hub() -> None:
                 )
                 confirmation_line = (
                     "Sending on behalf of:<br/>"
-                    f"{full_name} — {room_display} — {care_home_display} \u2192 all Family Members with Resident Access"
+                    f"{full_name} — {room_display} — {care_home_display} \u2192 all Family Members"
                 )
             st.markdown(
                 f'<div class="vm-muted-line">{confirmation_line}</div>',
@@ -9540,7 +9540,7 @@ def render_care_hub() -> None:
                             st.session_state["care_last_sent"] = {
                                 "resident_id": resident_id,
                                 "contact_id": None,
-                                "message": "Message sent to all Family Members with Resident Access.",
+                                "message": "Message sent to all Family Members.",
                             }
                             activate_send_guard(send_guard_scope)
                             state["recording_input_nonce"] = (
@@ -9648,7 +9648,7 @@ def render_care_hub() -> None:
             if get_app_variant() == VARIANT_OFFICE:
                 st.markdown("**Office update**")
                 st.caption(
-                    "This update will be sent to all Family Members with Resident Access for this resident and will appear in Care Hub Mobile."
+                    "This update will be sent to all Family Members for this resident and will appear in Care Hub Mobile."
                 )
                 st.caption(
                     "Office updates are non-urgent, one-way updates from the care team (no replies). For any queries, please contact the care home directly."
@@ -9766,9 +9766,9 @@ def render_care_hub() -> None:
                                 or OFFICE_UPDATE_CATEGORIES[0]
                             )
                             state["office_last_sent_label"] = (
-                                f"{category_label} update sent to all Family Members with Resident Access. {soft_sent_label}"
+                                f"{category_label} update sent to all Family Members. {soft_sent_label}"
                                 if soft_sent_label
-                                else f"{category_label} update sent to all Family Members with Resident Access."
+                                else f"{category_label} update sent to all Family Members."
                             )
                             state["office_last_sent_fingerprint"] = sent_office_fp
                             activate_send_guard(send_guard_scope)
@@ -9912,7 +9912,7 @@ def render_care_hub() -> None:
                             if note_value:
                                 st.caption(f"Note: {note_value}")
                             if bool(response.get("share_with_family", False)):
-                                st.caption("Shared with all Family Members with Resident Access.")
+                                st.caption("Shared with all Family Members.")
                     if st.button(
                         "Close responses for this practical message",
                         key=f"office_practical_close_{resident_id}_{active_message_id}",
@@ -10288,7 +10288,7 @@ def main() -> None:
             "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_FAMILY_URL",
             "assets/voice-message-family-walkthrough-v1.mp4",
             [
-                "How a Family Member with Resident Access sends Family -> Resident voice messages.",
+                "How a Family Member sends Family -> Resident voice messages.",
                 "How family listens to the resident's current shared message.",
                 "How Office updates and practical structured replies appear in Family.",
                 "Non-live expectations and calm communication boundaries.",
@@ -10353,7 +10353,7 @@ def main() -> None:
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
                 "How Office reviews resident-linked family messages.",
-                "How Office publishes one-way voice updates to all Family Members with Resident Access.",
+                "How Office publishes one-way voice updates to all Family Members.",
                 "How Office sends practical text requests and reviews structured replies.",
                 "How Office oversight supports low-pressure, non-urgent communication.",
             ],

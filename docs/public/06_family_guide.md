@@ -4,11 +4,11 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Communication participants: residents, Family Members with Resident Access, and Care Hub (Office and Mobile).
+Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
 ## What this app is for
 
-Family app is for Family Members with Resident Access granted by the care home.  
+Family app is for Family Members granted by the care home.  
 It supports:
 - Family -> Resident social voice messages
 - Playing the resident's current shared reply
@@ -25,7 +25,7 @@ It supports:
 
 ### Office general update
 
-One-way update from Office to all Family Members with Resident Access.  
+One-way update from Office to all Family Members.  
 Used for non-urgent general information and reassurance.
 
 ### Office practical message

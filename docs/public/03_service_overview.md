@@ -4,17 +4,17 @@
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
-Communication participants: residents, Family Members with Resident Access, and Care Hub (Office and Mobile).
+Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
 Use the diagram above as the primary reference for message directions, replacement rules, and playback order.
 
 ## Purpose
 
-voice-message.com is a simple system for non-urgent social voice messages between a resident and Family Members with Resident Access.
+voice-message.com is a simple system for non-urgent social voice messages between a resident and Family Members.
 
 It also supports non-urgent care-home communication to family in two Office modes:
 
-- Office general update (one-way to all Family Members with Resident Access)
+- Office general update (one-way to all Family Members)
 - Office practical message (structured family reply to a specific office message)
 
 ## Core message model
@@ -33,17 +33,17 @@ Care Hub - Mobile playback is one-at-a-time in a fair rotating order, with unpla
 
 ### Resident -> Family
 
-Resident -> Family channel keeps only the latest resident reply shared to all Family Members with Resident Access.
+Resident -> Family channel keeps only the latest resident reply shared to all Family Members.
 
 ### Office -> Family (general update)
 
-One-way broadcast to all Family Members with Resident Access for non-urgent, non-medical information and reassurance.  
+One-way broadcast to all Family Members for non-urgent, non-medical information and reassurance.  
 General updates do not accept replies in the update channel.
 
 ### Office practical message (structured reply)
 
 Office can publish a practical message for a resident (for example visits, attendance, reminders, item requests).  
-Each Family Member with Resident Access can submit:
+Each Family Member can submit:
 
 - Yes / No / Maybe
 - Optional tick-box selections

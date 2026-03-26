@@ -13,23 +13,23 @@ Office staff/admin login email:
 - [ ] Care Hub – Mobile uses individual staff Mobile PIN access (no shared Mobile PIN).
 - [ ] Device PIN/password is enabled on all devices used for recordings/playback.
 - [ ] Desk devices have a visible "Lock session" step and staff use it when stepping away.
-- [ ] Care Hub – Mobile idle sign-out time is set in Operational settings (Care home banner page).
+- [ ] Care Hub – Mobile idle sign-out time is set in Operational Variables.
 - [ ] Only approved staff devices are used for the service.
 - [ ] Dedicated Care Hub – Mobile device supplied for this service (with lanyard) is in use.
-- [ ] Role separation confirmed: Family Members with Resident Access use Family app only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
-- [ ] Operational setup variables reviewed on the Care home banner page (name, banner settings, idle sign-out time).
+- [ ] Role separation confirmed: Family Members use Family app only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
+- [ ] Operational setup variables reviewed on the Operational Variables page (name, banner settings, idle sign-out time).
 
 ## Residents and consent
 
 - [ ] Resident display name and reference are correct (care home defined).
-- [ ] Consent and authority checks (including LPA if applicable) are recorded by the care home.
+- [ ] Consent and authority checks are recorded by the care home.
 - [ ] Participation is supervised by staff.
 
 ## Contact access
 
-- [ ] Resident Access is granted only by the care home.
-- [ ] Resident Access revocation is tested (access removed immediately).
-- [ ] Platform role boundary confirmed: voice-message does not verify or validate identity, authority, entitlement, or appropriateness; it enforces care-home access configuration.
+- [ ] Family Member registration is approved only by the care home.
+- [ ] Family member removal is tested (access removed immediately).
+- [ ] Platform role boundary confirmed: voice-message does not verify or validate identity, authority, entitlement, or appropriateness; it enforces care-home registration and access configuration.
 - [ ] Family members and friends are told the service is non-urgent and social only.
 - [ ] Family members and friends are told to contact the care home for any care-related matters.
 

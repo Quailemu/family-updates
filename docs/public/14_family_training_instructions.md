@@ -4,7 +4,7 @@
 
 ## Who this is for
 
-This guide is for Family App users (Family Members with Resident Access granted by the care home), including family members, friends, and other individuals granted access by the care home.
+This guide is for Family App users (Family Members granted by the care home), including family members, friends, and other individuals granted access by the care home.
 
 ## What this app is for
 

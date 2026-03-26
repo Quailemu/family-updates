@@ -11,17 +11,17 @@ The service provides three user interfaces connected to a resident's care circle
 
 - Care Hub – Mobile: the operational interface used by carers to support the resident and manage voice messaging
 - Care Hub – Office: the office/administration interface used by care-home staff
-- Family App: used by Family Members with Resident Access granted by the care home
+- Family App: used by Family Members granted by the care home
 
 Each interface has its own controls for creating and managing the messages it sends.
 
-In this guide, **Family Member with Resident Access** means a person the care home has decided may access a resident in the service.
+In this guide, **Family Member** means a person the care home has decided may access a resident in the service.
 
 The messaging system uses four channel types linked to each resident:
 
 - Family Member channels for Family/Friend -> Resident messages
-- A shared Resident -> Family message channel to all Family Members with Resident Access
-- A one-way Office update channel used by the care home to send updates to Family Members with Resident Access
+- A shared Resident -> Family message channel to all Family Members
+- A one-way Office update channel used by the care home to send updates to Family Members
 - An Office practical text message channel used by the care home to request structured family replies
 
 ## Message playback and control
@@ -29,7 +29,7 @@ The messaging system uses four channel types linked to each resident:
 Each channel keeps only the latest message.
 When a new message is recorded, it replaces the previous message in that channel.
 
-Messages within a Family Member channel can only be played by users of that specific channel. Other Family Members with Resident Access cannot access those messages.
+Messages within a Family Member channel can only be played by users of that specific channel. Other Family Members cannot access those messages.
 
 Care-home staff using Care Hub – Mobile or Care Hub – Office may also play messages when required for operational support.
 
@@ -44,19 +44,19 @@ If all current family messages have been played, then one new family message fro
 
 Example resident flow
 
-This diagram shows how voice messages and updates are organised for a single resident. Each Family Member with Resident Access has their own channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
+This diagram shows how voice messages and updates are organised for a single resident. Each Family Member has their own channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-Resident -> Family channel keeps the latest resident message shared to all Family Members with Resident Access. The care home can also send a one-way Office update to all Family Members with Resident Access. Office can additionally send a practical text message to gather structured family responses (for example yes/no/maybe, tick-box options, and an optional short note). Each Family Member channel keeps only the latest Family/Friend -> Resident message. A new message replaces only the previous message in that channel.
+Resident -> Family channel keeps the latest resident message shared to all Family Members. The care home can also send a one-way Office update to all Family Members. Office can additionally send a practical text message to gather structured family responses (for example yes/no/maybe, tick-box options, and an optional short note). Each Family Member channel keeps only the latest Family/Friend -> Resident message. A new message replaces only the previous message in that channel.
 
-## Authorised contact channel structure
+## Family member channel structure
 
 For each resident, communication with family and friends is organised through Family Member channels.
 
 Each Family Member channel contains one Family Member only (no shared multi-user channels).
 
 Family/Friend -> Resident messages are kept per Family Member channel.
-Resident -> Family channel keeps the latest shared resident message to all Family Members with Resident Access.
-The Office update channel is separate and one-way from the care home to Family Members with Resident Access.
+Resident -> Family channel keeps the latest shared resident message to all Family Members.
+The Office update channel is separate and one-way from the care home to Family Members.
 Office practical text messages are separate from voice channels and support structured family replies.
 
 ## Day-to-day use
@@ -67,7 +67,7 @@ Office practical text messages are separate from voice channels and support stru
 - Supporting resident playback and recording within existing care rounds.
 - Reducing repeated non-urgent inbound enquiries to office staff.
 - Keeping message handling simple by retaining only the latest message in each channel.
-- Giving Family Members with Resident Access clear one-way office information without response workflows.
+- Giving Family Members clear one-way office information without response workflows.
 - Sending practical Office text messages when a quick structured family response is needed (for example Yes/No/Maybe, tick-box options, and an optional short note).
 - Reviewing structured family replies in Office to support practical planning and follow-up.
 
@@ -84,28 +84,28 @@ Office staff use Care Hub – Office only.
 
 ### Setting up residents and contacts
 
-Managers and staff may add residents and Family Members with Resident Access to the service. The care home decides how residents are identified and who is granted access.
+Managers and staff may add residents and Family Members to the service. The care home decides how residents are identified and who is granted access.
 
 These admin tasks are handled in Care Hub – Office, not on Care Hub – Mobile.
 
 ### Registering a Family Member
 
 **Purpose**  
-Care Hub staff can securely invite Family Members and grant resident access in the service.
+Care Hub staff can securely invite and register Family Members in the service.
 
 **Steps**  
 1. Open Care Hub – Office.  
 2. Go to "Register a Family Member".  
-3. Enter contact details, including relationship to the resident where known (for example: daughter, son, spouse, friend).  
+3. Enter first name, last name, and email.  
 4. Select resident.  
-5. Confirm Resident Access is granted by the care home.  
+5. Confirm the care home has approved this registration.  
 6. Click "Send invitation".
 
 **What happens next**  
 The family contact receives an email invitation. They click a secure email login link to sign in. No password is required. They log into the Family app. Access is restricted to the selected resident.
 
 **Important notes**  
-This service is for non-urgent social communication only. Only individuals the care home has granted resident access to should be registered. Duplicate registrations are prevented automatically. Relationship labels help staff identify the right Family Member in daily workflows.
+This service is for non-urgent social communication only. Only individuals approved by the care home should be registered. Duplicate registrations are prevented automatically.
 
 ### Resident list and communication areas (Care Hub)
 
@@ -113,7 +113,7 @@ Care Hub users see a scrollable list of residents. In both Care Hub – Office a
 
 ### Mobile send section
 
-Staff can record an outgoing message for a resident from the Send section. The communication area includes a single recorder/player and an "I have listened to this message." checkbox before sending. The resident message is then sent to all Family Members with Resident Access as the latest shared resident message.
+Staff can record an outgoing message for a resident from the Send section. The communication area includes a single recorder/player and an "I have listened to this message." checkbox before sending. The resident message is then sent to all Family Members as the latest shared resident message.
 
 ### Office update message
 
@@ -125,16 +125,16 @@ Mobile users can play this Office message but cannot replace it.
 
 Staff may help residents record short social messages as part of normal day-to-day support, carried out on behalf of the care home.
 
-When a resident message is sent, it is shared as one latest Resident -> Family message to all Family Members with Resident Access for that resident.
+When a resident message is sent, it is shared as one latest Resident -> Family message to all Family Members for that resident.
 
-This channel is one-way from resident to Family Members with Resident Access (it is not a live conversation thread). A new resident message replaces the previous shared resident message.
+This channel is one-way from resident to Family Members (it is not a live conversation thread). A new resident message replaces the previous shared resident message.
 
 Recording and playback are done when staff are available, to fit normal care routines.
 
 ### Managing access
 
-The care home controls resident access. Only Care Hub – Office staff may add, maintain, or revoke resident access, in line with the care home's usual processes.
-voice-message does not verify or validate the identity, authority, entitlement, or appropriateness of any individual granted resident access by the care home.
+The care home controls who is registered and allowed to participate for each resident. Only Care Hub – Office staff may add, maintain, or remove Family Members in line with the care home's usual processes.
+voice-message does not verify or validate the identity, authority, entitlement, or appropriateness of any individual registered by the care home.
 
 ### Managing devices
 

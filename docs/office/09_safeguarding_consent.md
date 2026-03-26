@@ -8,7 +8,7 @@ This document explains how consent, authority, and safeguarding relate to voice-
 
 ## Consent and authority
 
-The care home is responsible for determining resident capacity, obtaining and recording consent, and verifying authority, including any LPA where applicable.
+The care home is responsible for determining resident capacity, obtaining and recording consent, and verifying authority.
 
 The platform does not assess capacity, verify consent, or verify legal authority. It provides the technical tool only.
 
