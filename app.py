@@ -6439,7 +6439,10 @@ def render_public_walkthrough_page(
     if not effective_back_route:
         app_variant = get_app_variant()
         if app_variant == VARIANT_PUBLIC:
-            effective_back_route = "/public/walkthrough-overview"
+            if get_route() == "/public/walkthrough-overview":
+                effective_back_route = "/service-overview"
+            else:
+                effective_back_route = "/public/walkthrough-overview"
         elif app_variant == VARIANT_OFFICE:
             if st.session_state.get("auth_uid"):
                 effective_back_route = "/docs"
