@@ -52,21 +52,28 @@ The care home may also publish an Office practical message that allows each regi
 
 The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
 
-Public universal service flow walkthrough bullets:
-- How the overall service flow works across Family, Mobile, and Office.
-- Channel boundaries and replacement-only rules.
-- Where Office updates and practical structured messages fit.
-- Non-live, non-urgent communication boundaries.
+Video naming and env key spec (locked):
+- Core labels everywhere: `Record video` and `Diagram video`.
+- Only two video types are allowed: `Record` and `Diagram`.
+- Do not use: `walkthrough`, `explainer`, or `flow video` in UI naming.
+- Optional helper text only when needed:
+- `Record video` -> `Send a voice message`
+- `Diagram video` -> `How the system works`
+- If `Diagram video` is unclear in a specific UI context, use `How it works`.
 
-Walkthrough video naming (public and in-app):
-- Universal Service Flow Diagram Walkthrough Video
-- Family Service Flow Diagram Walkthrough Video
-- Care Hub – Mobile Service Flow Diagram Walkthrough Video
-- Care Hub – Office Service Flow Diagram Walkthrough Video
-- Family Record & Send Voice Messages Walkthrough Video
-- Care Hub – Mobile Record & Send Voice Messages Walkthrough Video
-- Care Hub – Office Record & Send Voice Messages Walkthrough Video
-- Use "walkthrough videos" (not "walkthroughs") in generic UI labels.
+Env key format (locked):
+- `PUBLIC_<AUDIENCE>_<TYPE>_VIDEO_URL`
+- `<AUDIENCE>` = `MOBILE | FAMILY | OFFICE | UNIVERSAL`
+- `<TYPE>` = `RECORD | DIAGRAM`
+
+Final public video env keys:
+- `PUBLIC_MOBILE_RECORD_VIDEO_URL`
+- `PUBLIC_FAMILY_RECORD_VIDEO_URL`
+- `PUBLIC_OFFICE_RECORD_VIDEO_URL`
+- `PUBLIC_MOBILE_DIAGRAM_VIDEO_URL`
+- `PUBLIC_FAMILY_DIAGRAM_VIDEO_URL`
+- `PUBLIC_OFFICE_DIAGRAM_VIDEO_URL`
+- `PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL`
 
 ---
 
