@@ -52,6 +52,22 @@ The care home may also publish an Office practical message that allows each regi
 
 The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
 
+Public universal service flow walkthrough bullets:
+- How the overall service flow works across Family, Mobile, and Office.
+- Channel boundaries and replacement-only rules.
+- Where Office updates and practical structured messages fit.
+- Non-live, non-urgent communication boundaries.
+
+Walkthrough video naming (public and in-app):
+- Universal Service Flow Diagram Walkthrough Video
+- Family Service Flow Diagram Walkthrough Video
+- Care Hub – Mobile Service Flow Diagram Walkthrough Video
+- Care Hub – Office Service Flow Diagram Walkthrough Video
+- Family Record & Send Voice Messages Walkthrough Video
+- Care Hub – Mobile Record & Send Voice Messages Walkthrough Video
+- Care Hub – Office Record & Send Voice Messages Walkthrough Video
+- Use "walkthrough videos" (not "walkthroughs") in generic UI labels.
+
 ---
 
 ## Pricing page (public)
