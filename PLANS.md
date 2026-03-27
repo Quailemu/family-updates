@@ -21,6 +21,12 @@ No archive. No message history. No scrolling thread.
 Non-real-time reinforcement (homepage or family entry page, short):
 This is non-urgent and not live messaging. Messages are played when staff are available, to fit around care routines.
 
+Family security session statement (family-facing, short):
+For security, Family sessions sign out after 30 minutes of inactivity. If signed out, request a new secure email link.
+
+Family preparation statement (family-facing, short):
+Plan your message before recording. Most messages only need a few seconds.
+
 No notifications / date-only statement (family-facing, short):
 The service does not send live notifications. Main care communication views show message date only (no clock time).
 
@@ -218,6 +224,10 @@ The Family app does not include Care Hub features.
 You can record a short audio message for the resident.
 
 This is not a live service. Messages are played when staff are available, to fit around care routines.
+
+For security, Family sessions sign out after 30 minutes of inactivity. If signed out, request a new secure email link.
+
+Plan your message before recording. Most messages only need a few seconds.
 
 ### Receiving a reply
 Residents can record a reply when appropriate support is available.

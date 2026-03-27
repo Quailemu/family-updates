@@ -151,25 +151,29 @@ Care Hub – Mobile devices typically use an inactivity warning and lock after a
 
 ### Locking sessions and device security
 
-Care Hub sessions should not be left open on unattended devices.
+Care Hub sessions must not be left open on unattended devices.
 
-When stepping away, staff should lock the screen or sign out in line with the care home's normal security procedures.
+Care Hub – Mobile uses individual staff access. Each staff member has their own Mobile PIN. Shared Mobile PINs should not be used.
 
-Care Hub – Mobile is used on the dedicated voice-message mobile device supplied for this service. That device should stay under staff supervision during use and be stored securely when not in use.
+If a staff member forgets their Mobile PIN, an authorised Office user can reset it in Care Hub – Office under Security (staff account emails). The staff member then sets a new PIN at next Mobile sign-in.
 
-Care Hub – Office is used on office-managed devices. Access should be limited to office staff designated by the care home, with desk sessions locked when unattended.
+When stepping away, staff should lock the device screen (or sign out) in line with the care home's normal security procedures.
 
-If a device is lost, misplaced, or access is suspected to be compromised, staff should follow the care home's incident process immediately.
+Care Hub – Mobile is used on the dedicated voice-message mobile device supplied for this service, with lanyard. That device should stay under staff supervision during use and be stored securely when not in use.
+
+Care Hub – Office is used on office-managed devices. Access should be limited to designated office staff, with desk sessions locked when unattended.
+
+If a device is lost, misplaced, or access is suspected to be compromised, staff should follow the care home's incident process immediately and reset affected access.
 
 ### Operational settings
 
-Each care home chooses a few practical security settings for its Care Hub devices.
+Each care home chooses how quickly sessions lock after inactivity.
 
-In everyday use, this means deciding how long the app can stay open if no one is using it, and when staff must unlock it again.
+In practice, this is the "time before auto-lock" for devices that are left idle.
 
-If a device is left idle, it should lock after a short time so messages and resident details are not left visible.
+Choose a short enough time to protect resident information, but long enough that staff can work through normal care tasks without repeated disruption.
 
-The setting is chosen to support normal care work: easy to re-open during routines, but locked when a device is unattended.
+Review this setting regularly, especially after incidents, staffing changes, or workflow changes.
 
 ## Responsibility and governance
 

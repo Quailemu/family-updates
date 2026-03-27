@@ -32,7 +32,7 @@ except ModuleNotFoundError:  # pragma: no cover - runtime env mismatch
 from ui_theme import TOKENS, inject_css
 
 FAMILY_SESSION_TIMEOUT_SECONDS = int(
-    os.getenv("FAMILY_SESSION_TIMEOUT_SECONDS", str(60 * 60 * 4))
+    os.getenv("FAMILY_SESSION_TIMEOUT_SECONDS", str(60 * 30))
 )
 # Guard against accidental very-low timeout values in deployment config.
 # Care Hub sessions should not expire during normal short pauses in workflow.
@@ -103,15 +103,14 @@ AUTH_COOKIE_NAME = "vm_auth_rt"
 AUTH_COOKIE_MAX_AGE_SECONDS = int(os.getenv("AUTH_COOKIE_MAX_AGE_SECONDS", str(60 * 60 * 24 * 14)))
 AUTH_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "1").strip().lower() in {"1", "true", "yes", "on"}
 AUTH_COOKIE_SIGNING_KEY = os.getenv("AUTH_COOKIE_SIGNING_KEY", "").strip()
-AUTH_COOKIE_PERSISTENCE_MODE = os.getenv("AUTH_COOKIE_PERSISTENCE_ENABLED", "auto").strip().lower()
+AUTH_COOKIE_PERSISTENCE_MODE = os.getenv("AUTH_COOKIE_PERSISTENCE_ENABLED", "0").strip().lower()
 if AUTH_COOKIE_PERSISTENCE_MODE in {"1", "true", "yes", "on"}:
     AUTH_COOKIE_PERSISTENCE_ENABLED = True
 elif AUTH_COOKIE_PERSISTENCE_MODE in {"0", "false", "no", "off"}:
     AUTH_COOKIE_PERSISTENCE_ENABLED = False
 else:
-    # Default to persistence when signing is configured so short Streamlit session resets
-    # do not force users to log in again.
-    AUTH_COOKIE_PERSISTENCE_ENABLED = bool(AUTH_COOKIE_SIGNING_KEY)
+    # Security-first default for production: require explicit opt-in.
+    AUTH_COOKIE_PERSISTENCE_ENABLED = False
 AUTH_STATE_KEYS = (
     "auth_uid",
     "access_token",
@@ -3340,11 +3339,17 @@ def get_care_hub_idle_timeout_seconds(access_token: str | None) -> int:
 
 
 def _is_missing_column_error(exc: Exception, column_name: str) -> bool:
-    message = str(exc)
-    return (
-        "PGRST204" in message
-        and "schema cache" in message.lower()
-        and column_name in message
+    message = str(exc or "").lower()
+    column_key = str(column_name or "").strip().lower()
+    if not column_key:
+        return False
+    return column_key in message and (
+        "does not exist" in message
+        or "could not find the" in message
+        or "schema cache" in message
+        or "undefined column" in message
+        or "42703" in message
+        or "pgrst204" in message
     )
 
 
@@ -3517,7 +3522,7 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
 def render_active_care_home_name_caption() -> None:
     st.session_state["_care_home_banner_rendered_in_header"] = False
     app_variant = get_app_variant()
-    if app_variant not in {VARIANT_MOBILE, VARIANT_OFFICE}:
+    if app_variant not in {VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE}:
         return
     if not st.session_state.get("auth_uid"):
         return
@@ -4935,6 +4940,14 @@ def render_front_page_descriptor() -> None:
     )
     st.markdown(
         '<div class="front-page-info-box">One message kept at a time in each direction (between each Family Member and each resident), with no threads.</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="front-page-info-box">For security, Family sessions sign out after 30 minutes of inactivity. If signed out, request a new secure email link.</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div class="front-page-info-box">Not a live service. Messages are played when staff are available.</div>',
         unsafe_allow_html=True,
     )
 
@@ -6591,8 +6604,10 @@ def render_family_login_hub() -> None:
         unsafe_allow_html=True,
     )
     login_info_boxes = [
-        "Send one social voice message to a resident. The care team manages playback and support.",
-        "Enter your email to receive a secure login link. No password required.",
+        "Not a live service. Messages are played when staff are available.",
+        "For security, Family sessions sign out after 30 minutes of inactivity.",
+        "If you are signed out, request a new secure email link.",
+        "Plan your message first. Most messages only need a few seconds.",
         "For urgent matters or safeguarding concerns, contact the care home directly.",
     ]
     for box in login_info_boxes:
@@ -6602,7 +6617,7 @@ def render_family_login_hub() -> None:
     st.markdown("### Login")
     email = st.text_input("Email", key="family_login_email")
     st.caption(
-        "Sign in: enter your invited email and use a secure login link. No password required."
+        "Sign in with your invited email and a secure link. No password required. Sign out when finished on shared devices."
     )
     normalized_email = email.strip().lower()
     st.markdown('<div id="vm-login-actions"></div>', unsafe_allow_html=True)
@@ -7930,6 +7945,12 @@ def render_care_hub_banner_settings() -> None:
     )
 
     care_home_profile = fetch_active_care_home_profile(access_token)
+    if not isinstance(care_home_profile, dict) or not str(care_home_profile.get("name") or "").strip():
+        st.error(
+            "Could not load the current care home settings. Save is disabled to avoid overwriting existing banner values."
+        )
+        st.info("Refresh the page and try again. If this persists, check that recent database migrations are applied.")
+        return
     timeout_options = list(CARE_HUB_IDLE_TIMEOUT_OPTIONS_SECONDS)
     timeout_labels = {
         60 * 30: "30 minutes",
