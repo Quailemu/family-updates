@@ -7937,6 +7937,25 @@ def render_care_hub_banner_settings() -> None:
     st.caption(
         "Review and confirm these settings during setup so day-to-day use is consistent from launch."
     )
+    st.markdown("### ✅ Voice Message – Office Checks")
+    st.markdown("**Daily**")
+    st.checkbox("Login", key="office_checks_daily_login")
+    st.checkbox("Send & playback test message", key="office_checks_daily_send_playback")
+    st.markdown("**Weekly**")
+    st.checkbox("Check walkthrough link", key="office_checks_weekly_walkthrough")
+    st.markdown("**When asked**")
+    st.checkbox(
+        "After app update: send & play test message",
+        key="office_checks_after_update_send_playback",
+    )
+    st.markdown("**If needed**")
+    st.checkbox("Reset message list", key="office_checks_if_needed_reset_message_list")
+    st.caption(
+        "Reset message list rebuilds queue tracking (played/unread state and pointer). "
+        "It does not delete messages."
+    )
+    st.markdown("**Issues**")
+    st.checkbox("Log / escalate incidents", key="office_checks_issues_log_escalate")
     st.markdown("### Office care home banner")
     st.caption("Add your logo or your own banner design for Care Hub – Office and Family views.")
     st.markdown("### Operational settings")
