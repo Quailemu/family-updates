@@ -55,7 +55,7 @@ For each resident, communication with family and friends is organised through Fa
 
 Each Family Member channel contains one Family Member only (no shared multi-user channels).
 
-Family/Friend -> Resident messages are kept per Family Member channel.
+Only the latest Family/Friend -> Resident message is kept per Family Member channel.
 Resident -> Family channel keeps the latest shared resident message to all Family Members.
 The Office update channel is separate and one-way from the care home to Family Members.
 Office practical text messages are separate from voice channels and support structured family replies.

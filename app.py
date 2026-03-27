@@ -10085,7 +10085,7 @@ def render_care_hub_register_family() -> None:
             "Family registration is only available in Care Hub – Office."
         )
         return
-    render_page_header("Register a Family Member")
+    render_page_header("Register a Family Member", show_menu=False)
     access_token = st.session_state.get("access_token")
     render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
