@@ -11,7 +11,7 @@ import json
 import re
 import html
 from pathlib import Path
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.parse import urlparse
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -6399,41 +6399,20 @@ def normalize_public_video_url(raw_value: str) -> str:
     # Strip accidental wrapping quotes.
     if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
         value = value[1:-1].strip()
-    # Convert Dropbox share links into direct raw video links to avoid blank player embeds.
-    try:
-        parsed = urlparse(value)
-        host = (parsed.netloc or "").strip().lower()
-        if host.endswith("dropbox.com") and parsed.scheme in {"http", "https"}:
-            query_items = dict(parse_qsl(parsed.query, keep_blank_values=True))
-            query_items.pop("dl", None)
-            query_items["raw"] = "1"
-            value = urlunparse(parsed._replace(query=urlencode(query_items)))
-    except Exception:
-        # Keep original value if parsing fails.
-        pass
     return value
 
 
-DEFAULT_PUBLIC_VIDEO_URLS: dict[str, str] = {
-    "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL": (
-        "https://www.dropbox.com/scl/fi/74rq3lb9oe2jw3ka8ru81/family-page-screen-recording-220326.mp4"
-        "?rlkey=u1m7g9jatgk31mu5iadly4ze4&st=d4hx3kgd&raw=1"
-    ),
-    "PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL": (
-        "https://www.dropbox.com/scl/fi/8yhsz3u1w5q2j5mzjfzlq/mobile-screen-recording-voice-message.com.mp4"
-        "?rlkey=d0r8ng3ghjnidzay1brmtox6u&st=jalrytjq&raw=1"
-    ),
-    "PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL": (
-        "https://www.dropbox.com/scl/fi/szdmrv8u3skia02avuxgb/office-screen-recording-24324.mp4"
-        "?rlkey=6lynsqocd0umoknzgbt46ogno&st=n86d8qyp&raw=1"
-    ),
-}
+DEFAULT_PUBLIC_VIDEO_URLS: dict[str, str] = {}
 
 
 def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
     candidate_vars = [candidate.strip() for candidate in str(env_var).split(",") if candidate.strip()]
     for candidate in candidate_vars:
         url = normalize_public_video_url(os.getenv(candidate, ""))
+        parsed = urlparse(url) if url else None
+        host = ((parsed.netloc if parsed else "") or "").lower()
+        if url and host.endswith("dropbox.com"):
+            continue
         if url:
             return url
     for candidate in candidate_vars:
@@ -6495,7 +6474,7 @@ def render_public_walkthrough_page(
             st.video(video_source)
             if str(video_source).startswith(("http://", "https://")):
                 st.caption(
-                    "If the video box is blank, set this walkthrough URL to a direct MP4/raw link."
+                    "Using configured walkthrough URL. If blank, verify your Cloudflare URL serves video bytes."
                 )
         except Exception:
             st.warning(
