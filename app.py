@@ -1253,6 +1253,61 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
         return False
 
     st.caption("PIN access is individual to each staff account.")
+    with st.expander("Change Mobile PIN"):
+        st.caption("Use this if you know your current PIN. If forgotten, ask Office to reset it.")
+        with st.form("mobile_pin_change_form", clear_on_submit=False):
+            current_pin = st.text_input(
+                "Current Mobile PIN",
+                type="password",
+                key="mobile_pin_change_current",
+            )
+            new_pin = st.text_input(
+                "New Mobile PIN",
+                type="password",
+                key="mobile_pin_change_new",
+            )
+            confirm_new_pin = st.text_input(
+                "Confirm new Mobile PIN",
+                type="password",
+                key="mobile_pin_change_confirm",
+            )
+            change_submitted = st.form_submit_button("Change PIN")
+        if change_submitted:
+            if not _is_valid_mobile_pin(current_pin):
+                st.error("Enter your current 4-8 digit PIN.")
+                return False
+            if not _is_valid_mobile_pin(new_pin):
+                st.error("New PIN must be 4-8 digits.")
+                return False
+            if new_pin != confirm_new_pin:
+                st.error("New PIN values do not match.")
+                return False
+            current_candidate_hash = _mobile_pin_hash(current_pin, care_home_id)
+            current_legacy_hash = _mobile_pin_hash_legacy(current_pin, auth_uid, care_home_id)
+            if current_candidate_hash != stored_hash and current_legacy_hash != stored_hash:
+                st.error("Current PIN is incorrect.")
+                return False
+            new_hash = _mobile_pin_hash(new_pin, care_home_id)
+            try:
+                supabase.rpc("set_mobile_pin_hash", {"p_pin_hash": new_hash}).execute()
+            except Exception as exc:  # pragma: no cover - Supabase runtime error
+                msg = str(exc or "")
+                msg_l = msg.lower()
+                if (
+                    "duplicate key value violates unique constraint" in msg_l
+                    or "idx_care_home_users_unique_mobile_pin_per_home" in msg_l
+                ):
+                    st.error(
+                        "This Mobile PIN is already used by another staff account in this care home. Choose a different PIN."
+                    )
+                else:
+                    st.error(msg)
+                return False
+            mark_mobile_pin_verified()
+            st.session_state["mobile_pin_just_accepted"] = True
+            st.success("Mobile PIN changed.")
+            set_route(MOBILE_HOME_ROUTE)
+            return True
     with st.form("mobile_pin_unlock_form", clear_on_submit=False):
         pin_value = st.text_input(
             "Enter your individual Mobile PIN",
