@@ -5763,7 +5763,7 @@ def render_home(active: str) -> None:
                 "Family",
                 "For families and friends to send and hear non-urgent messages.",
                 "/public/walkthrough-family",
-                "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL",
+                "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_FAMILY_URL",
                 "assets/voice-message-family-walkthrough-v1.mp4",
             ),
             (
@@ -5771,7 +5771,7 @@ def render_home(active: str) -> None:
                 "Care Hub – Mobile",
                 "For care staff to play family messages and support resident recordings.",
                 "/public/walkthrough-mobile",
-                "PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL",
+                "PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_MOBILE_URL",
                 "assets/voice-message-mobile-walkthrough-v1.mp4",
             ),
             (
@@ -5779,7 +5779,7 @@ def render_home(active: str) -> None:
                 "Care Hub – Office",
                 "For office oversight, one-way updates, and practical structured messages.",
                 "/public/walkthrough-office",
-                "PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL",
+                "PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_OFFICE_URL",
                 "assets/voice-message-office-walkthrough-v1.mp4",
             ),
         ]
@@ -10493,7 +10493,7 @@ def main() -> None:
     elif route == "/public/walkthrough-family":
         render_public_walkthrough_page(
             "Family Record & Send Voice Messages Walkthrough Video",
-            "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL",
+            "PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_FAMILY_URL",
             "assets/voice-message-family-walkthrough-v1.mp4",
             [
                 "How a Family Member sends Family -> Resident voice messages.",
@@ -10531,7 +10531,7 @@ def main() -> None:
     elif route == "/public/walkthrough-mobile":
         render_public_walkthrough_page(
             "Care Hub – Mobile Record & Send Voice Messages Walkthrough Video",
-            "PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL",
+            "PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_MOBILE_URL",
             "assets/voice-message-mobile-walkthrough-v1.mp4",
             [
                 "How staff play Family -> Resident messages to the resident.",
@@ -10557,7 +10557,7 @@ def main() -> None:
     elif route == "/public/walkthrough-office":
         render_public_walkthrough_page(
             "Care Hub – Office Record & Send Voice Messages Walkthrough Video",
-            "PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL",
+            "PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_OFFICE_URL",
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
                 "How Office reviews resident-linked family messages.",
