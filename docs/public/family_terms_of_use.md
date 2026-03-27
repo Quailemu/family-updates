@@ -12,6 +12,8 @@ The Family app is for non-urgent social voice messages only.
 
 It is not for medical updates, health information, safeguarding communication, or urgent enquiries.
 
+It must not be used for confidential, highly personal, or time-critical communication.
+
 ## Not a live service
 
 Not a live service. Messages are played when staff are available.
@@ -19,6 +21,10 @@ Not a live service. Messages are played when staff are available.
 There are no push alerts, delivery confirmations, read receipts, typing indicators, or instant response expectations.
 
 Message date is shown in Family app and Care Hub - Mobile (date only, no time).
+
+The service is provided using reasonable skill and care, but uninterrupted or error-free operation is not guaranteed.
+
+Technical faults, delays, outages, transmission failures, or security incidents may occur despite appropriate technical and organisational safeguards.
 
 ## Role separation
 
@@ -45,6 +51,10 @@ voice-message.com provides technical infrastructure only.
 
 Playback and recording may happen in normal care environments. Privacy cannot be guaranteed.
 
+Care homes are communal living environments, and during normal operations messages may be heard in shared areas by staff, residents, families, or visitors.
+
 ## If you have concerns
 
 For care-related, urgent, or safeguarding concerns, contact the care home directly through its normal channels.
+
+For confidential or sensitive matters, contact the care home directly through its official channels.

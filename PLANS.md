@@ -457,6 +457,10 @@ There is no message history or archive.
 
 The service is not monitored in real time.
 
+The service is provided using reasonable skill and care, but uninterrupted or error-free operation is not guaranteed.
+
+Technical faults, delays, outages, transmission failures, or security incidents may occur despite appropriate technical and organisational safeguards.
+
 ## 2) Intended Use
 The service is for non-urgent, social communication only.
 
@@ -467,6 +471,10 @@ It must not be used for:
 • Emergency communication  
 
 For urgent matters, contact the care home directly.
+
+The service must not be used for confidential, highly personal, or time-critical communication.
+
+Care homes are communal environments, and during normal operations messages may be heard in shared areas.
 
 ## 3) Access
 Access is provided and managed by the care home.
@@ -505,6 +513,8 @@ We are not responsible for:
 • Safeguarding matters  
 • Staff conduct  
 • Loss arising from misuse of the service  
+
+Subject to applicable law, voice-message.com is liable only for direct loss caused by proven breach of contractual obligations and is not liable for indirect or consequential loss.
 
 Nothing in these Terms excludes liability where it cannot be excluded by law.
 
