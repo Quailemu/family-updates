@@ -11,6 +11,7 @@ import json
 import re
 import html
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -6398,6 +6399,18 @@ def normalize_public_video_url(raw_value: str) -> str:
     # Strip accidental wrapping quotes.
     if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
         value = value[1:-1].strip()
+    # Convert Dropbox share links into direct raw video links to avoid blank player embeds.
+    try:
+        parsed = urlparse(value)
+        host = (parsed.netloc or "").strip().lower()
+        if host.endswith("dropbox.com") and parsed.scheme in {"http", "https"}:
+            query_items = dict(parse_qsl(parsed.query, keep_blank_values=True))
+            query_items.pop("dl", None)
+            query_items["raw"] = "1"
+            value = urlunparse(parsed._replace(query=urlencode(query_items)))
+    except Exception:
+        # Keep original value if parsing fails.
+        pass
     return value
 
 
@@ -6480,6 +6493,10 @@ def render_public_walkthrough_page(
     if video_source:
         try:
             st.video(video_source)
+            if str(video_source).startswith(("http://", "https://")):
+                st.caption(
+                    "If the video box is blank, set this walkthrough URL to a direct MP4/raw link."
+                )
         except Exception:
             st.warning(
                 f"Video failed to load from {video_env_var}. Check the URL format and permissions."
