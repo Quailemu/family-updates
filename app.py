@@ -1523,7 +1523,11 @@ def render_office_family_registration_form(
             if ok:
                 st.session_state.pop(pending_key, None)
                 st.success(
-                    f"Family member linked: {pending_payload.get('email', 'contact')}."
+                    "Family member linked to resident access\n"
+                    f"Care home: {active_care_home_name}\n"
+                    f"Registered by: {registering_staff_name}\n"
+                    f"Date: {registration_date}\n"
+                    f"Family email: {pending_payload.get('email', 'contact')}"
                 )
                 st.rerun()
             else:
@@ -1534,9 +1538,15 @@ def render_office_family_registration_form(
         or st.session_state.get("care_home_name")
         or "this care home"
     ).strip()
+    registering_staff_name = str(
+        st.session_state.get("auth_email")
+        or st.session_state.get("auth_uid")
+        or "Office staff"
+    ).strip()
+    registration_date = time.strftime("%d %b %Y")
     st.caption(
-        "Care home staff are adding a Family Member for a resident using the voice-message platform. "
-        "voice-message sends a secure email login link and enables the account."
+        f"{active_care_home_name} is registering a Family Member for this resident. "
+        "The care home makes the access decision and keeps the registration record."
     )
     resident_options = []
     resident_by_id = {}
@@ -1589,7 +1599,7 @@ def render_office_family_registration_form(
             "for determining, granting, and maintaining their access to the resident.",
             key="office_family_authorisation_confirm",
         )
-        st.caption("voice-message does not verify or manage authorisation decisions.")
+        st.caption("voice-message does not decide who is authorised. The care home is responsible for that decision.")
         st.caption(
             "Security note: after sending an invite, wait for the countdown before retrying."
         )
@@ -1685,7 +1695,10 @@ def render_office_family_registration_form(
         st.session_state.pop(pending_key, None)
         st.success(
             "Invitation sent\n"
-            f"We've emailed {normalized_email} with a secure login link.\n"
+            f"Care home: {active_care_home_name}\n"
+            f"Registered by: {registering_staff_name}\n"
+            f"Date: {registration_date}\n"
+            f"Family email: {normalized_email}\n"
             "Ask them to check spam/junk if they don't receive it."
         )
         return
@@ -10152,7 +10165,15 @@ def render_care_hub_register_family() -> None:
             "Family registration is only available in Care Hub – Office."
         )
         return
+    back_route = get_office_home_route(bool(st.session_state.get("auth_uid")))
     render_page_header("Register a Family Member", show_menu=False)
+    render_route_link(
+        "← Back to dashboard",
+        back_route,
+        key="office_register_family_back_dashboard_link",
+    )
+    if st.button("Back to dashboard", key="office_register_family_back_dashboard_fallback"):
+        set_route(back_route)
     access_token = st.session_state.get("access_token")
     render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)

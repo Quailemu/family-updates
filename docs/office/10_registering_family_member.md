@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Care Hub staff can securely invite and register a Family Member for a resident.
+Care Hub staff can invite and register a Family Member for a resident, with the care home retaining responsibility for authorisation and record-keeping.
 
 ## Steps
 
@@ -18,14 +18,16 @@ Care Hub staff can securely invite and register a Family Member for a resident.
 ## What Happens Next
 
 The Family Member receives a secure email login link.
-They click the link from their inbox to sign in.
-No password is required.
-They log into the Family app.
-Access is restricted to the selected resident.
+The on-screen confirmation records:
+- Care home
+- Registered by (office staff account)
+- Date
+- Family email
+The Family Member uses the email link to sign in to Family access for the selected resident.
 
 ## Important Notes
 
 This service is for non-urgent social communication only.
 Only individuals designated by the care home should be registered.
-voice-message does not verify or validate identity, authority, or entitlement decisions; it enforces the care home's registration and access configuration.
+voice-message does not decide who is authorised; the care home is responsible for identity/authority decisions and for keeping local registration records.
 Duplicate registrations are prevented automatically.
