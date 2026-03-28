@@ -1538,6 +1538,10 @@ def render_office_family_registration_form(
         or st.session_state.get("care_home_name")
         or "this care home"
     ).strip()
+    if active_care_home_name.lower() == "this care home":
+        resolved_care_home_name = fetch_active_care_home_name(access_token)
+        if resolved_care_home_name:
+            active_care_home_name = resolved_care_home_name
     registering_staff_name = str(
         st.session_state.get("auth_email")
         or st.session_state.get("auth_uid")
@@ -1547,6 +1551,12 @@ def render_office_family_registration_form(
     st.caption(
         f"{active_care_home_name} is registering a Family Member for this resident. "
         "The care home makes the access decision and keeps the registration record."
+    )
+    st.markdown("#### Registration record details")
+    st.markdown(
+        f"Care home: **{active_care_home_name}**  \n"
+        f"Registered by: **{registering_staff_name}**  \n"
+        f"Date: **{registration_date}**"
     )
     resident_options = []
     resident_by_id = {}
