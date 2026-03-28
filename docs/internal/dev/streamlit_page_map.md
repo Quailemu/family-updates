@@ -11,7 +11,7 @@ Scope reminders:
 
 ### Front page descriptor (exact text)
 
-- "voice-message.com — for non-urgent social voice messages."
+- "voicemessagecare.com — for non-urgent social voice messages."
 - "One message kept at a time in each direction, with no threads."
 - "Only one message is kept between each family member and each resident, in each direction."
 - "Each new message deletes the previous message, to keep communication simple and up to date."

@@ -148,7 +148,7 @@ If your concern relates to:
 
 You may contact voice-message.com directly.
 
-Email: complaints@voice-message.com
+Email: complaints@voicemessagecare.com
 
 ## 3) What happens next
 For platform-related complaints, we will:
@@ -457,7 +457,7 @@ Care homes remain responsible for managing local device security and staff acces
 Requests relating to resident or family data should be directed to the relevant care home as Data Controller.
 
 Platform-related data enquiries may be directed to:
-privacy@voice-message.com
+privacy@voicemessagecare.com
 
 ---
 

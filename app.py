@@ -1,4 +1,4 @@
-# voice-message.com UI
+# voicemessagecare.com UI
 
 import os
 import base64
@@ -884,7 +884,7 @@ def send_magic_link_email(
         )
     redirect_to_lower = redirect_to.lower()
     if app_variant == VARIANT_MOBILE and (
-        "voice-message-family.onrender.com" in redirect_to_lower
+        "voicemessagecare-family.onrender.com" in redirect_to_lower
         or "/family/login" in redirect_to_lower
     ):
         return (
@@ -893,7 +893,7 @@ def send_magic_link_email(
             "Update CARE_MOBILE_MAGIC_LINK_REDIRECT_URL and CARE_MOBILE_APP_URL to the mobile URL.",
         )
     if app_variant == VARIANT_FAMILY and (
-        "voice-message-mobile.onrender.com" in redirect_to_lower
+        "voicemessagecare-mobile.onrender.com" in redirect_to_lower
         or "/care-hub/mobile" in redirect_to_lower
     ):
         return (
@@ -1609,7 +1609,7 @@ def render_office_family_registration_form(
             "for determining, granting, and maintaining their access to the resident.",
             key="office_family_authorisation_confirm",
         )
-        st.caption("voice-message does not decide who is authorised. The care home is responsible for that decision.")
+        st.caption("voicemessagecare.com does not decide who is authorised. The care home is responsible for that decision.")
         st.caption(
             "Security note: after sending an invite, wait for the countdown before retrying."
         )
@@ -2182,7 +2182,7 @@ def render_how_it_works_family() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages between residents and Family Members.",
+        "voicemessagecare.com — for non-urgent social voice messages between residents and Family Members.",
         "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
         "Family access uses secure email login links. No SMS and no phone-number login.",
     ]
@@ -2218,7 +2218,7 @@ def render_how_it_works_mobile() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages between residents and Family Members.",
+        "voicemessagecare.com — for non-urgent social voice messages between residents and Family Members.",
         "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
         "Care Hub – Mobile uses individual staff PIN access for day-to-day use.",
         "Secure email link is used only for first sign-in or expired-session recovery.",
@@ -2258,7 +2258,7 @@ def render_how_it_works_office_overview() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voice-message.com — for non-urgent social voice messages between residents and Family Members.",
+        "voicemessagecare.com — for non-urgent social voice messages between residents and Family Members.",
         "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
         "Care Hub – Office is a separate staff/admin access path.",
         "Office authentication is distinct from Family email links and Mobile staff PIN access.",
@@ -4631,7 +4631,7 @@ def render_logo_row() -> None:
 </style>
 <div class="vm-logo-row">
   <img src="data:image/png;base64,{logo_b64}" alt="logo" />
-  <span class="vm-logo-text">voice-message.com</span>
+  <span class="vm-logo-text">voicemessagecare.com</span>
 </div>
 """,
             unsafe_allow_html=True,
@@ -5018,7 +5018,7 @@ def render_front_page_descriptor() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="front-page-info-box">voice-message.com — for non-urgent social voice messages.</div>',
+        '<div class="front-page-info-box">voicemessagecare.com — for non-urgent social voice messages.</div>',
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -5745,13 +5745,13 @@ def render_home(active: str) -> None:
             header_html = (
                 f'<div class="public-header">'
                 f'<img src="{logo_data}" alt="logo" style="height:84px;width:auto;display:block;" />'
-                f'<div class="public-header-title">voice-message.com</div>'
+                f'<div class="public-header-title">voicemessagecare.com</div>'
                 f"</div>"
             )
         else:
             header_html = (
                 '<div class="public-header">'
-                '<div class="public-header-title">voice-message.com</div>'
+                '<div class="public-header-title">voicemessagecare.com</div>'
                 "</div>"
             )
         st.markdown(header_html, unsafe_allow_html=True)
@@ -5763,7 +5763,7 @@ def render_home(active: str) -> None:
             A calm way to stay connected
             </h1>
             <p>Simple voice messages between care home residents, their families, and care teams — with no pressure to reply and no overwhelming threads.</p>
-            <p>voice-message.com is a simple way for care home residents, their families, and care teams to stay connected through non-urgent voice messages.</p>
+            <p>voicemessagecare.com is a simple way for care home residents, their families, and care teams to stay connected through non-urgent voice messages.</p>
             <p>It allows residents and their loved ones to exchange messages at their own pace, while care homes can share general updates with families to provide reassurance and keep everyone informed.</p>
             <p>The service is designed to be calm, controlled, and easy to use, fitting naturally around care routines.</p>
             """,
@@ -6025,7 +6025,7 @@ def render_home(active: str) -> None:
             key=f"service_overview_back_to_public_docs_{current_variant}",
         )
     st.markdown(
-        "voice-message.com  \n"
+        "voicemessagecare.com  \n"
         "One message in. One message out.  \n"
         "No threads. No pressure.\n\n"
         "The service supports non-urgent social voice messages between residents and Family Members.  \n"
@@ -6678,7 +6678,7 @@ def render_family_login_hub() -> None:
     )
     render_page_header(
         "Voice Message — Family",
-        brand_title="voice-message.com",
+        brand_title="voicemessagecare.com",
         show_variant_subheading=False,
         show_menu=False,
     )
@@ -7946,7 +7946,7 @@ def render_pr_homepage() -> None:
         if logo_path.exists():
             st.image(logo_path.read_bytes(), width=64)
     with header_cols[1]:
-        st.markdown('<div class="pr-header-title">voice-message.com</div>', unsafe_allow_html=True)
+        st.markdown('<div class="pr-header-title">voicemessagecare.com</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="pr-hero">', unsafe_allow_html=True)
     st.markdown("<h1>One message in. One message out.</h1>", unsafe_allow_html=True)
@@ -8309,7 +8309,7 @@ def render_care_hub_security() -> None:
             totp = pyotp.TOTP(secret)
             provisioning_uri = totp.provisioning_uri(
                 name=f"{auth_email} (Office)",
-                issuer_name="voice-message-office",
+                issuer_name="voicemessagecare-office",
             )
             qr = qrcode.make(provisioning_uri)
             qr_image = qr.get_image() if hasattr(qr, "get_image") else qr
@@ -8387,7 +8387,7 @@ def render_care_hub_mfa() -> None:
             auth_email = st.session_state.get("auth_email") or "office-user"
             provisioning_uri = totp.provisioning_uri(
                 name=f"{auth_email} (Office)",
-                issuer_name="voice-message-office",
+                issuer_name="voicemessagecare-office",
             )
             qr = qrcode.make(provisioning_uri)
             qr_image = qr.get_image() if hasattr(qr, "get_image") else qr
@@ -8504,7 +8504,7 @@ def render_contracts() -> None:
         {
             "title": "External services and subscriptions register",
             "path": "docs/contracts/registers/external_services_and_subscriptions_register.md",
-            "summary": "Register of third-party websites/apps used by voice-message.com.",
+            "summary": "Register of third-party websites/apps used by voicemessagecare.com.",
         },
     ]
 
@@ -8624,7 +8624,7 @@ def render_care_login() -> None:
     app_variant = get_app_variant()
     render_page_header(
         f"{get_care_hub_label()} login",
-        brand_title="voice-message.com",
+        brand_title="voicemessagecare.com",
         show_variant_subheading=False,
         show_menu=app_variant != VARIANT_OFFICE,
     )
@@ -10192,7 +10192,7 @@ def render_care_hub_register_family() -> None:
 
 def main() -> None:
     st.set_page_config(
-        page_title="voice-message.com",
+        page_title="voicemessagecare.com",
         page_icon="🗣️",
         layout="centered",
         initial_sidebar_state="collapsed",

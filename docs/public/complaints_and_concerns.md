@@ -10,9 +10,9 @@ The care home is responsible for care delivery, safeguarding, and operational de
 
 ## Platform-related concerns
 
-If your concern is about access, technical faults, system errors, or data handling by voice-message.com, contact:
+If your concern is about access, technical faults, system errors, or data handling by voicemessagecare.com, contact:
 
-`complaints@voice-message.com`
+`complaints@voicemessagecare.com`
 
 ## Response approach
 
@@ -26,7 +26,7 @@ If more time is needed, we explain why.
 
 ## Clarification
 
-voice-message.com does not provide care services, supervise care home staff, or replace care home complaints procedures.
+voicemessagecare.com does not provide care services, supervise care home staff, or replace care home complaints procedures.
 
 ## Service rules reference
 

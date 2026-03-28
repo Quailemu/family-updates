@@ -8,14 +8,14 @@ st.markdown(
 Version 1.0  
 Effective Date: [Insert Date]
 
-voice-message.com provides a communication platform to care homes under a Subscription Agreement.
+voicemessagecare.com provides a communication platform to care homes under a Subscription Agreement.
 
 We are committed to protecting personal data and complying with applicable UK data protection law.
 
 ## 1) Our Role
 When a care home subscribes to the service:
 • The care home acts as the Data Controller for resident and family data entered into the platform.  
-• voice-message.com acts as the Data Processor, processing data on behalf of the care home.
+• voicemessagecare.com acts as the Data Processor, processing data on behalf of the care home.
 
 ## 2) What Data Is Processed
 The platform may process:
@@ -29,7 +29,7 @@ Only the most recent message from each sender is retained.
 The platform is not designed to store long-term communication histories.
 
 ## 3) Where Data Is Stored
-Data is stored within secure UK-based cloud infrastructure operated by voice-message.com.
+Data is stored within secure UK-based cloud infrastructure operated by voicemessagecare.com.
 Logical separation is maintained between participating care homes.
 
 ## 4) Purpose of Processing
@@ -60,6 +60,6 @@ Care homes remain responsible for managing local device security and staff acces
 Requests relating to resident or family data should be directed to the relevant care home as Data Controller.
 
 Platform-related data enquiries may be directed to:
-privacy@voice-message.com
+privacy@voicemessagecare.com
 """
 )
