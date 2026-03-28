@@ -26,8 +26,10 @@ This guide is for office and admin staff using Care Hub - Office.
 2. Enter first name, last name, and email.
 3. Select the resident.
 4. Confirm the person is being registered by the care home.
-5. Confirm that voice-message does not verify or manage authorisation decisions.
-6. Send invitation.
+5. Confirm this registration is between the named care home and the named Family Member.
+6. Confirm record details are captured: care home name, Family Member name/email, office staff name, and date.
+7. Confirm that voice-message.com provides technical infrastructure only and does not decide or manage authorisation.
+8. Send invitation.
 
 ## Message flow and control
 

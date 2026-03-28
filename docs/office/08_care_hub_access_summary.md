@@ -35,7 +35,7 @@ Resident -> Family channel keeps the latest resident message shared to all Famil
 
 Purpose
 
-Care Hub staff can securely invite and register a Family Member.
+Care Hub staff can invite and register a Family Member for a resident. This registration is a care-home action between the named care home and the named Family Member.
 
 Steps
 
@@ -53,12 +53,13 @@ They click the link from their inbox to sign in.
 No password is required.
 They log into the Family app.
 Access is restricted to the selected resident.
+The registration record should include: care home name, Family Member name/email, office staff name, and date.
 
 Important Notes
 
 This service is for non-urgent social communication only.
 Only individuals designated by the care home should be registered.
-voice-message does not verify or manage authorisation decisions.
+voice-message.com provides technical infrastructure only. It does not decide, verify, or manage authorisation decisions.
 Duplicate registrations are prevented automatically.
 
 ## Message policy

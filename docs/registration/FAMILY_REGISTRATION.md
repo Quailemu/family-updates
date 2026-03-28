@@ -96,6 +96,11 @@ This model provides:
 - Revocation capability
 - No uncontrolled public registration
 
+Legal boundary statement:
+Family registration is a care-home action between the named care home and the named Family Member for a named resident.
+voice-message.com provides technical infrastructure only and does not decide or approve who is authorised.
+Care homes should keep a local registration record including care home name, Family Member name/email, office staff name, and date.
+
 It is proportionate for low-urgency social communication.
 
 Finalised: 2026-02-22
