@@ -6487,6 +6487,9 @@ def render_public_walkthrough_page(
         key=f"walkthrough_back_{page_title.lower().replace(' ', '_').replace('–', '-')}",
     )
     render_page_header(page_title, show_menu=False, show_variant_subheading=False)
+    st.caption(
+        "Note: App name updated to voicemessagecare.com (previously voice-message.com)."
+    )
     normalized_title = page_title.strip().lower()
     if normalized_title.endswith("record video"):
         st.caption("Record video — Send a voice message.")
