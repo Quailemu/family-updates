@@ -4,7 +4,7 @@
 
 # Public walkthrough recording script (60-90 seconds)
 
-voice-message.com. One message in. One message out.
+voicemessagecare.com. One message in. One message out.
 
 This service is for non-urgent social voice messages between residents in care homes and Family.
 In this service, 'Family' means Family Members granted by the care home, such as family members or close friends.

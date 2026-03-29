@@ -135,7 +135,7 @@ Recording and playback are done when staff are available, to fit normal care rou
 ### Managing access
 
 The care home controls who is registered and allowed to participate for each resident. Only Care Hub – Office staff may add, maintain, or remove Family Members in line with the care home's usual processes.
-voice-message.com provides technical infrastructure only. It does not decide, verify, or validate identity, authority, entitlement, or appropriateness for registration decisions.
+voicemessagecare.com provides technical infrastructure only. It does not decide, verify, or validate identity, authority, entitlement, or appropriateness for registration decisions.
 
 ### Managing devices
 

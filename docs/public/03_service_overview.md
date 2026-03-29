@@ -10,7 +10,7 @@ Use the diagram above as the primary reference for message directions, replaceme
 
 ## Purpose
 
-voice-message.com is a simple system for non-urgent social voice messages between a resident and Family Members.
+voicemessagecare.com is a simple system for non-urgent social voice messages between a resident and Family Members.
 
 It also supports non-urgent care-home communication to family in two Office modes:
 

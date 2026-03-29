@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This document explains how consent, authority, and safeguarding relate to voice-message.com. It is intended for care managers, inspectors, and legal review, and aims to be clear and practical.
+This document explains how consent, authority, and safeguarding relate to voicemessagecare.com. It is intended for care managers, inspectors, and legal review, and aims to be clear and practical.
 
 ## Consent and authority
 

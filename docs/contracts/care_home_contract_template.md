@@ -7,7 +7,7 @@ Effective date: TBD
 
 ## 1. Introduction and scope
 
-This document is a draft outline for a contract between the care home and voice-message.com (the service provider). It covers a limited service for non-urgent, social voice messages between residents and their family members or friends.
+This document is a draft outline for a contract between the care home and voicemessagecare.com (the service provider). It covers a limited service for non-urgent, social voice messages between residents and their family members or friends.
 
 It reflects the scope set out in the handbook documents, the Privacy Policy, and the end-user terms summary. It is not a final contract and is intended for legal review and refinement.
 

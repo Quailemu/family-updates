@@ -2,7 +2,7 @@
 
 ## What this service is for
 
-voice-message.com is a simple tool for exchanging non-urgent, social voice messages between residents and their family or friends. It is designed for use in UK care homes and is intended to be reliable, low-risk, and easy to operate.
+voicemessagecare.com is a simple tool for exchanging non-urgent, social voice messages between residents and their family or friends. It is designed for use in UK care homes and is intended to be reliable, low-risk, and easy to operate.
 
 Care homes operate the system and act as the data controller. The platform provides the technical tool only and does not verify identity, consent, authority, or message content.
 

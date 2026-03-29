@@ -48,7 +48,7 @@ Q: Who handles complaints about care quality?
 A: The care home handles care complaints through its own complaints process.
 
 Q: Who handles platform faults or login issues?  
-A: The care home can raise technical support issues with voice-message.com.
+A: The care home can raise technical support issues with voicemessagecare.com.
 
 Q: Does the platform moderate message content?  
 A: No. The care home remains responsible for supervision and content management.

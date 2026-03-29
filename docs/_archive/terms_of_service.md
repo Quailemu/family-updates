@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This addendum applies to family access to the Family app for voice-message.com. It is written in plain English for families and care homes.
+This addendum applies to family access to the Family app for voicemessagecare.com. It is written in plain English for families and care homes.
 
 ## Scope and use
 
@@ -22,7 +22,7 @@ Only the most recent voice message is kept and played. Older messages are automa
 
 ## Care-home oversight
 
-The care home manages access, supervision, and consent. voice-message.com provides the technical platform only.
+The care home manages access, supervision, and consent. voicemessagecare.com provides the technical platform only.
 
 ## Privacy and setting
 

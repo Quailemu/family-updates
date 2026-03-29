@@ -45,7 +45,7 @@ No archive or message history is provided.
 The care home controls who can be registered and participate, and how the service is used in practice.
 voice-message does not verify or validate the identity, authority, or entitlement of individuals registered by the care home and relies on the care home's instructions.
 
-voice-message.com provides technical infrastructure only.
+voicemessagecare.com provides technical infrastructure only.
 
 ## Privacy in care settings
 

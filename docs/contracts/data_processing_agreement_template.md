@@ -3,12 +3,12 @@
 # Data Processing Agreement (DPA) template (UK GDPR)
 
 Status: draft for legal review  
-Applies to: voice-message.com pilot and live service
+Applies to: voicemessagecare.com pilot and live service
 
 ## 1. Parties and roles
 
 - Controller: Care home
-- Processor: voice-message.com service provider
+- Processor: voicemessagecare.com service provider
 
 The Controller determines purposes and means of processing for care-home operations.  
 The Processor provides communication infrastructure only, under documented Controller instructions.
@@ -107,6 +107,6 @@ Controller (Care home): ____________________
 Name/title: ____________________  
 Date: ____________________
 
-Processor (voice-message.com): ____________________  
+Processor (voicemessagecare.com): ____________________  
 Name/title: ____________________  
 Date: ____________________

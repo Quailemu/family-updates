@@ -2,11 +2,11 @@
 
 # External services and subscriptions register
 
-Purpose: track every third-party website/app/service used by voice-message.com, including subscriptions, credentials ownership, legal links, and renewal dates.
+Purpose: track every third-party website/app/service used by voicemessagecare.com, including subscriptions, credentials ownership, legal links, and renewal dates.
 
 ## Register table
 
-| Service / website | Purpose in voice-message.com | Owner | Contract / terms location | Renewal date | Data processed | Notes |
+| Service / website | Purpose in voicemessagecare.com | Owner | Contract / terms location | Renewal date | Data processed | Notes |
 |---|---|---|---|---|---|---|
 | Supabase | Database, auth, storage, edge functions |  |  |  | Personal data + message metadata/audio | Core infrastructure |
 | Streamlit hosting (if used) | Application hosting/runtime |  |  |  | Application/session metadata | Confirm environment details |

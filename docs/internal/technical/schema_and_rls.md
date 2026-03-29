@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This document defines the Supabase schema and row-level security (RLS) rules for voice-message.com. The goal is to enforce the documented scope in the database so the platform cannot exceed its intended role.
+This document defines the Supabase schema and row-level security (RLS) rules for voicemessagecare.com. The goal is to enforce the documented scope in the database so the platform cannot exceed its intended role.
 
 ## Overview of scope enforcement
 

@@ -8,12 +8,12 @@ Status: working register (update when documents are added, revised, signed, or r
 
 | Document | Location | Status | Owner | Last updated |
 |---|---|---|---|---|
-| Care home contract template | `docs/contracts/care_home_contract_template.md` | Draft template | voice-message.com |  |
-| Data Processing Agreement (DPA) template | `docs/contracts/data_processing_agreement_template.md` | Draft template | voice-message.com |  |
-| Pilot legal and insurance readiness checklist | `docs/contracts/pilot_legal_insurance_readiness_checklist.md` | Draft checklist | voice-message.com |  |
-| Privacy notice | `docs/public/privacy_policy.md` | Published | voice-message.com |  |
-| Safeguarding and consent | `docs/public/safeguarding_and_consent.md` | Published | voice-message.com |  |
-| Family terms of use | `docs/public/family_terms_of_use.md` | Published | voice-message.com |  |
+| Care home contract template | `docs/contracts/care_home_contract_template.md` | Draft template | voicemessagecare.com |  |
+| Data Processing Agreement (DPA) template | `docs/contracts/data_processing_agreement_template.md` | Draft template | voicemessagecare.com |  |
+| Pilot legal and insurance readiness checklist | `docs/contracts/pilot_legal_insurance_readiness_checklist.md` | Draft checklist | voicemessagecare.com |  |
+| Privacy notice | `docs/public/privacy_policy.md` | Published | voicemessagecare.com |  |
+| Safeguarding and consent | `docs/public/safeguarding_and_consent.md` | Published | voicemessagecare.com |  |
+| Family terms of use | `docs/public/family_terms_of_use.md` | Published | voicemessagecare.com |  |
 
 ## Signed document storage (recommended convention)
 

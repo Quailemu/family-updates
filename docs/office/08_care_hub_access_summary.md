@@ -59,7 +59,7 @@ Important Notes
 
 This service is for non-urgent social communication only.
 Only individuals designated by the care home should be registered.
-voice-message.com provides technical infrastructure only. It does not decide, verify, or manage authorisation decisions.
+voicemessagecare.com provides technical infrastructure only. It does not decide, verify, or manage authorisation decisions.
 Duplicate registrations are prevented automatically.
 
 ## Message policy
