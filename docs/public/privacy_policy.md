@@ -4,11 +4,11 @@
 
 ## Purpose
 
-This notice explains what personal data is used in voice-message.com and why.
+This notice explains what personal data is used in voicemessagecare.com and why.
 
 ## Data roles
 
-The care home is the Data Controller. voice-message.com is the Data Processor and acts on the care home's instructions.
+The care home is the Data Controller. voicemessagecare.com is the Data Processor and acts on the care home's instructions.
 
 The care home decides access, participation, and day-to-day use in its service.
 
