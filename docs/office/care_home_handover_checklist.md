@@ -29,7 +29,7 @@ Office staff/admin login email:
 
 - [ ] Family Member registration is carried out only by the care home.
 - [ ] Family member removal is tested (access removed immediately).
-- [ ] Platform role boundary confirmed: voicemessagecare.com does not verify or validate identity, authority, entitlement, or appropriateness; it enforces care-home registration and access configuration.
+- [ ] Platform role boundary confirmed: voicemailcare.com does not verify or validate identity, authority, entitlement, or appropriateness; it enforces care-home registration and access configuration.
 - [ ] Each registration record includes named care home, named Family Member (name/email), office staff name, and date.
 - [ ] Family members and friends are told the service is non-urgent and social only.
 - [ ] Family members and friends are told to contact the care home for any care-related matters.

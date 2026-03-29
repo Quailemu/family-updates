@@ -135,11 +135,11 @@ Recording and playback are done when staff are available, to fit normal care rou
 ### Managing access
 
 The care home controls who is registered and allowed to participate for each resident. Only Care Hub – Office staff may add, maintain, or remove Family Members in line with the care home's usual processes.
-voicemessagecare.com provides technical infrastructure only. It does not decide, verify, or validate identity, authority, entitlement, or appropriateness for registration decisions.
+voicemailcare.com provides technical infrastructure only. It does not decide, verify, or validate identity, authority, entitlement, or appropriateness for registration decisions.
 
 ### Managing devices
 
-Homes typically use a desk device for admin tasks (Care Hub – Office). Care Hub – Mobile is used on the dedicated voicemessagecare.com mobile device supplied for this service, with lanyard, for recording and listening.
+Homes typically use a desk device for admin tasks (Care Hub – Office). Care Hub – Mobile is used on the dedicated voicemailcare.com mobile device supplied for this service, with lanyard, for recording and listening.
 
 The care home decides how the supplied Care Hub – Mobile device is supervised and used during normal care routines.
 
@@ -159,7 +159,7 @@ If a staff member forgets their Mobile PIN, an authorised Office user can reset 
 
 When stepping away, staff should lock the device screen (or sign out) in line with the care home's normal security procedures.
 
-Care Hub – Mobile is used on the dedicated voicemessagecare.com mobile device supplied for this service, with lanyard. That device should stay under staff supervision during use and be stored securely when not in use.
+Care Hub – Mobile is used on the dedicated voicemailcare.com mobile device supplied for this service, with lanyard. That device should stay under staff supervision during use and be stored securely when not in use.
 
 Care Hub – Office is used on office-managed devices. Access should be limited to designated office staff, with desk sessions locked when unattended.
 

@@ -6,10 +6,10 @@ st.title("Safeguarding and Consent")
 st.markdown(
     """
 ## Purpose
-This section explains how safeguarding and consent responsibilities operate when using voice-message.com within a care setting.
+This section explains how safeguarding and consent responsibilities operate when using voicemailcare.com within a care setting.
 
 ## Safeguarding Responsibility
-voice-message.com provides a communication platform only.
+voicemailcare.com provides a communication platform only.
 
 Each participating care home remains fully responsible for:
 • Safeguarding residents  
@@ -31,7 +31,7 @@ The care home is responsible for managing the use of the platform within its ser
 • Managing or restricting family access where necessary  
 • Taking action in accordance with internal policies  
 
-voice-message.com does not moderate, screen, or approve message content.
+voicemailcare.com does not moderate, screen, or approve message content.
 
 ## Consent to Participate
 The care home is responsible for determining whether a resident is suitable to participate in the service.
@@ -41,7 +41,7 @@ This includes:
 • Involving family or representatives where applicable  
 • Reviewing participation where circumstances change  
 
-voice-message.com does not assess resident capacity or consent.
+voicemailcare.com does not assess resident capacity or consent.
 
 ## Appropriate Use
 The service is not intended for clinical communication, safeguarding reporting, or formal complaints.
@@ -55,6 +55,6 @@ The care home is responsible for managing privacy within its environment.
 
 ## Reporting Concerns
 If a family member has a safeguarding concern, they should contact the care home directly.
-Platform-related issues may be directed to voice-message.com.
+Platform-related issues may be directed to voicemailcare.com.
 """
 )

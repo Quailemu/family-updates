@@ -13,7 +13,7 @@ These Terms apply to individuals using the Family app provided through a partici
 By accessing or using the service, you agree to these Terms.
 
 ## 1) Nature of the Service
-voice-message.com provides a platform that enables non-urgent voice messages between residents and their family or friends.
+voicemailcare.com provides a platform that enables non-urgent voice messages between residents and their family or friends.
 
 The service operates on a “one message in, one message out” structure.  
 Only the most recent message from you and the most recent reply from the resident are kept.
@@ -53,17 +53,17 @@ Messages must not include:
 
 The care home is responsible for managing the use of the service within its setting.
 
-voice-message.com does not monitor or moderate message content.
+voicemailcare.com does not monitor or moderate message content.
 
 ## 5) Privacy
 Personal data is processed in accordance with the Privacy Notice.
 
 The care home acts as Data Controller for resident and family data.
 
-voice-message.com acts as Data Processor.
+voicemailcare.com acts as Data Processor.
 
 ## 6) Limitation of Liability
-voice-message.com provides the platform on an “as is” basis.
+voicemailcare.com provides the platform on an “as is” basis.
 
 We are not responsible for:
 • Care decisions  

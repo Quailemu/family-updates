@@ -6,7 +6,7 @@
 
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
-## What is voicemessagecare.com for?
+## What is voicemailcare.com for?
 
 Non-urgent social voice messaging between residents and Family Members, plus non-urgent Office communication to family.
 

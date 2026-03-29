@@ -7,7 +7,7 @@ Effective date: TBD
 
 ## 1. Introduction and scope
 
-This document is a draft outline for a contract between the care home and voicemessagecare.com (the service provider). It covers a limited service for non-urgent, social voice messages between residents and their family members or friends.
+This document is a draft outline for a contract between the care home and voicemailcare.com (the service provider). It covers a limited service for non-urgent, social voice messages between residents and their family members or friends.
 
 It reflects the scope set out in the handbook documents, the Privacy Policy, and the end-user terms summary. It is not a final contract and is intended for legal review and refinement.
 
@@ -38,9 +38,9 @@ The care home is responsible for:
 
 The platform does not provide care updates or health information. It does not monitor or review message content. It is not a safeguarding or alerting system. It does not verify consent, capacity, authority, identity, entitlement, or appropriateness for registration or participation decisions.
 
-The Customer is solely responsible for determining which individuals are permitted to have access to a resident within the Service, and for granting, maintaining, and revoking that access as appropriate. voicemessagecare.com does not verify or validate the identity, authority, or entitlement of any individual granted access by the Customer and relies on the Customer’s instructions in this regard.
+The Customer is solely responsible for determining which individuals are permitted to have access to a resident within the Service, and for granting, maintaining, and revoking that access as appropriate. voicemailcare.com does not verify or validate the identity, authority, or entitlement of any individual granted access by the Customer and relies on the Customer’s instructions in this regard.
 
-For clarity, voicemessagecare.com has no independent duty to assess or approve any individual's eligibility to communicate in relation to a resident. The Customer warrants that it has made all required checks and decisions before instructing registration or access changes in the Service.
+For clarity, voicemailcare.com has no independent duty to assess or approve any individual's eligibility to communicate in relation to a resident. The Customer warrants that it has made all required checks and decisions before instructing registration or access changes in the Service.
 
 Care homes are communal environments. During normal operations, message content may be heard in shared areas by staff, residents, families, or visitors.
 

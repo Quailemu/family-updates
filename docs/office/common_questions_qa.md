@@ -48,7 +48,7 @@ Q: Who handles complaints about care quality?
 A: The care home handles care complaints through its own complaints process.
 
 Q: Who handles platform faults or login issues?  
-A: The care home can raise technical support issues with voicemessagecare.com.
+A: The care home can raise technical support issues with voicemailcare.com.
 
 Q: Does the platform moderate message content?  
 A: No. The care home remains responsible for supervision and content management.
@@ -78,4 +78,4 @@ Q: Where do contracts and templates live?
 A: In the Office "Contracts & templates" section.
 
 Q: What is the safest short explanation to give families?  
-A: "This is a non-urgent social voicemessagecare.com service. It is not live and only the latest message is kept."
+A: "This is a non-urgent social voicemailcare.com service. It is not live and only the latest message is kept."

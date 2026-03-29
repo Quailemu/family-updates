@@ -8,7 +8,7 @@ st.markdown(
 Oversight and administrative control for participating care homes.
 
 ## Purpose
-Care Hub – Office provides management-level access to the voice-message.com platform within your service.
+Care Hub – Office provides management-level access to the voicemailcare.com platform within your service.
 
 It supports oversight of how the platform is used, while maintaining the care home’s existing governance framework.
 
@@ -30,7 +30,7 @@ Care Hub – Office allows authorised personnel to:
 Access is restricted to authorised management users.
 
 ## Governance Position
-voice-message.com provides a communication platform.
+voicemailcare.com provides a communication platform.
 
 The care home remains responsible for:
 • Care delivery and safeguarding  

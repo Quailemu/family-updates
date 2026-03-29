@@ -3,12 +3,12 @@
 # Data Processing Agreement (DPA) template (UK GDPR)
 
 Status: draft for legal review  
-Applies to: voicemessagecare.com pilot and live service
+Applies to: voicemailcare.com pilot and live service
 
 ## 1. Parties and roles
 
 - Controller: Care home
-- Processor: voicemessagecare.com service provider
+- Processor: voicemailcare.com service provider
 
 The Controller determines purposes and means of processing for care-home operations.  
 The Processor provides communication infrastructure only, under documented Controller instructions.
@@ -50,7 +50,7 @@ Processor must:
 - ensure confidentiality obligations for authorised personnel
 
 Customer responsibility for access to residents:  
-The Customer is solely responsible for determining which individuals are permitted to have access to a resident within the Service, and for granting, maintaining, and revoking that access as appropriate. voicemessagecare.com does not verify or validate the identity, authority, or entitlement of any individual granted access by the Customer and relies on the Customer’s instructions in this regard.
+The Customer is solely responsible for determining which individuals are permitted to have access to a resident within the Service, and for granting, maintaining, and revoking that access as appropriate. voicemailcare.com does not verify or validate the identity, authority, or entitlement of any individual granted access by the Customer and relies on the Customer’s instructions in this regard.
 For clarity, the Processor has no independent duty to assess or approve any individual's eligibility to communicate in relation to a resident and acts only on documented Controller instructions.
 - implement appropriate technical and organisational security measures
 - assist Controller with data subject rights requests where applicable
@@ -107,6 +107,6 @@ Controller (Care home): ____________________
 Name/title: ____________________  
 Date: ____________________
 
-Processor (voicemessagecare.com): ____________________  
+Processor (voicemailcare.com): ____________________  
 Name/title: ____________________  
 Date: ____________________

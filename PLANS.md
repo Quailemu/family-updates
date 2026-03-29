@@ -3,7 +3,7 @@
 Reference: `docs/security/SECURITY_MODEL.md` (final security/login model)
 
 ## Homepage banner (public)
-voice-message.com  
+voicemailcare.com  
 One message in. One message out.  
 (Optional small line) No threads. No pressure.
 
@@ -44,7 +44,7 @@ Office practical messages are optional structured requests linked to a specific 
 For urgent, medical, safeguarding, or other time-sensitive matters, families must contact the care home directly through normal channels.
 
 Service overview purpose statement:
-voice-message.com is a simple tool for exchanging non-urgent social voice messages between residents in care homes and their family members, friends, or other individuals designated by the care home. The care home office may also send non-urgent general updates about daily life in the home to family members, friends, or other individuals designated by the care home.
+voicemailcare.com is a simple tool for exchanging non-urgent social voice messages between residents in care homes and their family members, friends, or other individuals designated by the care home. The care home office may also send non-urgent general updates about daily life in the home to family members, friends, or other individuals designated by the care home.
 
 Office general updates are one-way informational messages.
 
@@ -115,7 +115,7 @@ No per-message fees. No hidden charges.
 • Technical support for platform-related issues  
 
 ## Important
-voice-message.com provides a communication platform.  
+voicemailcare.com provides a communication platform.  
 Each participating care home remains responsible for care delivery, safeguarding, and regulatory compliance.
 
 ---
@@ -125,7 +125,7 @@ Each participating care home remains responsible for care delivery, safeguarding
 We take concerns seriously and aim to respond promptly and fairly.
 
 ## 1) Concerns relating to care or platform use within a care home
-voice-message.com provides a communication platform to care homes under a subscription agreement.
+voicemailcare.com provides a communication platform to care homes under a subscription agreement.
 
 Each participating care home is responsible for:
 • Care delivery and safeguarding  
@@ -138,7 +138,7 @@ If your concern relates to care, staff conduct, safeguarding, or how the platfor
 
 The care home remains responsible for operational decisions and oversight.
 
-## 2) Concerns relating to the voice-message.com service
+## 2) Concerns relating to the voicemailcare.com service
 If your concern relates to:
 • Access or login issues  
 • Technical faults  
@@ -146,9 +146,9 @@ If your concern relates to:
 • Data protection queries  
 • Contract or subscription matters  
 
-You may contact voice-message.com directly.
+You may contact voicemailcare.com directly.
 
-Email: complaints@voicemessagecare.com
+Email: hello@voicemailcare.com
 
 ## 3) What happens next
 For platform-related complaints, we will:
@@ -161,7 +161,7 @@ If more time is required, we will explain why.
 Where appropriate, we may liaise with the relevant care home.
 
 ## 4) Important clarification
-voice-message.com does not:
+voicemailcare.com does not:
 • Provide care services  
 • Supervise care home staff  
 • Make care decisions  
@@ -176,7 +176,7 @@ The care home remains responsible under its own regulatory framework.
 Oversight and administrative control for participating care homes.
 
 ## Purpose
-Care Hub – Office provides management-level access to the voice-message.com platform within your service.
+Care Hub – Office provides management-level access to the voicemailcare.com platform within your service.
 
 It supports oversight of how the platform is used, while maintaining the care home’s existing governance framework.
 
@@ -205,7 +205,7 @@ Care Hub – Office allows personnel designated by the care home to:
 Access is restricted to management users designated by the care home.
 
 ## Governance Position
-voice-message.com provides a communication platform.
+voicemailcare.com provides a communication platform.
 
 The care home remains responsible for:
 • Care delivery and safeguarding  
@@ -233,7 +233,7 @@ Care-related concerns should be addressed through the care home’s own procedur
 # Family and Friends Guide
 
 ## Purpose
-This guide explains how voice-message.com is used for simple, non-urgent social messages between residents and their family or friends.
+This guide explains how voicemailcare.com is used for simple, non-urgent social messages between residents and their family or friends.
 
 It sets out how the service works and its intended use.
 
@@ -347,10 +347,10 @@ Messages are not guaranteed to be private.
 # Safeguarding and Consent
 
 ## Purpose
-This section explains how safeguarding and consent responsibilities operate when using voice-message.com within a care setting.
+This section explains how safeguarding and consent responsibilities operate when using voicemailcare.com within a care setting.
 
 ## Safeguarding Responsibility
-voice-message.com provides a communication platform only.
+voicemailcare.com provides a communication platform only.
 
 Each participating care home remains fully responsible for:
 • Safeguarding residents  
@@ -372,7 +372,7 @@ The care home is responsible for managing the use of the platform within its ser
 • Managing or restricting family access where necessary  
 • Taking action in accordance with internal policies  
 
-voice-message.com does not moderate, screen, or approve message content.
+voicemailcare.com does not moderate, screen, or approve message content.
 
 ## Consent to Participate
 The care home is responsible for determining whether a resident is suitable to participate in the service.
@@ -382,7 +382,7 @@ This includes:
 • Involving family or representatives where applicable  
 • Reviewing participation where circumstances change  
 
-voice-message.com does not assess resident capacity or consent.
+voicemailcare.com does not assess resident capacity or consent.
 
 ## Appropriate Use
 The service is not intended for clinical communication, safeguarding reporting, or formal complaints.
@@ -396,7 +396,7 @@ The care home is responsible for managing privacy within its environment.
 
 ## Reporting Concerns
 If a family member has a safeguarding concern, they should contact the care home directly.
-Platform-related issues may be directed to voice-message.com.
+Platform-related issues may be directed to voicemailcare.com.
 
 ---
 
@@ -405,14 +405,14 @@ Platform-related issues may be directed to voice-message.com.
 Version 1.0  
 Effective Date: [Insert Date]
 
-voice-message.com provides a communication platform to care homes under a Subscription Agreement.
+voicemailcare.com provides a communication platform to care homes under a Subscription Agreement.
 
 We are committed to protecting personal data and complying with applicable UK data protection law.
 
 ## 1) Our Role
 When a care home subscribes to the service:
 • The care home acts as the Data Controller for resident and family data entered into the platform.  
-• voice-message.com acts as the Data Processor, processing data on behalf of the care home.
+• voicemailcare.com acts as the Data Processor, processing data on behalf of the care home.
 
 ## 2) What Data Is Processed
 The platform may process:
@@ -426,7 +426,7 @@ Only the most recent message from each sender is retained.
 The platform is not designed to store long-term communication histories.
 
 ## 3) Where Data Is Stored
-Data is stored within secure UK-based cloud infrastructure operated by voice-message.com.
+Data is stored within secure UK-based cloud infrastructure operated by voicemailcare.com.
 Logical separation is maintained between participating care homes.
 
 ## 4) Purpose of Processing
@@ -457,7 +457,7 @@ Care homes remain responsible for managing local device security and staff acces
 Requests relating to resident or family data should be directed to the relevant care home as Data Controller.
 
 Platform-related data enquiries may be directed to:
-privacy@voicemessagecare.com
+hello@voicemailcare.com
 
 ---
 
@@ -471,7 +471,7 @@ These Terms apply to individuals using the Family app provided through a partici
 By accessing or using the service, you agree to these Terms.
 
 ## 1) Nature of the Service
-voice-message.com provides a platform that enables non-urgent voice messages between residents and their family or friends.
+voicemailcare.com provides a platform that enables non-urgent voice messages between residents and their family or friends.
 
 The service operates on a “one message in, one message out” structure.  
 Only the most recent message from you and the most recent reply from the resident are kept.
@@ -519,17 +519,17 @@ Messages must not include:
 
 The care home is responsible for managing the use of the service within its setting.
 
-voice-message.com does not monitor or moderate message content.
+voicemailcare.com does not monitor or moderate message content.
 
 ## 5) Privacy
 Personal data is processed in accordance with the Privacy Notice.
 
 The care home acts as Data Controller for resident and family data.
 
-voice-message.com acts as Data Processor.
+voicemailcare.com acts as Data Processor.
 
 ## 6) Limitation of Liability
-voice-message.com provides the platform on an “as is” basis.
+voicemailcare.com provides the platform on an “as is” basis.
 
 We are not responsible for:
 • Care decisions  
@@ -537,7 +537,7 @@ We are not responsible for:
 • Staff conduct  
 • Loss arising from misuse of the service  
 
-Subject to applicable law, voice-message.com is liable only for direct loss caused by proven breach of contractual obligations and is not liable for indirect or consequential loss.
+Subject to applicable law, voicemailcare.com is liable only for direct loss caused by proven breach of contractual obligations and is not liable for indirect or consequential loss.
 
 Nothing in these Terms excludes liability where it cannot be excluded by law.
 
@@ -554,7 +554,7 @@ Version 1.0
 Effective Date: [Insert Date]
 
 This Schedule forms part of the Care Home Subscription Agreement between:
-voice-message.com (“the Processor”) and [Care Home Legal Entity] (“the Controller”).
+voicemailcare.com (“the Processor”) and [Care Home Legal Entity] (“the Controller”).
 
 1) Subject matter: Provision of the platform enabling voice messages between residents and family members within a care home setting.  
 2) Duration: For the term of the Agreement, plus up to 30 days after termination before deletion.  
@@ -571,7 +571,7 @@ voice-message.com (“the Processor”) and [Care Home Legal Entity] (“the Con
 
 ## Product Design Principles (internal)
 # Product Design Principles
-voice-message.com  
+voicemailcare.com  
 Version 1.0
 
 1) Calm Over Immediacy — avoid features that introduce urgency, response pressure, or performance expectations.  

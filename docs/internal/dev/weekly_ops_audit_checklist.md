@@ -21,7 +21,7 @@ Frequency: once per week (and again after any production deployment).
 ## 2) Cloudflare media audit (walkthrough videos)
 
 - Verify all public walkthrough video URLs load directly in browser.
-- Confirm these app walkthrough env vars point to `media.voicemessagecare.com`:
+- Confirm these app walkthrough env vars point to `media.voicemailcare.com`:
   - `PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL`
   - `PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL`
   - `PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL`

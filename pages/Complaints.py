@@ -8,7 +8,7 @@ st.markdown(
 We take concerns seriously and aim to respond promptly and fairly.
 
 ## 1) Concerns relating to care or platform use within a care home
-voicemessagecare.com provides a communication platform to care homes under a subscription agreement.
+voicemailcare.com provides a communication platform to care homes under a subscription agreement.
 
 Each participating care home is responsible for:
 • Care delivery and safeguarding  
@@ -21,7 +21,7 @@ If your concern relates to care, staff conduct, safeguarding, or how the platfor
 
 The care home remains responsible for operational decisions and oversight.
 
-## 2) Concerns relating to the voicemessagecare.com service
+## 2) Concerns relating to the voicemailcare.com service
 If your concern relates to:
 • Access or login issues  
 • Technical faults  
@@ -29,9 +29,9 @@ If your concern relates to:
 • Data protection queries  
 • Contract or subscription matters  
 
-You may contact voicemessagecare.com directly.
+You may contact voicemailcare.com directly.
 
-Email: complaints@voicemessagecare.com
+Email: hello@voicemailcare.com
 
 ## 3) What happens next
 For platform-related complaints, we will:
@@ -44,7 +44,7 @@ If more time is required, we will explain why.
 Where appropriate, we may liaise with the relevant care home.
 
 ## 4) Important clarification
-voicemessagecare.com does not:
+voicemailcare.com does not:
 • Provide care services  
 • Supervise care home staff  
 • Make care decisions  

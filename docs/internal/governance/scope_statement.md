@@ -2,7 +2,7 @@
 
 # Scope Statement (Authoritative - Non-Negotiable)
 
-Project: voicemessagecare.com
+Project: voicemailcare.com
 
 Purpose:
 - Non-urgent, social voice messages only between residents and their family/friends.

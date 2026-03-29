@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document sets out the care home’s responsibilities when using voicemessagecare.com.
+This document sets out the care home’s responsibilities when using voicemailcare.com.
 It is intended to be clear, practical, and suitable for care managers, inspectors, and legal review.
 
 The care home decides whether and how the service is used within the home and is responsible for its day-to-day operation and oversight.

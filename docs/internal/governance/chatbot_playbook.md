@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This playbook defines the scope and limits of the support chatbot for voicemessagecare.com. It is intended to reduce misdirected queries and avoid creating new obligations or advice.
+This playbook defines the scope and limits of the support chatbot for voicemailcare.com. It is intended to reduce misdirected queries and avoid creating new obligations or advice.
 
 ## What the chatbot can do
 

@@ -41,7 +41,7 @@ No per-message fees. No hidden charges.
 • Technical support for platform-related issues  
 
 ## Important
-voice-message.com provides a communication platform.  
+voicemailcare.com provides a communication platform.  
 Each participating care home remains responsible for care delivery, safeguarding, and regulatory compliance.
 """
 )

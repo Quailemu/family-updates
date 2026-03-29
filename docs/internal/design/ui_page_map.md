@@ -19,10 +19,10 @@ Care Hub – Office provides full access and includes Care Hub – Mobile functi
 ## Global header (all screens)
 
 Header treatment:
-- Logo: voicemessagecare.com
-- Title: "voicemessagecare.com"
+- Logo: voicemailcare.com
+- Title: "voicemailcare.com"
 - Front-page descriptor (exact):
-  - "voicemessagecare.com — for non-urgent social voice messages."
+  - "voicemailcare.com — for non-urgent social voice messages."
   - "One message kept at a time in each direction, with no threads."
   - "Only one message is kept between each family member and each resident, in each direction."
   - "Each new message deletes the previous message, to keep communication simple and up to date."

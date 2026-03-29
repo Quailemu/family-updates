@@ -6,7 +6,7 @@ st.title("Family and Friends Guide")
 st.markdown(
     """
 ## Purpose
-This guide explains how voice-message.com is used for simple, non-urgent social messages between residents and their family or friends.
+This guide explains how voicemailcare.com is used for simple, non-urgent social messages between residents and their family or friends.
 
 It sets out how the service works and its intended use.
 
