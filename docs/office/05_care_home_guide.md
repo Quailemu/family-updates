@@ -139,7 +139,7 @@ voicemessagecare.com provides technical infrastructure only. It does not decide,
 
 ### Managing devices
 
-Homes typically use a desk device for admin tasks (Care Hub – Office). Care Hub – Mobile is used on the dedicated voice-message mobile device supplied for this service, with lanyard, for recording and listening.
+Homes typically use a desk device for admin tasks (Care Hub – Office). Care Hub – Mobile is used on the dedicated voicemessagecare.com mobile device supplied for this service, with lanyard, for recording and listening.
 
 The care home decides how the supplied Care Hub – Mobile device is supervised and used during normal care routines.
 
@@ -159,7 +159,7 @@ If a staff member forgets their Mobile PIN, an authorised Office user can reset 
 
 When stepping away, staff should lock the device screen (or sign out) in line with the care home's normal security procedures.
 
-Care Hub – Mobile is used on the dedicated voice-message mobile device supplied for this service, with lanyard. That device should stay under staff supervision during use and be stored securely when not in use.
+Care Hub – Mobile is used on the dedicated voicemessagecare.com mobile device supplied for this service, with lanyard. That device should stay under staff supervision during use and be stored securely when not in use.
 
 Care Hub – Office is used on office-managed devices. Access should be limited to designated office staff, with desk sessions locked when unattended.
 

@@ -78,4 +78,4 @@ Q: Where do contracts and templates live?
 A: In the Office "Contracts & templates" section.
 
 Q: What is the safest short explanation to give families?  
-A: "This is a non-urgent social voice-message service. It is not live and only the latest message is kept."
+A: "This is a non-urgent social voicemessagecare.com service. It is not live and only the latest message is kept."

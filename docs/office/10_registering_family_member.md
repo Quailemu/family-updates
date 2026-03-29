@@ -29,5 +29,5 @@ The Family Member uses the email link to sign in to Family access for the select
 
 This service is for non-urgent social communication only.
 Only individuals designated by the care home should be registered.
-voice-message does not decide who is authorised; the care home is responsible for identity/authority decisions and for keeping local registration records.
+voicemessagecare.com does not decide who is authorised; the care home is responsible for identity/authority decisions and for keeping local registration records.
 Duplicate registrations are prevented automatically.

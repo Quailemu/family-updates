@@ -38,9 +38,9 @@ The care home is responsible for:
 
 The platform does not provide care updates or health information. It does not monitor or review message content. It is not a safeguarding or alerting system. It does not verify consent, capacity, authority, identity, entitlement, or appropriateness for registration or participation decisions.
 
-The Customer is solely responsible for determining which individuals are permitted to have access to a resident within the Service, and for granting, maintaining, and revoking that access as appropriate. voice-message does not verify or validate the identity, authority, or entitlement of any individual granted access by the Customer and relies on the Customer’s instructions in this regard.
+The Customer is solely responsible for determining which individuals are permitted to have access to a resident within the Service, and for granting, maintaining, and revoking that access as appropriate. voicemessagecare.com does not verify or validate the identity, authority, or entitlement of any individual granted access by the Customer and relies on the Customer’s instructions in this regard.
 
-For clarity, voice-message has no independent duty to assess or approve any individual's eligibility to communicate in relation to a resident. The Customer warrants that it has made all required checks and decisions before instructing registration or access changes in the Service.
+For clarity, voicemessagecare.com has no independent duty to assess or approve any individual's eligibility to communicate in relation to a resident. The Customer warrants that it has made all required checks and decisions before instructing registration or access changes in the Service.
 
 Care homes are communal environments. During normal operations, message content may be heard in shared areas by staff, residents, families, or visitors.
 
