@@ -6013,9 +6013,7 @@ def render_home(active: str) -> None:
                 try:
                     st.video(overview_video)
                 except Exception:
-                    st.caption("Overview video is configured but could not be loaded.")
-            else:
-                st.caption("Overall diagram video will appear here when available.")
+                    pass
     st.markdown("### Service overview")
     current_variant = get_app_variant()
     if current_variant in (VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE):
