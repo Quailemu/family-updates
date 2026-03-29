@@ -6499,10 +6499,6 @@ def render_public_walkthrough_page(
     if video_source:
         try:
             st.video(video_source)
-            if str(video_source).startswith(("http://", "https://")):
-                st.caption(
-                    "Using configured video URL. If blank, verify your Cloudflare URL serves video bytes."
-                )
         except Exception:
             st.warning(
                 f"Video failed to load from {video_env_var}. Check the URL format and permissions."
