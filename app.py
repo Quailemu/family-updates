@@ -5756,6 +5756,37 @@ def render_home(active: str) -> None:
             )
         st.markdown(header_html, unsafe_allow_html=True)
 
+        st.markdown('<div class="public-section">', unsafe_allow_html=True)
+        st.markdown("## A calm way to stay connected")
+        st.markdown(
+            "A simple way for care home residents and families to exchange voice messages without pressure, notifications, or message overload."
+        )
+        st.markdown("- Families send messages anytime")
+        st.markdown("- Staff play them when appropriate")
+        st.markdown("- Residents reply in their own time")
+        st.markdown("- No message history, no threads, no urgency")
+        st.markdown("")
+        st.markdown("This is designed to fit naturally around care routines.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown('<div class="public-section">', unsafe_allow_html=True)
+        st.markdown("## A gentle way to explore this")
+        st.markdown(
+            "A simple way to explore this approach is through a one-to-one, activity-based introduction within the care home."
+        )
+        st.markdown(
+            "This involves a calm, conversation-led session using printed artwork as a starting point. A short voice message can be played as part of the interaction, naturally introducing the idea of listening to and sharing messages in a low-pressure way."
+        )
+        st.markdown(
+            "This is designed to be informal, unhurried, and to fit easily around normal care routines."
+        )
+        st.markdown(
+            "There is no requirement to adopt anything, simply an opportunity to see how it feels in practice."
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown("If helpful, you can see more detail below.")
+
         st.markdown('<div class="public-hero">', unsafe_allow_html=True)
         st.markdown(
             """
