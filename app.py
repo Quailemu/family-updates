@@ -1130,6 +1130,26 @@ def normalize_auth_hash_fragment_on_login_routes() -> None:
 (function () {
   try {
     var topWin = window.parent && window.parent.location ? window.parent : window;
+    var allowedKeys = ["access_token", "refresh_token", "token_hash", "token", "type", "code"];
+    var currentUrl = new URL(topWin.location.href);
+    var path = currentUrl.pathname || "";
+    var ampIndex = path.indexOf("&");
+    if (ampIndex > -1) {
+      var cleanPath = path.slice(0, ampIndex);
+      var suffix = path.slice(ampIndex + 1);
+      if (suffix && suffix.indexOf("=") > -1) {
+        var misplacedParams = new URLSearchParams(suffix);
+        allowedKeys.forEach(function (k) {
+          var v = misplacedParams.get(k);
+          if (v && !currentUrl.searchParams.get(k)) {
+            currentUrl.searchParams.set(k, v);
+          }
+        });
+        currentUrl.pathname = cleanPath || "/";
+        topWin.location.replace(currentUrl.toString());
+        return;
+      }
+    }
     var hash = topWin.location.hash || "";
     if (!hash || hash.length < 2) return;
     var raw = hash.substring(1);
@@ -1146,7 +1166,7 @@ def normalize_auth_hash_fragment_on_login_routes() -> None:
 
     var url = new URL(topWin.location.href);
     var hashParams = new URLSearchParams(raw);
-    ["access_token", "refresh_token", "token_hash", "token", "type", "code"].forEach(function (k) {
+    allowedKeys.forEach(function (k) {
       var v = hashParams.get(k);
       if (v && !url.searchParams.get(k)) {
         url.searchParams.set(k, v);
