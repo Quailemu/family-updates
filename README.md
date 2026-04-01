@@ -18,16 +18,16 @@ python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## Single-service multi-domain (Render)
+## Single-service variant routing
 
-Use one web service with multiple custom domains and set:
+Runtime resolves app variant from request path first:
 
-- `APP_VARIANT_BY_HOST` for domain-to-variant mapping
-- keep `APP_VARIANT` as fallback for unmapped hosts or local/dev
+- `/` -> public
+- `/family` -> family
+- `/mobile` -> mobile
+- `/office` -> office
 
-Example:
-
-`APP_VARIANT_BY_HOST=public.voicemailcare.com=public,family.voicemailcare.com=family,care-hub-mobile.voicemailcare.com=mobile,care-hub-office.voicemailcare.com=office`
+`APP_VARIANT` remains as fallback for local/dev or unmapped paths.
 
 ## Run by variant
 

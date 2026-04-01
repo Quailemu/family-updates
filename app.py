@@ -883,19 +883,13 @@ def send_magic_link_email(
             "Missing magic-link redirect URL configuration for this app variant.",
         )
     redirect_to_lower = redirect_to.lower()
-    if app_variant == VARIANT_MOBILE and (
-        "voicemailcare-family.onrender.com" in redirect_to_lower
-        or "/family/login" in redirect_to_lower
-    ):
+    if app_variant == VARIANT_MOBILE and "/family/login" in redirect_to_lower:
         return (
             False,
             "Mobile magic-link redirect is misconfigured (currently pointing to Family). "
             "Update CARE_MOBILE_MAGIC_LINK_REDIRECT_URL and CARE_MOBILE_APP_URL to the mobile URL.",
         )
-    if app_variant == VARIANT_FAMILY and (
-        "voicemailcare-mobile.onrender.com" in redirect_to_lower
-        or "/care-hub/mobile" in redirect_to_lower
-    ):
+    if app_variant == VARIANT_FAMILY and "/care-hub/mobile" in redirect_to_lower:
         return (
             False,
             "Family magic-link redirect is misconfigured (currently pointing to Mobile). "
@@ -6332,6 +6326,45 @@ def _get_request_host() -> str:
     return ""
 
 
+def _get_request_path() -> str:
+    """
+    Best-effort request path extraction from Streamlit request context.
+    Returns normalized path (leading slash), defaulting to "/" when unavailable.
+    """
+    try:
+        context = getattr(st, "context", None)
+        if context is None:
+            return "/"
+        url_value = str(getattr(context, "url", "") or "").strip()
+        if not url_value:
+            return "/"
+        parsed = urlparse(url_value)
+        path = normalize_route(parsed.path or "/") or "/"
+        return path
+    except Exception:
+        return "/"
+
+
+def _resolve_variant_from_request_path() -> str | None:
+    """
+    Resolve variant from URL path prefix.
+    / -> public, /family -> family, /mobile -> mobile, /office -> office
+    """
+    path = _get_request_path()
+    if path == "/":
+        return VARIANT_PUBLIC
+    first = path.lstrip("/").split("/", 1)[0].strip().lower()
+    if first == "family":
+        return VARIANT_FAMILY
+    if first == "mobile":
+        return VARIANT_MOBILE
+    if first == "office":
+        return VARIANT_OFFICE
+    if first == "public":
+        return VARIANT_PUBLIC
+    return None
+
+
 def _parse_app_variant_by_host(raw_mapping: str) -> dict[str, str]:
     """
     Parse APP_VARIANT_BY_HOST entries formatted as:
@@ -6360,14 +6393,11 @@ def _parse_app_variant_by_host(raw_mapping: str) -> dict[str, str]:
 
 def resolve_runtime_variant() -> str:
     """
-    Resolve app variant by host mapping first, then APP_VARIANT fallback.
+    Resolve app variant by request path first, then APP_VARIANT fallback.
     """
-    host = _get_request_host()
-    mapping = _parse_app_variant_by_host(os.getenv("APP_VARIANT_BY_HOST", ""))
-    if host and mapping:
-        mapped = mapping.get(host)
-        if mapped:
-            return mapped
+    path_variant = _resolve_variant_from_request_path()
+    if path_variant:
+        return path_variant
     return get_app_variant()
 
 
@@ -10302,10 +10332,10 @@ def main() -> None:
         initial_sidebar_state="collapsed",
     )
     raw_variant = get_raw_app_variant()
-    host_variant_mapping = os.getenv("APP_VARIANT_BY_HOST", "").strip()
-    if not raw_variant and not host_variant_mapping:
+    path_variant = _resolve_variant_from_request_path()
+    if not raw_variant and not path_variant:
         st.error(
-            "Configuration error: APP_VARIANT is required (or set APP_VARIANT_BY_HOST).\n\n"
+            "Configuration error: APP_VARIANT is required when request path does not map to a variant.\n\n"
             f"Allowed values: {ALLOWED_VARIANT_VALUES_TEXT}."
         )
         st.stop()
