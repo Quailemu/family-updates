@@ -6295,6 +6295,82 @@ def get_raw_app_variant() -> str:
     return __import__("os").getenv("APP_VARIANT", "").strip()
 
 
+def _get_request_host() -> str:
+    """
+    Best-effort host extraction from Streamlit request context.
+    Returns lowercase host without port, or empty string when unavailable.
+    """
+    try:
+        context = getattr(st, "context", None)
+        if context is None:
+            return ""
+        candidates = []
+        headers = getattr(context, "headers", None)
+        if headers:
+            for key in ("x-forwarded-host", "host"):
+                value = ""
+                if hasattr(headers, "get"):
+                    value = str(headers.get(key, "") or "").strip()
+                    if not value:
+                        value = str(headers.get(key.title(), "") or "").strip()
+                if value:
+                    candidates.append(value)
+        url_value = str(getattr(context, "url", "") or "").strip()
+        if url_value:
+            parsed = urlparse(url_value)
+            if parsed.hostname:
+                candidates.append(str(parsed.hostname).strip())
+        for raw_host in candidates:
+            host = raw_host.split(",")[0].strip().lower()
+            if host:
+                if ":" in host:
+                    host = host.split(":", 1)[0].strip()
+                if host:
+                    return host
+    except Exception:
+        return ""
+    return ""
+
+
+def _parse_app_variant_by_host(raw_mapping: str) -> dict[str, str]:
+    """
+    Parse APP_VARIANT_BY_HOST entries formatted as:
+    host1=variant1,host2=variant2
+    Invalid entries are ignored to fail safely.
+    """
+    mapping: dict[str, str] = {}
+    raw_value = str(raw_mapping or "").strip()
+    if not raw_value:
+        return mapping
+    for part in raw_value.split(","):
+        entry = part.strip()
+        if not entry or "=" not in entry:
+            continue
+        host_raw, variant_raw = entry.split("=", 1)
+        host = host_raw.strip().lower()
+        variant = variant_raw.strip().lower()
+        if not host or not variant:
+            continue
+        if ":" in host:
+            host = host.split(":", 1)[0].strip()
+        if variant in VARIANT_CONFIG:
+            mapping[host] = variant
+    return mapping
+
+
+def resolve_runtime_variant() -> str:
+    """
+    Resolve app variant by host mapping first, then APP_VARIANT fallback.
+    """
+    host = _get_request_host()
+    mapping = _parse_app_variant_by_host(os.getenv("APP_VARIANT_BY_HOST", ""))
+    if host and mapping:
+        mapped = mapping.get(host)
+        if mapped:
+            return mapped
+    return get_app_variant()
+
+
 def get_variant_label(app_variant: str) -> str:
     return VARIANT_CONFIG.get(app_variant, {}).get("label", "Unknown")
 
@@ -10226,14 +10302,15 @@ def main() -> None:
         initial_sidebar_state="collapsed",
     )
     raw_variant = get_raw_app_variant()
-    if not raw_variant:
+    host_variant_mapping = os.getenv("APP_VARIANT_BY_HOST", "").strip()
+    if not raw_variant and not host_variant_mapping:
         st.error(
-            "Configuration error: APP_VARIANT is required.\n\n"
+            "Configuration error: APP_VARIANT is required (or set APP_VARIANT_BY_HOST).\n\n"
             f"Allowed values: {ALLOWED_VARIANT_VALUES_TEXT}."
         )
         st.stop()
     try:
-        app_variant = get_app_variant()
+        app_variant = resolve_runtime_variant()
     except ValueError as exc:
         st.error(str(exc))
         st.stop()
