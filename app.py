@@ -8826,9 +8826,10 @@ def render_care_login() -> None:
 """,
         unsafe_allow_html=True,
     )
-    app_variant = get_app_variant()
+    app_variant = resolve_runtime_variant(route_hint=get_route())
+    login_label = "Care Hub – Mobile" if app_variant == VARIANT_MOBILE else "Care Hub – Office"
     render_page_header(
-        f"{get_care_hub_label()} login",
+        f"{login_label} login",
         brand_title="voicemailcare.com",
         show_variant_subheading=False,
         show_menu=app_variant != VARIANT_OFFICE,
