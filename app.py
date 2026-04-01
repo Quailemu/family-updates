@@ -9217,7 +9217,7 @@ def render_care_hub() -> None:
     )
     render_page_header(f"{get_care_hub_label()} voice messages")
     if (
-        get_app_variant() == VARIANT_MOBILE
+        runtime_variant == VARIANT_MOBILE
         and st.session_state.pop("mobile_pin_just_accepted", False)
     ):
         st.success("Mobile PIN accepted.")
