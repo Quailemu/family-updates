@@ -11,7 +11,7 @@ import json
 import re
 import html
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlparse
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -952,6 +952,14 @@ def consume_magic_link_callback() -> None:
     otp_type = str(params.get("type", "") or "").strip().lower()
     raw_access_token = str(params.get("access_token", "") or "").strip()
     raw_refresh_token = str(params.get("refresh_token", "") or "").strip()
+    if not auth_code and not token_hash and not token and not (raw_access_token and raw_refresh_token):
+        recovered = _recover_auth_callback_params_from_path()
+        auth_code = auth_code or str(recovered.get("code", "") or "").strip()
+        token_hash = token_hash or str(recovered.get("token_hash", "") or "").strip()
+        token = token or str(recovered.get("token", "") or "").strip()
+        otp_type = otp_type or str(recovered.get("type", "") or "").strip().lower()
+        raw_access_token = raw_access_token or str(recovered.get("access_token", "") or "").strip()
+        raw_refresh_token = raw_refresh_token or str(recovered.get("refresh_token", "") or "").strip()
     if not auth_code and not token_hash and not token and not (raw_access_token and raw_refresh_token):
         return
     callback_sig = "|".join(
@@ -6369,6 +6377,37 @@ def _get_request_path() -> str:
         return path
     except Exception:
         return "/"
+
+
+def _recover_auth_callback_params_from_path() -> dict[str, str]:
+    """
+    Recover auth callback params when they are mistakenly appended to path using '&'
+    instead of query params, e.g. /mobile/login&token_hash=...&type=magiclink.
+    """
+    recovered: dict[str, str] = {}
+    try:
+        context = getattr(st, "context", None)
+        if context is None:
+            return recovered
+        url_value = str(getattr(context, "url", "") or "").strip()
+        if not url_value:
+            return recovered
+        parsed = urlparse(url_value)
+        raw_path = str(parsed.path or "")
+        if "&" not in raw_path:
+            return recovered
+        _, suffix = raw_path.split("&", 1)
+        if not suffix or "=" not in suffix:
+            return recovered
+        allowed_keys = {"code", "token_hash", "token", "type", "access_token", "refresh_token"}
+        for key, value in parse_qsl(suffix, keep_blank_values=True):
+            key = str(key or "").strip()
+            value = str(value or "").strip()
+            if key in allowed_keys and value:
+                recovered[key] = value
+    except Exception:
+        return {}
+    return recovered
 
 
 def _resolve_variant_from_request_path() -> str | None:
