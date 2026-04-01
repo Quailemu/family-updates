@@ -4737,8 +4737,8 @@ def read_plans_section(heading: str) -> str:
 
 
 def render_header_menu(menu_key: str) -> None:
-    app_variant = get_app_variant()
     current_route = st.session_state.get("current_page") or get_route()
+    app_variant = resolve_runtime_variant(route_hint=current_route)
     prev_route = st.session_state.get("prev_page") or "/"
     show_back_only = current_route.startswith("/how-it-works/") and prev_route in ("/", "", None)
     with st.popover("≡"):
@@ -4906,9 +4906,10 @@ def render_page_header(
     show_variant_subheading: bool = True,
     show_menu: bool = True,
 ) -> None:
-    if get_app_variant() == "family" and not is_family_authenticated():
+    runtime_variant = resolve_runtime_variant(route_hint=get_route())
+    if runtime_variant == VARIANT_FAMILY and not is_family_authenticated():
         show_menu = False
-    if get_app_variant() == VARIANT_MOBILE and not is_care_authenticated():
+    if runtime_variant == VARIANT_MOBILE and not is_care_authenticated():
         show_menu = False
     st.markdown(
         f"""
@@ -5066,7 +5067,8 @@ def render_how_it_works_general() -> None:
 
 def render_how_it_works_button(button_key: str) -> None:
     if st.button("How it works", key=button_key):
-        set_route(get_how_it_works_route(get_app_variant()))
+        current_variant = resolve_runtime_variant(route_hint=get_route())
+        set_route(get_how_it_works_route(current_variant))
 
 
 def render_small_corner_logo() -> None:
