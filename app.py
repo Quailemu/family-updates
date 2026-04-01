@@ -908,10 +908,11 @@ def _normalize_magic_link_redirect_url_for_variant(redirect_to: str, app_variant
                 continue
             query_map[key_text] = str(raw_value or "")
         canonical_login_route = get_login_route(app_variant)
-        if canonical_login_route and not str(query_map.get("route") or "").strip():
+        if canonical_login_route:
             query_map["route"] = canonical_login_route
+        normalized_path = "/"
         normalized_query = urlencode(query_map)
-        return urlunparse(parsed._replace(query=normalized_query))
+        return urlunparse(parsed._replace(path=normalized_path, query=normalized_query))
     except Exception:
         return value
 
