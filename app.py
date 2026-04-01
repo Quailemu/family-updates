@@ -2433,7 +2433,8 @@ def render_care_hub_training() -> None:
 
 
 def require_family_access() -> None:
-    if get_app_variant() != VARIANT_FAMILY:
+    runtime_variant = resolve_runtime_variant(route_hint=get_route())
+    if runtime_variant != VARIANT_FAMILY:
         wrong_variant_screen(get_route(), "Family pages are not available in this app.")
     active_role = st.session_state.get("active_role")
     if st.session_state.get("auth_uid") and active_role and active_role != "family":
@@ -2467,9 +2468,10 @@ def require_family_access() -> None:
 
 
 def require_care_access() -> None:
-    if get_app_variant() not in {VARIANT_MOBILE, VARIANT_OFFICE}:
+    runtime_variant = resolve_runtime_variant(route_hint=get_route())
+    if runtime_variant not in {VARIANT_MOBILE, VARIANT_OFFICE}:
         wrong_variant_screen(get_route(), "Care Hub pages are not available in this app.")
-    if get_app_variant() == VARIANT_OFFICE and not bool(st.session_state.get("office_login_explicit")):
+    if runtime_variant == VARIANT_OFFICE and not bool(st.session_state.get("office_login_explicit")):
         if get_route() != get_login_route(VARIANT_OFFICE):
             set_route(get_login_route(VARIANT_OFFICE))
         st.stop()
@@ -2479,7 +2481,7 @@ def require_care_access() -> None:
     if not st.session_state.get("auth_uid"):
         render_access_gate(
             f"Please sign in to access {get_care_hub_label()}.",
-            get_login_route(get_app_variant()),
+            get_login_route(runtime_variant),
             "care_hub",
         )
         st.stop()
@@ -2499,7 +2501,7 @@ def require_care_access() -> None:
                 return
             render_access_gate(
                 "Temporary session check issue. Please retry.",
-                get_login_route(get_app_variant()),
+                get_login_route(runtime_variant),
                 "care_hub",
             )
             st.stop()
@@ -2510,7 +2512,7 @@ def require_care_access() -> None:
             return
         render_access_gate(
             f"Session check failed. Please sign in to access {get_care_hub_label()}.",
-            get_login_route(get_app_variant()),
+            get_login_route(runtime_variant),
             "care_hub",
         )
         st.stop()
@@ -2518,7 +2520,7 @@ def require_care_access() -> None:
         if care_record:
             st.session_state["active_role"] = "care_hub"
             st.session_state["active_care_home_id"] = care_record.get("care_home_id")
-        if get_app_variant() == VARIANT_OFFICE and is_office_mfa_required():
+        if runtime_variant == VARIANT_OFFICE and is_office_mfa_required():
             if get_route() != "/care-hub/mfa":
                 set_route("/care-hub/mfa")
             st.stop()
@@ -2526,7 +2528,7 @@ def require_care_access() -> None:
     if family_found:
         render_wrong_variant("Your login details are for Family.")
         st.stop()
-    render_access_gate("Account not set up yet.", get_login_route(get_app_variant()), "care_hub")
+    render_access_gate("Account not set up yet.", get_login_route(runtime_variant), "care_hub")
     st.stop()
 
 
