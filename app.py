@@ -139,8 +139,21 @@ def normalize_route(route: str | None) -> str:
     value = (route or "").strip()
     if not value:
         return ""
+    if "&" in value:
+        base, suffix = value.split("&", 1)
+        suffix_lower = suffix.lower()
+        if "=" in suffix and any(
+            f"{key}=" in suffix_lower
+            for key in ("code", "token_hash", "token", "type", "access_token", "refresh_token")
+        ):
+            value = base or "/"
     if not value.startswith("/"):
         value = f"/{value}"
+    normalized_lower = value.lower()
+    if normalized_lower == "/mobile/login":
+        value = "/care-hub/mobile/login"
+    elif normalized_lower == "/office/login":
+        value = "/care-hub/login"
     if len(value) > 1 and value.endswith("/"):
         value = value[:-1]
     return value
