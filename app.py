@@ -2295,7 +2295,7 @@ def render_family_document(title: str, path: str) -> None:
         st.markdown(content)
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
-        render_route_link("Back", "/how-it-works/family", key="family_doc_back_link")
+        render_route_link("Back", "/family/how-it-works", key="family_doc_back_link")
     with action_cols[1]:
         render_route_link(
             "Back to Family login",
@@ -2376,7 +2376,7 @@ def render_family_contact() -> None:
     )
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
-        render_route_link("Back", "/how-it-works/family", key="family_contact_back_link")
+        render_route_link("Back", "/family/how-it-works", key="family_contact_back_link")
     with action_cols[1]:
         render_route_link(
             "Back to Family login",
@@ -5777,7 +5777,7 @@ def render_home(active: str) -> None:
         st.markdown(header_html, unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
-        st.markdown("## A calm way to stay connected")
+        st.markdown("## The reassuring sound of familiar voices")
         st.markdown(
             "A simple way for care home residents and families to exchange voice messages without pressure, notifications, or message overload."
         )
@@ -6397,11 +6397,19 @@ def _resolve_variant_from_route(route: str) -> str | None:
     This is the most reliable signal in current architecture.
     """
     normalized = normalize_route(route) or "/"
-    if normalized.startswith("/family"):
+    if normalized.startswith("/family") or normalized == "/how-it-works/family":
         return VARIANT_FAMILY
-    if normalized.startswith("/care-hub/mobile") or normalized.startswith("/mobile"):
+    if (
+        normalized.startswith("/care-hub/mobile")
+        or normalized.startswith("/mobile")
+        or normalized == "/how-it-works/mobile"
+    ):
         return VARIANT_MOBILE
-    if normalized.startswith("/care-hub") or normalized.startswith("/office"):
+    if (
+        normalized.startswith("/care-hub")
+        or normalized.startswith("/office")
+        or normalized == "/how-it-works/office"
+    ):
         return VARIANT_OFFICE
     if normalized.startswith("/public") or normalized in {"/", "/service-overview", "/pr-home"}:
         return VARIANT_PUBLIC
@@ -10645,9 +10653,9 @@ def main() -> None:
     elif route == "/family/sent":
         render_family_sent()
     elif route == "/family/introduction":
-        set_route("/how-it-works/family")
+        set_route("/family/how-it-works")
     elif route == "/family/instructions":
-        set_route("/how-it-works/family")
+        set_route("/family/how-it-works")
     elif route == "/family/info":
         render_how_it_works_family()
     elif route == "/family/privacy":
