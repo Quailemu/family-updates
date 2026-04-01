@@ -9890,7 +9890,7 @@ def render_care_hub() -> None:
                 latest_sent_label = format_soft_message_period_label(latest_sent_at)
                 if latest_sent_label:
                     st.caption(latest_sent_label)
-        if is_mobile_variant:
+        if is_mobile_variant or is_office_variant:
             if hasattr(st, "audio_input"):
                 recorded_from_native = st.audio_input(
                     f"Record voice message from {full_name} to all Family Members",
