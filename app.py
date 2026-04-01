@@ -1179,6 +1179,23 @@ def normalize_auth_hash_fragment_on_login_routes() -> None:
     var topWin = window.parent && window.parent.location ? window.parent : window;
     var allowedKeys = ["access_token", "refresh_token", "token_hash", "token", "type", "code"];
     var currentUrl = new URL(topWin.location.href);
+    var routeFromPath = "";
+    var normalizedPath = (currentUrl.pathname || "").toLowerCase();
+    if (normalizedPath === "/mobile/login") routeFromPath = "/care-hub/mobile/login";
+    else if (normalizedPath === "/office/login") routeFromPath = "/care-hub/login";
+    else if (normalizedPath === "/family/login") routeFromPath = "/family/login";
+    var hasAuthSearchParam = false;
+    allowedKeys.forEach(function (k) {
+      if (currentUrl.searchParams.get(k)) hasAuthSearchParam = true;
+    });
+    if (routeFromPath && currentUrl.pathname !== "/" && (hasAuthSearchParam || currentUrl.searchParams.get("route"))) {
+      if (!currentUrl.searchParams.get("route")) {
+        currentUrl.searchParams.set("route", routeFromPath);
+      }
+      currentUrl.pathname = "/";
+      topWin.location.replace(currentUrl.toString());
+      return;
+    }
     var path = currentUrl.pathname || "";
     var ampIndex = path.indexOf("&");
     if (ampIndex > -1) {
