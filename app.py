@@ -9123,6 +9123,7 @@ def render_care_hub() -> None:
     render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
     is_care_queue_variant_screen = get_app_variant() in {VARIANT_MOBILE, VARIANT_OFFICE}
+    include_care_home_in_resident_labels = get_app_variant() == VARIANT_MOBILE
     contacts_by_resident: dict[str, list[dict]] = {}
 
     search_value = st.text_input("Search residents", key="care_resident_search")
@@ -9143,7 +9144,6 @@ def render_care_hub() -> None:
         return
 
     if is_care_queue_variant_screen:
-        include_care_home_in_resident_labels = get_app_variant() == VARIANT_MOBILE
         resident_option_ids = [resident["id"] for resident in residents]
         resident_label_by_id = {}
         for resident in residents:
