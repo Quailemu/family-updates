@@ -6648,10 +6648,19 @@ def render_public_walkthrough_page(
     fallback_doc_path: str | None = None,
 ) -> None:
     effective_back_route = back_route
+    current_route = normalize_route(get_route()) or "/"
+    prev_route = normalize_route(st.session_state.get("prev_page") or "")
+    if (
+        not effective_back_route
+        and prev_route
+        and prev_route != current_route
+    ):
+        # Preserve in-app navigation context (for example Family -> Diagram video -> Back).
+        effective_back_route = prev_route
     if not effective_back_route:
-        app_variant = get_app_variant()
+        app_variant = resolve_runtime_variant(route_hint=current_route)
         if app_variant == VARIANT_PUBLIC:
-            if get_route() == "/public/walkthrough-overview":
+            if current_route == "/public/walkthrough-overview":
                 effective_back_route = "/service-overview"
             else:
                 effective_back_route = "/public/walkthrough-overview"
