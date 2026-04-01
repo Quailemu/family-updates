@@ -63,6 +63,18 @@ APP_FAMILY_LIVE_REFRESH = os.getenv("APP_FAMILY_LIVE_REFRESH", "0").strip().lowe
     "yes",
     "on",
 }
+APP_MOBILE_LIVE_REFRESH = os.getenv("APP_MOBILE_LIVE_REFRESH", "1").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+APP_OFFICE_LIVE_REFRESH = os.getenv("APP_OFFICE_LIVE_REFRESH", "0").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 SUPABASE_AUDIO_BUCKET = os.getenv("SUPABASE_AUDIO_BUCKET", "voice-messages").strip() or "voice-messages"
 OFFICE_UPDATE_CATEGORIES = (
@@ -3267,6 +3279,16 @@ def trigger_live_message_refresh(key: str, disabled: bool) -> None:
     st_autorefresh(interval=APP_LIVE_REFRESH_INTERVAL_MS, key=key)
 
 
+def is_variant_live_refresh_enabled(app_variant: str) -> bool:
+    if app_variant == VARIANT_FAMILY:
+        return APP_FAMILY_LIVE_REFRESH
+    if app_variant == VARIANT_MOBILE:
+        return APP_MOBILE_LIVE_REFRESH
+    if app_variant == VARIANT_OFFICE:
+        return APP_OFFICE_LIVE_REFRESH
+    return False
+
+
 def reset_outbox_state_on_new_recording(
     state: dict | None,
     ack_widget_key: str | None = None,
@@ -6365,6 +6387,23 @@ def _resolve_variant_from_request_path() -> str | None:
     return None
 
 
+def _resolve_variant_from_route(route: str) -> str | None:
+    """
+    Resolve variant from internal app route (query-param driven).
+    This is the most reliable signal in current architecture.
+    """
+    normalized = normalize_route(route) or "/"
+    if normalized.startswith("/family"):
+        return VARIANT_FAMILY
+    if normalized.startswith("/care-hub/mobile") or normalized.startswith("/mobile"):
+        return VARIANT_MOBILE
+    if normalized.startswith("/care-hub") or normalized.startswith("/office"):
+        return VARIANT_OFFICE
+    if normalized.startswith("/public") or normalized in {"/", "/service-overview", "/pr-home"}:
+        return VARIANT_PUBLIC
+    return None
+
+
 def _parse_app_variant_by_host(raw_mapping: str) -> dict[str, str]:
     """
     Parse APP_VARIANT_BY_HOST entries formatted as:
@@ -6391,10 +6430,15 @@ def _parse_app_variant_by_host(raw_mapping: str) -> dict[str, str]:
     return mapping
 
 
-def resolve_runtime_variant() -> str:
+def resolve_runtime_variant(route_hint: str | None = None) -> str:
     """
-    Resolve app variant by request path first, then APP_VARIANT fallback.
+    Resolve app variant by internal route first, then request path,
+    then APP_VARIANT fallback.
     """
+    if route_hint:
+        route_variant = _resolve_variant_from_route(route_hint)
+        if route_variant:
+            return route_variant
     path_variant = _resolve_variant_from_request_path()
     if path_variant:
         return path_variant
@@ -7021,7 +7065,7 @@ def render_family_send() -> None:
     )
     trigger_live_message_refresh(
         "family_live_refresh",
-        disabled=has_pending_recording or not APP_FAMILY_LIVE_REFRESH,
+        disabled=has_pending_recording or not is_variant_live_refresh_enabled(VARIANT_FAMILY),
     )
     active_rec_id = st.session_state.get("family_active_rec_resident")
     manual_active = st.session_state.get("family_active_rec_manual", False)
@@ -9065,8 +9109,10 @@ def render_care_hub() -> None:
         for entry in send_state.values()
         if isinstance(entry, dict)
     )
-    # Office recording uses native audio input; periodic full-page reruns cause visible flicker.
-    disable_live_refresh = has_pending_recording or (get_app_variant() == VARIANT_OFFICE)
+    current_variant = get_app_variant()
+    disable_live_refresh = has_pending_recording or not is_variant_live_refresh_enabled(
+        current_variant
+    )
     trigger_live_message_refresh("care_live_refresh", disabled=disable_live_refresh)
     active_rec_id = st.session_state.get("care_active_rec_resident")
     manual_active = st.session_state.get("care_active_rec_manual", False)
@@ -10332,15 +10378,18 @@ def main() -> None:
         initial_sidebar_state="collapsed",
     )
     raw_variant = get_raw_app_variant()
+    init_state()
+    pre_auth_route = get_route()
+    route_variant = _resolve_variant_from_route(pre_auth_route)
     path_variant = _resolve_variant_from_request_path()
-    if not raw_variant and not path_variant:
+    if not raw_variant and not route_variant and not path_variant:
         st.error(
             "Configuration error: APP_VARIANT is required when request path does not map to a variant.\n\n"
             f"Allowed values: {ALLOWED_VARIANT_VALUES_TEXT}."
         )
         st.stop()
     try:
-        app_variant = resolve_runtime_variant()
+        app_variant = resolve_runtime_variant(route_hint=pre_auth_route)
     except ValueError as exc:
         st.error(str(exc))
         st.stop()
@@ -10353,8 +10402,6 @@ def main() -> None:
             st.error("Configuration error: AUTH_COOKIE_SIGNING_KEY is required for secure session cookies.")
             st.stop()
         restore_auth_session_from_cookie()
-    init_state()
-    pre_auth_route = get_route()
     if pre_auth_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}:
         normalize_auth_hash_fragment_on_login_routes()
     consume_magic_link_callback()
