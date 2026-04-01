@@ -10380,6 +10380,16 @@ def main() -> None:
     raw_variant = get_raw_app_variant()
     init_state()
     pre_auth_route = get_route()
+    request_path = _get_request_path()
+    if pre_auth_route in ("/", ""):
+        if request_path.startswith("/family"):
+            pre_auth_route = FAMILY_LOGIN_ROUTE
+        elif request_path.startswith("/mobile") or request_path.startswith("/care-hub/mobile"):
+            pre_auth_route = MOBILE_LOGIN_ROUTE
+        elif request_path.startswith("/office") or request_path.startswith("/care-hub"):
+            pre_auth_route = OFFICE_LOGIN_ROUTE
+        elif request_path.startswith("/public"):
+            pre_auth_route = "/public/walkthrough-overview"
     route_variant = _resolve_variant_from_route(pre_auth_route)
     path_variant = _resolve_variant_from_request_path()
     if not raw_variant and not route_variant and not path_variant:
@@ -10406,6 +10416,8 @@ def main() -> None:
         normalize_auth_hash_fragment_on_login_routes()
     consume_magic_link_callback()
     route = get_route()
+    if route in ("/", "") and pre_auth_route not in ("/", ""):
+        route = pre_auth_route
     st.session_state.route = route
     default_route = normalize_route(get_default_route(app_variant)) or "/"
     if route in ("/", ""):
