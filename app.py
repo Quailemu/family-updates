@@ -9144,7 +9144,8 @@ def render_care_login() -> None:
 
 def render_care_hub() -> None:
     require_care_access()
-    if get_app_variant() == VARIANT_MOBILE and not is_mobile_pin_verified_for_session():
+    runtime_variant = resolve_runtime_variant(route_hint=get_route())
+    if runtime_variant == VARIANT_MOBILE and not is_mobile_pin_verified_for_session():
         set_route(get_login_route(VARIANT_MOBILE))
         st.stop()
     run_daily_audit_log_retention_purge()
@@ -9208,8 +9209,8 @@ def render_care_hub() -> None:
     access_token = st.session_state.get("access_token")
     render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
-    is_care_queue_variant_screen = get_app_variant() in {VARIANT_MOBILE, VARIANT_OFFICE}
-    include_care_home_in_resident_labels = get_app_variant() == VARIANT_MOBILE
+    is_care_queue_variant_screen = runtime_variant in {VARIANT_MOBILE, VARIANT_OFFICE}
+    include_care_home_in_resident_labels = runtime_variant == VARIANT_MOBILE
     contacts_by_resident: dict[str, list[dict]] = {}
 
     search_value = st.text_input("Search residents", key="care_resident_search")
@@ -9262,7 +9263,7 @@ def render_care_hub() -> None:
         for entry in send_state.values()
         if isinstance(entry, dict)
     )
-    current_variant = get_app_variant()
+    current_variant = runtime_variant
     disable_live_refresh = has_pending_recording or not is_variant_live_refresh_enabled(
         current_variant
     )
@@ -9364,8 +9365,8 @@ def render_care_hub() -> None:
                 )
             st.markdown("</div>", unsafe_allow_html=True)
             continue
-        is_mobile_variant = get_app_variant() == VARIANT_MOBILE
-        is_office_variant = get_app_variant() == VARIANT_OFFICE
+        is_mobile_variant = runtime_variant == VARIANT_MOBILE
+        is_office_variant = runtime_variant == VARIANT_OFFICE
         is_queue_playback_variant = is_mobile_variant
         manual_selection_key = f"care_manual_selected_{resident_id}"
         queue_unread_count = 0
@@ -10114,7 +10115,7 @@ def render_care_hub() -> None:
                             )
                             st.rerun()
 
-        if get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE}:
+        if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
             st.markdown("**Care Hub ↔ Family**")
             st.caption("Office update to Family")
             latest_office_update = fetch_latest_message(
@@ -10134,7 +10135,7 @@ def render_care_hub() -> None:
                     latest_office_audio,
                     format=latest_office_update.get("audio_mime_type") or "audio/wav",
                 )
-                if get_app_variant() == VARIANT_MOBILE:
+                if runtime_variant == VARIANT_MOBILE:
                     soft_label = format_soft_message_period_label(
                         latest_office_update.get("recorded_at")
                     )
@@ -10146,7 +10147,7 @@ def render_care_hub() -> None:
                     unsafe_allow_html=True,
                 )
 
-            if get_app_variant() == VARIANT_OFFICE and hasattr(st, "audio_input"):
+            if runtime_variant == VARIANT_OFFICE and hasattr(st, "audio_input"):
                 recorded_office = st.audio_input(
                     "Record care hub update",
                     key=f"care_office_audio_input_{resident_id}_{state.get('office_recording_input_nonce', 0)}",
@@ -10187,10 +10188,10 @@ def render_care_hub() -> None:
                         state["office_last_sent_label"] = None
                         state["office_last_sent_fingerprint"] = None
                         st.session_state[f"care_office_listened_{resident_id}"] = False
-            elif get_app_variant() == VARIANT_OFFICE:
+            elif runtime_variant == VARIANT_OFFICE:
                 st.warning("Native microphone recording is unavailable in this environment.")
 
-            if get_app_variant() == VARIANT_OFFICE and state.get("office_recording_bytes"):
+            if runtime_variant == VARIANT_OFFICE and state.get("office_recording_bytes"):
                 st.caption("Captured care hub update preview:")
                 st.audio(
                     state["office_recording_bytes"],
@@ -10201,17 +10202,17 @@ def render_care_hub() -> None:
                     value=state.get("office_preview_confirmed", False),
                     key=f"care_office_listened_{resident_id}",
                 )
-            elif get_app_variant() == VARIANT_OFFICE:
+            elif runtime_variant == VARIANT_OFFICE:
                 state["office_preview_confirmed"] = False
 
             if (
-                get_app_variant() == VARIANT_OFFICE
+                runtime_variant == VARIANT_OFFICE
                 and state.get("office_last_sent_label")
                 and not state.get("office_recording_bytes")
             ):
                 st.success(state.get("office_last_sent_label"))
 
-            if get_app_variant() == VARIANT_OFFICE:
+            if runtime_variant == VARIANT_OFFICE:
                 st.markdown("**Office update**")
                 st.caption(
                     "This update will be sent to all Family Members for this resident and will appear in Care Hub Mobile."
@@ -10242,7 +10243,7 @@ def render_care_hub() -> None:
             office_can_send = bool(
                 state.get("office_recording_bytes") and state.get("office_preview_confirmed")
             )
-            if get_app_variant() == VARIANT_OFFICE and st.button(
+            if runtime_variant == VARIANT_OFFICE and st.button(
                 f"Send care hub update for {full_name}",
                 key=f"care_send_office_update_{resident_id}",
                 disabled=not office_can_send,
