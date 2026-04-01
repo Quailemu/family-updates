@@ -11,7 +11,7 @@ import json
 import re
 import html
 from pathlib import Path
-from urllib.parse import parse_qsl, urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -892,6 +892,30 @@ def get_magic_link_redirect_url(app_variant: str) -> str:
     return ""
 
 
+def _normalize_magic_link_redirect_url_for_variant(redirect_to: str, app_variant: str) -> str:
+    value = str(redirect_to or "").strip()
+    if not value:
+        return value
+    try:
+        parsed = urlparse(value)
+        if not parsed.scheme or not parsed.netloc:
+            return value
+        query_pairs = parse_qsl(parsed.query, keep_blank_values=True)
+        query_map: dict[str, str] = {}
+        for key, raw_value in query_pairs:
+            key_text = str(key or "").strip()
+            if not key_text:
+                continue
+            query_map[key_text] = str(raw_value or "")
+        canonical_login_route = get_login_route(app_variant)
+        if canonical_login_route and not str(query_map.get("route") or "").strip():
+            query_map["route"] = canonical_login_route
+        normalized_query = urlencode(query_map)
+        return urlunparse(parsed._replace(query=normalized_query))
+    except Exception:
+        return value
+
+
 def send_magic_link_email(
     email: str, *, app_variant: str, should_create_user: bool = False
 ) -> tuple[bool, str]:
@@ -902,6 +926,7 @@ def send_magic_link_email(
     if error:
         return False, error
     redirect_to = get_magic_link_redirect_url(app_variant).strip()
+    redirect_to = _normalize_magic_link_redirect_url_for_variant(redirect_to, app_variant)
     if not redirect_to:
         return (
             False,
