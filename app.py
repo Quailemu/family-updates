@@ -6650,6 +6650,7 @@ def render_public_walkthrough_page(
     effective_back_route = back_route
     current_route = normalize_route(get_route()) or "/"
     prev_route = normalize_route(st.session_state.get("prev_page") or "")
+    back_route_memory_key = f"_walkthrough_back_route::{current_route}"
     if (
         not effective_back_route
         and prev_route
@@ -6657,6 +6658,11 @@ def render_public_walkthrough_page(
     ):
         # Preserve in-app navigation context (for example Family -> Diagram video -> Back).
         effective_back_route = prev_route
+        st.session_state[back_route_memory_key] = prev_route
+    if not effective_back_route:
+        remembered_back_route = normalize_route(st.session_state.get(back_route_memory_key) or "")
+        if remembered_back_route and remembered_back_route != current_route:
+            effective_back_route = remembered_back_route
     if not effective_back_route:
         app_variant = resolve_runtime_variant(route_hint=current_route)
         if app_variant == VARIANT_PUBLIC:
