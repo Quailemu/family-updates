@@ -6476,6 +6476,26 @@ def _recover_auth_callback_params_from_path() -> dict[str, str]:
     return recovered
 
 
+def _recover_auth_callback_params_from_route_path(raw_path: str) -> dict[str, str]:
+    recovered: dict[str, str] = {}
+    path_value = str(raw_path or "").strip()
+    if "&" not in path_value:
+        return recovered
+    try:
+        _, suffix = path_value.split("&", 1)
+    except ValueError:
+        return recovered
+    if not suffix or "=" not in suffix:
+        return recovered
+    allowed_keys = {"code", "token_hash", "token", "type", "access_token", "refresh_token"}
+    for key, value in parse_qsl(suffix, keep_blank_values=True):
+        key = str(key or "").strip()
+        value = str(value or "").strip()
+        if key in allowed_keys and value:
+            recovered[key] = value
+    return recovered
+
+
 def _resolve_variant_from_request_path() -> str | None:
     """
     Resolve variant from URL path prefix.
@@ -10517,6 +10537,22 @@ def main() -> None:
     init_state()
     pre_auth_route = get_route()
     request_path = _get_request_path()
+    recovered_request_path_auth = _recover_auth_callback_params_from_route_path(request_path)
+    if recovered_request_path_auth and hasattr(st, "query_params"):
+        promoted_any = False
+        try:
+            for key in ("code", "token_hash", "token", "type", "access_token", "refresh_token"):
+                value = str(recovered_request_path_auth.get(key, "") or "").strip()
+                if value and not str(st.query_params.get(key, "") or "").strip():
+                    st.query_params[key] = value
+                    promoted_any = True
+        except Exception:
+            promoted_any = False
+        if promoted_any and not bool(st.session_state.get("_auth_path_promoted_once", False)):
+            st.session_state["_auth_path_promoted_once"] = True
+            st.rerun()
+    else:
+        st.session_state.pop("_auth_path_promoted_once", None)
     if pre_auth_route in ("/", ""):
         if request_path.startswith("/family"):
             pre_auth_route = FAMILY_LOGIN_ROUTE
