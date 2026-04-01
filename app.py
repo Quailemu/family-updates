@@ -9435,6 +9435,7 @@ def render_care_hub() -> None:
                         access_token,
                         contact_user_id=selected_contact.get("auth_user_id"),
                         channel="resident_family",
+                        include_audio=True,
                     )
                     latest_message_id = str((latest or {}).get("id") or "").strip()
                     if latest_message_id and not has_message_been_played_since_recorded(
@@ -9652,6 +9653,7 @@ def render_care_hub() -> None:
                                 access_token,
                                 contact_user_id=selected_contact.get("auth_user_id"),
                                 channel="resident_family",
+                                include_audio=True,
                             )
                             latest_message_id = str((latest or {}).get("id") or "").strip()
                             if latest_message_id and not has_message_been_played_since_recorded(
@@ -9721,6 +9723,7 @@ def render_care_hub() -> None:
                     access_token,
                     contact_user_id=state.get("selected_contact_user_id"),
                     channel="resident_family",
+                    include_audio=True,
                 )
             elif not (
                 latest.get("audio_storage_path")
