@@ -9364,7 +9364,7 @@ def render_care_hub() -> None:
             contacts = fetch_family_users_for_resident(resident_id, access_token)
             contacts_by_resident[resident_id] = contacts
         if not contacts:
-            if get_app_variant() == VARIANT_OFFICE:
+            if runtime_variant == VARIANT_OFFICE:
                 st.warning(
                     "No Family Members are linked to this resident yet. "
                     "Register a family member in Care Hub – Office before sending messages."
@@ -10359,7 +10359,7 @@ def render_care_hub() -> None:
                             activate_send_guard(send_guard_scope)
                             st.rerun()
 
-            if get_app_variant() == VARIANT_OFFICE:
+            if runtime_variant == VARIANT_OFFICE:
                 st.markdown("**Office practical message (structured family reply)**")
                 st.caption(
                     "Use this for low-risk practical communication only (for example visits, events, reminders, attendance, or item requests)."
