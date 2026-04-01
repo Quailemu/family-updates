@@ -973,6 +973,14 @@ def consume_magic_link_callback() -> None:
         otp_type = otp_type or str(recovered.get("type", "") or "").strip().lower()
         raw_access_token = raw_access_token or str(recovered.get("access_token", "") or "").strip()
         raw_refresh_token = raw_refresh_token or str(recovered.get("refresh_token", "") or "").strip()
+        if recovered and hasattr(st, "query_params"):
+            try:
+                for key in ("code", "token_hash", "token", "type", "access_token", "refresh_token"):
+                    value = str(recovered.get(key, "") or "").strip()
+                    if value and not str(st.query_params.get(key, "") or "").strip():
+                        st.query_params[key] = value
+            except Exception:
+                pass
     if not auth_code and not token_hash and not token and not (raw_access_token and raw_refresh_token):
         return
     callback_sig = "|".join(
