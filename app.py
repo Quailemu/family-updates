@@ -3807,16 +3807,13 @@ def render_active_care_home_custom_banner(care_home_profile: dict) -> None:
             unsafe_allow_html=True,
         )
     if banner_artwork_url:
-        try:
-            st.image(banner_artwork_url, use_container_width=True)
-        except Exception:
-            # Fallback to browser-side rendering when Streamlit server-side fetch fails.
-            safe_artwork_url = html.escape(banner_artwork_url.replace(" ", "%20"), quote=True)
-            st.markdown(
-                f'<img src="{safe_artwork_url}" alt="Care home custom banner artwork" '
-                'style="display:block;max-width:100%;height:auto;border-radius:6px;" />',
-                unsafe_allow_html=True,
-            )
+        # Use browser-side rendering to avoid Streamlit server-side URL fetch limitations.
+        safe_artwork_url = html.escape(banner_artwork_url.replace(" ", "%20"), quote=True)
+        st.markdown(
+            f'<img src="{safe_artwork_url}" alt="Care home custom banner artwork" '
+            'style="display:block;max-width:100%;height:auto;border-radius:6px;" />',
+            unsafe_allow_html=True,
+        )
     st.markdown("</div>", unsafe_allow_html=True)
 
 
