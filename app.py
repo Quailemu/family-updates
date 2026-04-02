@@ -8622,8 +8622,7 @@ def render_care_hub_banner_settings() -> None:
             care_hub_idle_timeout_seconds=int(selected_idle_timeout),
         )
         if saved:
-            st.session_state[save_notice_state_key] = message
-            st.rerun()
+            st.success(message)
         else:
             st.error(message)
 
