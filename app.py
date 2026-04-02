@@ -2174,13 +2174,31 @@ def wrong_variant_screen(route: str, detail: str | None = None) -> None:
     st.caption(f"Blocked route: {normalized_route}")
     if st.button("Return", key=f"wrong_variant_public_{normalized_route.replace('/', '_')}"):
         route_variant = resolve_runtime_variant(route_hint=normalized_route)
-        if st.session_state.get("auth_uid") and st.session_state.get("active_role") == "care_hub":
+        has_auth_tokens = bool(
+            st.session_state.get("auth_uid")
+            and st.session_state.get("access_token")
+            and st.session_state.get("refresh_token")
+        )
+        care_session = bool(
+            is_care_authenticated()
+            or (
+                has_auth_tokens
+                and st.session_state.get("active_role") != "family"
+            )
+        )
+        if care_session:
             if route_variant == VARIANT_OFFICE:
                 set_route(get_home_route(VARIANT_OFFICE))
             elif route_variant == VARIANT_MOBILE:
                 set_route(get_home_route(VARIANT_MOBILE))
             else:
-                set_route(get_home_route(VARIANT_OFFICE))
+                set_route(
+                    get_home_route(
+                        VARIANT_OFFICE
+                        if bool(st.session_state.get("office_login_explicit"))
+                        else VARIANT_MOBILE
+                    )
+                )
         elif route_variant == VARIANT_FAMILY:
             set_route(get_login_route(VARIANT_FAMILY))
         elif route_variant in {VARIANT_MOBILE, VARIANT_OFFICE}:
@@ -6850,11 +6868,19 @@ def render_public_walkthrough_page(
             effective_back_route = MOBILE_HOME_ROUTE
         elif base_variant == VARIANT_OFFICE:
             effective_back_route = OFFICE_HOME_ROUTE
-    if (
+    has_auth_tokens = bool(
         st.session_state.get("auth_uid")
-        and st.session_state.get("active_role") == "care_hub"
-        and effective_back_route in {"/public/walkthrough-overview", "/public-docs", "/service-overview", "/"}
-    ):
+        and st.session_state.get("access_token")
+        and st.session_state.get("refresh_token")
+    )
+    care_session = bool(
+        is_care_authenticated()
+        or (
+            has_auth_tokens
+            and st.session_state.get("active_role") != "family"
+        )
+    )
+    if care_session and effective_back_route in {"/public/walkthrough-overview", "/public-docs", "/service-overview", "/"}:
         effective_back_route = (
             OFFICE_HOME_ROUTE
             if bool(st.session_state.get("office_login_explicit"))
