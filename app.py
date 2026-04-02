@@ -6858,17 +6858,30 @@ def render_public_walkthrough_page(
             effective_back_route = "/public-docs"
         else:
             effective_back_route = "/public-docs"
-    # If a signed-in care user opened walkthrough pages from login flow/history,
-    # keep Back inside the authenticated inbox rather than returning to login.
+    # If an authenticated user opened walkthrough pages from login flow/history,
+    # keep Back inside the authenticated app home rather than returning to login.
     if (
         st.session_state.get("auth_uid")
-        and effective_back_route in {MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}
+        and effective_back_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}
     ):
-        base_variant = get_app_variant()
-        if base_variant == VARIANT_MOBILE:
-            effective_back_route = MOBILE_HOME_ROUTE
-        elif base_variant == VARIANT_OFFICE:
-            effective_back_route = OFFICE_HOME_ROUTE
+        active_role = str(st.session_state.get("active_role") or "").strip().lower()
+        if active_role == "family":
+            effective_back_route = FAMILY_HOME_ROUTE
+        elif active_role == "care_hub":
+            if bool(st.session_state.get("office_login_explicit")):
+                effective_back_route = OFFICE_HOME_ROUTE
+            elif effective_back_route == OFFICE_LOGIN_ROUTE:
+                effective_back_route = OFFICE_HOME_ROUTE
+            else:
+                effective_back_route = MOBILE_HOME_ROUTE
+        else:
+            base_variant = get_app_variant()
+            if base_variant == VARIANT_FAMILY:
+                effective_back_route = FAMILY_HOME_ROUTE
+            elif base_variant == VARIANT_MOBILE:
+                effective_back_route = MOBILE_HOME_ROUTE
+            elif base_variant == VARIANT_OFFICE:
+                effective_back_route = OFFICE_HOME_ROUTE
     has_auth_tokens = bool(
         st.session_state.get("auth_uid")
         and st.session_state.get("access_token")
@@ -8426,9 +8439,13 @@ def render_care_hub_banner_settings() -> None:
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
         render_wrong_variant("Operational variables are only available in Care Hub – Office.")
         return
+    save_notice_state_key = "office_operational_save_notice"
     render_page_header("Operational Variables")
     access_token = st.session_state.get("access_token")
     render_care_home_identity_banner(access_token)
+    save_notice = str(st.session_state.pop(save_notice_state_key, "") or "").strip()
+    if save_notice:
+        st.success(save_notice)
     st.markdown("### Operational setup variables")
     st.markdown(
         "- Care home name\n"
@@ -8605,7 +8622,7 @@ def render_care_hub_banner_settings() -> None:
             care_hub_idle_timeout_seconds=int(selected_idle_timeout),
         )
         if saved:
-            st.success(message)
+            st.session_state[save_notice_state_key] = message
             st.rerun()
         else:
             st.error(message)
