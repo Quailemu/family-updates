@@ -1568,7 +1568,7 @@ def _apply_family_registration_mapping(
 def render_office_family_registration_form(
     access_token: str | None, residents: list[dict]
 ) -> None:
-    if get_app_variant() != VARIANT_OFFICE:
+    if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
         return
     care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
     auth_uid = str(st.session_state.get("auth_uid") or "").strip()
@@ -10541,7 +10541,7 @@ def render_care_hub() -> None:
 
 def render_care_hub_register_family() -> None:
     require_care_access()
-    if get_app_variant() != VARIANT_OFFICE:
+    if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
         render_wrong_variant(
             "Family registration is only available in Care Hub – Office."
         )
