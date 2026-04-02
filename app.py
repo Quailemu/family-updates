@@ -2631,12 +2631,12 @@ def is_office_mfa_required() -> bool:
         return False
     if st.session_state.get("mfa_verified"):
         return False
-    return os.getenv("OFFICE_MFA_REQUIRED", "0").strip().lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
+    if os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in {"1", "true", "yes", "on"}:
+        return True
+    access_token = st.session_state.get("access_token")
+    auth_uid = st.session_state.get("auth_uid")
+    record = get_care_hub_mfa_record(access_token, auth_uid)
+    return bool(record and record.get("enabled"))
 
 
 def log_audit_event(
@@ -8567,7 +8567,7 @@ def render_care_hub_security() -> None:
     record = get_care_hub_mfa_record(access_token, auth_uid)
     enabled = bool(record and record.get("enabled"))
     mfa_required = (
-        os.getenv("OFFICE_MFA_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
+        os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in {"1", "true", "yes", "on"}
     )
     st.caption("Operational variables are managed on the dedicated Operational variables page.")
     render_route_link(
@@ -8705,7 +8705,7 @@ def render_care_hub_mfa() -> None:
     render_care_home_identity_banner(access_token)
     auth_uid = st.session_state.get("auth_uid")
     mfa_required = (
-        os.getenv("OFFICE_MFA_REQUIRED", "0").strip().lower() in {"1", "true", "yes", "on"}
+        os.getenv("OFFICE_MFA_REQUIRED", "1").strip().lower() in {"1", "true", "yes", "on"}
     )
     if not auth_uid:
         render_access_gate(
