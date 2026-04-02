@@ -3759,11 +3759,14 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
         )
     else:
         st.caption("You are signed in.")
-    render_active_care_home_custom_banner(care_home_profile)
+    if not bool(st.session_state.get("_care_home_custom_banner_rendered")):
+        rendered = render_active_care_home_custom_banner(care_home_profile)
+        st.session_state["_care_home_custom_banner_rendered"] = bool(rendered)
 
 
 def render_active_care_home_name_caption() -> None:
     st.session_state["_care_home_banner_rendered_in_header"] = False
+    st.session_state["_care_home_custom_banner_rendered"] = False
     app_variant = get_app_variant()
     if app_variant not in {VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE}:
         return
@@ -3784,17 +3787,18 @@ def render_active_care_home_name_caption() -> None:
             unsafe_allow_html=True,
         )
         st.session_state["_care_home_banner_rendered_in_header"] = True
-    render_active_care_home_custom_banner(care_home_profile)
+    rendered = render_active_care_home_custom_banner(care_home_profile)
+    st.session_state["_care_home_custom_banner_rendered"] = bool(rendered)
 
 
-def render_active_care_home_custom_banner(care_home_profile: dict) -> None:
+def render_active_care_home_custom_banner(care_home_profile: dict) -> bool:
     if not isinstance(care_home_profile, dict):
-        return
+        return False
     banner_title = str(care_home_profile.get("branding_banner_title") or "").strip()
     banner_text = str(care_home_profile.get("branding_banner_text") or "").strip()
     banner_artwork_url = str(care_home_profile.get("branding_banner_artwork_url") or "").strip()
     if not banner_title and not banner_text and not banner_artwork_url:
-        return
+        return False
     escaped_title = html.escape(banner_title)
     escaped_text = html.escape(banner_text)
     st.markdown('<div class="vm-care-home-custom-banner">', unsafe_allow_html=True)
@@ -3817,6 +3821,7 @@ def render_active_care_home_custom_banner(care_home_profile: dict) -> None:
             unsafe_allow_html=True,
         )
     st.markdown("</div>", unsafe_allow_html=True)
+    return True
 
 
 def get_resident_full_name(resident: dict) -> str:
