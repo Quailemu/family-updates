@@ -3413,11 +3413,12 @@ def reset_outbox_state_on_new_recording(
     state: dict | None,
     ack_widget_key: str | None = None,
     clear_care_last_sent_for_resident: str | None = None,
+    update_widget_state: bool = True,
 ) -> None:
     if isinstance(state, dict):
         state["preview_confirmed"] = False
         state["last_message"] = None
-    if ack_widget_key:
+    if ack_widget_key and update_widget_state:
         st.session_state[ack_widget_key] = False
     if clear_care_last_sent_for_resident:
         last_sent = st.session_state.get("care_last_sent")
@@ -10075,6 +10076,7 @@ def render_care_hub() -> None:
                         state,
                         ack_widget_key=f"care_listened_{resident_id}",
                         clear_care_last_sent_for_resident=resident_id,
+                        update_widget_state=False,
                     )
                     st.rerun()
             else:
@@ -10311,7 +10313,6 @@ def render_care_hub() -> None:
                     state["office_recording_input_nonce"] = int(
                         state.get("office_recording_input_nonce", 0)
                     ) + 1
-                    st.session_state[f"care_office_listened_{resident_id}"] = False
                     st.rerun()
             elif runtime_variant == VARIANT_OFFICE:
                 state["office_preview_confirmed"] = False
