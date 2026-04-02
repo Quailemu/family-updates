@@ -8379,7 +8379,7 @@ For urgent, medical, safeguarding, or emergency matters, contact the care home d
 
 def render_care_hub_banner_settings() -> None:
     require_care_access()
-    if get_app_variant() != VARIANT_OFFICE:
+    if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
         render_wrong_variant("Operational variables are only available in Care Hub – Office.")
         return
     render_page_header("Operational Variables")
@@ -8569,7 +8569,7 @@ def render_care_hub_banner_settings() -> None:
 
 def render_care_hub_security() -> None:
     require_care_access()
-    if get_app_variant() != VARIANT_OFFICE:
+    if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
         render_wrong_variant("Security settings are only available in Care Hub – Office.")
         return
     render_page_header("Account & Security")
