@@ -10060,6 +10060,23 @@ def render_care_hub() -> None:
                     value=state.get("preview_confirmed", False),
                     key=f"care_listened_{resident_id}",
                 )
+                if st.button(
+                    "Reset recorder",
+                    key=f"care_reset_recorder_{resident_id}",
+                    use_container_width=True,
+                ):
+                    state["recording_bytes"] = None
+                    state["recording_mime_type"] = "audio/wav"
+                    state["recording_fingerprint"] = None
+                    state["recording_input_nonce"] = int(
+                        state.get("recording_input_nonce", 0)
+                    ) + 1
+                    reset_outbox_state_on_new_recording(
+                        state,
+                        ack_widget_key=f"care_listened_{resident_id}",
+                        clear_care_last_sent_for_resident=resident_id,
+                    )
+                    st.rerun()
             else:
                 state["preview_confirmed"] = False
 
@@ -10280,6 +10297,22 @@ def render_care_hub() -> None:
                     value=state.get("office_preview_confirmed", False),
                     key=f"care_office_listened_{resident_id}",
                 )
+                if st.button(
+                    "Reset care hub recorder",
+                    key=f"care_office_reset_recorder_{resident_id}",
+                    use_container_width=True,
+                ):
+                    state["office_recording_bytes"] = None
+                    state["office_recording_mime_type"] = "audio/wav"
+                    state["office_recording_fingerprint"] = None
+                    state["office_preview_confirmed"] = False
+                    state["office_last_sent_label"] = None
+                    state["office_last_sent_fingerprint"] = None
+                    state["office_recording_input_nonce"] = int(
+                        state.get("office_recording_input_nonce", 0)
+                    ) + 1
+                    st.session_state[f"care_office_listened_{resident_id}"] = False
+                    st.rerun()
             elif runtime_variant == VARIANT_OFFICE:
                 state["office_preview_confirmed"] = False
 
