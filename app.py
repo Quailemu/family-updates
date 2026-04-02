@@ -3743,7 +3743,8 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
         and st.session_state.get("_care_home_banner_rendered_in_header")
     ):
         return
-    care_home_name = fetch_active_care_home_name(access_token)
+    care_home_profile = fetch_active_care_home_profile(access_token)
+    care_home_name = str(care_home_profile.get("name") or "").strip()
     if care_home_name:
         safe_name = html.escape(care_home_name)
         st.markdown(
@@ -3758,6 +3759,7 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
         )
     else:
         st.caption("You are signed in.")
+    render_active_care_home_custom_banner(care_home_profile)
 
 
 def render_active_care_home_name_caption() -> None:
@@ -5694,6 +5696,40 @@ def inject_login_css() -> None:
     )
 
 
+def submit_public_feedback(
+    *,
+    audience: str,
+    ease_score: int,
+    calm_score: int,
+    recommend_score: int,
+    comment: str,
+) -> tuple[bool, str]:
+    valid_audiences = {"family", "resident_supported", "carer"}
+    if audience not in valid_audiences:
+        return False, "Please choose who is giving feedback."
+    for score in (ease_score, calm_score, recommend_score):
+        if int(score) < 1 or int(score) > 5:
+            return False, "Please complete all three questions."
+    comment_value = str(comment or "").strip()
+    if len(comment_value) > 500:
+        return False, "Optional comment must be 500 characters or fewer."
+    supabase, error = get_supabase_client()
+    if error:
+        return False, error
+    payload = {
+        "audience": audience,
+        "q1_score": int(ease_score),
+        "q2_score": int(calm_score),
+        "q3_score": int(recommend_score),
+        "comment": comment_value or None,
+    }
+    try:
+        supabase.table("feedback_submissions").insert(payload).execute()
+    except Exception as exc:
+        return False, str(exc)
+    return True, "Thank you. Your anonymous feedback has been saved."
+
+
 def render_home(active: str) -> None:
     inject_css()
     inject_home_css()
@@ -5963,6 +5999,62 @@ def render_home(active: str) -> None:
             """,
             unsafe_allow_html=True,
         )
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown('<div class="public-section">', unsafe_allow_html=True)
+        st.markdown("## Feedback welcome")
+        st.markdown(
+            "We warmly welcome feedback from carers, residents (with support), and families to help us improve this service."
+        )
+        st.caption("Anonymous only. Please do not include names, emails, phone numbers, or medical details.")
+        with st.form("public_feedback_form", clear_on_submit=True):
+            audience_choice = st.selectbox(
+                "Who are you?",
+                options=[
+                    ("family", "Family"),
+                    ("resident_supported", "Resident (with support)"),
+                    ("carer", "Carer"),
+                ],
+                format_func=lambda item: item[1],
+                key="public_feedback_audience",
+            )
+            ease_score = st.radio(
+                "1. How easy was voice-message.com to use today?",
+                options=[1, 2, 3, 4, 5],
+                horizontal=True,
+                key="public_feedback_q1",
+            )
+            calm_score = st.radio(
+                "2. Did it help you feel more connected in a calm way?",
+                options=[1, 2, 3, 4, 5],
+                horizontal=True,
+                key="public_feedback_q2",
+            )
+            recommend_score = st.radio(
+                "3. Would you recommend this for care-home communication?",
+                options=[1, 2, 3, 4, 5],
+                horizontal=True,
+                key="public_feedback_q3",
+            )
+            free_text = st.text_area(
+                "Optional suggestion",
+                max_chars=500,
+                key="public_feedback_comment",
+                placeholder="Share an idea (without names, emails, phone numbers, or medical details).",
+            )
+            feedback_submit = st.form_submit_button("Send anonymous feedback")
+        if feedback_submit:
+            saved, message = submit_public_feedback(
+                audience=audience_choice[0],
+                ease_score=int(ease_score),
+                calm_score=int(calm_score),
+                recommend_score=int(recommend_score),
+                comment=free_text,
+            )
+            if saved:
+                st.success(message)
+            else:
+                st.error(message)
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-section public-app-buttons">', unsafe_allow_html=True)
