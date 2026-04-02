@@ -2202,7 +2202,7 @@ def wrong_variant_screen(route: str, detail: str | None = None) -> None:
         elif route_variant == VARIANT_FAMILY:
             set_route(get_login_route(VARIANT_FAMILY))
         elif route_variant in {VARIANT_MOBILE, VARIANT_OFFICE}:
-            set_route("/public-docs")
+            set_route("/service-overview")
         else:
             set_route("/public/walkthrough-overview")
     st.stop()
@@ -4970,12 +4970,12 @@ def render_header_menu(menu_key: str) -> None:
                 set_route(get_how_it_works_route(app_variant))
                 return
         if app_variant not in (VARIANT_OFFICE, VARIANT_MOBILE, VARIANT_FAMILY):
-            if st.button("Public documents", key=f"{menu_key}_public_docs"):
-                set_route("/public-docs")
+            if st.button("Public info", key=f"{menu_key}_public_docs"):
+                set_route("/service-overview")
                 return
         if app_variant == VARIANT_MOBILE:
-            if st.button("Public documents", key=f"{menu_key}_mobile_public_docs"):
-                set_route("/public-docs")
+            if st.button("Public info", key=f"{menu_key}_mobile_public_docs"):
+                set_route("/service-overview")
                 return
             if st.button("Mobile Q&A", key=f"{menu_key}_mobile_qa"):
                 set_route("/care-hub/mobile/qa")
@@ -6295,8 +6295,8 @@ def render_home(active: str) -> None:
     current_variant = get_app_variant()
     if current_variant in (VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE):
         render_route_link(
-            "← Back to Public documents",
-            "/public-docs",
+            "← Back to main public page",
+            "/service-overview",
             key=f"service_overview_back_to_public_docs_{current_variant}",
         )
     st.markdown(
@@ -6970,11 +6970,11 @@ def render_public_walkthrough_page(
             if st.session_state.get("auth_uid"):
                 effective_back_route = "/docs"
             else:
-                effective_back_route = "/public-docs"
+                effective_back_route = "/service-overview"
         elif app_variant in {VARIANT_MOBILE, VARIANT_FAMILY}:
-            effective_back_route = "/public-docs"
+            effective_back_route = "/service-overview"
         else:
-            effective_back_route = "/public-docs"
+            effective_back_route = "/service-overview"
     # If an authenticated user opened walkthrough pages from login flow/history,
     # keep Back inside the authenticated app home rather than returning to login.
     if (
@@ -7011,7 +7011,7 @@ def render_public_walkthrough_page(
             and st.session_state.get("active_role") != "family"
         )
     )
-    if care_session and effective_back_route in {"/public/walkthrough-overview", "/public-docs", "/service-overview", "/"}:
+    if care_session and effective_back_route in {"/public/walkthrough-overview", "/service-overview", "/"}:
         effective_back_route = (
             OFFICE_HOME_ROUTE
             if bool(st.session_state.get("office_login_explicit"))
@@ -11117,7 +11117,7 @@ def main() -> None:
     elif route == "/docs":
         render_docs()
     elif route == "/public-docs":
-        render_public_docs()
+        set_route("/service-overview")
     elif route == "/public/service-overview":
         set_route("/public/walkthrough-overview")
     elif route == "/public/how-it-works":

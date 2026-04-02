@@ -52,7 +52,8 @@ Frequency: once per week (and again after any production deployment).
   - login + 2FA flow works
   - office update send works
   - practical message send + responses view works
-- Public docs:
+- Public front page:
+  - main public page loads and shows the three access buttons (Family, Care Hub – Mobile, Care Hub – Office).
   - walkthrough pages load for Family/Mobile/Office without placeholder errors.
 
 ## 5) GitHub/source-control audit

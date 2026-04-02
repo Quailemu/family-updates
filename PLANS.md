@@ -12,11 +12,22 @@ Homepage buttons (only):
 - Care Hub – Mobile
 - Care Hub – Office
 
-Short Explanation (homepage section):
-The system has three application interfaces for groups associated with the resident: Care Hub – Mobile, Care Hub – Office, and the Family App (which includes family members, friends, or other individuals designated by the care home).  
-Messages are organised into channels. Each channel keeps only the latest message.  
-When a new message is recorded in a channel, the previous message in that channel is replaced.  
-No archive. No message history. No scrolling thread.
+Homepage public info copy (before feedback section):
+## Familiar voices
+A simple communication tool for care homes, residents, and their families.
+
+Family members may each send an individual message to a resident at any time, as it is not a live service. Carers may play messages for the resident when convenient. Carers may also help residents record one reply to the family group.
+
+The care home may also send non-urgent or practical updates, and families may respond with structured text to simple requests.
+
+There is no message history, no long threads, and it is not live. It fits around normal care routines and helps keep communication manageable.
+
+## A simple way to explore the idea
+Voicemail Care can be introduced through a one-to-one, activity-based session in the care home.
+
+The session uses printed artwork and conversation as a starting point. A short voice message can be played as part of the interaction, introducing the idea in a natural way.
+
+There is no obligation to adopt anything, simply an opportunity to see how this might help communication for you.
 
 Non-real-time reinforcement (homepage or family entry page, short):
 This is non-urgent and not live messaging. Messages are played when staff are available, to fit around care routines.
