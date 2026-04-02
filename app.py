@@ -6831,6 +6831,17 @@ def render_public_walkthrough_page(
             effective_back_route = "/public-docs"
         else:
             effective_back_route = "/public-docs"
+    # If a signed-in care user opened walkthrough pages from login flow/history,
+    # keep Back inside the authenticated inbox rather than returning to login.
+    if (
+        st.session_state.get("auth_uid")
+        and effective_back_route in {MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}
+    ):
+        base_variant = get_app_variant()
+        if base_variant == VARIANT_MOBILE:
+            effective_back_route = MOBILE_HOME_ROUTE
+        elif base_variant == VARIANT_OFFICE:
+            effective_back_route = OFFICE_HOME_ROUTE
     render_route_link(
         "← Back",
         effective_back_route,
