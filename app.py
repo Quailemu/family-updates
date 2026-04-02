@@ -9972,6 +9972,10 @@ def render_care_hub() -> None:
                         st.warning(
                             "That recording could not be captured correctly. Please record again."
                         )
+                    # Once user has confirmed preview for current recording, avoid resetting
+                    # from duplicate/replayed audio_input payloads on rerun.
+                    elif state.get("preview_confirmed") and state.get("recording_bytes"):
+                        pass
                     elif native_fp != state.get("recording_fingerprint"):
                         reset_outbox_state_on_new_recording(
                             state,
