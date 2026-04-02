@@ -5961,48 +5961,34 @@ def render_home(active: str) -> None:
         st.markdown(header_html, unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
-        st.markdown("## The reassuring sound of familiar voices")
+        st.markdown("## Familiar voices")
         st.markdown(
-            "A simple way for care home residents and families to exchange voice messages without pressure, notifications, or message overload."
+            "A simple communication tool for care homes, residents, and their families."
         )
-        st.markdown("- Families send messages anytime")
-        st.markdown("- Staff play them when appropriate")
-        st.markdown("- Residents reply in their own time")
-        st.markdown("- No message history, no threads, no urgency")
-        st.markdown("")
-        st.markdown("This is designed to fit naturally around care routines.")
+        st.markdown(
+            "Family members may each send an individual message to a resident at any time, as it is not a live service. "
+            "Carers may play messages for the resident when convenient. Carers may also help residents record one reply to the family group."
+        )
+        st.markdown(
+            "The care home may also send non-urgent or practical updates, and families may respond with structured text to simple requests."
+        )
+        st.markdown(
+            "There is no message history, no long threads, and it is not live. "
+            "It fits around normal care routines and helps keep communication manageable."
+        )
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
-        st.markdown("## A gentle way to explore this")
+        st.markdown("## A simple way to explore the idea")
         st.markdown(
-            "A simple way to explore this approach is through a one-to-one, activity-based introduction within the care home."
+            "Voicemail Care can be introduced through a one-to-one, activity-based session in the care home."
         )
         st.markdown(
-            "This involves a calm, conversation-led session using printed artwork as a starting point. A short voice message can be played as part of the interaction, naturally introducing the idea of listening to and sharing messages in a low-pressure way."
+            "The session uses printed artwork and conversation as a starting point. "
+            "A short voice message can be played as part of the interaction, introducing the idea in a natural way."
         )
         st.markdown(
-            "This is designed to be informal, unhurried, and to fit easily around normal care routines."
-        )
-        st.markdown(
-            "There is no requirement to adopt anything, simply an opportunity to see how it feels in practice."
-        )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        st.markdown("If helpful, you can see more detail below.")
-
-        st.markdown('<div class="public-hero">', unsafe_allow_html=True)
-        st.markdown(
-            """
-            <h1 class="hero-headline">
-            A calm way to stay connected
-            </h1>
-            <p>Simple voice messages between care home residents, their families, and care teams — with no pressure to reply and no overwhelming threads.</p>
-            <p>voicemailcare.com is a simple way for care home residents, their families, and care teams to stay connected through non-urgent voice messages.</p>
-            <p>It allows residents and their loved ones to exchange messages at their own pace, while care homes can share general updates with families to provide reassurance and keep everyone informed.</p>
-            <p>The service is designed to be calm, controlled, and easy to use, fitting naturally around care routines.</p>
-            """,
-            unsafe_allow_html=True,
+            "There is no obligation to adopt anything, simply an opportunity to see how this might help communication for you."
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
