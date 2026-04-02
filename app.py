@@ -6552,6 +6552,7 @@ def _resolve_variant_from_route(route: str) -> str | None:
     if (
         normalized.startswith("/care-hub")
         or normalized.startswith("/office")
+        or normalized in {"/billing", "/contracts", "/docs"}
         or normalized == "/how-it-works/office"
     ):
         return VARIANT_OFFICE
