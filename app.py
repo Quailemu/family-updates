@@ -3717,6 +3717,21 @@ def update_active_care_home_branding(
                 .execute()
             )
         st.session_state.pop(f"care_home_profile_{care_home_id}", None)
+        persisted_profile = fetch_active_care_home_profile(access_token)
+        persisted_name = str((persisted_profile or {}).get("name") or "").strip()
+        persisted_title = str((persisted_profile or {}).get("branding_banner_title") or "").strip()
+        persisted_text = str((persisted_profile or {}).get("branding_banner_text") or "").strip()
+        persisted_artwork = str((persisted_profile or {}).get("branding_banner_artwork_url") or "").strip()
+        if (
+            persisted_name != name_value
+            or persisted_title != title_value
+            or persisted_text != text_value
+            or persisted_artwork != artwork_value
+        ):
+            return (
+                False,
+                "Settings could not be confirmed after save. Please retry or check care_homes update permissions.",
+            )
         return True, "Care home profile updated."
     except Exception as exc:
         return False, str(exc)
@@ -6741,7 +6756,17 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
 
 
 def get_office_home_route(is_authed: bool) -> str:
-    return get_home_route(VARIANT_OFFICE) if is_authed else get_login_route(VARIANT_OFFICE)
+    if is_authed:
+        return get_home_route(VARIANT_OFFICE)
+    has_care_hub_session = bool(
+        st.session_state.get("access_token")
+        and st.session_state.get("refresh_token")
+        and st.session_state.get("active_role") == "care_hub"
+    )
+    if has_care_hub_session:
+        st.session_state["office_login_explicit"] = True
+        return get_home_route(VARIANT_OFFICE)
+    return get_login_route(VARIANT_OFFICE)
 
 
 def validate_supabase_config_for_variant(app_variant: str) -> None:
