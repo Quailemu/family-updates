@@ -2625,7 +2625,8 @@ def require_care_access() -> None:
 
 
 def is_office_mfa_required() -> bool:
-    if get_app_variant() != VARIANT_OFFICE:
+    runtime_variant = resolve_runtime_variant(route_hint=get_route())
+    if runtime_variant != VARIANT_OFFICE:
         return False
     if not st.session_state.get("auth_uid"):
         return False
@@ -8710,7 +8711,7 @@ def render_care_hub_mfa() -> None:
     if not auth_uid:
         render_access_gate(
             "Please sign in to access Care Hub – Office.",
-            get_login_route(get_app_variant()),
+            get_login_route(VARIANT_OFFICE),
             "care_hub",
         )
         return
@@ -8719,7 +8720,7 @@ def render_care_hub_mfa() -> None:
         if not mfa_required:
             st.info("Two-factor authentication is not enabled for this account.")
             if st.button("Continue", key="mfa_not_enabled_continue"):
-                set_route(get_home_route(get_app_variant()))
+                set_route(get_home_route(VARIANT_OFFICE))
                 st.rerun()
             return
         st.info("Two-factor authentication is required for Care Hub - Office.")
@@ -8768,7 +8769,7 @@ def render_care_hub_mfa() -> None:
                 st.code(code, language=None)
             if st.button("I have saved these codes", key="mfa_login_codes_saved"):
                 st.session_state.pop("mfa_show_codes", None)
-                set_route(get_home_route(get_app_variant()))
+                set_route(get_home_route(VARIANT_OFFICE))
                 st.rerun()
         if st.button("Sign out", key="mfa_setup_sign_out"):
             sign_out_user("care_hub")
@@ -8792,7 +8793,7 @@ def render_care_hub_mfa() -> None:
                 verified = True
         if verified:
             st.session_state["mfa_verified"] = True
-            set_route(get_home_route(get_app_variant()))
+            set_route(get_home_route(VARIANT_OFFICE))
             st.rerun()
         else:
             st.error("Invalid code.")
