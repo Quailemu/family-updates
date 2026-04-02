@@ -2588,7 +2588,11 @@ def require_care_access() -> None:
     runtime_variant = resolve_runtime_variant(route_hint=get_route())
     if runtime_variant not in {VARIANT_MOBILE, VARIANT_OFFICE}:
         wrong_variant_screen(get_route(), "Care Hub pages are not available in this app.")
-    if runtime_variant == VARIANT_OFFICE and not bool(st.session_state.get("office_login_explicit")):
+    if (
+        runtime_variant == VARIANT_OFFICE
+        and not bool(st.session_state.get("office_login_explicit"))
+        and not bool(st.session_state.get("auth_uid"))
+    ):
         if get_route() != get_login_route(VARIANT_OFFICE):
             set_route(get_login_route(VARIANT_OFFICE))
         st.stop()
@@ -2637,6 +2641,8 @@ def require_care_access() -> None:
         if care_record:
             st.session_state["active_role"] = "care_hub"
             st.session_state["active_care_home_id"] = care_record.get("care_home_id")
+        if runtime_variant == VARIANT_OFFICE:
+            st.session_state["office_login_explicit"] = True
         if runtime_variant == VARIANT_OFFICE and is_office_mfa_required():
             if get_route() != "/care-hub/mfa":
                 set_route("/care-hub/mfa")
@@ -9355,8 +9361,10 @@ def render_care_hub() -> None:
         if isinstance(entry, dict)
     )
     current_variant = runtime_variant
-    disable_live_refresh = has_pending_recording or not is_variant_live_refresh_enabled(
-        current_variant
+    disable_live_refresh = (
+        has_pending_recording
+        or current_variant == VARIANT_OFFICE
+        or not is_variant_live_refresh_enabled(current_variant)
     )
     trigger_live_message_refresh("care_live_refresh", disabled=disable_live_refresh)
     active_rec_id = st.session_state.get("care_active_rec_resident")
@@ -10273,6 +10281,10 @@ def render_care_hub() -> None:
                         if office_bytes
                         else None
                     )
+                    if not office_bytes:
+                        st.warning(
+                            "That care hub update recording could not be captured correctly. Please record again."
+                        )
                     now_ts = time.time()
                     # Prevent stale recorder replay after a send from re-populating the form.
                     if (
