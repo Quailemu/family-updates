@@ -2252,9 +2252,9 @@ def render_how_it_works_diagram_and_notes() -> None:
     diagram_path = Path("assets/voice-message-flow-diagram.png")
     if diagram_path.exists():
         try:
-            st.image(str(diagram_path), caption="Voice message flow diagram", use_container_width=True)
+            st.image(str(diagram_path), caption="Voicemailcare.com flow diagram", use_container_width=True)
         except TypeError:
-            st.image(str(diagram_path), caption="Voice message flow diagram", use_column_width=True)
+            st.image(str(diagram_path), caption="Voicemailcare.com flow diagram", use_column_width=True)
     else:
         st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
     st.markdown(
@@ -6117,13 +6117,13 @@ def render_home(active: str) -> None:
             try:
                 st.image(
                     str(public_diagram_path),
-                    caption="Voice message flow diagram",
+                    caption="Voicemailcare.com flow diagram",
                     use_container_width=True,
                 )
             except TypeError:
                 st.image(
                     str(public_diagram_path),
-                    caption="Voice message flow diagram",
+                    caption="Voicemailcare.com flow diagram",
                     use_column_width=True,
                 )
         else:
@@ -6260,13 +6260,13 @@ def render_home(active: str) -> None:
             try:
                 st.image(
                     str(public_diagram_path),
-                    caption="Voice message flow diagram",
+                    caption="Voicemailcare.com flow diagram",
                     use_container_width=True,
                 )
             except TypeError:
                 st.image(
                     str(public_diagram_path),
-                    caption="Voice message flow diagram",
+                    caption="Voicemailcare.com flow diagram",
                     use_column_width=True,
                 )
             st.markdown("Communication participants")
