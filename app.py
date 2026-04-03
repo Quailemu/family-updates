@@ -1707,7 +1707,9 @@ def render_office_family_registration_form(
             "for determining, granting, and maintaining their access to the resident.",
             key="office_family_authorisation_confirm",
         )
-        st.caption("voicemailcare.com does not decide who is authorised. The care home is responsible for that decision.")
+        st.caption(
+            "voicemailcare.com does not decide who may be added. The care home is responsible for that decision."
+        )
         st.caption(
             "Security note: after sending an invite, wait for the countdown before retrying."
         )
