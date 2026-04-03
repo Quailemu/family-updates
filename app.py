@@ -11180,7 +11180,7 @@ def main() -> None:
             "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL,PUBLIC_VIDEO_OVERVIEW_URL",
             "assets/voice-message-flow-overview-v1.mp4",
             [
-                "How the overall service flow works across Family, Mobile, and Office.",
+                "How the overall service flow works across the three app interfaces.",
                 "Channel boundaries and replacement-only rules.",
                 "Where Office updates and practical structured messages fit.",
                 "Non-live, non-urgent communication boundaries.",

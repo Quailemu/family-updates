@@ -4,11 +4,11 @@
 
 ## Purpose
 
-These terms apply to Family Members using the Family app.
+These terms apply to Family Members using the Family app interface.
 
 ## Service type
 
-The Family app is for non-urgent social voice messages only.
+The Family app interface is for non-urgent social voice messages only.
 
 It is not for medical updates, health information, safeguarding communication, or urgent enquiries.
 
@@ -20,7 +20,7 @@ Not a live service. Messages are played when staff are available.
 
 There are no push alerts, delivery confirmations, read receipts, typing indicators, or instant response expectations.
 
-Message date is shown in Family app and Care Hub - Mobile (date only, no time).
+Message date is shown in Family app interface and Care Hub - Mobile (date only, no time).
 
 The service is provided using reasonable skill and care, but uninterrupted or error-free operation is not guaranteed.
 
@@ -28,7 +28,7 @@ Technical faults, delays, outages, transmission failures, or security incidents 
 
 ## Role separation
 
-Family users use the Family app only.
+Family users use the Family app interface only.
 
 Family users do not access Care Hub – Mobile or Care Hub – Office.
 
