@@ -2258,7 +2258,7 @@ def render_how_it_works_diagram_and_notes() -> None:
     else:
         st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
     st.markdown(
-        "- The diagram shows the three app areas: Family, Care Hub – Mobile, and Care Hub – Office.\n"
+        "- The diagram shows the three app interfaces: Family, Care Hub – Mobile, and Care Hub – Office.\n"
         "- Each Family Member has their own individual communication channel to the resident.\n"
         "- Office practical messages collect quick structured family responses to support efficient, inclusive practical decision-making.\n"
         "- The care home reviews responses and makes the final operational decision.\n"
@@ -6129,7 +6129,7 @@ def render_home(active: str) -> None:
         else:
             st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
         st.markdown(
-            "- The diagram shows the three app areas: Family, Care Hub – Mobile, and Care Hub – Office.\n"
+            "- The diagram shows the three app interfaces: Family, Care Hub – Mobile, and Care Hub – Office.\n"
             "- Each family member has their own individual communication channel to the resident, managed by the care home.\n"
             "- Office practical messages collect quick structured family responses to support efficient, inclusive practical decision-making.\n"
             "- The care home reviews responses and makes the final operational decision.\n"
