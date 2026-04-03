@@ -7262,7 +7262,9 @@ def render_family_login_hub() -> None:
     if st.session_state.get("auth_uid"):
         if st.button("Sign out", key="family_login_sign_out"):
             sign_out_pressed = True
-    back_pressed = False
+    if st.button("Back to main public page", key="family_login_back_public"):
+        set_route("/service-overview")
+        return
 
     if submit_login:
         ok, message = send_magic_link_email(
@@ -9195,6 +9197,12 @@ def render_care_login() -> None:
             st.markdown(f'<div class="care-login-box">{box}</div>', unsafe_allow_html=True)
     elif app_variant == VARIANT_OFFICE:
         st.caption("Office login is a separate staff/admin access path.")
+    if st.button(
+        "Back to main public page",
+        key=f"care_login_back_public_{app_variant}",
+    ):
+        set_route("/service-overview")
+        return
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
     office_requires_explicit_login = (
         app_variant == VARIANT_OFFICE

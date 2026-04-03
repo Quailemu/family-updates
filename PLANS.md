@@ -12,6 +12,9 @@ Homepage buttons (only):
 - Care Hub – Mobile
 - Care Hub – Office
 
+Canonical interface sentence:
+The platform has three app interfaces: Family app, Care Hub – Mobile, and Care Hub – Office.
+
 Homepage public info copy (before feedback section):
 ## Familiar voices
 A simple communication tool for care homes, residents, and their families.

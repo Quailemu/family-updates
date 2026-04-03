@@ -7,11 +7,11 @@ It explains how the Care Hub is used day to day across the Care Hub – Mobile a
 
 ## System structure
 
-The service provides three user interfaces connected to a resident's care circle:
+The service provides three app interfaces connected to a resident's care circle:
 
 - Care Hub – Mobile: the operational interface used by carers to support the resident and manage voice messaging
 - Care Hub – Office: the office/administration interface used by care-home staff
-- Family App: used by Family Members registered by the care home
+- Family app: used by Family Members registered by the care home
 
 Each interface has its own controls for creating and managing the messages it sends.
 
