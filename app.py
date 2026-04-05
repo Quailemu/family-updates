@@ -6993,6 +6993,10 @@ def render_public_walkthrough_page(
     back_route: str | None = None,
     fallback_doc_path: str | None = None,
 ) -> None:
+    def _is_walkthrough_route(route_value: str) -> bool:
+        normalized = normalize_route(route_value)
+        return normalized.startswith("/public/walkthrough")
+
     effective_back_route = back_route
     current_route = normalize_route(get_route()) or "/"
     prev_route = normalize_route(st.session_state.get("prev_page") or "")
@@ -7001,21 +7005,26 @@ def render_public_walkthrough_page(
         not effective_back_route
         and prev_route
         and prev_route != current_route
+        and not (_is_walkthrough_route(current_route) and _is_walkthrough_route(prev_route))
     ):
         # Preserve in-app navigation context (for example Family -> Diagram video -> Back).
         effective_back_route = prev_route
         st.session_state[back_route_memory_key] = prev_route
     if not effective_back_route:
         remembered_back_route = normalize_route(st.session_state.get(back_route_memory_key) or "")
-        if remembered_back_route and remembered_back_route != current_route:
+        if (
+            remembered_back_route
+            and remembered_back_route != current_route
+            and not (
+                _is_walkthrough_route(current_route)
+                and _is_walkthrough_route(remembered_back_route)
+            )
+        ):
             effective_back_route = remembered_back_route
     if not effective_back_route:
         app_variant = resolve_runtime_variant(route_hint=current_route)
         if app_variant == VARIANT_PUBLIC:
-            if current_route == "/public/walkthrough-overview":
-                effective_back_route = "/service-overview"
-            else:
-                effective_back_route = "/public/walkthrough-overview"
+            effective_back_route = "/service-overview"
         elif app_variant == VARIANT_OFFICE:
             if st.session_state.get("auth_uid"):
                 effective_back_route = "/docs"
