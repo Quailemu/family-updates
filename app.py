@@ -380,8 +380,8 @@ def set_route(route: str) -> None:
 
 
 def get_public_landing_url() -> str:
-    url = (os.getenv("PUBLIC_LANDING_URL", "").strip() or "https://voicemailcare.com").rstrip("/")
-    return url or "https://voicemailcare.com"
+    # Always route public back-links to the static marketing homepage.
+    return "https://voicemailcare.com"
 
 
 def render_public_landing_link(label: str, key: str) -> None:
