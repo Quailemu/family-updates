@@ -379,6 +379,19 @@ def set_route(route: str) -> None:
         st.rerun()
 
 
+def get_public_landing_url() -> str:
+    url = (os.getenv("PUBLIC_LANDING_URL", "").strip() or "https://voicemailcare.com").rstrip("/")
+    return url or "https://voicemailcare.com"
+
+
+def render_public_landing_link(label: str, key: str) -> None:
+    url = get_public_landing_url()
+    if hasattr(st, "link_button"):
+        st.link_button(label, url, use_container_width=True, key=key)
+    else:
+        st.markdown(f"[{label}]({url})")
+
+
 def render_route_link(label: str, route: str, key: str, use_container_width: bool = True) -> None:
     target = normalize_route(route) or "/"
     if st.button(label, key=key, use_container_width=use_container_width):
@@ -6295,12 +6308,10 @@ def render_home(active: str) -> None:
                     pass
     st.markdown("### Service overview")
     current_variant = get_app_variant()
-    if current_variant in (VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE):
-        render_route_link(
-            "← Back to main public page",
-            "/service-overview",
-            key=f"service_overview_back_to_public_docs_{current_variant}",
-        )
+    render_public_landing_link(
+        "← Back to main public page",
+        key=f"service_overview_back_to_public_docs_{current_variant}",
+    )
     st.markdown(
         "voicemailcare.com  \n"
         "One message in. One message out.  \n"
@@ -7264,9 +7275,7 @@ def render_family_login_hub() -> None:
     if st.session_state.get("auth_uid"):
         if st.button("Sign out", key="family_login_sign_out"):
             sign_out_pressed = True
-    if st.button("Back to main public page", key="family_login_back_public"):
-        set_route("/service-overview")
-        return
+    render_public_landing_link("Back to main public page", key="family_login_back_public")
 
     if submit_login:
         ok, message = send_magic_link_email(
@@ -9199,12 +9208,10 @@ def render_care_login() -> None:
             st.markdown(f'<div class="care-login-box">{box}</div>', unsafe_allow_html=True)
     elif app_variant == VARIANT_OFFICE:
         st.caption("Office login is a separate staff/admin access path.")
-    if st.button(
+    render_public_landing_link(
         "Back to main public page",
         key=f"care_login_back_public_{app_variant}",
-    ):
-        set_route("/service-overview")
-        return
+    )
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
     office_requires_explicit_login = (
         app_variant == VARIANT_OFFICE
