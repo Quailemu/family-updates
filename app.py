@@ -5031,7 +5031,13 @@ def render_header_menu(menu_key: str) -> None:
                 and prev_route != login_route
             ):
                 back_target = prev_route
-            render_route_link("Back", back_target, key=f"{menu_key}_family_back_link")
+            if normalize_route(back_target) == normalize_route(current_route):
+                render_public_landing_link(
+                    "Back to main public page",
+                    key=f"{menu_key}_family_back_public_link",
+                )
+            else:
+                render_route_link("Back", back_target, key=f"{menu_key}_family_back_link")
             render_route_link(
                 "How it works",
                 get_how_it_works_route(app_variant),
