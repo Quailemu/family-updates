@@ -387,7 +387,7 @@ def get_public_landing_url() -> str:
 def render_public_landing_link(label: str, key: str) -> None:
     url = get_public_landing_url()
     if hasattr(st, "link_button"):
-        st.link_button(label, url, use_container_width=True, key=key)
+        st.link_button(label, url, use_container_width=True)
     else:
         st.markdown(f"[{label}]({url})")
 
