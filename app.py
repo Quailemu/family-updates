@@ -395,30 +395,10 @@ def render_public_landing_link(label: str, key: str) -> None:
 
 def render_public_landing_button(label: str) -> None:
     url = get_public_landing_url()
-    safe_url = html.escape(url, quote=True)
-    safe_label = html.escape(label)
-    st.markdown(
-        f"""
-<a
-  href="{safe_url}"
-  target="_self"
-  style="
-    display:block;
-    width:100%;
-    text-align:center;
-    text-decoration:none;
-    padding:0.45rem 0.7rem;
-    border:1px solid rgba(31,31,31,0.2);
-    border-radius:0.55rem;
-    background:#ffffff;
-    color:#1f1f1f;
-    font-weight:600;
-    margin:0.2rem 0 0.65rem;
-  "
->{safe_label}</a>
-""",
-        unsafe_allow_html=True,
-    )
+    try:
+        st.link_button(label, url, use_container_width=True)
+    except Exception:
+        render_public_landing_link(label, key=f"fallback_{label}")
 
 
 def render_route_link(label: str, route: str, key: str, use_container_width: bool = True) -> None:
