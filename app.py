@@ -4989,6 +4989,17 @@ def render_header_menu(menu_key: str) -> None:
                 set_route("/service-overview")
                 return
         if app_variant == VARIANT_MOBILE:
+            is_authed = bool(st.session_state.get("auth_uid"))
+            back_target = get_home_route(app_variant) if is_authed else get_login_route(app_variant)
+            if prev_route and prev_route != current_route:
+                back_target = prev_route
+            if normalize_route(back_target) == normalize_route(current_route):
+                render_public_landing_link(
+                    "Back to main public page",
+                    key=f"{menu_key}_mobile_back_public_link",
+                )
+            else:
+                render_route_link("Back", back_target, key=f"{menu_key}_mobile_back_link")
             if st.button("Public info", key=f"{menu_key}_mobile_public_docs"):
                 set_route("/service-overview")
                 return
