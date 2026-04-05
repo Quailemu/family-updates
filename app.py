@@ -384,6 +384,17 @@ def get_public_landing_url() -> str:
     return "https://voicemailcare.com"
 
 
+def redirect_to_public_landing() -> None:
+    url = get_public_landing_url()
+    safe_url = html.escape(url, quote=True)
+    st.markdown(
+        f'<meta http-equiv="refresh" content="0;url={safe_url}">',
+        unsafe_allow_html=True,
+    )
+    st.markdown(f"[Continue to main public page]({url})")
+    st.stop()
+
+
 def render_public_landing_link(label: str, key: str) -> None:
     url = get_public_landing_url()
     safe_url = html.escape(url, quote=True)
@@ -2226,7 +2237,8 @@ def wrong_variant_screen(route: str, detail: str | None = None) -> None:
         elif route_variant == VARIANT_FAMILY:
             set_route(get_login_route(VARIANT_FAMILY))
         elif route_variant in {VARIANT_MOBILE, VARIANT_OFFICE}:
-            set_route("/service-overview")
+            redirect_to_public_landing()
+            return
         else:
             set_route("/public/walkthrough-overview")
     st.stop()
@@ -4997,7 +5009,7 @@ def render_header_menu(menu_key: str) -> None:
                 return
         if app_variant not in (VARIANT_OFFICE, VARIANT_MOBILE, VARIANT_FAMILY):
             if st.button("Public info", key=f"{menu_key}_public_docs"):
-                set_route("/service-overview")
+                redirect_to_public_landing()
                 return
         if app_variant == VARIANT_MOBILE:
             is_authed = bool(st.session_state.get("auth_uid"))
@@ -5012,7 +5024,7 @@ def render_header_menu(menu_key: str) -> None:
             else:
                 render_route_link("Back", back_target, key=f"{menu_key}_mobile_back_link")
             if st.button("Public info", key=f"{menu_key}_mobile_public_docs"):
-                set_route("/service-overview")
+                redirect_to_public_landing()
                 return
             if st.button("Mobile Q&A", key=f"{menu_key}_mobile_qa"):
                 set_route("/care-hub/mobile/qa")
@@ -11111,9 +11123,9 @@ def main() -> None:
     elif route == "/family/contact":
         render_family_contact()
     elif route == "/pr-home":
-        set_route("/service-overview")
+        redirect_to_public_landing()
     elif route == "/service-overview":
-        render_home("public")
+        redirect_to_public_landing()
     elif route == "/how-it-works/family":
         set_route("/family/how-it-works")
     elif route == "/family/how-it-works":
@@ -11164,7 +11176,7 @@ def main() -> None:
     elif route == "/docs":
         render_docs()
     elif route == "/public-docs":
-        set_route("/service-overview")
+        redirect_to_public_landing()
     elif route == "/public/service-overview":
         set_route("/public/walkthrough-overview")
     elif route == "/public/how-it-works":
