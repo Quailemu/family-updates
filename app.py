@@ -393,6 +393,33 @@ def render_public_landing_link(label: str, key: str) -> None:
         unsafe_allow_html=True,
     )
 
+def render_public_landing_button(label: str) -> None:
+    url = get_public_landing_url()
+    safe_url = html.escape(url, quote=True)
+    safe_label = html.escape(label)
+    st.markdown(
+        f"""
+<a
+  href="{safe_url}"
+  target="_self"
+  style="
+    display:block;
+    width:100%;
+    text-align:center;
+    text-decoration:none;
+    padding:0.45rem 0.7rem;
+    border:1px solid rgba(31,31,31,0.2);
+    border-radius:0.55rem;
+    background:#ffffff;
+    color:#1f1f1f;
+    font-weight:600;
+    margin:0.2rem 0 0.65rem;
+  "
+>{safe_label}</a>
+""",
+        unsafe_allow_html=True,
+    )
+
 
 def render_route_link(label: str, route: str, key: str, use_container_width: bool = True) -> None:
     target = normalize_route(route) or "/"
@@ -4909,6 +4936,8 @@ def render_header_menu(menu_key: str) -> None:
     prev_route = st.session_state.get("prev_page") or "/"
     show_back_only = current_route.startswith("/how-it-works/") and prev_route in ("/", "", None)
     with st.popover("≡"):
+        # Prevent first action from clipping at the popover edge on small screens.
+        st.markdown('<div style="height:0.9rem"></div>', unsafe_allow_html=True)
         if app_variant == VARIANT_OFFICE:
             is_authed = bool(st.session_state.get("auth_uid"))
             if not is_authed:
@@ -9439,6 +9468,11 @@ def render_care_hub() -> None:
         unsafe_allow_html=True,
     )
     render_page_header(f"{get_care_hub_label()} voice messages")
+    if runtime_variant == VARIANT_MOBILE:
+        st.caption("App interface: Care Hub – Mobile")
+        render_public_landing_button("Back to main public page")
+    elif runtime_variant == VARIANT_OFFICE:
+        render_public_landing_button("Back to main public page")
     if (
         runtime_variant == VARIANT_MOBILE
         and st.session_state.pop("mobile_pin_just_accepted", False)
