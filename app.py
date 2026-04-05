@@ -386,10 +386,12 @@ def get_public_landing_url() -> str:
 
 def render_public_landing_link(label: str, key: str) -> None:
     url = get_public_landing_url()
-    if hasattr(st, "link_button"):
-        st.link_button(label, url, use_container_width=True)
-    else:
-        st.markdown(f"[{label}]({url})")
+    safe_url = html.escape(url, quote=True)
+    safe_label = html.escape(label)
+    st.markdown(
+        f'<a href="{safe_url}" target="_self">{safe_label}</a>',
+        unsafe_allow_html=True,
+    )
 
 
 def render_route_link(label: str, route: str, key: str, use_container_width: bool = True) -> None:
