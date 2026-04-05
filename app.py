@@ -5311,7 +5311,7 @@ def render_action_row(actions: list[tuple[str, str]]) -> None:
                         set_route(get_home_route(get_app_variant()))
                 elif key.endswith("_back"):
                     if "family_send" in key:
-                        set_route(get_login_route(VARIANT_FAMILY))
+                        set_route(PUBLIC_HOME_ROUTE)
                     elif "family_sent" in key:
                         set_route(get_home_route(VARIANT_FAMILY))
                     elif "family_login" in key:
