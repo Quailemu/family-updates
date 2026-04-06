@@ -1,6 +1,6 @@
 ![logo](../../assets/logo.png)
 
-![Voicemail Care cartoon overview](../../assets/cartoon%20voicemailcare.PNG)
+![Voicemail Care cartoon overview](../../assets/cartoon-voicemailcare.png)
 
 ## Purpose
 

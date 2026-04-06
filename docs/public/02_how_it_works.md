@@ -2,7 +2,7 @@
 
 # Voice messages - how it works
 
-![Voicemail Care cartoon overview](../../assets/cartoon%20voicemailcare.PNG)
+![Voicemail Care cartoon overview](../../assets/cartoon-voicemailcare.png)
 
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
