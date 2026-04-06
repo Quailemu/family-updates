@@ -4994,6 +4994,8 @@ def render_header_menu(menu_key: str) -> None:
         if app_variant == VARIANT_OFFICE:
             st.markdown("**Care Hub – Office**")
             clicked_action = None
+            if st.button("How it works", key=f"{menu_key}_office_how_it_works"):
+                clicked_action = ("route", "/care-hub-office/how-it-works")
             if st.button("Inbox", key=f"{menu_key}_inbox"):
                 clicked_action = ("route", get_home_route(app_variant))
             if st.button("Register family member", key=f"{menu_key}_register_family"):
@@ -5019,7 +5021,7 @@ def render_header_menu(menu_key: str) -> None:
 
             st.markdown("— Governance —")
             if st.button("Videos", key=f"{menu_key}_office_service_overview"):
-                clicked_action = ("route", "/public/walkthrough-overview")
+                clicked_action = ("route", "/docs")
             if st.button("Care home responsibilities", key=f"{menu_key}_office_doc_responsibilities"):
                 clicked_action = ("doc", "docs/office/04_care_home_responsibilities.md")
             if st.button("Safeguarding & consent", key=f"{menu_key}_office_doc_safeguarding"):
@@ -8170,7 +8172,8 @@ def render_document_boxes(doc_path: str, strip_first_heading: bool = True) -> No
     except OSError:
         st.error("Document not found.")
         return
-    content = re.sub(r"\A(?:\s*!\[[^\]]*\]\([^)]+\)\s*\n+)+", "", content, count=1)
+    # Remove only the leading logo marker; keep other top images (for example the cartoon).
+    content = re.sub(r"\A\s*!\[logo\]\([^)]+\)\s*\n+", "", content, count=1, flags=re.I)
     if strip_first_heading:
         content = re.sub(r"\A\s*#\s+.+?\n+", "", content, count=1)
     blocks = [block.strip() for block in re.split(r"\n\s*\n", content) if block.strip()]
