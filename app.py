@@ -2371,6 +2371,17 @@ def render_how_it_works_family() -> None:
 def render_how_it_works_mobile() -> None:
     render_page_header("How it works — Care Hub – Mobile")
     render_how_it_works_cartoon()
+    if get_app_variant() == VARIANT_PUBLIC:
+        mobile_back_label = "Back to public page"
+        mobile_back_route = get_home_route(VARIANT_PUBLIC)
+    else:
+        mobile_back_label = "Back to Care Hub – Mobile"
+        mobile_back_route = get_home_route(VARIANT_MOBILE)
+    render_route_link(
+        mobile_back_label,
+        mobile_back_route,
+        key="mobile_how_it_works_back_top_link",
+    )
     st.markdown(
         """
 <style>
@@ -2402,23 +2413,27 @@ def render_how_it_works_mobile() -> None:
         "how_mobile",
     )
     render_how_it_works_diagram_and_notes()
-    if get_app_variant() == VARIANT_PUBLIC:
-        render_route_link(
-            "Back to public page",
-            get_home_route(VARIANT_PUBLIC),
-            key="mobile_how_it_works_back_public_link",
-        )
-    else:
-        render_route_link(
-            "Back to Care Hub – Mobile",
-            get_home_route(VARIANT_MOBILE),
-            key="mobile_how_it_works_back_link",
-        )
+    render_route_link(
+        mobile_back_label,
+        mobile_back_route,
+        key="mobile_how_it_works_back_bottom_link",
+    )
 
 
 def render_how_it_works_office_overview() -> None:
     render_page_header("How it works — Care Hub – Office")
     render_how_it_works_cartoon()
+    if get_app_variant() == VARIANT_PUBLIC:
+        office_back_label = "Back to public page"
+        office_back_route = get_home_route(VARIANT_PUBLIC)
+    else:
+        office_back_label = "Back to Care Hub – Office"
+        office_back_route = get_home_route(VARIANT_OFFICE)
+    render_route_link(
+        office_back_label,
+        office_back_route,
+        key="office_how_it_works_back_top_link",
+    )
     st.markdown(
         """
 <style>
@@ -2451,6 +2466,11 @@ def render_how_it_works_office_overview() -> None:
         "how_office",
     )
     render_how_it_works_diagram_and_notes()
+    render_route_link(
+        office_back_label,
+        office_back_route,
+        key="office_how_it_works_back_bottom_link",
+    )
 
 
 def render_how_it_works_office() -> None:
