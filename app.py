@@ -2300,6 +2300,16 @@ def render_how_it_works_diagram_and_notes() -> None:
     )
 
 
+def render_how_it_works_cartoon() -> None:
+    cartoon_path = Path("assets/cartoon-voicemailcare.png")
+    if not cartoon_path.exists():
+        return
+    try:
+        st.image(str(cartoon_path), use_container_width=True)
+    except TypeError:
+        st.image(str(cartoon_path), use_column_width=True)
+
+
 def render_how_it_works_video_links(
     specific_label: str,
     specific_route: str,
@@ -2323,6 +2333,7 @@ def render_how_it_works_video_links(
 
 def render_how_it_works_family() -> None:
     render_page_header("How it works — Family")
+    render_how_it_works_cartoon()
     st.markdown(
         """
 <style>
@@ -2359,6 +2370,7 @@ def render_how_it_works_family() -> None:
 
 def render_how_it_works_mobile() -> None:
     render_page_header("How it works — Care Hub – Mobile")
+    render_how_it_works_cartoon()
     st.markdown(
         """
 <style>
@@ -2390,15 +2402,23 @@ def render_how_it_works_mobile() -> None:
         "how_mobile",
     )
     render_how_it_works_diagram_and_notes()
-    render_route_link(
-        "Back to Care Hub – Mobile",
-        get_home_route(VARIANT_MOBILE),
-        key="mobile_how_it_works_back_link",
-    )
+    if get_app_variant() == VARIANT_PUBLIC:
+        render_route_link(
+            "Back to public page",
+            get_home_route(VARIANT_PUBLIC),
+            key="mobile_how_it_works_back_public_link",
+        )
+    else:
+        render_route_link(
+            "Back to Care Hub – Mobile",
+            get_home_route(VARIANT_MOBILE),
+            key="mobile_how_it_works_back_link",
+        )
 
 
 def render_how_it_works_office_overview() -> None:
     render_page_header("How it works — Care Hub – Office")
+    render_how_it_works_cartoon()
     st.markdown(
         """
 <style>
