@@ -2,6 +2,8 @@
 
 # Voice messages - how it works
 
+![Voicemail Care cartoon overview](../../assets/cartoon%20voicemailcare.PNG)
+
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
 Communication participants: residents, Family Members, and Care Hub channels (Office and Mobile).

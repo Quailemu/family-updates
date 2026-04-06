@@ -1,5 +1,7 @@
 ![logo](../../assets/logo.png)
 
+![Voicemail Care cartoon overview](../../assets/cartoon%20voicemailcare.PNG)
+
 ## Purpose
 
 This guide is for care home managers and staff.

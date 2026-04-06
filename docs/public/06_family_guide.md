@@ -2,6 +2,8 @@
 
 # Family and friends guide
 
+![Voicemail Care cartoon overview](../../assets/cartoon%20voicemailcare.PNG)
+
 ![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
 
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).

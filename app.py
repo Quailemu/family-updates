@@ -7300,8 +7300,6 @@ def render_family_login_hub() -> None:
         "Plan your message first. Most messages only need a few seconds.",
         "For urgent matters or safeguarding concerns, contact the care home directly.",
     ]
-    for box in login_info_boxes:
-        st.markdown(f'<div class="family-login-box">{box}</div>', unsafe_allow_html=True)
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
 
     st.markdown("### Login")
@@ -7321,8 +7319,6 @@ def render_family_login_hub() -> None:
     if st.session_state.get("auth_uid"):
         if st.button("Sign out", key="family_login_sign_out"):
             sign_out_pressed = True
-    render_public_landing_link("Back to main public page", key="family_login_back_public")
-
     if submit_login:
         ok, message = send_magic_link_email(
             normalized_email, app_variant=VARIANT_FAMILY, should_create_user=False
@@ -7344,6 +7340,10 @@ def render_family_login_hub() -> None:
         else:
             st.error(message)
             st.info("If you are new, ask the care home to send your invitation first.")
+
+    for box in login_info_boxes:
+        st.markdown(f'<div class="family-login-box">{box}</div>', unsafe_allow_html=True)
+    render_public_landing_link("Back to main public page", key="family_login_back_public")
 
     # Logged-out Family view is intentionally login-only to avoid pre-login routing issues.
 
@@ -9226,7 +9226,14 @@ def render_care_login() -> None:
         show_variant_subheading=False,
         show_menu=app_variant != VARIANT_OFFICE,
     )
+    mobile_login_boxes = []
     if app_variant == VARIANT_MOBILE:
+        mobile_login_boxes = [
+            "Care Hub - Mobile supports non-urgent social voice messages between residents and families.",
+            "Not a live service. Messages are played when staff are available.",
+            "Mobile access uses an individual staff PIN for day-to-day use.",
+            "Use email secure link only for first sign-in or when session access has expired.",
+        ]
         st.markdown(
             """
 <style>
@@ -9244,20 +9251,8 @@ def render_care_login() -> None:
 """,
             unsafe_allow_html=True,
         )
-        mobile_login_boxes = [
-            "Care Hub - Mobile supports non-urgent social voice messages between residents and families.",
-            "Not a live service. Messages are played when staff are available.",
-            "Mobile access uses an individual staff PIN for day-to-day use.",
-            "Use email secure link only for first sign-in or when session access has expired.",
-        ]
-        for box in mobile_login_boxes:
-            st.markdown(f'<div class="care-login-box">{box}</div>', unsafe_allow_html=True)
     elif app_variant == VARIANT_OFFICE:
         st.caption("Office login is a separate staff/admin access path.")
-    render_public_landing_link(
-        "Back to main public page",
-        key=f"care_login_back_public_{app_variant}",
-    )
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
     office_requires_explicit_login = (
         app_variant == VARIANT_OFFICE
@@ -9328,6 +9323,12 @@ def render_care_login() -> None:
                 st.success(message)
             else:
                 st.error(message)
+        for box in mobile_login_boxes:
+            st.markdown(f'<div class="care-login-box">{box}</div>', unsafe_allow_html=True)
+        render_public_landing_link(
+            "Back to main public page",
+            key=f"care_login_back_public_{app_variant}",
+        )
         return
 
     email = st.text_input("Staff/admin email", key="care_login_email")
@@ -9411,6 +9412,10 @@ def render_care_login() -> None:
             st.success(message)
         else:
             st.error(message)
+    render_public_landing_link(
+        "Back to main public page",
+        key=f"care_login_back_public_{app_variant}",
+    )
 
 
 def render_care_hub() -> None:
