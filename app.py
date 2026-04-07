@@ -11519,7 +11519,21 @@ def main() -> None:
         restore_auth_session_from_cookie()
     if pre_auth_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}:
         normalize_auth_hash_fragment_on_login_routes()
-    consume_magic_link_callback()
+    should_consume_auth_callback = False
+    if hasattr(st, "query_params"):
+        try:
+            qp = st.query_params
+            should_consume_auth_callback = any(
+                bool(str(qp.get(key, "") or "").strip())
+                for key in ("code", "token_hash", "token", "type", "access_token", "refresh_token")
+            )
+        except Exception:
+            should_consume_auth_callback = False
+    if (
+        pre_auth_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}
+        or should_consume_auth_callback
+    ):
+        consume_magic_link_callback()
     route = get_route()
     if route in ("/", "") and pre_auth_route not in ("/", ""):
         route = pre_auth_route
@@ -11530,10 +11544,11 @@ def main() -> None:
         set_route(target_route)
         return
     route_allowlisted = is_route_allowed(app_variant, route)
-    print(
-        f"[startup] variant={app_variant} route={route} allowlisted={route_allowlisted}",
-        flush=True,
-    )
+    if APP_DEBUG:
+        print(
+            f"[startup] variant={app_variant} route={route} allowlisted={route_allowlisted}",
+            flush=True,
+        )
     guard_route_access(route, app_variant)
     # Debug startup banner disabled in UI.
     st.markdown(
