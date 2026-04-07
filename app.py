@@ -10519,11 +10519,18 @@ def render_care_hub() -> None:
         selected_contact_name = (
             (selected_contact or {}).get("full_name") or "family contact"
         )
+        effective_queue_next_contact = queue_next_contact
+        if effective_queue_next_contact is None and selected_contact is not None:
+            effective_queue_next_contact = selected_contact
+        if effective_queue_next_contact is None and contacts:
+            contacts_sorted_for_queue = sort_contacts_for_playback(contacts)
+            if contacts_sorted_for_queue:
+                effective_queue_next_contact = contacts_sorted_for_queue[0]
         if contacts and (is_mobile_variant or is_office_variant):
             st.caption(f"Unread family messages: {queue_unread_count}")
-            if queue_next_contact:
-                next_name = (queue_next_contact.get("full_name") or "family contact").strip()
-                next_relationship = ((queue_next_contact.get("relationship") or "").strip())
+            if effective_queue_next_contact:
+                next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
+                next_relationship = ((effective_queue_next_contact.get("relationship") or "").strip())
                 next_display = (
                     f"{next_name} ({next_relationship.title()})"
                     if next_relationship
@@ -10749,6 +10756,12 @@ def render_care_hub() -> None:
                 if selected_contact_relationship
                 else f"{selected_contact_name} (Family Member)"
             )
+            if (
+                is_queue_playback_variant
+                and queue_mode_label == "No family messages available."
+                and selected_contact is not None
+            ):
+                queue_mode_label = "Session order"
             if is_queue_playback_variant and queue_mode_label:
                 st.caption(f"Queue mode: {queue_mode_label}")
             if is_mobile_variant:
