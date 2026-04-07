@@ -9859,7 +9859,16 @@ def render_care_login() -> None:
         app_variant == VARIANT_OFFICE
         and not bool(st.session_state.get("office_login_explicit"))
     )
-    if st.session_state.get("auth_uid") and not office_requires_explicit_login:
+    has_auth_uid = bool(st.session_state.get("auth_uid"))
+    has_auth_tokens = bool(
+        st.session_state.get("access_token") and st.session_state.get("refresh_token")
+    )
+    if not has_auth_uid and has_auth_tokens:
+        # Magic-link callbacks can occasionally land with tokens set before auth_uid hydration.
+        # Re-resolve mapping once so Mobile/Office login can continue without forcing a loop.
+        get_mapping_status()
+        has_auth_uid = bool(st.session_state.get("auth_uid"))
+    if has_auth_uid and not office_requires_explicit_login:
         allow_manual_login = False
         family_found, care_found, error, family_record, care_record = get_mapping_status()
         if care_found:
