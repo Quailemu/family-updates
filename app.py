@@ -10600,6 +10600,25 @@ def render_care_hub() -> None:
                 latest,
                 access_token=access_token,
             )
+            if not playback_source and is_mobile_variant:
+                latest_any_contact = fetch_latest_message(
+                    resident_id,
+                    "to_resident",
+                    access_token,
+                    channel="resident_family",
+                    include_audio=True,
+                )
+                latest_any_contact_id = str((latest_any_contact or {}).get("id") or "").strip()
+                latest_selected_id = str((latest or {}).get("id") or "").strip()
+                if latest_any_contact and latest_any_contact_id != latest_selected_id:
+                    fallback_source, fallback_kind = resolve_audio_playback_source(
+                        latest_any_contact,
+                        access_token=access_token,
+                    )
+                    if fallback_source:
+                        latest = latest_any_contact
+                        playback_source = fallback_source
+                        playback_source_kind = fallback_kind
             should_show_message = True
             if is_mobile_variant:
                 if not bool(st.session_state.get(mobile_play_requested_key, False)):
