@@ -3352,6 +3352,29 @@ def select_next_family_message_for_mobile(
         )
 
     if not queued_items:
+        fallback_latest = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            channel="resident_family",
+            include_audio=False,
+        )
+        if fallback_latest:
+            fallback_contact = None
+            fallback_contact_user_id = str(fallback_latest.get("contact_user_id") or "").strip()
+            if fallback_contact_user_id:
+                fallback_contact = next(
+                    (
+                        contact
+                        for contact in contacts_sorted
+                        if str(contact.get("auth_user_id") or "").strip() == fallback_contact_user_id
+                    ),
+                    None,
+                )
+            if fallback_contact is None and len(contacts_sorted) == 1:
+                fallback_contact = contacts_sorted[0]
+            if fallback_contact is not None:
+                return fallback_contact, fallback_latest, "Fallback latest"
         return None, None, "No family messages available."
 
     last_played_cache = st.session_state.get(f"care_mobile_last_played_{resident_id}")
@@ -4162,7 +4185,13 @@ def fetch_latest_message_for_contact_with_mapping_repair(
     if contact_email:
         resolved_user_id = _get_contact_auth_user_id_via_email(contact_email)
     if not resolved_user_id:
-        return None
+        return fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            channel=channel,
+            include_audio=include_audio,
+        )
 
     if resolved_user_id != contact_user_id:
         contact["auth_user_id"] = resolved_user_id
@@ -4177,11 +4206,20 @@ def fetch_latest_message_for_contact_with_mapping_repair(
                 except Exception:
                     pass
 
-    return fetch_latest_message(
+    latest = fetch_latest_message(
         resident_id,
         "to_resident",
         access_token,
         contact_user_id=resolved_user_id,
+        channel=channel,
+        include_audio=include_audio,
+    )
+    if latest:
+        return latest
+    return fetch_latest_message(
+        resident_id,
+        "to_resident",
+        access_token,
         channel=channel,
         include_audio=include_audio,
     )
@@ -10404,6 +10442,14 @@ def render_care_hub() -> None:
                         channel="resident_family",
                         include_audio=True,
                     )
+            if latest is None:
+                latest = fetch_latest_message(
+                    resident_id,
+                    "to_resident",
+                    access_token,
+                    channel="resident_family",
+                    include_audio=True,
+                )
             latest_contact_user_id = str((latest or {}).get("contact_user_id") or "").strip()
             if latest_contact_user_id:
                 matched_contact = next(
