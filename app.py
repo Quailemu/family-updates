@@ -3683,6 +3683,53 @@ def select_next_family_message_for_mobile(
     return chosen["contact"], chosen["message"], "Played cycle"
 
 
+def find_next_playable_family_message_in_order(
+    resident_id: str,
+    contacts: list[dict],
+    access_token: str,
+    *,
+    start_after_contact_user_id: str | None = None,
+    channel: str = "resident_family",
+) -> tuple[dict | None, dict | None, bytes | str | None, str]:
+    contacts_sorted = sort_contacts_for_playback(contacts)
+    if not contacts_sorted:
+        return None, None, None, "none"
+
+    start_idx = 0
+    start_after = str(start_after_contact_user_id or "").strip()
+    if start_after:
+        for idx, contact in enumerate(contacts_sorted):
+            contact_user_id = str(contact.get("auth_user_id") or "").strip()
+            if not contact_user_id:
+                contact_email = str(contact.get("email") or "").strip().lower()
+                if contact_email:
+                    contact_user_id = _get_contact_auth_user_id_via_email(contact_email).strip()
+                    if contact_user_id:
+                        contact["auth_user_id"] = contact_user_id
+            if contact_user_id and contact_user_id == start_after:
+                start_idx = (idx + 1) % len(contacts_sorted)
+                break
+
+    for offset in range(len(contacts_sorted)):
+        contact = contacts_sorted[(start_idx + offset) % len(contacts_sorted)]
+        latest = fetch_latest_message_for_contact_with_mapping_repair(
+            resident_id,
+            access_token,
+            contact,
+            channel=channel,
+            include_audio=True,
+        )
+        if not latest:
+            continue
+        playback_source, playback_source_kind = resolve_audio_playback_source(
+            latest,
+            access_token=access_token,
+        )
+        if playback_source:
+            return contact, latest, playback_source, playback_source_kind
+    return None, None, None, "none"
+
+
 def get_family_queue_status_for_resident(
     resident_id: str,
     care_home_id: str,
@@ -10679,11 +10726,12 @@ def render_care_hub() -> None:
                     use_container_width=True,
                 ):
                     st.session_state[manual_selection_key] = False
-                    selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
+                    selected_contact, latest, _, _ = find_next_playable_family_message_in_order(
                         resident_id,
-                        resident["care_home_id"],
                         contacts,
                         access_token,
+                        start_after_contact_user_id=state.get("selected_contact_user_id"),
+                        channel="resident_family",
                     )
                     if selected_contact:
                         selected_contact_user_id = str(
@@ -10693,9 +10741,11 @@ def render_care_hub() -> None:
                         ).strip()
                         state["selected_contact_id"] = selected_contact.get("id")
                         state["selected_contact_user_id"] = selected_contact_user_id
+                        queue_mode_label = "Session order"
                         st.session_state[mobile_play_requested_key] = True
                         st.session_state[mobile_advance_pointer_key] = True
                     else:
+                        st.warning("No playable family messages are available for this resident.")
                         st.session_state[mobile_play_requested_key] = False
                         st.session_state[mobile_advance_pointer_key] = False
 
@@ -10824,30 +10874,28 @@ def render_care_hub() -> None:
                         latest = latest_any_contact
                         playback_source = fallback_source
                         playback_source_kind = fallback_kind
-            if not playback_source and is_mobile_variant:
-                recovery_contact, recovery_latest, recovery_mode = select_next_family_message_for_mobile(
-                    resident_id,
-                    resident["care_home_id"],
-                    contacts,
-                    access_token,
-                )
-                if recovery_contact is not None and recovery_latest is not None:
-                    recovery_source, recovery_kind = resolve_audio_playback_source(
-                        recovery_latest,
-                        access_token=access_token,
+            if not playback_source and (is_mobile_variant or is_office_variant):
+                recovery_contact, recovery_latest, recovery_source, recovery_kind = (
+                    find_next_playable_family_message_in_order(
+                        resident_id,
+                        contacts,
+                        access_token,
+                        start_after_contact_user_id=state.get("selected_contact_user_id"),
+                        channel="resident_family",
                     )
-                    if recovery_source:
-                        selected_contact = recovery_contact
-                        latest = recovery_latest
-                        playback_source = recovery_source
-                        playback_source_kind = recovery_kind
-                        state["selected_contact_id"] = recovery_contact.get("id")
-                        state["selected_contact_user_id"] = str(
-                            (recovery_latest or {}).get("contact_user_id")
-                            or recovery_contact.get("auth_user_id")
-                            or ""
-                        ).strip()
-                        queue_mode_label = recovery_mode or "Session order"
+                )
+                if recovery_contact is not None and recovery_latest is not None and recovery_source:
+                    selected_contact = recovery_contact
+                    latest = recovery_latest
+                    playback_source = recovery_source
+                    playback_source_kind = recovery_kind
+                    state["selected_contact_id"] = recovery_contact.get("id")
+                    state["selected_contact_user_id"] = str(
+                        (recovery_latest or {}).get("contact_user_id")
+                        or recovery_contact.get("auth_user_id")
+                        or ""
+                    ).strip()
+                    queue_mode_label = "Session order" if is_mobile_variant else "Office review"
             should_show_message = True
             if is_mobile_variant:
                 if not bool(st.session_state.get(mobile_play_requested_key, False)):
