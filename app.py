@@ -12,7 +12,7 @@ import re
 import html
 import io
 from pathlib import Path
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse, unquote
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -781,15 +781,19 @@ def build_transcript_fields(
 def _download_audio_from_storage(
     object_path: str, access_token: str | None = None
 ) -> bytes | None:
-    path = str(object_path or "").strip()
-    if not path:
+    raw_path = str(object_path or "").strip()
+    if not raw_path:
+        return None
+    path_candidates = _candidate_audio_storage_paths(raw_path)
+    if not path_candidates:
         return None
     cache = st.session_state.get("_audio_storage_blob_cache")
     if not isinstance(cache, dict):
         cache = {}
-    cached = cache.get(path)
-    if isinstance(cached, (bytes, bytearray)):
-        return bytes(cached)
+    for path in path_candidates:
+        cached = cache.get(path)
+        if isinstance(cached, (bytes, bytearray)):
+            return bytes(cached)
 
     clients: list[object] = []
     if access_token:
@@ -803,25 +807,29 @@ def _download_audio_from_storage(
     if not admin_error and admin_client is not None:
         clients.append(admin_client)
 
-    for client in clients:
-        try:
-            data = client.storage.from_(SUPABASE_AUDIO_BUCKET).download(path)
-            if isinstance(data, bytearray):
-                data = bytes(data)
-            if isinstance(data, bytes) and data:
-                cache[path] = data
-                st.session_state["_audio_storage_blob_cache"] = cache
-                return data
-        except Exception:
-            continue
+    for path in path_candidates:
+        for client in clients:
+            try:
+                data = client.storage.from_(SUPABASE_AUDIO_BUCKET).download(path)
+                if isinstance(data, bytearray):
+                    data = bytes(data)
+                if isinstance(data, bytes) and data:
+                    cache[path] = data
+                    st.session_state["_audio_storage_blob_cache"] = cache
+                    return data
+            except Exception:
+                continue
     return None
 
 
 def _create_signed_audio_url(
     object_path: str, access_token: str | None = None, *, expires_in: int = 600
 ) -> str | None:
-    path = str(object_path or "").strip()
-    if not path:
+    raw_path = str(object_path or "").strip()
+    if not raw_path:
+        return None
+    path_candidates = _candidate_audio_storage_paths(raw_path)
+    if not path_candidates:
         return None
     clients: list[object] = []
     if access_token:
@@ -835,30 +843,76 @@ def _create_signed_audio_url(
     if not admin_error and admin_client is not None:
         clients.append(admin_client)
 
-    for client in clients:
-        try:
-            signed = client.storage.from_(SUPABASE_AUDIO_BUCKET).create_signed_url(path, expires_in)
-        except Exception:
-            continue
-        if not isinstance(signed, dict):
-            continue
-        signed_url = str(
-            signed.get("signedURL")
-            or signed.get("signedUrl")
-            or signed.get("signed_url")
-            or ""
-        ).strip()
-        if not signed_url:
-            continue
-        if signed_url.startswith("http://") or signed_url.startswith("https://"):
+    for path in path_candidates:
+        for client in clients:
+            try:
+                signed = client.storage.from_(SUPABASE_AUDIO_BUCKET).create_signed_url(path, expires_in)
+            except Exception:
+                continue
+            if not isinstance(signed, dict):
+                continue
+            signed_url = str(
+                signed.get("signedURL")
+                or signed.get("signedUrl")
+                or signed.get("signed_url")
+                or ""
+            ).strip()
+            if not signed_url:
+                continue
+            if signed_url.startswith("http://") or signed_url.startswith("https://"):
+                return signed_url
+            base_url = str(SUPABASE_URL or "").rstrip("/")
+            if base_url and signed_url.startswith("/"):
+                return f"{base_url}{signed_url}"
+            if base_url and not signed_url.startswith("/"):
+                return f"{base_url}/{signed_url}"
             return signed_url
-        base_url = str(SUPABASE_URL or "").rstrip("/")
-        if base_url and signed_url.startswith("/"):
-            return f"{base_url}{signed_url}"
-        if base_url and not signed_url.startswith("/"):
-            return f"{base_url}/{signed_url}"
-        return signed_url
     return None
+
+
+def _candidate_audio_storage_paths(raw_value: str) -> list[str]:
+    raw = str(raw_value or "").strip()
+    if not raw:
+        return []
+
+    candidates: list[str] = []
+
+    def _push(value: str) -> None:
+        candidate = str(value or "").strip()
+        if not candidate:
+            return
+        candidate = candidate.strip("\"'")
+        if candidate.startswith("/"):
+            candidate = candidate.lstrip("/")
+        if candidate and candidate not in candidates:
+            candidates.append(candidate)
+
+    _push(raw)
+
+    parsed = urlparse(raw)
+    if parsed.scheme and parsed.netloc:
+        path_only = unquote(str(parsed.path or "").strip())
+        _push(path_only)
+        marker = f"/{SUPABASE_AUDIO_BUCKET}/"
+        if marker in path_only:
+            _push(path_only.split(marker, 1)[1])
+        if "/storage/v1/object/" in path_only:
+            parts = [part for part in path_only.split("/") if part]
+            # Expected patterns include:
+            # storage/v1/object/public/<bucket>/<key...>
+            # storage/v1/object/sign/<bucket>/<key...>
+            if len(parts) >= 6 and parts[0] == "storage" and parts[1] == "v1" and parts[2] == "object":
+                bucket = parts[4]
+                key_parts = parts[5:]
+                if bucket == SUPABASE_AUDIO_BUCKET and key_parts:
+                    _push("/".join(key_parts))
+
+    bucket_prefix = f"{SUPABASE_AUDIO_BUCKET}/"
+    for existing in list(candidates):
+        if existing.startswith(bucket_prefix):
+            _push(existing[len(bucket_prefix) :])
+
+    return candidates
 
 
 def resolve_audio_playback_source(
