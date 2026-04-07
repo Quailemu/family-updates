@@ -10534,6 +10534,12 @@ def render_care_hub() -> None:
             (selected_contact or {}).get("full_name") or "family contact"
         )
         effective_queue_next_contact = queue_next_contact
+        if (
+            is_mobile_variant
+            and queue_mode_label in {"Session order", "Played cycle", "Unplayed first (round 0)"}
+            and selected_contact is not None
+        ):
+            effective_queue_next_contact = selected_contact
         if effective_queue_next_contact is None and selected_contact is not None:
             effective_queue_next_contact = selected_contact
         if effective_queue_next_contact is None and contacts:
@@ -10807,6 +10813,30 @@ def render_care_hub() -> None:
                         latest = latest_any_contact
                         playback_source = fallback_source
                         playback_source_kind = fallback_kind
+            if not playback_source and is_mobile_variant:
+                recovery_contact, recovery_latest, recovery_mode = select_next_family_message_for_mobile(
+                    resident_id,
+                    resident["care_home_id"],
+                    contacts,
+                    access_token,
+                )
+                if recovery_contact is not None and recovery_latest is not None:
+                    recovery_source, recovery_kind = resolve_audio_playback_source(
+                        recovery_latest,
+                        access_token=access_token,
+                    )
+                    if recovery_source:
+                        selected_contact = recovery_contact
+                        latest = recovery_latest
+                        playback_source = recovery_source
+                        playback_source_kind = recovery_kind
+                        state["selected_contact_id"] = recovery_contact.get("id")
+                        state["selected_contact_user_id"] = str(
+                            (recovery_latest or {}).get("contact_user_id")
+                            or recovery_contact.get("auth_user_id")
+                            or ""
+                        ).strip()
+                        queue_mode_label = recovery_mode or "Session order"
             should_show_message = True
             if is_mobile_variant:
                 if not bool(st.session_state.get(mobile_play_requested_key, False)):
