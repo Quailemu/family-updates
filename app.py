@@ -7380,6 +7380,20 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
         else is_care_authenticated()
     )
     is_authed = bool(st.session_state.get("auth_uid"))
+    if (
+        not is_authed
+        and st.session_state.get("access_token")
+        and st.session_state.get("refresh_token")
+    ):
+        # Reruns can occasionally lose hydrated auth_uid/role even when tokens are valid.
+        # Rehydrate once before routing to login to avoid false logout loops.
+        get_mapping_status()
+        is_authed = bool(st.session_state.get("auth_uid"))
+        is_variant_authed = (
+            is_family_authenticated()
+            if app_variant == VARIANT_FAMILY
+            else is_care_authenticated()
+        )
     login_route = get_login_route(app_variant)
     home_route = get_home_route(app_variant)
     if (
@@ -11682,15 +11696,13 @@ def main() -> None:
     except ValueError as exc:
         st.error(str(exc))
         st.stop()
-    if (
-        variant_requires_auth(app_variant)
-        and AUTH_COOKIE_PERSISTENCE_ENABLED
-        and app_variant == VARIANT_FAMILY
-    ):
+    if variant_requires_auth(app_variant) and AUTH_COOKIE_PERSISTENCE_ENABLED:
         if not AUTH_COOKIE_SIGNING_KEY:
-            st.error("Configuration error: AUTH_COOKIE_SIGNING_KEY is required for secure session cookies.")
-            st.stop()
-        restore_auth_session_from_cookie()
+            if app_variant == VARIANT_FAMILY:
+                st.error("Configuration error: AUTH_COOKIE_SIGNING_KEY is required for secure session cookies.")
+                st.stop()
+        else:
+            restore_auth_session_from_cookie()
     if pre_auth_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}:
         normalize_auth_hash_fragment_on_login_routes()
     should_consume_auth_callback = False
