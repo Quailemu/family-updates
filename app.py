@@ -615,6 +615,29 @@ def _looks_like_base64_payload(value: str) -> bool:
     return bool(re.fullmatch(r"[A-Za-z0-9+/=]+", normalized))
 
 
+def _try_decode_base64_audio(payload: str) -> bytes | None:
+    normalized = str(payload or "").strip()
+    if not normalized:
+        return None
+    compact = "".join(normalized.split())
+    if not compact:
+        return None
+    padded = compact + ("=" * ((4 - (len(compact) % 4)) % 4))
+    try:
+        decoded = base64.b64decode(padded, validate=False)
+        if isinstance(decoded, (bytes, bytearray)) and decoded:
+            return bytes(decoded)
+    except Exception:
+        pass
+    try:
+        decoded = base64.urlsafe_b64decode(padded)
+        if isinstance(decoded, (bytes, bytearray)) and decoded:
+            return bytes(decoded)
+    except Exception:
+        pass
+    return None
+
+
 def _message_select_fields(
     include_audio: bool,
     include_optional_storage_columns: bool = True,
@@ -5043,11 +5066,14 @@ def decode_audio_payload(message: dict, access_token: str | None = None) -> byte
         )
         if downloaded:
             return downloaded
+        relaxed_decoded = _try_decode_base64_audio(payload)
+        if relaxed_decoded:
+            return relaxed_decoded
         return None
     try:
         return base64.b64decode(payload)
     except Exception:
-        return None
+        return _try_decode_base64_audio(payload)
 
 
 def render_transcript_assist(
