@@ -591,6 +591,12 @@ def _office_practical_family_user_column(supabase: object) -> str:
 
 def _strip_optional_message_audio_columns(payload: dict) -> dict:
     cleaned = dict(payload or {})
+    # Legacy schemas may miss audio_object_path/audio_source/transcript columns.
+    # Preserve a playable storage pointer in audio_storage_path before stripping.
+    audio_storage_path = str(cleaned.get("audio_storage_path") or "").strip()
+    audio_object_path = str(cleaned.get("audio_object_path") or "").strip()
+    if not audio_storage_path and audio_object_path:
+        cleaned["audio_storage_path"] = audio_object_path
     cleaned.pop("audio_object_path", None)
     cleaned.pop("audio_source", None)
     cleaned.pop("transcript_text", None)
