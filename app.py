@@ -47,6 +47,7 @@ CARE_HUB_SESSION_TIMEOUT_SECONDS = max(
     60 * 30,
 )
 CARE_HUB_IDLE_TIMEOUT_OPTIONS_SECONDS = (60 * 30, 60 * 60, 60 * 90, 60 * 120)
+TRANSCRIPT_POLICY_MODES = ("off", "assist", "precheck")
 APP_DEBUG = os.getenv("APP_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
 APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
     "1",
@@ -3740,6 +3741,18 @@ def normalize_care_hub_idle_timeout_seconds(timeout_value: object) -> int:
     return parsed if parsed in allowed_values else CARE_HUB_SESSION_TIMEOUT_SECONDS
 
 
+def normalize_transcript_policy_mode(policy_value: object) -> str:
+    candidate = str(policy_value or "").strip().lower()
+    if candidate in TRANSCRIPT_POLICY_MODES:
+        return candidate
+    return "assist"
+
+
+def get_transcript_policy_mode(access_token: str | None) -> str:
+    profile = fetch_active_care_home_profile(access_token)
+    return normalize_transcript_policy_mode(profile.get("transcript_policy_mode"))
+
+
 def get_care_hub_idle_timeout_seconds(access_token: str | None) -> int:
     profile = fetch_active_care_home_profile(access_token)
     timeout_value = profile.get("care_hub_idle_timeout_seconds")
@@ -3774,7 +3787,7 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
         return {}
     select_fields = (
         "name, branding_banner_title, branding_banner_text, "
-        "branding_banner_artwork_url, care_hub_idle_timeout_seconds"
+        "branding_banner_artwork_url, care_hub_idle_timeout_seconds, transcript_policy_mode"
     )
     fallback_select_fields = (
         "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url"
@@ -3790,7 +3803,10 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
                 .execute()
             )
         except Exception as exc:
-            if not _is_missing_column_error(exc, "care_hub_idle_timeout_seconds"):
+            if not (
+                _is_missing_column_error(exc, "care_hub_idle_timeout_seconds")
+                or _is_missing_column_error(exc, "transcript_policy_mode")
+            ):
                 raise
             resp = (
                 supabase.table("care_homes")
@@ -3813,7 +3829,10 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
                     .execute()
                 )
             except Exception as exc:
-                if not _is_missing_column_error(exc, "care_hub_idle_timeout_seconds"):
+                if not (
+                    _is_missing_column_error(exc, "care_hub_idle_timeout_seconds")
+                    or _is_missing_column_error(exc, "transcript_policy_mode")
+                ):
                     raise
                 fallback_resp = (
                     supabase.table("care_homes")
@@ -3831,6 +3850,9 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
             "care_hub_idle_timeout_seconds": normalize_care_hub_idle_timeout_seconds(
                 row.get("care_hub_idle_timeout_seconds")
             ),
+            "transcript_policy_mode": normalize_transcript_policy_mode(
+                row.get("transcript_policy_mode")
+            ),
         }
         if profile["name"]:
             st.session_state[cache_key] = profile
@@ -3847,6 +3869,7 @@ def update_active_care_home_branding(
     banner_text: str,
     banner_artwork_url: str,
     care_hub_idle_timeout_seconds: int,
+    transcript_policy_mode: str,
 ) -> tuple[bool, str]:
     care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
     if not care_home_id:
@@ -3858,6 +3881,7 @@ def update_active_care_home_branding(
     text_value = str(banner_text or "").strip()
     artwork_value = str(banner_artwork_url or "").strip()
     timeout_value = normalize_care_hub_idle_timeout_seconds(care_hub_idle_timeout_seconds)
+    transcript_policy_value = normalize_transcript_policy_mode(transcript_policy_mode)
     if not name_value:
         return False, "Care home name is required."
     if len(name_value) > 160:
@@ -3879,6 +3903,7 @@ def update_active_care_home_branding(
         "branding_banner_text": text_value or None,
         "branding_banner_artwork_url": artwork_value or None,
         "care_hub_idle_timeout_seconds": timeout_value,
+        "transcript_policy_mode": transcript_policy_value,
     }
     try:
         try:
@@ -3889,9 +3914,13 @@ def update_active_care_home_branding(
                 .execute()
             )
         except Exception as exc:
-            if not _is_missing_column_error(exc, "care_hub_idle_timeout_seconds"):
+            if not (
+                _is_missing_column_error(exc, "care_hub_idle_timeout_seconds")
+                or _is_missing_column_error(exc, "transcript_policy_mode")
+            ):
                 raise
             update_payload.pop("care_hub_idle_timeout_seconds", None)
+            update_payload.pop("transcript_policy_mode", None)
             (
                 supabase.table("care_homes")
                 .update(update_payload)
@@ -3904,11 +3933,15 @@ def update_active_care_home_branding(
         persisted_title = str((persisted_profile or {}).get("branding_banner_title") or "").strip()
         persisted_text = str((persisted_profile or {}).get("branding_banner_text") or "").strip()
         persisted_artwork = str((persisted_profile or {}).get("branding_banner_artwork_url") or "").strip()
+        persisted_transcript_policy = normalize_transcript_policy_mode(
+            (persisted_profile or {}).get("transcript_policy_mode")
+        )
         if (
             persisted_name != name_value
             or persisted_title != title_value
             or persisted_text != text_value
             or persisted_artwork != artwork_value
+            or persisted_transcript_policy != transcript_policy_value
         ):
             return (
                 False,
@@ -4894,18 +4927,53 @@ def decode_audio_payload(message: dict, access_token: str | None = None) -> byte
         return None
 
 
-def render_transcript_assist(message: dict | None) -> None:
+def render_transcript_assist(
+    message: dict | None,
+    *,
+    policy_mode: str = "assist",
+    care_home_id: str | None = None,
+    resident_id: str | None = None,
+) -> bool:
+    mode = normalize_transcript_policy_mode(policy_mode)
+    if mode == "off":
+        return True
     if not isinstance(message, dict):
-        return
+        return mode != "precheck"
     status = str(message.get("transcript_status") or "").strip().lower()
     transcript_text = str(message.get("transcript_text") or "").strip()
+    message_id = str(message.get("id") or "").strip()
     if transcript_text:
         with st.expander("Transcript assist", expanded=False):
             st.markdown(transcript_text)
             st.caption("Transcript may contain errors. Voice remains the source of truth.")
-        return
+        if mode != "precheck":
+            return True
+        ack_key = f"transcript_precheck_ack::{resident_id or ''}::{message_id}"
+        reviewed = bool(st.session_state.get(ack_key))
+        if st.button(
+            "Mark transcript reviewed",
+            key=f"transcript_precheck_btn::{resident_id or ''}::{message_id}",
+            use_container_width=True,
+        ):
+            st.session_state[ack_key] = True
+            reviewed = True
+            if message_id:
+                log_audit_event(
+                    "transcript_viewed_preplay",
+                    "care_hub",
+                    care_home_id,
+                    target_id=message_id,
+                    resident_id=resident_id,
+                )
+        if not reviewed:
+            st.warning("Transcript review is required before playback (policy mode: precheck).")
+        return reviewed
     if status == "failed":
         st.caption("Transcript was requested but is not available for this message.")
+    if mode == "precheck":
+        st.error("Playback blocked: transcript is required by policy but unavailable.")
+        return False
+    return True
 
 
 def global_header() -> None:
@@ -7606,6 +7674,7 @@ def render_family_send() -> None:
     )
 
     access_token = st.session_state.get("access_token")
+    transcript_policy_mode = get_transcript_policy_mode(access_token)
     care_home_name = fetch_active_care_home_name(access_token)
     family_user_record = get_family_user_for_session(access_token)
     family_user_id = str((family_user_record or {}).get("id") or "").strip()
@@ -8003,12 +8072,23 @@ def render_family_send() -> None:
                 value=state.get("preview_confirmed", False),
                 key=f"family_listened_{resident_id}",
             )
-            state["transcribe_requested"] = st.checkbox(
-                "Create transcript for accessibility/support",
-                value=state.get("transcribe_requested", False),
-                key=f"family_transcribe_{resident_id}",
-            )
-            st.caption("Transcript is optional, may contain errors, and replaces with the next message.")
+            if transcript_policy_mode == "off":
+                state["transcribe_requested"] = False
+                st.caption("Transcript assist is off for this care home.")
+            elif transcript_policy_mode == "precheck":
+                state["transcribe_requested"] = True
+                st.caption(
+                    "Transcript is required by care home policy before Care Hub playback."
+                )
+            else:
+                state["transcribe_requested"] = st.checkbox(
+                    "Create transcript for accessibility/support",
+                    value=state.get("transcribe_requested", False),
+                    key=f"family_transcribe_{resident_id}",
+                )
+                st.caption(
+                    "Transcript is optional, may contain errors, and replaces with the next message."
+                )
         else:
             state["preview_confirmed"] = False
             state["transcribe_requested"] = False
@@ -8918,6 +8998,9 @@ def render_care_hub_banner_settings() -> None:
     st.caption(
         "Choose how long Care Hub can stay idle before it signs out. This applies to Care Hub – Office and Care Hub – Mobile."
     )
+    st.caption(
+        "Transcript policy controls safety/accessibility behavior for Care Hub playback (voice remains source of truth)."
+    )
 
     care_home_profile = fetch_active_care_home_profile(access_token)
     if not isinstance(care_home_profile, dict) or not str(care_home_profile.get("name") or "").strip():
@@ -8936,7 +9019,17 @@ def render_care_hub_banner_settings() -> None:
     current_timeout = normalize_care_hub_idle_timeout_seconds(
         care_home_profile.get("care_hub_idle_timeout_seconds")
     )
+    current_transcript_policy = normalize_transcript_policy_mode(
+        care_home_profile.get("transcript_policy_mode")
+    )
     timeout_index = timeout_options.index(current_timeout)
+    transcript_policy_options = list(TRANSCRIPT_POLICY_MODES)
+    transcript_policy_labels = {
+        "off": "Off (no transcript assist)",
+        "assist": "Assist (optional transcript assist)",
+        "precheck": "Precheck (review transcript before playback)",
+    }
+    transcript_policy_index = transcript_policy_options.index(current_transcript_policy)
     with st.form("office_care_home_banner_page_form"):
         care_home_name_value = st.text_input(
             "Care home name",
@@ -8971,6 +9064,14 @@ def render_care_hub_banner_settings() -> None:
             key="office_care_hub_idle_timeout_seconds",
             help="If no activity is detected for this period, the app signs out for security.",
         )
+        selected_transcript_policy = st.selectbox(
+            "Transcript policy mode",
+            options=transcript_policy_options,
+            index=transcript_policy_index,
+            format_func=lambda value: transcript_policy_labels.get(value, value),
+            key="office_transcript_policy_mode",
+            help="Precheck requires transcript review before playback in Care Hub.",
+        )
         save_banner = st.form_submit_button("Save banner and operational settings")
     if save_banner:
         saved, message = update_active_care_home_branding(
@@ -8980,6 +9081,7 @@ def render_care_hub_banner_settings() -> None:
             banner_text=banner_text_value,
             banner_artwork_url=banner_artwork_value,
             care_hub_idle_timeout_seconds=int(selected_idle_timeout),
+            transcript_policy_mode=selected_transcript_policy,
         )
         if saved:
             st.success(message)
@@ -9672,6 +9774,7 @@ def render_care_hub() -> None:
     # Action row already rendered at the top of the page.
 
     access_token = st.session_state.get("access_token")
+    transcript_policy_mode = get_transcript_policy_mode(access_token)
     render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
     is_care_queue_variant_screen = runtime_variant in {VARIANT_MOBILE, VARIANT_OFFICE}
@@ -10290,16 +10393,26 @@ def render_care_hub() -> None:
                 should_show_message = bool(st.session_state.get(mobile_play_requested_key, False))
                 if not should_show_message:
                     st.caption("Press 'Play next family message' to start playback.")
+            playback_allowed = render_transcript_assist(
+                latest,
+                policy_mode=transcript_policy_mode,
+                care_home_id=resident["care_home_id"],
+                resident_id=resident_id,
+            )
+            played_now = bool(audio_bytes and should_show_message and playback_allowed)
 
             if audio_bytes and should_show_message:
-                st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
-                played_label = format_soft_message_period_label(latest.get("recorded_at"))
-                if played_label:
-                    st.caption(played_label)
-                if is_mobile_variant:
-                    st.caption("Press 'Play next family message' for the next contact.")
+                if playback_allowed:
+                    st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
+                    played_label = format_soft_message_period_label(latest.get("recorded_at"))
+                    if played_label:
+                        st.caption(played_label)
+                    if is_mobile_variant:
+                        st.caption("Press 'Play next family message' for the next contact.")
+                    else:
+                        st.caption("Use Office review controls or playlist selection to continue.")
                 else:
-                    st.caption("Use Office review controls or playlist selection to continue.")
+                    st.caption("Playback locked until transcript review is complete.")
             elif not audio_bytes:
                 st.markdown(
                     '<div class="vm-muted-line">No new messages.</div>',
@@ -10309,70 +10422,73 @@ def render_care_hub() -> None:
                     st.session_state.get(mobile_advance_pointer_key, False)
                 ):
                     st.caption("Message payload could not be played. Skipping to next contact.")
-            render_transcript_assist(latest)
 
             if is_mobile_variant:
                 latest_message_id = str((latest or {}).get("id") or "").strip()
                 advance_pointer_now = bool(st.session_state.get(mobile_advance_pointer_key, False))
                 if advance_pointer_now:
-                    if latest_message_id and not has_message_been_played_since_recorded(
-                        latest,
-                        resident_id=resident_id,
-                        care_home_id=resident["care_home_id"],
-                    ):
-                        log_audit_event(
-                            "message_played",
-                            "care_hub",
-                            resident["care_home_id"],
-                            latest_message_id,
+                    if not played_now:
+                        st.caption("Playback queue paused until transcript precheck is completed.")
+                        st.session_state[mobile_advance_pointer_key] = False
+                    else:
+                        if latest_message_id and not has_message_been_played_since_recorded(
+                            latest,
                             resident_id=resident_id,
+                            care_home_id=resident["care_home_id"],
+                        ):
+                            log_audit_event(
+                                "message_played",
+                                "care_hub",
+                                resident["care_home_id"],
+                                latest_message_id,
+                                resident_id=resident_id,
+                            )
+                        latest_contact_user_id = str(
+                            (latest or {}).get("contact_user_id")
+                            or state.get("selected_contact_user_id")
+                            or ""
+                        ).strip()
+                        latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
+                        if latest_contact_user_id and latest_recorded_at:
+                            set_contact_last_played_recorded_at(
+                                resident_id,
+                                resident["care_home_id"],
+                                latest_contact_user_id,
+                                latest_recorded_at,
+                                access_token,
+                            )
+                            cache_key = f"care_mobile_played_cache_{resident_id}"
+                            cache = st.session_state.get(cache_key)
+                            if not isinstance(cache, dict):
+                                cache = {}
+                            cache[latest_contact_user_id] = latest_recorded_at
+                            st.session_state[cache_key] = cache
+                            st.session_state[f"care_mobile_last_played_{resident_id}"] = {
+                                "contact_user_id": latest_contact_user_id,
+                                "recorded_at": latest_recorded_at,
+                            }
+                        next_contact_user_id = get_next_contact_user_id_with_message(
+                            resident_id,
+                            contacts,
+                            access_token,
+                            state.get("selected_contact_user_id"),
                         )
-                    latest_contact_user_id = str(
-                        (latest or {}).get("contact_user_id")
-                        or state.get("selected_contact_user_id")
-                        or ""
-                    ).strip()
-                    latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
-                    if latest_contact_user_id and latest_recorded_at:
-                        set_contact_last_played_recorded_at(
+                        set_resident_playback_pointer(
                             resident_id,
                             resident["care_home_id"],
-                            latest_contact_user_id,
-                            latest_recorded_at,
+                            next_contact_user_id,
                             access_token,
                         )
-                        cache_key = f"care_mobile_played_cache_{resident_id}"
-                        cache = st.session_state.get(cache_key)
-                        if not isinstance(cache, dict):
-                            cache = {}
-                        cache[latest_contact_user_id] = latest_recorded_at
-                        st.session_state[cache_key] = cache
-                        st.session_state[f"care_mobile_last_played_{resident_id}"] = {
-                            "contact_user_id": latest_contact_user_id,
-                            "recorded_at": latest_recorded_at,
-                        }
-                    next_contact_user_id = get_next_contact_user_id_with_message(
-                        resident_id,
-                        contacts,
-                        access_token,
-                        state.get("selected_contact_user_id"),
-                    )
-                    set_resident_playback_pointer(
-                        resident_id,
-                        resident["care_home_id"],
-                        next_contact_user_id,
-                        access_token,
-                    )
-                    st.session_state[f"care_mobile_pointer_{resident_id}"] = (
-                        next_contact_user_id or ""
-                    )
-                    if APP_DEBUG:
-                        st.caption(
-                            "Queue debug: "
-                            f"current={state.get('selected_contact_user_id')} "
-                            f"played_message={latest_message_id} "
-                            f"next={next_contact_user_id or 'none'}"
+                        st.session_state[f"care_mobile_pointer_{resident_id}"] = (
+                            next_contact_user_id or ""
                         )
+                        if APP_DEBUG:
+                            st.caption(
+                                "Queue debug: "
+                                f"current={state.get('selected_contact_user_id')} "
+                                f"played_message={latest_message_id} "
+                                f"next={next_contact_user_id or 'none'}"
+                            )
                 if advance_pointer_now:
                     st.session_state[mobile_advance_pointer_key] = False
 
@@ -10404,7 +10520,12 @@ def render_care_hub() -> None:
                 latest_sent_label = format_soft_message_period_label(latest_sent_at)
                 if latest_sent_label:
                     st.caption(latest_sent_label)
-            render_transcript_assist(latest_sent)
+            render_transcript_assist(
+                latest_sent,
+                policy_mode="assist",
+                care_home_id=resident["care_home_id"],
+                resident_id=resident_id,
+            )
         if is_mobile_variant or is_office_variant:
             if hasattr(st, "audio_input"):
                 recorded_from_native = st.audio_input(
@@ -10455,12 +10576,23 @@ def render_care_hub() -> None:
                     value=state.get("preview_confirmed", False),
                     key=f"care_listened_{resident_id}",
                 )
-                state["transcribe_requested"] = st.checkbox(
-                    "Create transcript for accessibility/support",
-                    value=state.get("transcribe_requested", False),
-                    key=f"care_transcribe_{resident_id}",
-                )
-                st.caption("Transcript is optional, may contain errors, and replaces with the next message.")
+                if transcript_policy_mode == "off":
+                    state["transcribe_requested"] = False
+                    st.caption("Transcript assist is off for this care home.")
+                elif transcript_policy_mode == "precheck":
+                    state["transcribe_requested"] = True
+                    st.caption(
+                        "Transcript is required by care home policy before Care Hub playback."
+                    )
+                else:
+                    state["transcribe_requested"] = st.checkbox(
+                        "Create transcript for accessibility/support",
+                        value=state.get("transcribe_requested", False),
+                        key=f"care_transcribe_{resident_id}",
+                    )
+                    st.caption(
+                        "Transcript is optional, may contain errors, and replaces with the next message."
+                    )
                 if st.button(
                     "Reset recorder",
                     key=f"care_reset_recorder_{resident_id}",
@@ -10653,7 +10785,12 @@ def render_care_hub() -> None:
                     '<div class="vm-muted-line">No care hub updates.</div>',
                     unsafe_allow_html=True,
                 )
-            render_transcript_assist(latest_office_update)
+            render_transcript_assist(
+                latest_office_update,
+                policy_mode="assist",
+                care_home_id=resident["care_home_id"],
+                resident_id=resident_id,
+            )
 
             if runtime_variant == VARIANT_OFFICE and hasattr(st, "audio_input"):
                 recorded_office = st.audio_input(
@@ -10714,12 +10851,23 @@ def render_care_hub() -> None:
                     value=state.get("office_preview_confirmed", False),
                     key=f"care_office_listened_{resident_id}",
                 )
-                state["office_transcribe_requested"] = st.checkbox(
-                    "Create transcript for accessibility/support",
-                    value=state.get("office_transcribe_requested", False),
-                    key=f"care_office_transcribe_{resident_id}",
-                )
-                st.caption("Transcript is optional, may contain errors, and replaces with the next message.")
+                if transcript_policy_mode == "off":
+                    state["office_transcribe_requested"] = False
+                    st.caption("Transcript assist is off for this care home.")
+                elif transcript_policy_mode == "precheck":
+                    state["office_transcribe_requested"] = True
+                    st.caption(
+                        "Transcript is required by care home policy before Care Hub playback."
+                    )
+                else:
+                    state["office_transcribe_requested"] = st.checkbox(
+                        "Create transcript for accessibility/support",
+                        value=state.get("office_transcribe_requested", False),
+                        key=f"care_office_transcribe_{resident_id}",
+                    )
+                    st.caption(
+                        "Transcript is optional, may contain errors, and replaces with the next message."
+                    )
                 if st.button(
                     "Reset care hub recorder",
                     key=f"care_office_reset_recorder_{resident_id}",
