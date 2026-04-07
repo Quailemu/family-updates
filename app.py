@@ -10116,16 +10116,28 @@ def render_care_hub() -> None:
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             keep_current_after_start = bool(st.session_state.get(mobile_play_requested_key, False))
             current_user_id = str(state.get("selected_contact_user_id") or "").strip()
+            current_contact_id = str(state.get("selected_contact_id") or "").strip()
             manual_selected = bool(st.session_state.get(manual_selection_key, False))
-            if manual_selected and current_user_id:
-                selected_contact = next(
-                    (
-                        c
-                        for c in contacts
-                        if str(c.get("auth_user_id") or "").strip() == current_user_id
-                    ),
-                    None,
-                )
+            if manual_selected and (current_user_id or current_contact_id):
+                selected_contact = None
+                if current_user_id:
+                    selected_contact = next(
+                        (
+                            c
+                            for c in contacts
+                            if str(c.get("auth_user_id") or "").strip() == current_user_id
+                        ),
+                        None,
+                    )
+                if selected_contact is None and current_contact_id:
+                    selected_contact = next(
+                        (
+                            c
+                            for c in contacts
+                            if str(c.get("id") or "").strip() == current_contact_id
+                        ),
+                        None,
+                    )
                 if selected_contact:
                     latest = fetch_latest_message_for_contact_with_mapping_repair(
                         resident_id,
@@ -10143,14 +10155,20 @@ def render_care_hub() -> None:
                 contacts,
                 access_token,
             )
-            if selected_contact is None and keep_current_after_start and current_user_id:
+            if selected_contact is None and keep_current_after_start and (current_user_id or current_contact_id):
                 queue_user_id = str((queue_selected_contact or {}).get("auth_user_id") or "").strip()
-                if queue_user_id and queue_user_id == current_user_id:
+                queue_contact_id = str((queue_selected_contact or {}).get("id") or "").strip()
+                if (queue_user_id and queue_user_id == current_user_id) or (
+                    queue_contact_id and queue_contact_id == current_contact_id
+                ):
                     selected_contact = next(
                         (
                             c
                             for c in contacts
-                            if str(c.get("auth_user_id") or "").strip() == current_user_id
+                            if (
+                                (current_user_id and str(c.get("auth_user_id") or "").strip() == current_user_id)
+                                or (current_contact_id and str(c.get("id") or "").strip() == current_contact_id)
+                            )
                         ),
                         None,
                     )
@@ -10408,7 +10426,6 @@ def render_care_hub() -> None:
                         if selected_contact:
                             st.session_state[manual_selection_key] = True
                             state["selected_contact_id"] = selected_contact.get("id")
-                            state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
                             latest = fetch_latest_message_for_contact_with_mapping_repair(
                                 resident_id,
                                 access_token,
@@ -10416,6 +10433,12 @@ def render_care_hub() -> None:
                                 channel="resident_family",
                                 include_audio=True,
                             )
+                            resolved_contact_user_id = str(
+                                (latest or {}).get("contact_user_id")
+                                or selected_contact.get("auth_user_id")
+                                or ""
+                            ).strip()
+                            state["selected_contact_user_id"] = resolved_contact_user_id
                             latest_message_id = str((latest or {}).get("id") or "").strip()
                             if latest_message_id and not has_message_been_played_since_recorded(
                                 latest,
@@ -10538,6 +10561,21 @@ def render_care_hub() -> None:
                     selected_contact = matched_contact
                     state["selected_contact_id"] = matched_contact.get("id")
                     state["selected_contact_user_id"] = matched_contact.get("auth_user_id")
+            elif selected_contact is None:
+                current_contact_id = str(state.get("selected_contact_id") or "").strip()
+                if current_contact_id:
+                    matched_contact = next(
+                        (
+                            c
+                            for c in contacts
+                            if str(c.get("id") or "").strip() == current_contact_id
+                        ),
+                        None,
+                    )
+                    if matched_contact is not None:
+                        selected_contact = matched_contact
+                        state["selected_contact_id"] = matched_contact.get("id")
+                        state["selected_contact_user_id"] = matched_contact.get("auth_user_id")
 
             selected_contact_name = (
                 (selected_contact or {}).get("full_name") or "family contact"
