@@ -788,6 +788,74 @@ def _download_audio_from_storage(
     return None
 
 
+def _create_signed_audio_url(
+    object_path: str, access_token: str | None = None, *, expires_in: int = 600
+) -> str | None:
+    path = str(object_path or "").strip()
+    if not path:
+        return None
+    clients: list[object] = []
+    if access_token:
+        authed_client, authed_error = get_authed_supabase(access_token)
+        if not authed_error and authed_client is not None:
+            clients.append(authed_client)
+    anon_client, anon_error = get_supabase_client()
+    if not anon_error and anon_client is not None:
+        clients.append(anon_client)
+    admin_client, admin_error = get_admin_client()
+    if not admin_error and admin_client is not None:
+        clients.append(admin_client)
+
+    for client in clients:
+        try:
+            signed = client.storage.from_(SUPABASE_AUDIO_BUCKET).create_signed_url(path, expires_in)
+        except Exception:
+            continue
+        if not isinstance(signed, dict):
+            continue
+        signed_url = str(
+            signed.get("signedURL")
+            or signed.get("signedUrl")
+            or signed.get("signed_url")
+            or ""
+        ).strip()
+        if not signed_url:
+            continue
+        if signed_url.startswith("http://") or signed_url.startswith("https://"):
+            return signed_url
+        base_url = str(SUPABASE_URL or "").rstrip("/")
+        if base_url and signed_url.startswith("/"):
+            return f"{base_url}{signed_url}"
+        if base_url and not signed_url.startswith("/"):
+            return f"{base_url}/{signed_url}"
+        return signed_url
+    return None
+
+
+def resolve_audio_playback_source(
+    message: dict, access_token: str | None = None
+) -> tuple[bytes | str | None, str]:
+    audio_bytes = decode_audio_payload(message, access_token=access_token)
+    if audio_bytes:
+        return audio_bytes, "bytes"
+    if not message:
+        return None, "none"
+    object_path = str(message.get("audio_object_path") or "").strip()
+    if object_path:
+        signed_url = _create_signed_audio_url(object_path, access_token=access_token)
+        if signed_url:
+            return signed_url, "url"
+    payload = str(message.get("audio_storage_path") or "").strip()
+    if payload:
+        if payload.startswith("http://") or payload.startswith("https://"):
+            return payload, "url"
+        if not _looks_like_base64_payload(payload):
+            signed_url = _create_signed_audio_url(payload, access_token=access_token)
+            if signed_url:
+                return signed_url, "url"
+    return None, "none"
+
+
 def upsert_latest_message_with_fallback(
     supabase: object,
     payload: dict,
@@ -10484,7 +10552,10 @@ def render_care_hub() -> None:
                 st.caption(f"Office review playing: {selected_contact_display}")
 
             st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
-            audio_bytes = decode_audio_payload(latest, access_token=access_token)
+            playback_source, playback_source_kind = resolve_audio_playback_source(
+                latest,
+                access_token=access_token,
+            )
             should_show_message = True
             if is_mobile_variant:
                 if not bool(st.session_state.get(mobile_play_requested_key, False)):
@@ -10498,12 +10569,19 @@ def render_care_hub() -> None:
                 care_home_id=resident["care_home_id"],
                 resident_id=resident_id,
             )
-            played_now = bool(audio_bytes and should_show_message and playback_allowed)
-            precheck_blocking = bool(audio_bytes and should_show_message and not playback_allowed)
+            has_playback_source = bool(playback_source)
+            played_now = bool(has_playback_source and should_show_message and playback_allowed)
+            precheck_blocking = bool(has_playback_source and should_show_message and not playback_allowed)
 
-            if audio_bytes and should_show_message:
+            if has_playback_source and should_show_message:
                 if playback_allowed:
-                    st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
+                    if playback_source_kind == "bytes":
+                        st.audio(
+                            playback_source,
+                            format=latest.get("audio_mime_type") or "audio/wav",
+                        )
+                    else:
+                        st.audio(playback_source)
                     played_label = format_soft_message_period_label(latest.get("recorded_at"))
                     if played_label:
                         st.caption(played_label)
@@ -10513,7 +10591,7 @@ def render_care_hub() -> None:
                         st.caption("Use Office review controls or playlist selection to continue.")
                 else:
                     st.caption("Playback locked until transcript review is complete.")
-            elif not audio_bytes:
+            elif not has_playback_source:
                 st.markdown(
                     '<div class="vm-muted-line">No new messages.</div>',
                     unsafe_allow_html=True,
