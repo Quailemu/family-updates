@@ -4132,6 +4132,7 @@ def fetch_latest_message_for_contact_with_mapping_repair(
     channel: str = "resident_family",
     include_audio: bool = True,
 ) -> dict | None:
+    contact_id = str(contact.get("id") or "").strip()
     contact_user_id = str(contact.get("auth_user_id") or "").strip()
     if contact_user_id:
         latest = fetch_latest_message(
@@ -4144,17 +4145,27 @@ def fetch_latest_message_for_contact_with_mapping_repair(
         )
         if latest:
             return latest
+    if contact_id:
+        latest = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            family_id=contact_id,
+            channel=channel,
+            include_audio=include_audio,
+        )
+        if latest:
+            return latest
 
     contact_email = str(contact.get("email") or "").strip().lower()
-    if not contact_email:
-        return None
-    resolved_user_id = _get_contact_auth_user_id_via_email(contact_email)
+    resolved_user_id = ""
+    if contact_email:
+        resolved_user_id = _get_contact_auth_user_id_via_email(contact_email)
     if not resolved_user_id:
         return None
 
     if resolved_user_id != contact_user_id:
         contact["auth_user_id"] = resolved_user_id
-        contact_id = str(contact.get("id") or "").strip()
         if contact_id:
             supabase, error = get_authed_supabase(access_token)
             if not error:
@@ -7097,7 +7108,7 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
     if (
         app_variant == VARIANT_MOBILE
         and is_authed
-        and is_login_route_for_variant(app_variant, current_route)
+        and current_route == MOBILE_LOGIN_ROUTE
         and is_mobile_pin_verified_for_session()
     ):
         set_route(home_route)
@@ -7112,6 +7123,10 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
         # Office should always present credential login before MFA/home routing.
         return False
     if is_variant_authed and is_login_route_for_variant(app_variant, current_route):
+        if app_variant == VARIANT_MOBILE and current_route == OFFICE_LOGIN_ROUTE:
+            # Mobile deployments can expose Office login route, but it must not
+            # auto-redirect into Mobile home/PIN flow.
+            return False
         if app_variant == VARIANT_OFFICE and is_office_mfa_required():
             set_route("/care-hub/mfa")
             st.stop()
@@ -9722,6 +9737,10 @@ def render_care_login() -> None:
 def render_care_hub() -> None:
     require_care_access()
     runtime_variant = resolve_runtime_variant(route_hint=get_route())
+    if get_app_variant() == VARIANT_MOBILE:
+        # Keep runtime behavior locked to Mobile when the app is launched as Mobile,
+        # even if route history/query params drift toward Office routes.
+        runtime_variant = VARIANT_MOBILE
     if runtime_variant == VARIANT_MOBILE and not is_mobile_pin_verified_for_session():
         set_route(get_login_route(VARIANT_MOBILE))
         st.stop()
@@ -9996,12 +10015,12 @@ def render_care_hub() -> None:
                     None,
                 )
                 if selected_contact:
-                    latest = fetch_latest_message(
+                    latest = fetch_latest_message_for_contact_with_mapping_repair(
                         resident_id,
-                        "to_resident",
                         access_token,
-                        contact_user_id=current_user_id,
+                        selected_contact,
                         channel="resident_family",
+                        include_audio=True,
                     )
                     queue_mode_label = "Manual selection"
                 else:
@@ -10024,12 +10043,12 @@ def render_care_hub() -> None:
                         None,
                     )
                     if selected_contact:
-                        latest = fetch_latest_message(
+                        latest = fetch_latest_message_for_contact_with_mapping_repair(
                             resident_id,
-                            "to_resident",
                             access_token,
-                            contact_user_id=current_user_id,
+                            selected_contact,
                             channel="resident_family",
+                            include_audio=True,
                         )
                         queue_mode_label = "Session order"
                     else:
@@ -10278,11 +10297,10 @@ def render_care_hub() -> None:
                             st.session_state[manual_selection_key] = True
                             state["selected_contact_id"] = selected_contact.get("id")
                             state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
-                            latest = fetch_latest_message(
+                            latest = fetch_latest_message_for_contact_with_mapping_repair(
                                 resident_id,
-                                "to_resident",
                                 access_token,
-                                contact_user_id=selected_contact.get("auth_user_id"),
+                                selected_contact,
                                 channel="resident_family",
                                 include_audio=True,
                             )
@@ -10348,26 +10366,44 @@ def render_care_hub() -> None:
                     st.rerun()
 
             if latest is None:
-                latest = fetch_latest_message(
-                    resident_id,
-                    "to_resident",
-                    access_token,
-                    contact_user_id=state.get("selected_contact_user_id"),
-                    channel="resident_family",
-                    include_audio=True,
-                )
+                if selected_contact is not None:
+                    latest = fetch_latest_message_for_contact_with_mapping_repair(
+                        resident_id,
+                        access_token,
+                        selected_contact,
+                        channel="resident_family",
+                        include_audio=True,
+                    )
+                else:
+                    latest = fetch_latest_message(
+                        resident_id,
+                        "to_resident",
+                        access_token,
+                        contact_user_id=state.get("selected_contact_user_id"),
+                        channel="resident_family",
+                        include_audio=True,
+                    )
             elif not (
                 latest.get("audio_storage_path")
                 or latest.get("audio_object_path")
             ):
-                latest = fetch_latest_message(
-                    resident_id,
-                    "to_resident",
-                    access_token,
-                    contact_user_id=state.get("selected_contact_user_id"),
-                    channel="resident_family",
-                    include_audio=True,
-                )
+                if selected_contact is not None:
+                    latest = fetch_latest_message_for_contact_with_mapping_repair(
+                        resident_id,
+                        access_token,
+                        selected_contact,
+                        channel="resident_family",
+                        include_audio=True,
+                    )
+                else:
+                    latest = fetch_latest_message(
+                        resident_id,
+                        "to_resident",
+                        access_token,
+                        contact_user_id=state.get("selected_contact_user_id"),
+                        channel="resident_family",
+                        include_audio=True,
+                    )
             latest_contact_user_id = str((latest or {}).get("contact_user_id") or "").strip()
             if latest_contact_user_id:
                 matched_contact = next(
@@ -10405,12 +10441,14 @@ def render_care_hub() -> None:
             audio_bytes = decode_audio_payload(latest, access_token=access_token)
             should_show_message = True
             if is_mobile_variant:
-                should_show_message = bool(st.session_state.get(mobile_play_requested_key, False))
-                if not should_show_message:
-                    st.caption("Press 'Play next family message' to start playback.")
+                if not bool(st.session_state.get(mobile_play_requested_key, False)):
+                    st.caption("Press 'Play next family message' to continue queue playback order.")
+            playback_policy_mode = transcript_policy_mode
+            if is_mobile_variant and transcript_policy_mode == "precheck":
+                playback_policy_mode = "assist"
             playback_allowed = render_transcript_assist(
                 latest,
-                policy_mode=transcript_policy_mode,
+                policy_mode=playback_policy_mode,
                 care_home_id=resident["care_home_id"],
                 resident_id=resident_id,
             )
