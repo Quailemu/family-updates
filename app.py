@@ -3710,6 +3710,8 @@ def find_next_playable_family_message_in_order(
                 start_idx = (idx + 1) % len(contacts_sorted)
                 break
 
+    fallback_contact: dict | None = None
+    fallback_latest: dict | None = None
     for offset in range(len(contacts_sorted)):
         contact = contacts_sorted[(start_idx + offset) % len(contacts_sorted)]
         latest = fetch_latest_message_for_contact_with_mapping_repair(
@@ -3721,12 +3723,19 @@ def find_next_playable_family_message_in_order(
         )
         if not latest:
             continue
+        if not _message_has_audio_pointer(latest):
+            continue
+        if fallback_contact is None:
+            fallback_contact = contact
+            fallback_latest = latest
         playback_source, playback_source_kind = resolve_audio_playback_source(
             latest,
             access_token=access_token,
         )
         if playback_source:
             return contact, latest, playback_source, playback_source_kind
+    if fallback_contact is not None and fallback_latest is not None:
+        return fallback_contact, fallback_latest, None, "none"
     return None, None, None, "none"
 
 
