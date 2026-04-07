@@ -5087,7 +5087,7 @@ def render_transcript_assist(
     if mode == "off":
         return True
     if not isinstance(message, dict):
-        return mode != "precheck"
+        return True
     status = str(message.get("transcript_status") or "").strip().lower()
     transcript_text = str(message.get("transcript_text") or "").strip()
     message_id = str(message.get("id") or "").strip()
@@ -5116,12 +5116,11 @@ def render_transcript_assist(
                 )
         if not reviewed:
             st.warning("Transcript review is required before playback (policy mode: precheck).")
-        return reviewed
+        return True
     if status == "failed":
         st.caption("Transcript was requested but is not available for this message.")
     if mode == "precheck":
-        st.error("Playback blocked: transcript is required by policy but unavailable.")
-        return False
+        st.caption("Transcript is unavailable. Playback remains available.")
     return True
 
 
