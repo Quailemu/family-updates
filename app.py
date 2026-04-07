@@ -7382,6 +7382,20 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
     is_authed = bool(st.session_state.get("auth_uid"))
     if (
         not is_authed
+        and AUTH_COOKIE_PERSISTENCE_ENABLED
+        and AUTH_COOKIE_SIGNING_KEY
+    ):
+        # When a rerun reconnects into a fresh Streamlit runtime session,
+        # recover auth from the signed refresh-token cookie before redirecting.
+        restore_auth_session_from_cookie()
+        is_authed = bool(st.session_state.get("auth_uid"))
+        is_variant_authed = (
+            is_family_authenticated()
+            if app_variant == VARIANT_FAMILY
+            else is_care_authenticated()
+        )
+    if (
+        not is_authed
         and st.session_state.get("access_token")
         and st.session_state.get("refresh_token")
     ):
@@ -10428,7 +10442,6 @@ def render_care_hub() -> None:
                     st.session_state[f"care_mobile_pointer_{resident_id}"] = (
                         office_next_contact_user_id or ""
                     )
-                    st.rerun()
             if selected_contact is None:
                 # Respect explicit manual selection first; otherwise default to queue-next.
                 if state.get("selected_contact_id"):
@@ -10655,7 +10668,6 @@ def render_care_hub() -> None:
                                 )
                             if is_mobile_variant:
                                 st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
-                            st.rerun()
         if is_mobile_variant or is_office_variant:
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
@@ -10686,7 +10698,6 @@ def render_care_hub() -> None:
                     else:
                         st.session_state[mobile_play_requested_key] = False
                         st.session_state[mobile_advance_pointer_key] = False
-                    st.rerun()
 
             if latest is None:
                 if selected_contact is not None:
