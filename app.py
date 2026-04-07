@@ -10235,40 +10235,19 @@ def render_care_hub() -> None:
                 if selected_contact:
                     state["selected_contact_id"] = selected_contact.get("id")
                     state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
-                    latest = fetch_latest_message(
+                    latest = fetch_latest_message_for_contact_with_mapping_repair(
                         resident_id,
-                        "to_resident",
                         access_token,
-                        contact_user_id=selected_contact.get("auth_user_id"),
+                        selected_contact,
                         channel="resident_family",
                         include_audio=True,
                     )
-                    latest_message_id = str((latest or {}).get("id") or "").strip()
-                    if latest_message_id and not has_message_been_played_since_recorded(
-                        latest,
-                        resident_id=resident_id,
-                        care_home_id=resident["care_home_id"],
-                    ):
-                        latest_contact_user_id = str(
-                            (latest or {}).get("contact_user_id")
-                            or selected_contact.get("auth_user_id")
-                            or ""
-                        ).strip()
-                        latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
-                        log_audit_event(
-                            "message_played",
-                            "care_hub",
-                            resident["care_home_id"],
-                            latest_message_id,
-                            resident_id=resident_id,
-                        )
-                        set_contact_last_played_recorded_at(
-                            resident_id,
-                            resident["care_home_id"],
-                            latest_contact_user_id,
-                            latest_recorded_at,
-                            access_token,
-                        )
+                    resolved_contact_user_id = str(
+                        (latest or {}).get("contact_user_id")
+                        or selected_contact.get("auth_user_id")
+                        or ""
+                    ).strip()
+                    state["selected_contact_user_id"] = resolved_contact_user_id
                     # Advance Office session pointer so each click moves through queue order.
                     office_next_contact_user_id = get_next_contact_user_id_with_message(
                         resident_id,
@@ -10297,12 +10276,12 @@ def render_care_hub() -> None:
                 if selected_contact:
                     state["selected_contact_id"] = selected_contact.get("id")
                     state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
-                    latest = fetch_latest_message(
+                    latest = fetch_latest_message_for_contact_with_mapping_repair(
                         resident_id,
-                        "to_resident",
                         access_token,
-                        contact_user_id=selected_contact.get("auth_user_id"),
+                        selected_contact,
                         channel="resident_family",
+                        include_audio=True,
                     )
         else:
             contacts_sorted = sort_contacts_for_playback(contacts)
@@ -10626,7 +10605,7 @@ def render_care_hub() -> None:
                 latest,
                 access_token=access_token,
             )
-            if not playback_source and is_mobile_variant:
+            if not playback_source and (is_mobile_variant or is_office_variant):
                 latest_any_contact = fetch_latest_message(
                     resident_id,
                     "to_resident",
