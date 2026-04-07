@@ -3259,6 +3259,56 @@ def _message_has_audio_pointer(message: dict | None) -> bool:
     )
 
 
+def _fetch_latest_message_for_contact_strict(
+    resident_id: str,
+    access_token: str,
+    contact: dict,
+    *,
+    channel: str = "resident_family",
+    include_audio: bool = True,
+) -> dict | None:
+    contact_user_id = str(contact.get("auth_user_id") or "").strip()
+    contact_id = str(contact.get("id") or "").strip()
+    if contact_user_id:
+        latest = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            contact_user_id=contact_user_id,
+            channel=channel,
+            include_audio=include_audio,
+        )
+        if latest:
+            return latest
+    if contact_id:
+        latest = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            family_id=contact_id,
+            channel=channel,
+            include_audio=include_audio,
+        )
+        if latest:
+            return latest
+    contact_email = str(contact.get("email") or "").strip().lower()
+    if contact_email:
+        resolved_user_id = _get_contact_auth_user_id_via_email(contact_email).strip()
+        if resolved_user_id:
+            contact["auth_user_id"] = resolved_user_id
+            latest = fetch_latest_message(
+                resident_id,
+                "to_resident",
+                access_token,
+                contact_user_id=resolved_user_id,
+                channel=channel,
+                include_audio=include_audio,
+            )
+            if latest:
+                return latest
+    return None
+
+
 def get_next_contact_user_id_in_order(
     contacts_sorted: list[dict],
     current_contact_user_id: str | None,
@@ -3308,6 +3358,15 @@ def get_next_contact_user_id_with_message(
     for contact in contacts_sorted:
         contact_user_id = str(contact.get("auth_user_id") or "").strip()
         latest = latest_by_contact.get(contact_user_id)
+        if not latest:
+            latest = _fetch_latest_message_for_contact_strict(
+                resident_id,
+                access_token,
+                contact,
+                channel="resident_family",
+                include_audio=True,
+            )
+            contact_user_id = str(contact.get("auth_user_id") or "").strip()
         if not latest:
             continue
         if not _message_has_audio_pointer(latest):
@@ -3487,6 +3546,15 @@ def select_next_family_message_for_mobile(
         contact_user_id = str(contact.get("auth_user_id") or "").strip()
         latest = latest_by_contact.get(contact_user_id)
         if not latest:
+            latest = _fetch_latest_message_for_contact_strict(
+                resident_id,
+                access_token,
+                contact,
+                channel="resident_family",
+                include_audio=True,
+            )
+            contact_user_id = str(contact.get("auth_user_id") or "").strip()
+        if not latest:
             continue
         if not _message_has_audio_pointer(latest):
             continue
@@ -3648,6 +3716,15 @@ def get_family_queue_status_for_resident(
     for contact in contacts_sorted:
         contact_user_id = str(contact.get("auth_user_id") or "").strip()
         latest = latest_by_contact.get(contact_user_id)
+        if not latest:
+            latest = _fetch_latest_message_for_contact_strict(
+                resident_id,
+                access_token,
+                contact,
+                channel="resident_family",
+                include_audio=True,
+            )
+            contact_user_id = str(contact.get("auth_user_id") or "").strip()
         if not latest:
             continue
         if not _message_has_audio_pointer(latest):
