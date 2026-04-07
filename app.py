@@ -7976,15 +7976,25 @@ def render_family_send() -> None:
                 include_audio=True,
             )
         latest_sent_audio = decode_audio_payload(latest_sent, access_token=access_token)
-        show_recent_send_feedback = bool(
-            (state.get("last_message") or {}) and not state.get("recording_bytes")
+        last_message = state.get("last_message") or {}
+        last_message_audio = last_message.get("audio_preview")
+        if isinstance(last_message_audio, memoryview):
+            last_message_audio = last_message_audio.tobytes()
+        if not isinstance(last_message_audio, (bytes, bytearray)):
+            last_message_audio = None
+        last_message_audio_mime = (
+            str(last_message.get("audio_mime_type") or "").strip() or "audio/wav"
         )
+        show_recent_send_feedback = bool(last_message and not state.get("recording_bytes"))
         if latest_sent and not state.get("recording_bytes"):
             if latest_sent_audio:
                 st.audio(
                     latest_sent_audio,
                     format=latest_sent.get("audio_mime_type") or "audio/wav",
                 )
+            elif last_message_audio:
+                st.audio(last_message_audio, format=last_message_audio_mime)
+                st.caption("Showing a copy of the message you just sent.")
             else:
                 st.success("Latest Family → Resident message is saved.")
             latest_sent_at = latest_sent.get("recorded_at")
@@ -7992,11 +8002,12 @@ def render_family_send() -> None:
                 latest_sent_label = format_soft_message_period_label(latest_sent_at)
                 if latest_sent_label:
                     st.caption(latest_sent_label)
-        last_message = state.get("last_message") or {}
         if last_message and not state.get("recording_bytes"):
             sent_at = last_message.get("sent_at")
             sent_display = format_soft_message_period_label(sent_at) if sent_at else None
             st.success("Message sent")
+            if last_message_audio:
+                st.audio(last_message_audio, format=last_message_audio_mime)
             if sent_display:
                 st.caption(sent_display)
             if st.button(
@@ -8187,7 +8198,11 @@ def render_family_send() -> None:
                         state["recording_mime_type"] = "audio/wav"
                         state["preview_confirmed"] = False
                         state["transcribe_requested"] = False
-                        state["last_message"] = {"sent_at": now_iso}
+                        state["last_message"] = {
+                            "sent_at": now_iso,
+                            "audio_preview": bytes(audio_bytes),
+                            "audio_mime_type": audio_mime_type,
+                        }
                         st.session_state.pop(f"family_upload_{resident_id}", None)
                         st.session_state.pop(f"family_audio_input_{resident_id}", None)
                         st.rerun()
@@ -10400,6 +10415,7 @@ def render_care_hub() -> None:
                 resident_id=resident_id,
             )
             played_now = bool(audio_bytes and should_show_message and playback_allowed)
+            precheck_blocking = bool(audio_bytes and should_show_message and not playback_allowed)
 
             if audio_bytes and should_show_message:
                 if playback_allowed:
@@ -10427,11 +10443,11 @@ def render_care_hub() -> None:
                 latest_message_id = str((latest or {}).get("id") or "").strip()
                 advance_pointer_now = bool(st.session_state.get(mobile_advance_pointer_key, False))
                 if advance_pointer_now:
-                    if not played_now:
+                    if precheck_blocking:
                         st.caption("Playback queue paused until transcript precheck is completed.")
                         st.session_state[mobile_advance_pointer_key] = False
                     else:
-                        if latest_message_id and not has_message_been_played_since_recorded(
+                        if played_now and latest_message_id and not has_message_been_played_since_recorded(
                             latest,
                             resident_id=resident_id,
                             care_home_id=resident["care_home_id"],
@@ -10449,7 +10465,7 @@ def render_care_hub() -> None:
                             or ""
                         ).strip()
                         latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
-                        if latest_contact_user_id and latest_recorded_at:
+                        if played_now and latest_contact_user_id and latest_recorded_at:
                             set_contact_last_played_recorded_at(
                                 resident_id,
                                 resident["care_home_id"],
