@@ -3250,6 +3250,15 @@ def dedupe_contacts_by_auth_user_id(contacts: list[dict]) -> list[dict]:
     return deduped
 
 
+def _message_has_audio_pointer(message: dict | None) -> bool:
+    if not isinstance(message, dict):
+        return False
+    return bool(
+        str(message.get("audio_object_path") or "").strip()
+        or str(message.get("audio_storage_path") or "").strip()
+    )
+
+
 def get_next_contact_user_id_in_order(
     contacts_sorted: list[dict],
     current_contact_user_id: str | None,
@@ -3293,13 +3302,15 @@ def get_next_contact_user_id_with_message(
         access_token,
         resolved_contact_user_ids,
         channel="resident_family",
-        include_audio=False,
+        include_audio=True,
     )
     ordered_user_ids: list[str] = []
     for contact in contacts_sorted:
         contact_user_id = str(contact.get("auth_user_id") or "").strip()
         latest = latest_by_contact.get(contact_user_id)
         if not latest:
+            continue
+        if not _message_has_audio_pointer(latest):
             continue
         if contact_user_id not in ordered_user_ids:
             ordered_user_ids.append(contact_user_id)
@@ -3468,7 +3479,7 @@ def select_next_family_message_for_mobile(
         access_token,
         resolved_contact_user_ids,
         channel="resident_family",
-        include_audio=False,
+        include_audio=True,
     )
 
     queued_items: list[dict] = []
@@ -3476,6 +3487,8 @@ def select_next_family_message_for_mobile(
         contact_user_id = str(contact.get("auth_user_id") or "").strip()
         latest = latest_by_contact.get(contact_user_id)
         if not latest:
+            continue
+        if not _message_has_audio_pointer(latest):
             continue
         if not contact_user_id:
             continue
@@ -3508,8 +3521,10 @@ def select_next_family_message_for_mobile(
             "to_resident",
             access_token,
             channel="resident_family",
-            include_audio=False,
+            include_audio=True,
         )
+        if fallback_latest and not _message_has_audio_pointer(fallback_latest):
+            fallback_latest = None
         if fallback_latest:
             fallback_contact = None
             fallback_contact_user_id = str(fallback_latest.get("contact_user_id") or "").strip()
@@ -3625,7 +3640,7 @@ def get_family_queue_status_for_resident(
         access_token,
         resolved_contact_user_ids,
         channel="resident_family",
-        include_audio=False,
+        include_audio=True,
     )
     unread_count = 0
     unread_contacts: list[dict] = []
@@ -3634,6 +3649,8 @@ def get_family_queue_status_for_resident(
         contact_user_id = str(contact.get("auth_user_id") or "").strip()
         latest = latest_by_contact.get(contact_user_id)
         if not latest:
+            continue
+        if not _message_has_audio_pointer(latest):
             continue
         if next_contact is None:
             next_contact = contact
