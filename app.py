@@ -10,6 +10,7 @@ import hmac
 import json
 import re
 import html
+import io
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
@@ -19,6 +20,10 @@ from supabase.client import create_client
 import pyotp
 import qrcode
 from config import get_supabase_config, get_app_variant as resolve_app_variant
+try:
+    from openai import OpenAI
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    OpenAI = None
 
 try:
     from st_audiorec import st_audiorec
@@ -77,6 +82,11 @@ APP_OFFICE_LIVE_REFRESH = os.getenv("APP_OFFICE_LIVE_REFRESH", "0").strip().lowe
 }
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 SUPABASE_AUDIO_BUCKET = os.getenv("SUPABASE_AUDIO_BUCKET", "voice-messages").strip() or "voice-messages"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+OPENAI_TRANSCRIPTION_MODEL = (
+    os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe").strip()
+    or "gpt-4o-mini-transcribe"
+)
 OFFICE_UPDATE_CATEGORIES = (
     "General reassurance",
     "Daily life",
@@ -582,6 +592,10 @@ def _strip_optional_message_audio_columns(payload: dict) -> dict:
     cleaned = dict(payload or {})
     cleaned.pop("audio_object_path", None)
     cleaned.pop("audio_source", None)
+    cleaned.pop("transcript_text", None)
+    cleaned.pop("transcript_status", None)
+    cleaned.pop("transcript_model", None)
+    cleaned.pop("transcript_generated_at", None)
     return cleaned
 
 
@@ -594,12 +608,25 @@ def _looks_like_base64_payload(value: str) -> bool:
     return bool(re.fullmatch(r"[A-Za-z0-9+/=]+", normalized))
 
 
-def _message_select_fields(include_audio: bool, include_optional_storage_columns: bool = True) -> str:
+def _message_select_fields(
+    include_audio: bool,
+    include_optional_storage_columns: bool = True,
+    include_optional_transcript_columns: bool = True,
+) -> str:
     fields = "id, resident_id, contact_user_id, family_id, channel, direction, recorded_at"
     if include_audio:
         audio_fields = ["audio_storage_path", "audio_mime_type", "audio_bytes"]
         if include_optional_storage_columns:
             audio_fields.extend(["audio_object_path", "audio_source"])
+        if include_optional_transcript_columns:
+            audio_fields.extend(
+                [
+                    "transcript_text",
+                    "transcript_status",
+                    "transcript_model",
+                    "transcript_generated_at",
+                ]
+            )
         fields = (
             "id, resident_id, contact_user_id, family_id, channel, direction, "
             + ", ".join(audio_fields)
@@ -652,6 +679,73 @@ def upload_audio_to_storage(
         return object_path, None
     except Exception as exc:
         return None, str(exc)
+
+
+def _audio_extension_from_mime(audio_mime_type: str) -> str:
+    mime = str(audio_mime_type or "audio/wav").strip().lower()
+    if "mpeg" in mime or "mp3" in mime:
+        return "mp3"
+    if "webm" in mime:
+        return "webm"
+    if "ogg" in mime:
+        return "ogg"
+    if "mp4" in mime or "m4a" in mime:
+        return "m4a"
+    return "wav"
+
+
+def transcribe_audio_bytes(audio_bytes: bytes, audio_mime_type: str) -> tuple[str | None, str | None]:
+    if not audio_bytes:
+        return None, "No audio bytes."
+    if not OPENAI_API_KEY:
+        return None, "OPENAI_API_KEY is not configured."
+    if OpenAI is None:
+        return None, "OpenAI SDK is not installed."
+    extension = _audio_extension_from_mime(audio_mime_type)
+    audio_file = io.BytesIO(audio_bytes)
+    audio_file.name = f"message.{extension}"
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        result = client.audio.transcriptions.create(
+            model=OPENAI_TRANSCRIPTION_MODEL,
+            file=audio_file,
+        )
+        text = str(getattr(result, "text", "") or "").strip()
+        if text:
+            return text, None
+        return None, "Transcription returned no text."
+    except Exception as exc:
+        return None, str(exc)
+
+
+def build_transcript_fields(
+    audio_bytes: bytes,
+    audio_mime_type: str,
+    *,
+    requested: bool,
+) -> tuple[dict, str | None]:
+    if not requested:
+        return {
+            "transcript_text": None,
+            "transcript_status": "not_requested",
+            "transcript_model": None,
+            "transcript_generated_at": None,
+        }, None
+
+    transcript_text, transcript_error = transcribe_audio_bytes(audio_bytes, audio_mime_type)
+    if transcript_text:
+        return {
+            "transcript_text": transcript_text,
+            "transcript_status": "ready",
+            "transcript_model": OPENAI_TRANSCRIPTION_MODEL,
+            "transcript_generated_at": __import__("datetime").datetime.utcnow().isoformat(),
+        }, None
+    return {
+        "transcript_text": None,
+        "transcript_status": "failed",
+        "transcript_model": OPENAI_TRANSCRIPTION_MODEL,
+        "transcript_generated_at": __import__("datetime").datetime.utcnow().isoformat(),
+    }, transcript_error or "Transcription failed."
 
 
 def _download_audio_from_storage(
@@ -708,6 +802,10 @@ def upsert_latest_message_with_fallback(
         except Exception as exc:
             if _is_missing_column_error(exc, "audio_object_path") or _is_missing_column_error(
                 exc, "audio_source"
+            ) or _is_missing_column_error(exc, "transcript_text") or _is_missing_column_error(
+                exc, "transcript_status"
+            ) or _is_missing_column_error(exc, "transcript_model") or _is_missing_column_error(
+                exc, "transcript_generated_at"
             ):
                 legacy_payload = _strip_optional_message_audio_columns(payload)
                 try:
@@ -743,6 +841,10 @@ def upsert_latest_message_with_fallback(
             except Exception as exc:
                 if _is_missing_column_error(exc, "audio_object_path") or _is_missing_column_error(
                     exc, "audio_source"
+                ) or _is_missing_column_error(exc, "transcript_text") or _is_missing_column_error(
+                    exc, "transcript_status"
+                ) or _is_missing_column_error(exc, "transcript_model") or _is_missing_column_error(
+                    exc, "transcript_generated_at"
                 ):
                     write_payload = _strip_optional_message_audio_columns(write_payload)
                     response = (
@@ -756,6 +858,10 @@ def upsert_latest_message_with_fallback(
             except Exception as exc:
                 if _is_missing_column_error(exc, "audio_object_path") or _is_missing_column_error(
                     exc, "audio_source"
+                ) or _is_missing_column_error(exc, "transcript_text") or _is_missing_column_error(
+                    exc, "transcript_status"
+                ) or _is_missing_column_error(exc, "transcript_model") or _is_missing_column_error(
+                    exc, "transcript_generated_at"
                 ):
                     write_payload = _strip_optional_message_audio_columns(write_payload)
                     response = supabase.table("messages").insert(write_payload).execute()
@@ -4086,6 +4192,10 @@ def fetch_latest_message(
             if include_audio and (
                 _is_missing_column_error(exc, "audio_object_path")
                 or _is_missing_column_error(exc, "audio_source")
+                or _is_missing_column_error(exc, "transcript_text")
+                or _is_missing_column_error(exc, "transcript_status")
+                or _is_missing_column_error(exc, "transcript_model")
+                or _is_missing_column_error(exc, "transcript_generated_at")
             ):
                 fallback_query = (
                     supabase.table("messages")
@@ -4093,6 +4203,7 @@ def fetch_latest_message(
                         _message_select_fields(
                             include_audio=include_audio,
                             include_optional_storage_columns=False,
+                            include_optional_transcript_columns=False,
                         )
                     )
                     .eq("resident_id", resident_id)
@@ -4781,6 +4892,20 @@ def decode_audio_payload(message: dict, access_token: str | None = None) -> byte
         return base64.b64decode(payload)
     except Exception:
         return None
+
+
+def render_transcript_assist(message: dict | None) -> None:
+    if not isinstance(message, dict):
+        return
+    status = str(message.get("transcript_status") or "").strip().lower()
+    transcript_text = str(message.get("transcript_text") or "").strip()
+    if transcript_text:
+        with st.expander("Transcript assist", expanded=False):
+            st.markdown(transcript_text)
+            st.caption("Transcript may contain errors. Voice remains the source of truth.")
+        return
+    if status == "failed":
+        st.caption("Transcript was requested but is not available for this message.")
 
 
 def global_header() -> None:
@@ -7878,8 +8003,15 @@ def render_family_send() -> None:
                 value=state.get("preview_confirmed", False),
                 key=f"family_listened_{resident_id}",
             )
+            state["transcribe_requested"] = st.checkbox(
+                "Create transcript for accessibility/support",
+                value=state.get("transcribe_requested", False),
+                key=f"family_transcribe_{resident_id}",
+            )
+            st.caption("Transcript is optional, may contain errors, and replaces with the next message.")
         else:
             state["preview_confirmed"] = False
+            state["transcribe_requested"] = False
 
         confirmation_line = f"Sending to: {full_name}"
         if room_label:
@@ -7931,6 +8063,12 @@ def render_family_send() -> None:
                         "audio_bytes": len(audio_bytes),
                         "recorded_at": now_iso,
                     }
+                    transcript_fields, transcript_error = build_transcript_fields(
+                        audio_bytes,
+                        audio_mime_type,
+                        requested=bool(state.get("transcribe_requested")),
+                    )
+                    payload.update(transcript_fields)
                     resp, upsert_error = upsert_latest_message_with_fallback(
                         supabase,
                         payload,
@@ -7945,6 +8083,8 @@ def render_family_send() -> None:
                     if upsert_error:
                         st.error(upsert_error)
                     else:
+                        if transcript_error and bool(state.get("transcribe_requested")):
+                            st.warning(f"Message sent, but transcript failed: {transcript_error}")
                         message_id = (
                             (
                                 resp.data[0].get("id")
@@ -7966,6 +8106,7 @@ def render_family_send() -> None:
                         state["recording_bytes"] = None
                         state["recording_mime_type"] = "audio/wav"
                         state["preview_confirmed"] = False
+                        state["transcribe_requested"] = False
                         state["last_message"] = {"sent_at": now_iso}
                         st.session_state.pop(f"family_upload_{resident_id}", None)
                         st.session_state.pop(f"family_audio_input_{resident_id}", None)
@@ -10168,6 +10309,7 @@ def render_care_hub() -> None:
                     st.session_state.get(mobile_advance_pointer_key, False)
                 ):
                     st.caption("Message payload could not be played. Skipping to next contact.")
+            render_transcript_assist(latest)
 
             if is_mobile_variant:
                 latest_message_id = str((latest or {}).get("id") or "").strip()
@@ -10262,6 +10404,7 @@ def render_care_hub() -> None:
                 latest_sent_label = format_soft_message_period_label(latest_sent_at)
                 if latest_sent_label:
                     st.caption(latest_sent_label)
+            render_transcript_assist(latest_sent)
         if is_mobile_variant or is_office_variant:
             if hasattr(st, "audio_input"):
                 recorded_from_native = st.audio_input(
@@ -10312,6 +10455,12 @@ def render_care_hub() -> None:
                     value=state.get("preview_confirmed", False),
                     key=f"care_listened_{resident_id}",
                 )
+                state["transcribe_requested"] = st.checkbox(
+                    "Create transcript for accessibility/support",
+                    value=state.get("transcribe_requested", False),
+                    key=f"care_transcribe_{resident_id}",
+                )
+                st.caption("Transcript is optional, may contain errors, and replaces with the next message.")
                 if st.button(
                     "Reset recorder",
                     key=f"care_reset_recorder_{resident_id}",
@@ -10332,6 +10481,7 @@ def render_care_hub() -> None:
                     st.rerun()
             else:
                 state["preview_confirmed"] = False
+                state["transcribe_requested"] = False
 
             sent_now = False
             room_display = f"Room {resident.get('room')}" if resident.get("room") else "Room not set"
@@ -10409,6 +10559,12 @@ def render_care_hub() -> None:
                             "audio_bytes": len(audio_bytes),
                             "recorded_at": now_iso,
                         }
+                        transcript_fields, transcript_error = build_transcript_fields(
+                            audio_bytes,
+                            audio_mime_type,
+                            requested=bool(state.get("transcribe_requested")),
+                        )
+                        payload.update(transcript_fields)
                         resp, upsert_error = upsert_latest_message_with_fallback(
                             supabase,
                             payload,
@@ -10423,6 +10579,8 @@ def render_care_hub() -> None:
                         if upsert_error:
                             st.error(upsert_error)
                         else:
+                            if transcript_error and bool(state.get("transcribe_requested")):
+                                st.warning(f"Message sent, but transcript failed: {transcript_error}")
                             message_id = (
                                 (
                                     resp.data[0].get("id")
@@ -10451,6 +10609,7 @@ def render_care_hub() -> None:
                             state["recording_bytes"] = None
                             state["recording_mime_type"] = "audio/wav"
                             state["preview_confirmed"] = False
+                            state["transcribe_requested"] = False
                             sent_now = True
                             st.session_state["care_last_sent"] = {
                                 "resident_id": resident_id,
@@ -10494,6 +10653,7 @@ def render_care_hub() -> None:
                     '<div class="vm-muted-line">No care hub updates.</div>',
                     unsafe_allow_html=True,
                 )
+            render_transcript_assist(latest_office_update)
 
             if runtime_variant == VARIANT_OFFICE and hasattr(st, "audio_input"):
                 recorded_office = st.audio_input(
@@ -10554,6 +10714,12 @@ def render_care_hub() -> None:
                     value=state.get("office_preview_confirmed", False),
                     key=f"care_office_listened_{resident_id}",
                 )
+                state["office_transcribe_requested"] = st.checkbox(
+                    "Create transcript for accessibility/support",
+                    value=state.get("office_transcribe_requested", False),
+                    key=f"care_office_transcribe_{resident_id}",
+                )
+                st.caption("Transcript is optional, may contain errors, and replaces with the next message.")
                 if st.button(
                     "Reset care hub recorder",
                     key=f"care_office_reset_recorder_{resident_id}",
@@ -10571,6 +10737,7 @@ def render_care_hub() -> None:
                     st.rerun()
             elif runtime_variant == VARIANT_OFFICE:
                 state["office_preview_confirmed"] = False
+                state["office_transcribe_requested"] = False
 
             if (
                 runtime_variant == VARIANT_OFFICE
@@ -10653,6 +10820,12 @@ def render_care_hub() -> None:
                             "audio_bytes": len(office_audio_bytes),
                             "recorded_at": office_now_iso,
                         }
+                        transcript_fields, transcript_error = build_transcript_fields(
+                            office_audio_bytes,
+                            office_audio_mime,
+                            requested=bool(state.get("office_transcribe_requested")),
+                        )
+                        office_payload.update(transcript_fields)
                         office_resp, upsert_error = upsert_latest_message_with_fallback(
                             supabase,
                             office_payload,
@@ -10667,6 +10840,8 @@ def render_care_hub() -> None:
                         if upsert_error:
                             st.error(upsert_error)
                         else:
+                            if transcript_error and bool(state.get("office_transcribe_requested")):
+                                st.warning(f"Update sent, but transcript failed: {transcript_error}")
                             office_message_id = (
                                 (
                                     office_resp.data[0].get("id")
@@ -10688,6 +10863,7 @@ def render_care_hub() -> None:
                             state["office_recording_bytes"] = None
                             state["office_recording_mime_type"] = "audio/wav"
                             state["office_preview_confirmed"] = False
+                            state["office_transcribe_requested"] = False
                             sent_office_fp = state.get("office_recording_fingerprint")
                             state["office_recording_fingerprint"] = None
                             state["office_recording_input_nonce"] = (
