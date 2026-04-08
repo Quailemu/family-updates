@@ -4676,6 +4676,30 @@ def _get_contact_auth_user_id_via_email(email: str) -> str:
     return resolved
 
 
+def _message_recorded_at_sort_key(message: dict | None) -> tuple[int, str]:
+    recorded_at = str((message or {}).get("recorded_at") or "").strip()
+    if not recorded_at:
+        return (0, "")
+    try:
+        dt_mod = __import__("datetime")
+        parsed = dt_mod.datetime.fromisoformat(recorded_at.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=dt_mod.timezone.utc)
+        return (1, parsed.astimezone(dt_mod.timezone.utc).isoformat())
+    except Exception:
+        return (1, recorded_at)
+
+
+def _prefer_newer_message(first: dict | None, second: dict | None) -> dict | None:
+    if first and not second:
+        return first
+    if second and not first:
+        return second
+    if not first and not second:
+        return None
+    return first if _message_recorded_at_sort_key(first) >= _message_recorded_at_sort_key(second) else second
+
+
 def fetch_latest_message_for_contact_with_mapping_repair(
     resident_id: str,
     access_token: str,
@@ -4686,8 +4710,10 @@ def fetch_latest_message_for_contact_with_mapping_repair(
 ) -> dict | None:
     contact_id = str(contact.get("id") or "").strip()
     contact_user_id = str(contact.get("auth_user_id") or "").strip()
+    latest_by_user: dict | None = None
+    latest_by_contact_id: dict | None = None
     if contact_user_id:
-        latest = fetch_latest_message(
+        latest_by_user = fetch_latest_message(
             resident_id,
             "to_resident",
             access_token,
@@ -4695,27 +4721,24 @@ def fetch_latest_message_for_contact_with_mapping_repair(
             channel=channel,
             include_audio=include_audio,
         )
-        if latest:
-            return latest
+    if contact_id:
+        latest_by_contact_id = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            family_id=contact_id,
+            channel=channel,
+            include_audio=include_audio,
+        )
+    latest = _prefer_newer_message(latest_by_user, latest_by_contact_id)
+    if latest:
+        return latest
 
     contact_email = str(contact.get("email") or "").strip().lower()
     resolved_user_id = ""
     if contact_email:
         resolved_user_id = _get_contact_auth_user_id_via_email(contact_email)
     if not resolved_user_id:
-        # Legacy fallback: only use contact-id channel when no auth user id is available.
-        # Avoid cross-contact drift where stale legacy rows override current user-linked rows.
-        if not contact_user_id and contact_id:
-            latest = fetch_latest_message(
-                resident_id,
-                "to_resident",
-                access_token,
-                family_id=contact_id,
-                channel=channel,
-                include_audio=include_audio,
-            )
-            if latest:
-                return latest
         return None
 
     if resolved_user_id != contact_user_id:
@@ -4739,7 +4762,7 @@ def fetch_latest_message_for_contact_with_mapping_repair(
         channel=channel,
         include_audio=include_audio,
     )
-    return latest
+    return _prefer_newer_message(latest, latest_by_contact_id)
 
 
 def fetch_latest_message(
@@ -5502,8 +5525,6 @@ def render_transcript_assist(
 ) -> bool:
     try:
         mode = normalize_transcript_policy_mode(policy_mode)
-        if mode == "off":
-            return True
         if not isinstance(message, dict):
             return True
         status = str(message.get("transcript_status") or "").strip().lower()
@@ -5539,6 +5560,8 @@ def render_transcript_assist(
                     )
             if not reviewed:
                 st.warning("Transcript review is required before playback (policy mode: precheck).")
+            return True
+        if mode == "off":
             return True
         if status == "failed":
             st.caption("Transcript was requested but is not available for this message.")
