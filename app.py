@@ -796,6 +796,110 @@ def build_transcript_fields(
     }, transcript_error or "Transcription failed."
 
 
+def clear_transcript_preview_state(state: dict, prefix: str = "") -> None:
+    if not isinstance(state, dict):
+        return
+    for key in (
+        "transcript_preview_fingerprint",
+        "transcript_preview_text",
+        "transcript_preview_status",
+        "transcript_preview_model",
+        "transcript_preview_generated_at",
+        "transcript_preview_error",
+    ):
+        state.pop(f"{prefix}{key}", None)
+
+
+def ensure_transcript_preview_state(
+    state: dict,
+    audio_bytes: bytes,
+    audio_mime_type: str,
+    *,
+    requested: bool,
+    prefix: str = "",
+) -> None:
+    if not isinstance(state, dict):
+        return
+    if not requested:
+        clear_transcript_preview_state(state, prefix=prefix)
+        return
+    if not audio_bytes:
+        clear_transcript_preview_state(state, prefix=prefix)
+        return
+    fingerprint = __import__("hashlib").sha1(audio_bytes).hexdigest()
+    fp_key = f"{prefix}transcript_preview_fingerprint"
+    status_key = f"{prefix}transcript_preview_status"
+    if (
+        str(state.get(fp_key) or "").strip() == fingerprint
+        and str(state.get(status_key) or "").strip() in {"ready", "failed"}
+    ):
+        return
+    transcript_text, transcript_error = transcribe_audio_bytes(audio_bytes, audio_mime_type)
+    state[fp_key] = fingerprint
+    state[f"{prefix}transcript_preview_model"] = OPENAI_TRANSCRIPTION_MODEL
+    state[f"{prefix}transcript_preview_generated_at"] = (
+        __import__("datetime").datetime.utcnow().isoformat()
+    )
+    if transcript_text:
+        state[f"{prefix}transcript_preview_text"] = transcript_text
+        state[status_key] = "ready"
+        state[f"{prefix}transcript_preview_error"] = None
+    else:
+        state[f"{prefix}transcript_preview_text"] = None
+        state[status_key] = "failed"
+        state[f"{prefix}transcript_preview_error"] = (
+            transcript_error or "Transcription failed."
+        )
+
+
+def build_transcript_fields_from_preview(
+    state: dict,
+    audio_bytes: bytes,
+    audio_mime_type: str,
+    *,
+    requested: bool,
+    prefix: str = "",
+) -> tuple[dict, str | None]:
+    if not requested:
+        return {
+            "transcript_text": None,
+            "transcript_status": "not_requested",
+            "transcript_model": None,
+            "transcript_generated_at": None,
+        }, None
+    if isinstance(state, dict) and audio_bytes:
+        fingerprint = __import__("hashlib").sha1(audio_bytes).hexdigest()
+        stored_fingerprint = str(
+            state.get(f"{prefix}transcript_preview_fingerprint") or ""
+        ).strip()
+        stored_status = str(state.get(f"{prefix}transcript_preview_status") or "").strip()
+        if stored_fingerprint == fingerprint and stored_status in {"ready", "failed"}:
+            generated_at = (
+                str(state.get(f"{prefix}transcript_preview_generated_at") or "").strip()
+                or __import__("datetime").datetime.utcnow().isoformat()
+            )
+            if stored_status == "ready":
+                return {
+                    "transcript_text": state.get(f"{prefix}transcript_preview_text"),
+                    "transcript_status": "ready",
+                    "transcript_model": state.get(f"{prefix}transcript_preview_model")
+                    or OPENAI_TRANSCRIPTION_MODEL,
+                    "transcript_generated_at": generated_at,
+                }, None
+            return {
+                "transcript_text": None,
+                "transcript_status": "failed",
+                "transcript_model": state.get(f"{prefix}transcript_preview_model")
+                or OPENAI_TRANSCRIPTION_MODEL,
+                "transcript_generated_at": generated_at,
+            }, str(state.get(f"{prefix}transcript_preview_error") or "Transcription failed.")
+    return build_transcript_fields(
+        audio_bytes,
+        audio_mime_type,
+        requested=requested,
+    )
+
+
 def _download_audio_from_storage(
     object_path: str, access_token: str | None = None
 ) -> bytes | None:
@@ -3976,6 +4080,7 @@ def reset_outbox_state_on_new_recording(
     if isinstance(state, dict):
         state["preview_confirmed"] = False
         state["last_message"] = None
+        clear_transcript_preview_state(state)
     if ack_widget_key and update_widget_state:
         st.session_state[ack_widget_key] = False
     if clear_care_last_sent_for_resident:
@@ -8540,9 +8645,33 @@ def render_family_send() -> None:
                 st.caption(
                     "Transcript is optional, may contain errors, and replaces with the next message."
                 )
+            ensure_transcript_preview_state(
+                state,
+                state.get("recording_bytes") or b"",
+                state.get("recording_mime_type") or "audio/wav",
+                requested=bool(state.get("transcribe_requested")),
+            )
+            if bool(state.get("transcribe_requested")):
+                transcript_preview_text = str(state.get("transcript_preview_text") or "").strip()
+                transcript_preview_status = str(
+                    state.get("transcript_preview_status") or ""
+                ).strip()
+                transcript_preview_error = str(
+                    state.get("transcript_preview_error") or ""
+                ).strip()
+                if transcript_preview_text and transcript_preview_status == "ready":
+                    st.markdown("**Transcript preview (before send)**")
+                    st.caption("Transcript may contain errors. Voice remains the source of truth.")
+                    st.markdown(transcript_preview_text)
+                elif transcript_preview_status == "failed":
+                    st.warning(
+                        "Transcript preview could not be generated before send."
+                        + (f" {transcript_preview_error}" if transcript_preview_error else "")
+                    )
         else:
             state["preview_confirmed"] = False
             state["transcribe_requested"] = False
+            clear_transcript_preview_state(state)
 
         confirmation_line = f"Sending to: {full_name}"
         if room_label:
@@ -8594,7 +8723,8 @@ def render_family_send() -> None:
                         "audio_bytes": len(audio_bytes),
                         "recorded_at": now_iso,
                     }
-                    transcript_fields, transcript_error = build_transcript_fields(
+                    transcript_fields, transcript_error = build_transcript_fields_from_preview(
+                        state,
                         audio_bytes,
                         audio_mime_type,
                         requested=bool(state.get("transcribe_requested")),
@@ -8638,6 +8768,7 @@ def render_family_send() -> None:
                         state["recording_mime_type"] = "audio/wav"
                         state["preview_confirmed"] = False
                         state["transcribe_requested"] = False
+                        clear_transcript_preview_state(state)
                         state["last_message"] = {
                             "sent_at": now_iso,
                             "audio_preview": bytes(audio_bytes),
@@ -11184,6 +11315,29 @@ def render_care_hub() -> None:
                     st.caption(
                         "Transcript is optional, may contain errors, and replaces with the next message."
                     )
+                ensure_transcript_preview_state(
+                    state,
+                    state.get("recording_bytes") or b"",
+                    state.get("recording_mime_type") or "audio/wav",
+                    requested=bool(state.get("transcribe_requested")),
+                )
+                if bool(state.get("transcribe_requested")):
+                    transcript_preview_text = str(state.get("transcript_preview_text") or "").strip()
+                    transcript_preview_status = str(
+                        state.get("transcript_preview_status") or ""
+                    ).strip()
+                    transcript_preview_error = str(
+                        state.get("transcript_preview_error") or ""
+                    ).strip()
+                    if transcript_preview_text and transcript_preview_status == "ready":
+                        st.markdown("**Transcript preview (before send)**")
+                        st.caption("Transcript may contain errors. Voice remains the source of truth.")
+                        st.markdown(transcript_preview_text)
+                    elif transcript_preview_status == "failed":
+                        st.warning(
+                            "Transcript preview could not be generated before send."
+                            + (f" {transcript_preview_error}" if transcript_preview_error else "")
+                        )
                 if st.button(
                     "Reset recorder",
                     key=f"care_reset_recorder_{resident_id}",
@@ -11205,6 +11359,7 @@ def render_care_hub() -> None:
             else:
                 state["preview_confirmed"] = False
                 state["transcribe_requested"] = False
+                clear_transcript_preview_state(state)
 
             sent_now = False
             room_display = f"Room {resident.get('room')}" if resident.get("room") else "Room not set"
@@ -11282,7 +11437,8 @@ def render_care_hub() -> None:
                             "audio_bytes": len(audio_bytes),
                             "recorded_at": now_iso,
                         }
-                        transcript_fields, transcript_error = build_transcript_fields(
+                        transcript_fields, transcript_error = build_transcript_fields_from_preview(
+                            state,
                             audio_bytes,
                             audio_mime_type,
                             requested=bool(state.get("transcribe_requested")),
@@ -11333,6 +11489,7 @@ def render_care_hub() -> None:
                             state["recording_mime_type"] = "audio/wav"
                             state["preview_confirmed"] = False
                             state["transcribe_requested"] = False
+                            clear_transcript_preview_state(state)
                             sent_now = True
                             st.session_state["care_last_sent"] = {
                                 "resident_id": resident_id,
@@ -11425,6 +11582,7 @@ def render_care_hub() -> None:
                             getattr(recorded_office, "type", None) or "audio/wav"
                         )
                         state["office_preview_confirmed"] = False
+                        clear_transcript_preview_state(state, prefix="office_")
                         state["office_last_sent_label"] = None
                         state["office_last_sent_fingerprint"] = None
                         st.session_state[f"care_office_listened_{resident_id}"] = False
@@ -11459,6 +11617,32 @@ def render_care_hub() -> None:
                     st.caption(
                         "Transcript is optional, may contain errors, and replaces with the next message."
                     )
+                ensure_transcript_preview_state(
+                    state,
+                    state.get("office_recording_bytes") or b"",
+                    state.get("office_recording_mime_type") or "audio/wav",
+                    requested=bool(state.get("office_transcribe_requested")),
+                    prefix="office_",
+                )
+                if bool(state.get("office_transcribe_requested")):
+                    transcript_preview_text = str(
+                        state.get("office_transcript_preview_text") or ""
+                    ).strip()
+                    transcript_preview_status = str(
+                        state.get("office_transcript_preview_status") or ""
+                    ).strip()
+                    transcript_preview_error = str(
+                        state.get("office_transcript_preview_error") or ""
+                    ).strip()
+                    if transcript_preview_text and transcript_preview_status == "ready":
+                        st.markdown("**Transcript preview (before send)**")
+                        st.caption("Transcript may contain errors. Voice remains the source of truth.")
+                        st.markdown(transcript_preview_text)
+                    elif transcript_preview_status == "failed":
+                        st.warning(
+                            "Transcript preview could not be generated before send."
+                            + (f" {transcript_preview_error}" if transcript_preview_error else "")
+                        )
                 if st.button(
                     "Reset care hub recorder",
                     key=f"care_office_reset_recorder_{resident_id}",
@@ -11470,6 +11654,7 @@ def render_care_hub() -> None:
                     state["office_preview_confirmed"] = False
                     state["office_last_sent_label"] = None
                     state["office_last_sent_fingerprint"] = None
+                    clear_transcript_preview_state(state, prefix="office_")
                     state["office_recording_input_nonce"] = int(
                         state.get("office_recording_input_nonce", 0)
                     ) + 1
@@ -11477,6 +11662,7 @@ def render_care_hub() -> None:
             elif runtime_variant == VARIANT_OFFICE:
                 state["office_preview_confirmed"] = False
                 state["office_transcribe_requested"] = False
+                clear_transcript_preview_state(state, prefix="office_")
 
             if (
                 runtime_variant == VARIANT_OFFICE
@@ -11559,10 +11745,12 @@ def render_care_hub() -> None:
                             "audio_bytes": len(office_audio_bytes),
                             "recorded_at": office_now_iso,
                         }
-                        transcript_fields, transcript_error = build_transcript_fields(
+                        transcript_fields, transcript_error = build_transcript_fields_from_preview(
+                            state,
                             office_audio_bytes,
                             office_audio_mime,
                             requested=bool(state.get("office_transcribe_requested")),
+                            prefix="office_",
                         )
                         office_payload.update(transcript_fields)
                         office_resp, upsert_error = upsert_latest_message_with_fallback(
@@ -11603,6 +11791,7 @@ def render_care_hub() -> None:
                             state["office_recording_mime_type"] = "audio/wav"
                             state["office_preview_confirmed"] = False
                             state["office_transcribe_requested"] = False
+                            clear_transcript_preview_state(state, prefix="office_")
                             sent_office_fp = state.get("office_recording_fingerprint")
                             state["office_recording_fingerprint"] = None
                             state["office_recording_input_nonce"] = (
