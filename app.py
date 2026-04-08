@@ -8049,6 +8049,27 @@ def render_slow_speech_hint() -> None:
     )
 
 
+def render_audio_safe(
+    audio_payload: bytes | str | None,
+    *,
+    audio_format: str | None = None,
+    unavailable_message: str = "Audio preview is temporarily unavailable.",
+) -> bool:
+    if audio_payload is None:
+        return False
+    try:
+        if audio_format:
+            st.audio(audio_payload, format=audio_format)
+        else:
+            st.audio(audio_payload)
+        return True
+    except Exception as exc:
+        if APP_DEBUG:
+            print(f"[audio-safe] suppressed audio render error: {exc}", flush=True)
+        st.caption(unavailable_message)
+        return False
+
+
 def render_family_login_hub() -> None:
     inject_login_css()
     st.markdown(
@@ -11601,12 +11622,16 @@ def render_care_hub() -> None:
             )
             if latest_office_audio:
                 if latest_office_audio_kind == "bytes":
-                    st.audio(
+                    render_audio_safe(
                         latest_office_audio,
-                        format=latest_office_update.get("audio_mime_type") or "audio/wav",
+                        audio_format=latest_office_update.get("audio_mime_type") or "audio/wav",
+                        unavailable_message="Office update audio could not be played.",
                     )
                 else:
-                    st.audio(latest_office_audio)
+                    render_audio_safe(
+                        latest_office_audio,
+                        unavailable_message="Office update audio could not be played.",
+                    )
                 if runtime_variant == VARIANT_MOBILE:
                     soft_label = format_soft_message_period_label(
                         latest_office_update.get("recorded_at")
@@ -11632,53 +11657,61 @@ def render_care_hub() -> None:
                 )
                 render_slow_speech_hint()
                 if recorded_office is not None:
-                    office_bytes = recorded_office.getvalue()
-                    office_fp = (
-                        __import__("hashlib").sha1(office_bytes).hexdigest()
-                        if office_bytes
-                        else None
-                    )
-                    if not office_bytes:
+                    try:
+                        office_bytes = recorded_office.getvalue()
+                        office_fp = (
+                            __import__("hashlib").sha1(office_bytes).hexdigest()
+                            if office_bytes
+                            else None
+                        )
+                        if not office_bytes:
+                            st.warning(
+                                "That care hub update recording could not be captured correctly. Please record again."
+                            )
+                        now_ts = time.time()
+                        # Prevent stale recorder replay after a send from re-populating the form.
+                        if (
+                            now_ts < float(state.get("office_ignore_audio_until") or 0.0)
+                            and not state.get("office_recording_bytes")
+                        ):
+                            pass
+                        elif (
+                            office_bytes
+                            and office_fp
+                            and office_fp == state.get("office_last_sent_fingerprint")
+                            and not state.get("office_recording_bytes")
+                        ):
+                            pass
+                        # Once user has confirmed preview for current recording, avoid resetting
+                        # from duplicate/replayed audio_input payloads.
+                        elif state.get("office_preview_confirmed") and state.get("office_recording_bytes"):
+                            pass
+                        elif office_bytes and office_fp != state.get("office_recording_fingerprint"):
+                            state["office_recording_bytes"] = office_bytes
+                            state["office_recording_fingerprint"] = office_fp
+                            state["office_recording_mime_type"] = (
+                                getattr(recorded_office, "type", None) or "audio/wav"
+                            )
+                            state["office_preview_confirmed"] = False
+                            clear_transcript_preview_state(state, prefix="office_")
+                            state["office_last_sent_label"] = None
+                            state["office_last_sent_fingerprint"] = None
+                            st.session_state[f"care_office_listened_{resident_id}"] = False
+                    except Exception as exc:
+                        if APP_DEBUG:
+                            print(f"[office-recorder] suppressed audio_input error: {exc}", flush=True)
                         st.warning(
-                            "That care hub update recording could not be captured correctly. Please record again."
+                            "Office recorder could not process that audio capture. Please record again."
                         )
-                    now_ts = time.time()
-                    # Prevent stale recorder replay after a send from re-populating the form.
-                    if (
-                        now_ts < float(state.get("office_ignore_audio_until") or 0.0)
-                        and not state.get("office_recording_bytes")
-                    ):
-                        pass
-                    elif (
-                        office_bytes
-                        and office_fp
-                        and office_fp == state.get("office_last_sent_fingerprint")
-                        and not state.get("office_recording_bytes")
-                    ):
-                        pass
-                    # Once user has confirmed preview for current recording, avoid resetting
-                    # from duplicate/replayed audio_input payloads.
-                    elif state.get("office_preview_confirmed") and state.get("office_recording_bytes"):
-                        pass
-                    elif office_bytes and office_fp != state.get("office_recording_fingerprint"):
-                        state["office_recording_bytes"] = office_bytes
-                        state["office_recording_fingerprint"] = office_fp
-                        state["office_recording_mime_type"] = (
-                            getattr(recorded_office, "type", None) or "audio/wav"
-                        )
-                        state["office_preview_confirmed"] = False
-                        clear_transcript_preview_state(state, prefix="office_")
-                        state["office_last_sent_label"] = None
-                        state["office_last_sent_fingerprint"] = None
-                        st.session_state[f"care_office_listened_{resident_id}"] = False
             elif runtime_variant == VARIANT_OFFICE:
                 st.warning("Native microphone recording is unavailable in this environment.")
 
             if runtime_variant == VARIANT_OFFICE and state.get("office_recording_bytes"):
                 st.caption("Captured care hub update preview:")
-                st.audio(
+                render_audio_safe(
                     state["office_recording_bytes"],
-                    format=state.get("office_recording_mime_type") or "audio/wav",
+                    audio_format=state.get("office_recording_mime_type") or "audio/wav",
+                    unavailable_message="Care hub update preview could not be played.",
                 )
                 state["office_preview_confirmed"] = st.checkbox(
                     "I have listened to this care hub update.",
