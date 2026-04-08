@@ -2614,7 +2614,7 @@ def update_care_hub_mfa_codes(
 
 def render_access_gate(message: str, login_route: str, role: str) -> None:
     if role == "family":
-        render_page_header("Family page")
+        render_page_header("Family")
     else:
         render_page_header("Access required", show_variant_subheading=False)
     st.markdown(
@@ -8361,7 +8361,7 @@ def render_family_send() -> None:
 """,
         unsafe_allow_html=True,
     )
-    render_page_header("Family page")
+    render_page_header("Family")
     render_how_it_works_button("family_send_how_it_works")
     family_display_name = st.session_state.get("family_display_name", "Family member")
     st.markdown(f"**Hello {family_display_name}**")
@@ -10522,7 +10522,7 @@ def render_care_hub() -> None:
 """,
         unsafe_allow_html=True,
     )
-    render_page_header(f"{get_care_hub_label()} voice messages")
+    render_page_header(get_care_hub_label())
     if runtime_variant == VARIANT_MOBILE:
         st.caption("App interface: Care Hub – Mobile")
         render_public_landing_button("Back to main public page")
