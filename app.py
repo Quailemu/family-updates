@@ -10538,6 +10538,7 @@ def render_care_hub() -> None:
         is_office_variant = runtime_variant == VARIANT_OFFICE
         is_queue_playback_variant = is_mobile_variant
         manual_selection_key = f"care_manual_selected_{resident_id}"
+        manual_selected_active = bool(st.session_state.get(manual_selection_key, False))
         queue_unread_count = 0
         queue_next_contact = None
         queue_unread_contacts: list[dict] = []
@@ -10570,7 +10571,7 @@ def render_care_hub() -> None:
             keep_current_after_start = bool(st.session_state.get(mobile_play_requested_key, False))
             current_user_id = str(state.get("selected_contact_user_id") or "").strip()
             current_contact_id = str(state.get("selected_contact_id") or "").strip()
-            manual_selected = bool(st.session_state.get(manual_selection_key, False))
+            manual_selected = manual_selected_active
             if manual_selected and (current_user_id or current_contact_id):
                 selected_contact = None
                 if current_user_id:
@@ -10602,6 +10603,7 @@ def render_care_hub() -> None:
                     queue_mode_label = "Manual selection"
                 else:
                     st.session_state[manual_selection_key] = False
+                    manual_selected_active = False
             queue_selected_contact, queue_latest, queue_mode_label = select_next_family_message_for_mobile(
                 resident_id,
                 resident["care_home_id"],
@@ -10653,6 +10655,7 @@ def render_care_hub() -> None:
                 use_container_width=True,
             ):
                 st.session_state[manual_selection_key] = False
+                manual_selected_active = False
                 selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
                     resident_id,
                     resident["care_home_id"],
@@ -10869,6 +10872,7 @@ def render_care_hub() -> None:
                         )
                         if selected_contact:
                             st.session_state[manual_selection_key] = True
+                            manual_selected_active = True
                             state["selected_contact_id"] = selected_contact.get("id")
                             latest = fetch_latest_message_for_contact_with_mapping_repair(
                                 resident_id,
@@ -10922,6 +10926,7 @@ def render_care_hub() -> None:
                     use_container_width=True,
                 ):
                     st.session_state[manual_selection_key] = False
+                    manual_selected_active = False
                     selected_contact, latest, _, _ = find_next_playable_family_message_in_order(
                         resident_id,
                         contacts,
@@ -11051,7 +11056,11 @@ def render_care_hub() -> None:
                 latest,
                 access_token=access_token,
             )
-            if not playback_source and (is_mobile_variant or is_office_variant):
+            if (
+                not playback_source
+                and (is_mobile_variant or is_office_variant)
+                and not manual_selected_active
+            ):
                 latest_any_contact = fetch_latest_message(
                     resident_id,
                     "to_resident",
@@ -11070,7 +11079,11 @@ def render_care_hub() -> None:
                         latest = latest_any_contact
                         playback_source = fallback_source
                         playback_source_kind = fallback_kind
-            if not playback_source and (is_mobile_variant or is_office_variant):
+            if (
+                not playback_source
+                and (is_mobile_variant or is_office_variant)
+                and not manual_selected_active
+            ):
                 recovery_contact, recovery_latest, recovery_source, recovery_kind = (
                     find_next_playable_family_message_in_order(
                         resident_id,
