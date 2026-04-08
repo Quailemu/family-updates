@@ -1088,6 +1088,37 @@ def resolve_audio_playback_source(
     return None, "none"
 
 
+def resolve_audio_playback_source_lazy(
+    message: dict, access_token: str | None = None
+) -> tuple[bytes | str | None, str]:
+    """Prefer URL-based playback and avoid eager storage downloads on page load."""
+    if not message:
+        return None, "none"
+    object_path = str(message.get("audio_object_path") or "").strip()
+    if object_path:
+        signed_url = _create_signed_audio_url(object_path, access_token=access_token)
+        if signed_url:
+            return signed_url, "url"
+        public_url = _create_public_audio_url(object_path)
+        if public_url:
+            return public_url, "url"
+    payload = str(message.get("audio_storage_path") or "").strip()
+    if payload:
+        if payload.startswith("http://") or payload.startswith("https://"):
+            return payload, "url"
+        if not _looks_like_base64_payload(payload):
+            signed_url = _create_signed_audio_url(payload, access_token=access_token)
+            if signed_url:
+                return signed_url, "url"
+            public_url = _create_public_audio_url(payload)
+            if public_url:
+                return public_url, "url"
+    audio_bytes = decode_audio_payload(message, access_token=access_token)
+    if audio_bytes:
+        return audio_bytes, "bytes"
+    return None, "none"
+
+
 def upsert_latest_message_with_fallback(
     supabase: object,
     payload: dict,
@@ -11038,72 +11069,79 @@ def render_care_hub() -> None:
                 st.caption(f"Office review playing: {selected_contact_display}")
 
             st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
-            playback_source, playback_source_kind = resolve_audio_playback_source(
-                latest,
-                access_token=access_token,
-            )
-            if (
-                not playback_source
-                and (is_mobile_variant or is_office_variant)
-                and not manual_selected_active
-            ):
-                latest_any_contact = fetch_latest_message(
-                    resident_id,
-                    "to_resident",
-                    access_token,
-                    channel="resident_family",
-                    include_audio=True,
+            mobile_play_requested = bool(st.session_state.get(mobile_play_requested_key, False))
+            should_attempt_playback = (not is_mobile_variant) or mobile_play_requested
+            playback_source = None
+            playback_source_kind = "none"
+            should_show_message = should_attempt_playback
+            if should_attempt_playback:
+                playback_source, playback_source_kind = resolve_audio_playback_source(
+                    latest,
+                    access_token=access_token,
                 )
-                latest_any_contact_id = str((latest_any_contact or {}).get("id") or "").strip()
-                latest_selected_id = str((latest or {}).get("id") or "").strip()
-                if latest_any_contact and latest_any_contact_id != latest_selected_id:
-                    fallback_source, fallback_kind = resolve_audio_playback_source(
-                        latest_any_contact,
-                        access_token=access_token,
-                    )
-                    if fallback_source:
-                        latest = latest_any_contact
-                        playback_source = fallback_source
-                        playback_source_kind = fallback_kind
-            if (
-                not playback_source
-                and (is_mobile_variant or is_office_variant)
-                and not manual_selected_active
-            ):
-                recovery_contact, recovery_latest, recovery_source, recovery_kind = (
-                    find_next_playable_family_message_in_order(
+                if (
+                    not playback_source
+                    and (is_mobile_variant or is_office_variant)
+                    and not manual_selected_active
+                ):
+                    latest_any_contact = fetch_latest_message(
                         resident_id,
-                        contacts,
+                        "to_resident",
                         access_token,
-                        start_after_contact_user_id=state.get("selected_contact_user_id"),
                         channel="resident_family",
+                        include_audio=True,
                     )
-                )
-                if recovery_contact is not None and recovery_latest is not None and recovery_source:
-                    selected_contact = recovery_contact
-                    latest = recovery_latest
-                    playback_source = recovery_source
-                    playback_source_kind = recovery_kind
-                    state["selected_contact_id"] = recovery_contact.get("id")
-                    state["selected_contact_user_id"] = str(
-                        (recovery_latest or {}).get("contact_user_id")
-                        or recovery_contact.get("auth_user_id")
-                        or ""
-                    ).strip()
-                    queue_mode_label = "Session order" if is_mobile_variant else "Office review"
-            should_show_message = True
+                    latest_any_contact_id = str((latest_any_contact or {}).get("id") or "").strip()
+                    latest_selected_id = str((latest or {}).get("id") or "").strip()
+                    if latest_any_contact and latest_any_contact_id != latest_selected_id:
+                        fallback_source, fallback_kind = resolve_audio_playback_source(
+                            latest_any_contact,
+                            access_token=access_token,
+                        )
+                        if fallback_source:
+                            latest = latest_any_contact
+                            playback_source = fallback_source
+                            playback_source_kind = fallback_kind
+                if (
+                    not playback_source
+                    and (is_mobile_variant or is_office_variant)
+                    and not manual_selected_active
+                ):
+                    recovery_contact, recovery_latest, recovery_source, recovery_kind = (
+                        find_next_playable_family_message_in_order(
+                            resident_id,
+                            contacts,
+                            access_token,
+                            start_after_contact_user_id=state.get("selected_contact_user_id"),
+                            channel="resident_family",
+                        )
+                    )
+                    if recovery_contact is not None and recovery_latest is not None and recovery_source:
+                        selected_contact = recovery_contact
+                        latest = recovery_latest
+                        playback_source = recovery_source
+                        playback_source_kind = recovery_kind
+                        state["selected_contact_id"] = recovery_contact.get("id")
+                        state["selected_contact_user_id"] = str(
+                            (recovery_latest or {}).get("contact_user_id")
+                            or recovery_contact.get("auth_user_id")
+                            or ""
+                        ).strip()
+                        queue_mode_label = "Session order" if is_mobile_variant else "Office review"
             if is_mobile_variant:
-                if not bool(st.session_state.get(mobile_play_requested_key, False)):
+                if not mobile_play_requested:
                     st.caption("Press 'Play next family message' to continue queue playback order.")
             playback_policy_mode = transcript_policy_mode
             if is_mobile_variant and transcript_policy_mode == "precheck":
                 playback_policy_mode = "assist"
-            playback_allowed = render_transcript_assist(
-                latest,
-                policy_mode=playback_policy_mode,
-                care_home_id=resident["care_home_id"],
-                resident_id=resident_id,
-            )
+            playback_allowed = True
+            if should_attempt_playback:
+                playback_allowed = render_transcript_assist(
+                    latest,
+                    policy_mode=playback_policy_mode,
+                    care_home_id=resident["care_home_id"],
+                    resident_id=resident_id,
+                )
             has_playback_source = bool(playback_source)
             played_now = bool(has_playback_source and should_show_message and playback_allowed)
             precheck_blocking = bool(has_playback_source and should_show_message and not playback_allowed)
@@ -11134,7 +11172,7 @@ def render_care_hub() -> None:
                         st.caption("Use Office review controls or playlist selection to continue.")
                 else:
                     st.caption("Playback locked until transcript review is complete.")
-            elif not has_playback_source:
+            elif should_show_message and not has_playback_source:
                 st.markdown(
                     '<div class="vm-muted-line">No new messages.</div>',
                     unsafe_allow_html=True,
@@ -11226,14 +11264,19 @@ def render_care_hub() -> None:
             channel="resident_family",
             include_audio=True,
         )
-        latest_sent_audio = None
-        latest_sent_audio = decode_audio_payload(latest_sent, access_token=access_token)
+        latest_sent_audio, latest_sent_audio_kind = resolve_audio_playback_source_lazy(
+            latest_sent,
+            access_token=access_token,
+        )
         if latest_sent and not state.get("recording_bytes"):
             if latest_sent_audio:
-                st.audio(
-                    latest_sent_audio,
-                    format=latest_sent.get("audio_mime_type") or "audio/wav",
-                )
+                if latest_sent_audio_kind == "bytes":
+                    st.audio(
+                        latest_sent_audio,
+                        format=latest_sent.get("audio_mime_type") or "audio/wav",
+                    )
+                else:
+                    st.audio(latest_sent_audio)
             else:
                 st.success("Latest Resident → Family message is saved.")
             latest_sent_at = latest_sent.get("recorded_at")
@@ -11512,15 +11555,18 @@ def render_care_hub() -> None:
                 channel="office_family",
                 include_audio=True,
             )
-            latest_office_audio = decode_audio_payload(
+            latest_office_audio, latest_office_audio_kind = resolve_audio_playback_source_lazy(
                 latest_office_update,
                 access_token=access_token,
             )
             if latest_office_audio:
-                st.audio(
-                    latest_office_audio,
-                    format=latest_office_update.get("audio_mime_type") or "audio/wav",
-                )
+                if latest_office_audio_kind == "bytes":
+                    st.audio(
+                        latest_office_audio,
+                        format=latest_office_update.get("audio_mime_type") or "audio/wav",
+                    )
+                else:
+                    st.audio(latest_office_audio)
                 if runtime_variant == VARIANT_MOBILE:
                     soft_label = format_soft_message_period_label(
                         latest_office_update.get("recorded_at")
