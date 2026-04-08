@@ -397,13 +397,23 @@ def get_public_landing_url() -> str:
 
 def redirect_to_public_landing() -> None:
     url = get_public_landing_url()
-    safe_url = html.escape(url, quote=True)
-    st.markdown(
-        (
-            f'<script>window.location.replace("{safe_url}");</script>'
-            f'<noscript><meta http-equiv="refresh" content="0;url={safe_url}"></noscript>'
-        ),
-        unsafe_allow_html=True,
+    url_js = json.dumps(url)
+    components.html(
+        f"""
+<script>
+(function () {{
+  try {{
+    var target = {url_js};
+    var topWin = window.parent && window.parent.location ? window.parent : window;
+    topWin.location.replace(target);
+  }} catch (e) {{
+    window.location.replace({url_js});
+  }}
+}})();
+</script>
+""",
+        height=0,
+        width=0,
     )
     st.stop()
 
