@@ -11372,6 +11372,7 @@ def render_care_hub() -> None:
             if is_mobile_variant:
                 latest_message_id = str((latest or {}).get("id") or "").strip()
                 advance_pointer_now = bool(st.session_state.get(mobile_advance_pointer_key, False))
+                refresh_queue_after_play = False
                 if advance_pointer_now:
                     if precheck_blocking:
                         st.caption("Playback queue paused until transcript precheck is completed.")
@@ -11435,8 +11436,15 @@ def render_care_hub() -> None:
                                 f"played_message={latest_message_id} "
                                 f"next={next_contact_user_id or 'none'}"
                             )
+                        if played_now:
+                            refresh_queue_after_play = True
                 if advance_pointer_now:
                     st.session_state[mobile_advance_pointer_key] = False
+                if refresh_queue_after_play:
+                    # Queue/unplayed list is computed earlier in this render.
+                    # Rerun once after a successful play so the unplayed list updates immediately.
+                    st.session_state[mobile_play_requested_key] = False
+                    st.rerun()
 
         if is_mobile_variant or is_office_variant:
             st.markdown(f"**Latest message from {full_name} to all Family Members**")
