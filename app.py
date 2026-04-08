@@ -12,7 +12,7 @@ import re
 import html
 import io
 from pathlib import Path
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse, unquote
+from urllib.parse import parse_qsl, quote, urlencode, urlparse, urlunparse, unquote
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -870,6 +870,27 @@ def _create_signed_audio_url(
     return None
 
 
+def _create_public_audio_url(object_path: str) -> str | None:
+    raw_path = str(object_path or "").strip()
+    if not raw_path:
+        return None
+    if raw_path.startswith("http://") or raw_path.startswith("https://"):
+        return raw_path
+    base_url = str(SUPABASE_URL or "").rstrip("/")
+    if not base_url:
+        return None
+    path_candidates = _candidate_audio_storage_paths(raw_path)
+    if not path_candidates:
+        return None
+    for candidate in path_candidates:
+        clean_path = str(candidate or "").strip().lstrip("/")
+        if not clean_path:
+            continue
+        encoded_path = quote(clean_path, safe="/")
+        return f"{base_url}/storage/v1/object/public/{SUPABASE_AUDIO_BUCKET}/{encoded_path}"
+    return None
+
+
 def _candidate_audio_storage_paths(raw_value: str) -> list[str]:
     raw = str(raw_value or "").strip()
     if not raw:
@@ -928,6 +949,9 @@ def resolve_audio_playback_source(
         signed_url = _create_signed_audio_url(object_path, access_token=access_token)
         if signed_url:
             return signed_url, "url"
+        public_url = _create_public_audio_url(object_path)
+        if public_url:
+            return public_url, "url"
     payload = str(message.get("audio_storage_path") or "").strip()
     if payload:
         if payload.startswith("http://") or payload.startswith("https://"):
@@ -936,6 +960,9 @@ def resolve_audio_playback_source(
             signed_url = _create_signed_audio_url(payload, access_token=access_token)
             if signed_url:
                 return signed_url, "url"
+            public_url = _create_public_audio_url(payload)
+            if public_url:
+                return public_url, "url"
     return None, "none"
 
 
