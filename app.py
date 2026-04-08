@@ -8745,12 +8745,12 @@ def render_family_send() -> None:
                 st.caption(
                     "Transcript is required by care home policy before Care Hub playback."
                 )
-                else:
-                    state["transcribe_requested"] = st.checkbox(
-                        "Create transcript for accessibility/support",
-                        value=state.get("transcribe_requested", True),
-                        key=f"family_transcribe_{resident_id}",
-                    )
+            else:
+                state["transcribe_requested"] = st.checkbox(
+                    "Create transcript for accessibility/support",
+                    value=state.get("transcribe_requested", True),
+                    key=f"family_transcribe_{resident_id}",
+                )
                 st.caption(
                     "Transcript is optional, may contain errors, and replaces with the next message."
                 )
