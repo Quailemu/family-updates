@@ -5572,7 +5572,7 @@ def render_transcript_assist(
         )
         if transcript_text:
             st.caption("Transcript assist is available for this message.")
-            with st.expander("Transcript assist", expanded=False):
+            with st.expander("Transcript assist", expanded=True):
                 st.markdown(transcript_text)
                 st.caption("Transcript may contain errors. Voice remains the source of truth.")
             if mode != "precheck":
