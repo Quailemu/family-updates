@@ -4636,13 +4636,7 @@ def fetch_latest_message_for_contact_with_mapping_repair(
     if contact_email:
         resolved_user_id = _get_contact_auth_user_id_via_email(contact_email)
     if not resolved_user_id:
-        return fetch_latest_message(
-            resident_id,
-            "to_resident",
-            access_token,
-            channel=channel,
-            include_audio=include_audio,
-        )
+        return None
 
     if resolved_user_id != contact_user_id:
         contact["auth_user_id"] = resolved_user_id
@@ -4665,15 +4659,7 @@ def fetch_latest_message_for_contact_with_mapping_repair(
         channel=channel,
         include_audio=include_audio,
     )
-    if latest:
-        return latest
-    return fetch_latest_message(
-        resident_id,
-        "to_resident",
-        access_token,
-        channel=channel,
-        include_audio=include_audio,
-    )
+    return latest
 
 
 def fetch_latest_message(
@@ -10989,7 +10975,7 @@ def render_care_hub() -> None:
                         channel="resident_family",
                         include_audio=True,
                     )
-            if latest is None:
+            if latest is None and not manual_selected_active:
                 latest = fetch_latest_message(
                     resident_id,
                     "to_resident",
