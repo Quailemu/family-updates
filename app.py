@@ -601,26 +601,33 @@ def _office_practical_family_user_column(supabase: object) -> str:
     return resolved
 
 
-def _strip_optional_message_audio_columns(payload: dict) -> dict:
+def _strip_optional_message_audio_columns(
+    payload: dict,
+    *,
+    strip_storage_columns: bool = True,
+    strip_transcript_columns: bool = True,
+) -> dict:
     cleaned = dict(payload or {})
-    # Legacy schemas may miss audio_object_path/audio_source/transcript columns.
-    # Preserve a playable payload in audio_storage_path before stripping.
-    audio_storage_path = str(cleaned.get("audio_storage_path") or "").strip()
-    audio_object_path = str(cleaned.get("audio_object_path") or "").strip()
-    if not audio_storage_path and audio_object_path:
-        downloaded = _download_audio_from_storage(audio_object_path)
-        if downloaded:
-            cleaned["audio_storage_path"] = base64.b64encode(downloaded).decode("ascii")
-            cleaned["audio_source"] = "inline"
-        else:
-            # Keep legacy pointer fallback for environments that can read storage by path.
-            cleaned["audio_storage_path"] = audio_object_path
-    cleaned.pop("audio_object_path", None)
-    cleaned.pop("audio_source", None)
-    cleaned.pop("transcript_text", None)
-    cleaned.pop("transcript_status", None)
-    cleaned.pop("transcript_model", None)
-    cleaned.pop("transcript_generated_at", None)
+    # Legacy schemas may miss optional storage/transcript columns.
+    # Preserve a playable payload in audio_storage_path before stripping storage pointers.
+    if strip_storage_columns:
+        audio_storage_path = str(cleaned.get("audio_storage_path") or "").strip()
+        audio_object_path = str(cleaned.get("audio_object_path") or "").strip()
+        if not audio_storage_path and audio_object_path:
+            downloaded = _download_audio_from_storage(audio_object_path)
+            if downloaded:
+                cleaned["audio_storage_path"] = base64.b64encode(downloaded).decode("ascii")
+                cleaned["audio_source"] = "inline"
+            else:
+                # Keep legacy pointer fallback for environments that can read storage by path.
+                cleaned["audio_storage_path"] = audio_object_path
+        cleaned.pop("audio_object_path", None)
+        cleaned.pop("audio_source", None)
+    if strip_transcript_columns:
+        cleaned.pop("transcript_text", None)
+        cleaned.pop("transcript_status", None)
+        cleaned.pop("transcript_model", None)
+        cleaned.pop("transcript_generated_at", None)
     return cleaned
 
 
@@ -1171,7 +1178,11 @@ def upsert_latest_message_with_fallback(
             if missing_audio_columns or missing_transcript_columns:
                 if missing_transcript_columns:
                     _flag_transcript_persistence_fallback(payload)
-                legacy_payload = _strip_optional_message_audio_columns(payload)
+                legacy_payload = _strip_optional_message_audio_columns(
+                    payload,
+                    strip_storage_columns=missing_audio_columns,
+                    strip_transcript_columns=missing_transcript_columns,
+                )
                 try:
                     response = (
                         supabase.table("messages")
@@ -1207,7 +1218,11 @@ def upsert_latest_message_with_fallback(
                 if missing_audio_columns or missing_transcript_columns:
                     if missing_transcript_columns:
                         _flag_transcript_persistence_fallback(write_payload)
-                    write_payload = _strip_optional_message_audio_columns(write_payload)
+                    write_payload = _strip_optional_message_audio_columns(
+                        write_payload,
+                        strip_storage_columns=missing_audio_columns,
+                        strip_transcript_columns=missing_transcript_columns,
+                    )
                     response = (
                         supabase.table("messages").update(write_payload).eq("id", existing_id).execute()
                     )
@@ -1221,7 +1236,11 @@ def upsert_latest_message_with_fallback(
                 if missing_audio_columns or missing_transcript_columns:
                     if missing_transcript_columns:
                         _flag_transcript_persistence_fallback(write_payload)
-                    write_payload = _strip_optional_message_audio_columns(write_payload)
+                    write_payload = _strip_optional_message_audio_columns(
+                        write_payload,
+                        strip_storage_columns=missing_audio_columns,
+                        strip_transcript_columns=missing_transcript_columns,
+                    )
                     response = supabase.table("messages").insert(write_payload).execute()
                 else:
                     raise
@@ -4765,21 +4784,17 @@ def fetch_latest_message(
         try:
             resp = query.execute()
         except Exception as exc:
-            if include_audio and (
-                _is_missing_column_error(exc, "audio_object_path")
-                or _is_missing_column_error(exc, "audio_source")
-                or _is_missing_column_error(exc, "transcript_text")
-                or _is_missing_column_error(exc, "transcript_status")
-                or _is_missing_column_error(exc, "transcript_model")
-                or _is_missing_column_error(exc, "transcript_generated_at")
-            ):
+            missing_audio_columns, missing_transcript_columns = _message_missing_optional_columns(exc)
+            if include_audio and (missing_audio_columns or missing_transcript_columns):
+                if missing_transcript_columns:
+                    st.session_state["_messages_missing_transcript_columns"] = True
                 fallback_query = (
                     supabase.table("messages")
                     .select(
                         _message_select_fields(
                             include_audio=include_audio,
-                            include_optional_storage_columns=False,
-                            include_optional_transcript_columns=False,
+                            include_optional_storage_columns=not missing_audio_columns,
+                            include_optional_transcript_columns=not missing_transcript_columns,
                         )
                     )
                     .eq("resident_id", resident_id)
@@ -4884,8 +4899,8 @@ def fetch_latest_messages_for_contact_user_ids(
                     .select(
                         _message_select_fields(
                             include_audio=include_audio,
-                            include_optional_storage_columns=False,
-                            include_optional_transcript_columns=False,
+                            include_optional_storage_columns=not missing_audio_columns,
+                            include_optional_transcript_columns=not missing_transcript_columns,
                         )
                     )
                     .eq("resident_id", resident_id)
