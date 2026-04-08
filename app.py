@@ -7319,7 +7319,7 @@ MOBILE_PUBLIC_ROUTES = {
 
 VARIANT_CONFIG = {
     VARIANT_FAMILY: {
-        "label": "Family app",
+        "label": "Family",
         "default_route": FAMILY_LOGIN_ROUTE,
         "how_it_works_route": "/family/how-it-works",
         "allowed_routes": {
@@ -8207,7 +8207,7 @@ def render_family_login_hub() -> None:
         unsafe_allow_html=True,
     )
     render_page_header(
-        "Voice Message — Family",
+        "Family login",
         brand_title="voicemailcare.com",
         show_variant_subheading=False,
         show_menu=False,
