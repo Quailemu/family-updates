@@ -10527,9 +10527,9 @@ def render_care_hub() -> None:
 """,
         unsafe_allow_html=True,
     )
-    render_page_header(get_care_hub_label())
+    page_title = "Care Hub Mobile" if runtime_variant == VARIANT_MOBILE else "Care Hub Office"
+    render_page_header(page_title)
     if runtime_variant == VARIANT_MOBILE:
-        st.caption("App interface: Care Hub – Mobile")
         render_public_landing_button("Back to main public page")
     elif runtime_variant == VARIANT_OFFICE:
         render_public_landing_button("Back to main public page")
