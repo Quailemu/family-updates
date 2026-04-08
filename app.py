@@ -4697,23 +4697,25 @@ def fetch_latest_message_for_contact_with_mapping_repair(
         )
         if latest:
             return latest
-    if contact_id:
-        latest = fetch_latest_message(
-            resident_id,
-            "to_resident",
-            access_token,
-            family_id=contact_id,
-            channel=channel,
-            include_audio=include_audio,
-        )
-        if latest:
-            return latest
 
     contact_email = str(contact.get("email") or "").strip().lower()
     resolved_user_id = ""
     if contact_email:
         resolved_user_id = _get_contact_auth_user_id_via_email(contact_email)
     if not resolved_user_id:
+        # Legacy fallback: only use contact-id channel when no auth user id is available.
+        # Avoid cross-contact drift where stale legacy rows override current user-linked rows.
+        if not contact_user_id and contact_id:
+            latest = fetch_latest_message(
+                resident_id,
+                "to_resident",
+                access_token,
+                family_id=contact_id,
+                channel=channel,
+                include_audio=include_audio,
+            )
+            if latest:
+                return latest
         return None
 
     if resolved_user_id != contact_user_id:
@@ -11088,8 +11090,22 @@ def render_care_hub() -> None:
                 # Keep queue-selected contact authoritative in mobile playback.
                 # This prevents label/audio drift if a fetched row carries a mismatched contact_user_id.
                 if latest_contact_user_id != selected_contact_user_id and latest is not None:
-                    latest = dict(latest)
-                    latest["contact_user_id"] = selected_contact_user_id
+                    if is_mobile_variant:
+                        latest = dict(latest)
+                        latest["contact_user_id"] = selected_contact_user_id
+                    elif is_office_variant and latest_contact_user_id:
+                        matched_contact = next(
+                            (
+                                c
+                                for c in contacts
+                                if str(c.get("auth_user_id") or "").strip() == latest_contact_user_id
+                            ),
+                            None,
+                        )
+                        if matched_contact is not None:
+                            selected_contact = matched_contact
+                            state["selected_contact_id"] = matched_contact.get("id")
+                            state["selected_contact_user_id"] = matched_contact.get("auth_user_id")
             elif latest_contact_user_id:
                 matched_contact = next(
                     (
@@ -11154,29 +11170,6 @@ def render_care_hub() -> None:
                     latest,
                     access_token=access_token,
                 )
-                if (
-                    not playback_source
-                    and is_office_variant
-                    and not manual_selected_active
-                ):
-                    latest_any_contact = fetch_latest_message(
-                        resident_id,
-                        "to_resident",
-                        access_token,
-                        channel="resident_family",
-                        include_audio=True,
-                    )
-                    latest_any_contact_id = str((latest_any_contact or {}).get("id") or "").strip()
-                    latest_selected_id = str((latest or {}).get("id") or "").strip()
-                    if latest_any_contact and latest_any_contact_id != latest_selected_id:
-                        fallback_source, fallback_kind = resolve_audio_playback_source(
-                            latest_any_contact,
-                            access_token=access_token,
-                        )
-                        if fallback_source:
-                            latest = latest_any_contact
-                            playback_source = fallback_source
-                            playback_source_kind = fallback_kind
                 if (
                     not playback_source
                     and (is_mobile_variant or is_office_variant)
