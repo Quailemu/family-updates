@@ -5326,45 +5326,56 @@ def render_transcript_assist(
     care_home_id: str | None = None,
     resident_id: str | None = None,
 ) -> bool:
-    mode = normalize_transcript_policy_mode(policy_mode)
-    if mode == "off":
-        return True
-    if not isinstance(message, dict):
-        return True
-    status = str(message.get("transcript_status") or "").strip().lower()
-    transcript_text = str(message.get("transcript_text") or "").strip()
-    message_id = str(message.get("id") or "").strip()
-    if transcript_text:
-        with st.expander("Transcript assist", expanded=False):
-            st.markdown(transcript_text)
-            st.caption("Transcript may contain errors. Voice remains the source of truth.")
-        if mode != "precheck":
+    try:
+        mode = normalize_transcript_policy_mode(policy_mode)
+        if mode == "off":
             return True
-        ack_key = f"transcript_precheck_ack::{resident_id or ''}::{message_id}"
-        reviewed = bool(st.session_state.get(ack_key))
-        if st.button(
-            "Mark transcript reviewed",
-            key=f"transcript_precheck_btn::{resident_id or ''}::{message_id}",
-            use_container_width=True,
-        ):
-            st.session_state[ack_key] = True
-            reviewed = True
-            if message_id:
-                log_audit_event(
-                    "transcript_viewed_preplay",
-                    "care_hub",
-                    care_home_id,
-                    target_id=message_id,
-                    resident_id=resident_id,
-                )
-        if not reviewed:
-            st.warning("Transcript review is required before playback (policy mode: precheck).")
+        if not isinstance(message, dict):
+            return True
+        status = str(message.get("transcript_status") or "").strip().lower()
+        transcript_text = str(message.get("transcript_text") or "").strip()
+        message_id = str(message.get("id") or "").strip()
+        message_key = message_id or (
+            f"{str(message.get('direction') or '').strip()}::"
+            f"{str(message.get('channel') or '').strip()}::"
+            f"{str(message.get('recorded_at') or '').strip()}"
+        )
+        if transcript_text:
+            with st.expander("Transcript assist", expanded=False):
+                st.markdown(transcript_text)
+                st.caption("Transcript may contain errors. Voice remains the source of truth.")
+            if mode != "precheck":
+                return True
+            ack_key = f"transcript_precheck_ack::{resident_id or ''}::{message_key}"
+            reviewed = bool(st.session_state.get(ack_key))
+            if st.button(
+                "Mark transcript reviewed",
+                key=f"transcript_precheck_btn::{resident_id or ''}::{message_key}",
+                use_container_width=True,
+            ):
+                st.session_state[ack_key] = True
+                reviewed = True
+                if message_id:
+                    log_audit_event(
+                        "transcript_viewed_preplay",
+                        "care_hub",
+                        care_home_id,
+                        target_id=message_id,
+                        resident_id=resident_id,
+                    )
+            if not reviewed:
+                st.warning("Transcript review is required before playback (policy mode: precheck).")
+            return True
+        if status == "failed":
+            st.caption("Transcript was requested but is not available for this message.")
+        if mode == "precheck":
+            st.caption("Transcript is unavailable. Playback remains available.")
         return True
-    if status == "failed":
-        st.caption("Transcript was requested but is not available for this message.")
-    if mode == "precheck":
-        st.caption("Transcript is unavailable. Playback remains available.")
-    return True
+    except Exception as exc:
+        if APP_DEBUG:
+            print(f"[transcript-assist] suppressed error: {exc}", flush=True)
+        st.caption("Transcript assist is temporarily unavailable. Playback remains available.")
+        return True
 
 
 def global_header() -> None:
@@ -10963,13 +10974,21 @@ def render_care_hub() -> None:
 
             if has_playback_source and should_show_message:
                 if playback_allowed:
-                    if playback_source_kind == "bytes":
-                        st.audio(
-                            playback_source,
-                            format=latest.get("audio_mime_type") or "audio/wav",
-                        )
-                    else:
-                        st.audio(playback_source)
+                    try:
+                        if playback_source_kind == "bytes":
+                            st.audio(
+                                playback_source,
+                                format=latest.get("audio_mime_type") or "audio/wav",
+                            )
+                        else:
+                            st.audio(playback_source)
+                    except Exception as exc:
+                        if APP_DEBUG:
+                            print(f"[playback] suppressed audio render error: {exc}", flush=True)
+                        st.caption("Message payload could not be played. Skipping to next contact.")
+                        playback_source = None
+                        has_playback_source = False
+                        played_now = False
                     played_label = format_soft_message_period_label(latest.get("recorded_at"))
                     if played_label:
                         st.caption(played_label)
