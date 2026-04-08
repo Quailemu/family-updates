@@ -6903,6 +6903,9 @@ def render_home(active: str) -> None:
             "The care home may also send non-urgent or practical updates, and families may respond with structured text to simple requests."
         )
         st.markdown(
+            "Optional transcript assist is available when recording in Family Hub, Care Hub Mobile, and Care Hub Office."
+        )
+        st.markdown(
             "There is no message history, no long threads, and it is not live. "
             "It fits around normal care routines and helps keep communication manageable."
         )
