@@ -8044,6 +8044,11 @@ def get_expected_variants_for_route(route: str) -> list[str]:
 
 
 def get_care_hub_label() -> str:
+    runtime_variant = resolve_runtime_variant(route_hint=get_route())
+    if runtime_variant == VARIANT_MOBILE:
+        return "Care Hub – Mobile"
+    if runtime_variant == VARIANT_OFFICE:
+        return "Care Hub – Office"
     app_variant = get_app_variant()
     if app_variant == VARIANT_MOBILE:
         return "Care Hub – Mobile"
