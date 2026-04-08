@@ -5565,6 +5565,8 @@ def render_transcript_assist(
             return True
         if status == "failed":
             st.caption("Transcript was requested but is not available for this message.")
+        elif status == "not_requested":
+            st.caption("Transcript was not requested for this message.")
         if mode == "precheck":
             st.caption("Transcript is unavailable. Playback remains available.")
         return True
@@ -8743,12 +8745,12 @@ def render_family_send() -> None:
                 st.caption(
                     "Transcript is required by care home policy before Care Hub playback."
                 )
-            else:
-                state["transcribe_requested"] = st.checkbox(
-                    "Create transcript for accessibility/support",
-                    value=state.get("transcribe_requested", False),
-                    key=f"family_transcribe_{resident_id}",
-                )
+                else:
+                    state["transcribe_requested"] = st.checkbox(
+                        "Create transcript for accessibility/support",
+                        value=state.get("transcribe_requested", True),
+                        key=f"family_transcribe_{resident_id}",
+                    )
                 st.caption(
                     "Transcript is optional, may contain errors, and replaces with the next message."
                 )
@@ -11442,7 +11444,7 @@ def render_care_hub() -> None:
                 else:
                     state["transcribe_requested"] = st.checkbox(
                         "Create transcript for accessibility/support",
-                        value=state.get("transcribe_requested", False),
+                        value=state.get("transcribe_requested", True),
                         key=f"care_transcribe_{resident_id}",
                     )
                     st.caption(
@@ -11762,7 +11764,7 @@ def render_care_hub() -> None:
                 else:
                     state["office_transcribe_requested"] = st.checkbox(
                         "Create transcript for accessibility/support",
-                        value=state.get("office_transcribe_requested", False),
+                        value=state.get("office_transcribe_requested", True),
                         key=f"care_office_transcribe_{resident_id}",
                     )
                     st.caption(
