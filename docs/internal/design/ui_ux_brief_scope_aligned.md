@@ -33,7 +33,7 @@ App structure (three distinct app versions):
 - Access denied / rate limited / generic error
 
 App separation:
-- Family app: families and friends only.
+- Family Hub: families and friends only.
 - Care Hub – Mobile: carers on a shared lanyard device (restricted operational view; no Office/admin functions).
 - Care Hub – Office: senior staff/admin for documents and oversight; includes Care Hub – Mobile functionality.
 - Office users may carry out Mobile tasks as part of supervision or care delivery.

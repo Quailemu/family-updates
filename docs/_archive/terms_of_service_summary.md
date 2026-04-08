@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This is a short summary of the Family app terms. It does not replace the care home’s own policies.
+This is a short summary of the Family Hub terms. It does not replace the care home’s own policies.
 
 ## What the service is
 
@@ -14,7 +14,7 @@ Messages are for non-urgent, social contact only. This service must not be used 
 
 ## Role separation
 
-Families use the Family app only. Families do not use Care Hub – Mobile or Care Hub – Office.
+Families use the Family Hub only. Families do not use Care Hub – Mobile or Care Hub – Office.
 
 ## Message replacement
 

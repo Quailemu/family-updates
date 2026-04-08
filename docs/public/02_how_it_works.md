@@ -12,7 +12,7 @@ Start with the diagram. It shows the communication channels and message directio
 
 ## The three app interfaces
 
-- Family app
+- Family Hub
 - Care Hub - Mobile
 - Care Hub - Office
 
@@ -62,7 +62,7 @@ A new message replaces the previous message in that channel.
 - No read receipts
 - No delivery confirmations
 - No response-time expectation
-- Message date is shown in Family app and Care Hub - Mobile (date only, no time).
+- Message date is shown in Family Hub and Care Hub - Mobile (date only, no time).
 
 Messages are handled within normal care routines.
 

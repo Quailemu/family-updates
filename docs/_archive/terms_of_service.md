@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This addendum applies to family access to the Family app for voicemailcare.com. It is written in plain English for families and care homes.
+This addendum applies to family access to the Family Hub for voicemailcare.com. It is written in plain English for families and care homes.
 
 ## Scope and use
 
@@ -14,7 +14,7 @@ Messages are for non-urgent, social contact only. This service must not be used 
 
 ## Role separation
 
-Families use the Family app only. Families do not use Care Hub – Mobile or Care Hub – Office.
+Families use the Family Hub only. Families do not use Care Hub – Mobile or Care Hub – Office.
 
 ## Message handling
 

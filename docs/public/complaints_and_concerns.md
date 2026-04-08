@@ -35,4 +35,4 @@ When reviewing concerns about expected behaviour, apply these service rules:
 - Not a live service. Messages are played and recorded when staff are available.
 - Each channel keeps only the latest message. A new message replaces the previous message in that channel.
 - No message history and no archive are provided.
-- Message date is shown in Family app and Care Hub - Mobile (date only, no time).
+- Message date is shown in Family Hub and Care Hub - Mobile (date only, no time).

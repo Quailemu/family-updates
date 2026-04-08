@@ -47,15 +47,15 @@ The first item in the hamburger menu is always:
 
 Documents are Office-only. Families see Privacy & data, Terms & conditions, and Contact care home.
 
-## Family app
+## Family Hub
 
 Purpose: families and friends send and listen to social messages.
 
 Pages:
-- Family login
+- Family Hub login
 - Family send/listen page
 - How it works (selection)
-- How it works — Family app
+- How it works — Family Hub
 - Privacy & data
 - Terms & conditions
 - Contact the care home
@@ -67,7 +67,7 @@ Menu items:
 - Contact the care home
 
 Notes:
-- Families use the Family app only.
+- Families use the Family Hub only.
 - No care hub features are visible.
 
 ## Care Hub – Mobile

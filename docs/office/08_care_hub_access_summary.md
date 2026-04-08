@@ -16,11 +16,11 @@ Resident -> Family channel keeps the latest resident message shared to all Famil
 
 - Care Hub – Mobile: operational tools for carers only.
 - Care Hub – Office: oversight, documents, and access management.
-- Family app: access for Family Members only, with no care hub tools.
+- Family Hub: access for Family Members only, with no care hub tools.
 
 ## Authentication model (role-based)
 
-- Family app: secure email-link sign-in (email only).
+- Family Hub: secure email-link sign-in (email only).
 - Care Hub – Mobile: individual staff PIN access for day-to-day use.
 - Care Hub – Office: separate staff/admin login path (not family login).
 
@@ -51,7 +51,7 @@ What Happens Next
 The Family Member receives a secure email login link.
 They click the link from their inbox to sign in.
 No password is required.
-They log into the Family app.
+They log into the Family Hub.
 Access is restricted to the selected resident.
 The registration record should include: care home name, Family Member name/email, office staff name, and date.
 

@@ -25,7 +25,7 @@ Care home ID in use:
 - [ ] Care home operates the service and is the Data Controller.
 - [ ] Care home handles identity, consent/LPA, supervision, access, devices, disputes.
 - [ ] Platform provides technical tooling only (no verification of identity/consent/content).
-- [ ] Role separation enforced: Families use Family app only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
+- [ ] Role separation enforced: Families use Family Hub only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
 - [ ] Documents are accessible only in Care Hub – Office.
 
 ## UI/UX scope guards

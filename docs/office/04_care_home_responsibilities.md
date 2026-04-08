@@ -23,7 +23,7 @@ The service is not a safeguarding system and is not designed to provide alerts, 
 
 To maintain clarity and safety, roles are strictly separated:
 
-- Family Members use the Family app only
+- Family Members use the Family Hub only
 - Carers use Care Hub – Mobile only
 - Office staff use Care Hub – Office only
 

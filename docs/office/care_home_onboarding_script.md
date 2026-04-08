@@ -17,7 +17,7 @@ New messages replace the previous one in that channel.
 Care staff operate the system and decide when messages are recorded and played back.
 
 This service has three distinct app versions:
-- Family app (Family Members only)
+- Family Hub (Family Members only)
 - Care Hub – Mobile (carers on a shared lanyard device)
 - Care Hub – Office (senior staff/admin for documents and oversight)
 
@@ -46,7 +46,7 @@ Suggested script:
 Messages are social only, and each channel keeps only the latest message.  
 When you send a new message, it replaces your previous one in that channel.  
 Care staff choose when messages are played.  
-Family Members use the Family app only; carers use Care Hub – Mobile; office staff use Care Hub – Office.  
+Family Members use the Family Hub only; carers use Care Hub – Mobile; office staff use Care Hub – Office.  
 Treat messages as shared within the care home. Staff may play messages in shared spaces.  
 If something is urgent or about care, please contact us directly using our usual phone or email."
 

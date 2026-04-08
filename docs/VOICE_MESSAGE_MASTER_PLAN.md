@@ -32,7 +32,7 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-  F[Family App] -->|record/send| API[(Backend/API)]
+  F[Family Hub] -->|record/send| API[(Backend/API)]
   API -->|deliver latest| F
 
   M[Care Hub Mobile] -->|record/send| API
@@ -268,7 +268,7 @@ Threaded history
 
 ```mermaid
 flowchart LR
-  F[Family App] -->|record/send| API[(Backend/API)]
+  F[Family Hub] -->|record/send| API[(Backend/API)]
   API -->|deliver latest| F
 
   M[Care Hub Mobile] -->|record/send| API

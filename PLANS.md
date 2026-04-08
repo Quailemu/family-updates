@@ -13,7 +13,7 @@ Homepage buttons (only):
 - Care Hub – Office
 
 Canonical interface sentence:
-The platform has three app interfaces: Family app, Care Hub – Mobile, and Care Hub – Office.
+The platform has three app interfaces: Family Hub, Care Hub – Mobile, and Care Hub – Office.
 
 Homepage public info copy (before feedback section):
 ## Familiar voices
@@ -45,7 +45,7 @@ No notifications / date-only statement (family-facing, short):
 The service does not send live notifications. Main care communication views show message date only (no clock time).
 
 Transcript assist statement (all interfaces, short):
-Transcripts can be requested when recording in Family app, Care Hub – Mobile, and Care Hub – Office.
+Transcripts can be requested when recording in Family Hub, Care Hub – Mobile, and Care Hub – Office.
 When available, the transcript appears under “Transcript assist”.
 Transcripts may contain errors, and voice remains the source of truth.
 If transcript is unavailable or not requested, voice playback still operates (unless a care-home precheck policy is enabled).
@@ -204,7 +204,7 @@ It supports oversight of how the platform is used, while maintaining the care ho
 The messaging system uses two types of channels linked to each resident: two-way contact channels and a one-way Office update channel.
 
 Channel directions:
-- Family/Friend -> Resident (created/replaced in Family App)
+- Family/Friend -> Resident (created/replaced in Family Hub)
 - Resident -> Family/Friend (created/replaced in Care Hub – Mobile)
 - Office -> Family/Friend (created/replaced in Care Hub – Office)
 
@@ -258,8 +258,8 @@ This guide explains how voicemailcare.com is used for simple, non-urgent social 
 It sets out how the service works and its intended use.
 
 ## App Version
-Families and friends use the **Family app only**.
-The Family app does not include Care Hub features.
+Families and friends use the **Family Hub only**.
+The Family Hub does not include Care Hub features.
 
 ## How the Service Works
 
@@ -486,7 +486,7 @@ hello@voicemailcare.com
 Version 1.0  
 Effective Date: [Insert Date]
 
-These Terms apply to individuals using the Family app provided through a participating care home.
+These Terms apply to individuals using the Family Hub provided through a participating care home.
 
 By accessing or using the service, you agree to these Terms.
 

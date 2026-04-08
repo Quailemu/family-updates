@@ -1,10 +1,10 @@
 ![logo](../../assets/logo.png)
 
-# Family App training and instructions
+# Family Hub training and instructions
 
 ## Who this is for
 
-This guide is for Family App users (Family Members granted by the care home), including family members, friends, and other individuals granted access by the care home.
+This guide is for Family Hub users (Family Members granted by the care home), including family members, friends, and other individuals granted access by the care home.
 
 ## What this app is for
 
@@ -28,7 +28,7 @@ This guide is for Family App users (Family Members granted by the care home), in
 
 ## What to do
 
-1. Open the Family App and sign in.
+1. Open the Family Hub and sign in.
 2. Check the latest playable messages shown for your resident.
 3. Record your new social message.
 4. Listen back before sending.

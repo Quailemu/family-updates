@@ -16,7 +16,7 @@ No. It is not live messaging.
 
 ## How many app interfaces are there?
 
-Three: Family app, Care Hub - Mobile, and Care Hub - Office.
+Three: Family Hub, Care Hub - Mobile, and Care Hub - Office.
 
 ## What is an Office general update?
 
@@ -36,7 +36,7 @@ Each channel keeps only the latest message. A new message replaces the previous 
 
 ## Can transcripts be provided?
 
-Yes. A transcript can be requested when recording in Family app, Care Hub - Mobile, and Care Hub - Office.
+Yes. A transcript can be requested when recording in Family Hub, Care Hub - Mobile, and Care Hub - Office.
 When available, it appears under "Transcript assist" for the current message.
 
 ## Does the service show message history?
@@ -49,7 +49,7 @@ No. There are no live notifications, delivery confirmations, or read receipts.
 
 ## Are timestamps shown in the app?
 
-Message date is shown in Family app and Care Hub - Mobile (date only, no time).
+Message date is shown in Family Hub and Care Hub - Mobile (date only, no time).
 
 ## Is this suitable for urgent or medical matters?
 

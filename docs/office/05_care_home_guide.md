@@ -13,7 +13,7 @@ The service provides three app interfaces connected to a resident's care circle:
 
 - Care Hub – Mobile: the operational interface used by carers to support the resident and manage voice messaging
 - Care Hub – Office: the office/administration interface used by care-home staff
-- Family app: used by Family Members registered by the care home
+- Family Hub: used by Family Members registered by the care home
 
 Each interface has its own controls for creating and managing the messages it sends.
 
@@ -109,7 +109,7 @@ Care Hub staff can invite and register Family Members in the service. Registrati
 6. Click "Send invitation".
 
 **What happens next**  
-The family contact receives an email invitation. They click a secure email login link to sign in. No password is required. They log into the Family app. Access is restricted to the selected resident. The registration record should include care home name, Family Member name/email, office staff name, and date.
+The family contact receives an email invitation. They click a secure email login link to sign in. No password is required. They log into the Family Hub. Access is restricted to the selected resident. The registration record should include care home name, Family Member name/email, office staff name, and date.
 
 **Important notes**  
 This service is for non-urgent social communication only. Only individuals designated by the care home should be registered. Duplicate registrations are prevented automatically.

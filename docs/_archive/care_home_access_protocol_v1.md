@@ -42,11 +42,11 @@ Care Hub – Office can:
 Care Hub – Office cannot:
 - access family-only areas
 
-### C. Family app
+### C. Family Hub
 
 Installed on personal family devices.  
 Contains no care hub tools.  
-Families use the Family app only.
+Families use the Family Hub only.
 
 This separation is intentional and acts as a data-protection and safeguarding control.
 
@@ -106,7 +106,7 @@ Senior care staff:
 - OS-level Face ID / fingerprint to authorise the device at shift start
 
 Families:
-- OS-level Face ID / fingerprint to unlock the Family app on personal devices
+- OS-level Face ID / fingerprint to unlock the Family Hub on personal devices
 
 ### Not allowed
 
@@ -125,7 +125,7 @@ Care staff support residents to:
 - select family recipients with the resident
 
 Care staff do not:
-- use the Family app
+- use the Family Hub
 - access Care Hub – Office admin functions
 - browse across residents freely
 - access family app areas

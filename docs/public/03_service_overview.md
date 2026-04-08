@@ -22,11 +22,11 @@ It also supports non-urgent care-home communication to family in two Office mode
 - Each channel keeps only the latest message.
 - A new message replaces the previous message in that channel.
 - No archive, no scrolling thread, no live chat.
-- Message date is shown in Family app and Care Hub - Mobile (date only, no time).
+- Message date is shown in Family Hub and Care Hub - Mobile (date only, no time).
 
 ## Transcript assist (optional)
 
-- A transcript can be requested when recording in Family app, Care Hub - Mobile, and Care Hub - Office.
+- A transcript can be requested when recording in Family Hub, Care Hub - Mobile, and Care Hub - Office.
 - When available, transcript text is shown under "Transcript assist" for the current message.
 - Transcript text may contain errors; voice playback remains the source of truth.
 

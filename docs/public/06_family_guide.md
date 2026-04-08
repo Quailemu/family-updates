@@ -10,7 +10,7 @@ Communication participants: residents, Family Members, and Care Hub (Office and 
 
 ## What this app is for
 
-Family app is for Family Members granted by the care home.  
+Family Hub is for Family Members granted by the care home.  
 It supports:
 - Family -> Resident social voice messages
 - Playing the resident's current shared reply
@@ -29,7 +29,7 @@ It supports:
 - When available, transcript text appears under "Transcript assist" for the current message.
 - Transcript text may contain errors; voice remains the source of truth.
 
-## Office communication in Family app
+## Office communication in Family Hub
 
 ### Office general update
 
@@ -49,7 +49,7 @@ You can reply with:
 
 - Not a live service. Messages are played when staff are available.
 - No read receipts, no delivery confirmations, no typing indicators.
-- Message date is shown in Family app and Care Hub - Mobile (date only, no time).
+- Message date is shown in Family Hub and Care Hub - Mobile (date only, no time).
 
 ## Boundaries
 

@@ -21,7 +21,7 @@ Reviewer:
 - [ ] Care home is the operator and Data Controller.
 - [ ] Platform provides technical tooling only (no verification of identity/consent/content).
 - [ ] Consent/LPA, supervision, and access ownership are assigned to the care home.
-- [ ] Role separation enforced: Families use Family app only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
+- [ ] Role separation enforced: Families use Family Hub only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
 
 ## 3) Security controls enforced
 

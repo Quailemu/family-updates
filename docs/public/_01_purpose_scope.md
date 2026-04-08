@@ -10,11 +10,11 @@ Care homes operate the system and act as the data controller. The platform provi
 
 Care Hub – Mobile is a restricted operational view for carers. Care Hub – Office provides full access and includes Care Hub – Mobile functionality.
 
-- Family app: used by family members and friends only.
+- Family Hub: used by family members and friends only.
 - Care Hub – Mobile: used by carers on a shared lanyard device.
 - Care Hub – Office: includes Care Hub – Mobile tasks plus admin documents and compliance.
 
-Family members and friends use the Family app only.  
+Family members and friends use the Family Hub only.  
 Carers use Care Hub – Mobile only.  
 Office staff use Care Hub – Office only.
 

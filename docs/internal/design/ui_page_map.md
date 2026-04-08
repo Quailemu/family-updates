@@ -8,7 +8,7 @@ Scope reference: `docs/support/scope_statement.md`
 
 ## App versions
 
-1) Family app
+1) Family Hub
 2) Care Hub – Mobile
 3) Care Hub – Office
 
@@ -52,13 +52,13 @@ Care Hub – Office menu items:
 
 ---
 
-## 1) Family app
+## 1) Family Hub
 
 Screens:
-- Family login
+- Family Hub login
 - Family resident page
 - How it works (selection)
-- How it works — Family app
+- How it works — Family Hub
 - Privacy & data
 - Terms & conditions
 - Contact the care home

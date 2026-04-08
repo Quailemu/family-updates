@@ -2614,7 +2614,7 @@ def update_care_hub_mfa_codes(
 
 def render_access_gate(message: str, login_route: str, role: str) -> None:
     if role == "family":
-        render_page_header("Family")
+        render_page_header("Family Hub")
     else:
         render_page_header("Access required", show_variant_subheading=False)
     st.markdown(
@@ -2638,7 +2638,7 @@ def render_access_gate(message: str, login_route: str, role: str) -> None:
             set_route(login_route)
     with cols[1]:
         render_route_link(
-            "Back to Family login",
+            "Back to Family Hub login",
             get_login_route(VARIANT_FAMILY),
             key=f"{role}_gate_home_link",
         )
@@ -2982,7 +2982,7 @@ def render_family_document(title: str, path: str) -> None:
         render_route_link("Back", "/family/how-it-works", key="family_doc_back_link")
     with action_cols[1]:
         render_route_link(
-            "Back to Family login",
+            "Back to Family Hub login",
             get_login_route(VARIANT_FAMILY),
             key="family_doc_home_link",
         )
@@ -3063,7 +3063,7 @@ def render_family_contact() -> None:
         render_route_link("Back", "/family/how-it-works", key="family_contact_back_link")
     with action_cols[1]:
         render_route_link(
-            "Back to Family login",
+            "Back to Family Hub login",
             get_login_route(VARIANT_FAMILY),
             key="family_contact_home_link",
         )
@@ -5969,7 +5969,7 @@ def render_header_menu(menu_key: str) -> None:
                 key=f"{menu_key}_family_contact_link",
             )
             render_route_link(
-                "Family login",
+                "Family Hub login",
                 get_login_route(app_variant),
                 key=f"{menu_key}_family_login_link",
             )
@@ -7319,7 +7319,7 @@ MOBILE_PUBLIC_ROUTES = {
 
 VARIANT_CONFIG = {
     VARIANT_FAMILY: {
-        "label": "Family",
+        "label": "Family Hub",
         "default_route": FAMILY_LOGIN_ROUTE,
         "how_it_works_route": "/family/how-it-works",
         "allowed_routes": {
@@ -8207,7 +8207,7 @@ def render_family_login_hub() -> None:
         unsafe_allow_html=True,
     )
     render_page_header(
-        "Family login",
+        "Family Hub login",
         brand_title="voicemailcare.com",
         show_variant_subheading=False,
         show_menu=False,
@@ -8366,7 +8366,7 @@ def render_family_send() -> None:
 """,
         unsafe_allow_html=True,
     )
-    render_page_header("Family")
+    render_page_header("Family Hub")
     render_how_it_works_button("family_send_how_it_works")
     family_display_name = st.session_state.get("family_display_name", "Family member")
     st.markdown(f"**Hello {family_display_name}**")
@@ -8985,7 +8985,7 @@ def render_family_sent() -> None:
         render_route_link("Back", get_home_route(VARIANT_FAMILY), key="family_sent_back_link")
     with action_cols[1]:
         render_route_link(
-            "Back to Family login",
+            "Back to Family Hub login",
             get_login_route(VARIANT_FAMILY),
             key="family_sent_home_link",
         )
@@ -9315,7 +9315,7 @@ def render_public_document(doc_path: str, back_route: str = "/public/walkthrough
     if app_variant == VARIANT_FAMILY:
         render_page_header(get_public_document_title(doc_path), show_variant_subheading=False)
         render_route_link(
-            "← Back to Family login",
+            "← Back to Family Hub login",
             get_login_route(VARIANT_FAMILY),
             key="public_doc_back_family_login_link",
         )
@@ -9381,7 +9381,7 @@ def render_public_docs() -> None:
     render_page_header("Public Documents")
     if app_variant == VARIANT_FAMILY:
         if st.button(
-            "← Back to Family login",
+            "← Back to Family Hub login",
             key="public_docs_back_family_login_link",
             use_container_width=True,
         ):
@@ -9590,7 +9590,7 @@ For urgent, medical, safeguarding, or emergency matters, contact the care home d
     st.markdown('<div class="pr-content">', unsafe_allow_html=True)
     info_cols = st.columns(3, gap="small")
     with info_cols[0]:
-        if st.button("Learn about Family app", key="pr_info_family", use_container_width=True):
+        if st.button("Learn about Family Hub", key="pr_info_family", use_container_width=True):
             set_route("/public/walkthrough-family")
             st.stop()
     with info_cols[1]:
@@ -9602,7 +9602,7 @@ For urgent, medical, safeguarding, or emergency matters, contact the care home d
             set_route("/public/walkthrough-office")
             st.stop()
     st.markdown(
-        "**Family app**: non-urgent social voice messages between Family Members and residents, "
+        "**Family Hub**: non-urgent social voice messages between Family Members and residents, "
         "plus structured replies to Office practical messages."
     )
     st.markdown(

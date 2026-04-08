@@ -11,7 +11,7 @@ This document is a draft outline for a contract between the care home and voicem
 
 It reflects the scope set out in the handbook documents, the Privacy Policy, and the end-user terms summary. It is not a final contract and is intended for legal review and refinement.
 
-This service has three distinct app versions: Family app, Care Hub – Mobile, and Care Hub – Office. Care Hub – Office provides full access and includes Care Hub – Mobile functionality. Care Hub – Mobile is a restricted operational view used by carers.
+This service has three distinct app versions: Family Hub, Care Hub – Mobile, and Care Hub – Office. Care Hub – Office provides full access and includes Care Hub – Mobile functionality. Care Hub – Mobile is a restricted operational view used by carers.
 
 This outline must be read with:
 - `docs/contracts/data_processing_agreement_template.md` (DPA schedule)
@@ -51,7 +51,7 @@ The service is for non-urgent, social voice messages only. It is not intended fo
 The service must not be used for confidential, highly personal, or time-critical communication.
 
 Role separation applies:
-- Family Members use the Family app only.
+- Family Members use the Family Hub only.
 - Carers use Care Hub – Mobile only.
 - Office staff use Care Hub – Office only.
 

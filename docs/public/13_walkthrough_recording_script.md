@@ -26,6 +26,6 @@ This keeps communication calm, manageable, and aligned with care-home workflow.
 
 Access is role-based.
 Family and Care Hub are separate experiences.
-Family users use the Family app.
+Family users use the Family Hub.
 Care staff use Care Hub – Mobile.
 Senior staff use Care Hub – Office.

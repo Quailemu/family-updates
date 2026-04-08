@@ -7,7 +7,7 @@ Scope reference: `docs/support/scope_statement.md`
 This document lists components and states in order. It confirms just-in-time signed URL usage on Play and on Send.
 
 This service has three distinct app versions:
-- Family app
+- Family Hub
 - Care Hub – Mobile
 - Care Hub – Office
 
