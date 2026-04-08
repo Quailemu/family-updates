@@ -5523,6 +5523,35 @@ def render_transcript_assist(
     care_home_id: str | None = None,
     resident_id: str | None = None,
 ) -> bool:
+    def _fetch_transcript_fields_for_message(message_id: str) -> tuple[str, str]:
+        normalized_id = str(message_id or "").strip()
+        if not normalized_id:
+            return "", ""
+        access_token = str(st.session_state.get("access_token") or "").strip()
+        supabase, error = get_authed_supabase(access_token)
+        if error or supabase is None:
+            return "", ""
+        try:
+            response = (
+                supabase.table("messages")
+                .select("transcript_text, transcript_status")
+                .eq("id", normalized_id)
+                .limit(1)
+                .execute()
+            )
+        except Exception as exc:
+            if _is_missing_column_error(exc, "transcript_text") or _is_missing_column_error(
+                exc, "transcript_status"
+            ):
+                st.session_state["_messages_missing_transcript_columns"] = True
+            return "", ""
+        row = response.data[0] if response.data else {}
+        if not isinstance(row, dict):
+            return "", ""
+        text_value = str(row.get("transcript_text") or "").strip()
+        status_value = str(row.get("transcript_status") or "").strip().lower()
+        return text_value, status_value
+
     try:
         mode = normalize_transcript_policy_mode(policy_mode)
         if not isinstance(message, dict):
@@ -5530,12 +5559,19 @@ def render_transcript_assist(
         status = str(message.get("transcript_status") or "").strip().lower()
         transcript_text = str(message.get("transcript_text") or "").strip()
         message_id = str(message.get("id") or "").strip()
+        if message_id and (not transcript_text or not status):
+            fetched_text, fetched_status = _fetch_transcript_fields_for_message(message_id)
+            if fetched_text and not transcript_text:
+                transcript_text = fetched_text
+            if fetched_status and not status:
+                status = fetched_status
         message_key = message_id or (
             f"{str(message.get('direction') or '').strip()}::"
             f"{str(message.get('channel') or '').strip()}::"
             f"{str(message.get('recorded_at') or '').strip()}"
         )
         if transcript_text:
+            st.caption("Transcript assist is available for this message.")
             with st.expander("Transcript assist", expanded=False):
                 st.markdown(transcript_text)
                 st.caption("Transcript may contain errors. Voice remains the source of truth.")
