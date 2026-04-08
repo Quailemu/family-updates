@@ -20,6 +20,12 @@ This guide is for Family App users (Family Members granted by the care home), in
 - Office practical message -> Family: structured non-urgent response (Yes/No/Maybe, optional tick-boxes, optional short note).
 - There is no thread and no message history.
 
+## Transcript assist (optional)
+
+- When recording, you can request transcript assist.
+- If transcript text is available, it appears under "Transcript assist" for the current message.
+- Transcript text may contain errors; voice remains the source of truth.
+
 ## What to do
 
 1. Open the Family App and sign in.

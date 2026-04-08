@@ -21,6 +21,9 @@ A: Each channel keeps only the latest message. New messages replace previous one
 Q: Can I see a message timeline?  
 A: No. There is no archive and no scrolling thread.
 
+Q: Can I request a transcript?  
+A: Yes. When recording, you can request transcript assist. If available, it appears under "Transcript assist" for that message.
+
 Q: What is an Office general update?  
 A: A one-way Office broadcast to all Family Members for non-urgent general information.
 

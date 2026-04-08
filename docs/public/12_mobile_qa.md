@@ -23,6 +23,9 @@ A: No. The platform is for non-urgent, social voice messages.
 Q: Do messages have history?  
 A: No. Each channel keeps only the latest message.
 
+Q: Can Mobile staff request transcripts?  
+A: Yes. Transcript assist can be requested when recording. If available, transcript text appears under "Transcript assist" for the current message.
+
 Q: What should staff do before sending a resident message?  
 A: Follow care-home process and confirm the message has been listened to before sending.
 

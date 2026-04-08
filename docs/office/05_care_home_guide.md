@@ -31,6 +31,10 @@ The messaging system uses four channel types linked to each resident:
 Each channel keeps only the latest message.
 When a new message is recorded, it replaces the previous message in that channel.
 
+Optional transcript assist may be requested when recording in Family, Mobile, and Office.
+When available, transcript text appears under "Transcript assist" for the current message.
+Transcript text may contain errors; voice remains the source of truth.
+
 Messages within a Family Member channel can only be played by users of that specific channel. Other Family Members cannot access those messages.
 
 Care-home staff using Care Hub – Mobile or Care Hub – Office may also play messages when required for operational support.

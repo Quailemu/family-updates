@@ -28,6 +28,12 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 - Record and send the latest resident message to all Family Members.
 - A new message replaces the previous message in that channel.
 
+## Transcript assist (optional)
+
+- Staff can request transcript assist when recording.
+- If transcript text is available, it appears under "Transcript assist" for the current message.
+- Transcript text may contain errors; voice remains the source of truth.
+
 ## Office update (read-only in Mobile)
 
 - Mobile users can play the latest Office update.

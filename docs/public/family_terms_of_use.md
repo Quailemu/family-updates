@@ -40,6 +40,9 @@ A new message replaces the previous message in that channel.
 
 No archive or message history is provided.
 
+Transcript assist is optional. If requested and available, transcript text may be shown for the current message.
+Transcript text may contain errors, and voice remains the source of truth.
+
 ## Access and oversight
 
 The care home controls who can be registered and participate, and how the service is used in practice.

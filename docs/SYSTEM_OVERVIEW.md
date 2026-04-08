@@ -23,6 +23,10 @@ flowchart LR
 
 ## Message model (one message each way, no threads)
 
+Optional transcript assist is available when recording in Family, Care Hub Mobile, and Care Hub Office.
+When available, transcript text is attached to the current message only (no transcript history).
+Transcript text may contain errors; voice remains the source of truth.
+
 ## Authentication & security (link to docs/security/SECURITY_MODEL.md)
 
 ## Family onboarding & registration (placeholder)

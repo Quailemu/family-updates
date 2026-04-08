@@ -34,6 +34,11 @@ No. It is a structured reply to one Office message, not open chat.
 
 Each channel keeps only the latest message. A new message replaces the previous message in that channel.
 
+## Can transcripts be provided?
+
+Yes. A transcript can be requested when recording in Family app, Care Hub - Mobile, and Care Hub - Office.
+When available, it appears under "Transcript assist" for the current message.
+
 ## Does the service show message history?
 
 No archive and no scrolling thread.

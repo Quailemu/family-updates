@@ -24,6 +24,12 @@ It also supports non-urgent care-home communication to family in two Office mode
 - No archive, no scrolling thread, no live chat.
 - Message date is shown in Family app and Care Hub - Mobile (date only, no time).
 
+## Transcript assist (optional)
+
+- A transcript can be requested when recording in Family app, Care Hub - Mobile, and Care Hub - Office.
+- When available, transcript text is shown under "Transcript assist" for the current message.
+- Transcript text may contain errors; voice playback remains the source of truth.
+
 ## Main flows
 
 ### Family -> Resident

@@ -47,6 +47,13 @@ Each Family Member can submit a structured reply:
 Each channel keeps only the latest message.  
 A new message replaces the previous message in that channel.
 
+## Transcript assist (optional)
+
+- Families and care-home staff can request a transcript when recording a message.
+- When available, transcript text appears under "Transcript assist" for the current message.
+- Transcript text may contain errors; voice remains the source of truth.
+- If transcript is unavailable or not requested, message playback still works.
+
 ## Not live messaging
 
 - Not a live service. Messages are played when staff are available.

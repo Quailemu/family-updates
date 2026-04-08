@@ -69,6 +69,8 @@ Duplicate registrations are prevented automatically.
 - Resident -> Family channel keeps the latest shared resident message to all Family Members.
 - Office -> Family is one shared current update to all Family Members.
 - Each new message replaces the previous one in that channel.
+- Transcript assist can be requested when recording; when available, transcript text is shown for the current message.
+- Transcript text may contain errors; voice remains the source of truth.
 
 ## Safeguarding clarification
 

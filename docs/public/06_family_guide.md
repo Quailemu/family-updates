@@ -23,6 +23,12 @@ It supports:
 - A new message replaces the previous message in that channel.
 - There is no archive and no scrolling thread.
 
+## Transcript assist (optional)
+
+- Family can request a transcript when recording a message.
+- When available, transcript text appears under "Transcript assist" for the current message.
+- Transcript text may contain errors; voice remains the source of truth.
+
 ## Office communication in Family app
 
 ### Office general update

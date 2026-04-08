@@ -18,6 +18,7 @@ The care home decides access, participation, and day-to-day use in its service.
 - Resident identifiers set by the care home
 - Family Member details (for example, name and email)
 - Voice messages (latest message only per channel)
+- Optional transcript text for the current message where requested and available
 - Security and operational logs needed to run the service safely
 
 ## Why data is used
@@ -31,6 +32,7 @@ The service is not for medical updates, safeguarding reporting, or urgent enquir
 Each channel keeps only the latest message.
 
 When a new message is sent in a channel, it replaces the previous one in that channel.
+Where transcript assist is requested, transcript text for that current message is replaced in the same way.
 
 No message history and no archive are provided.
 

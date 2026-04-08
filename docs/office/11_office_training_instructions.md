@@ -36,6 +36,10 @@ This guide is for office and admin staff using Care Hub - Office.
 All current messages may be played by users in the resident's care circle according to care-home registration settings.
 No role can directly replace another role's message.
 
+Transcript assist can be requested when recording in Family, Mobile, and Office.
+If transcript text is available, it appears under "Transcript assist" for the current message.
+Transcript text may contain errors; voice remains the source of truth.
+
 ## Important boundaries
 
 - This is not an emergency or urgent service.

@@ -8,6 +8,9 @@ A: No. It is for non-urgent, social messages only. For anything urgent, contact 
 Q: Will I see a history of messages?  
 A: No. Only the current message is kept. Each new message replaces the previous one.
 
+Q: Can transcripts be provided?  
+A: Yes. Transcript assist can be requested when recording. If available, transcript text appears for the current message.
+
 Q: Are messages private?  
 A: Treat messages as shared within the care home. Staff may play messages in shared spaces.
 

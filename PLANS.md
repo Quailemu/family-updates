@@ -44,6 +44,12 @@ Plan your message before recording. Most messages only need a few seconds.
 No notifications / date-only statement (family-facing, short):
 The service does not send live notifications. Main care communication views show message date only (no clock time).
 
+Transcript assist statement (all interfaces, short):
+Transcripts can be requested when recording in Family app, Care Hub – Mobile, and Care Hub – Office.
+When available, the transcript appears under “Transcript assist”.
+Transcripts may contain errors, and voice remains the source of truth.
+If transcript is unavailable or not requested, voice playback still operates (unless a care-home precheck policy is enabled).
+
 Role-based access (Family vs Care Hub):
 Family and Care Hub are separate, role-based experiences.
 

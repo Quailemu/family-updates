@@ -4,6 +4,9 @@ baseline before cleanup
 
 Calm, non-urgent voice messaging between residents and authorised contacts. One message in, one message out.
 
+Optional transcript assist is supported across Family, Care Hub – Mobile, and Care Hub – Office.
+When requested, transcript text can be shown for the current message, but voice remains the source of truth.
+
 ## Install
 
 ```bat

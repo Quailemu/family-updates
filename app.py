@@ -8365,6 +8365,16 @@ def render_family_send() -> None:
 
     access_token = st.session_state.get("access_token")
     transcript_policy_mode = get_transcript_policy_mode(access_token)
+    if transcript_policy_mode == "precheck":
+        st.caption(
+            "Transcript assist is enabled for this care home. Transcript review is required before Care Hub playback."
+        )
+    elif transcript_policy_mode == "assist":
+        st.caption(
+            "Transcript assist is available when requested. When available, it appears under 'Transcript assist'."
+        )
+    else:
+        st.caption("Transcript assist is off for this care home.")
     care_home_name = fetch_active_care_home_name(access_token)
     family_user_record = get_family_user_for_session(access_token)
     family_user_id = str((family_user_record or {}).get("id") or "").strip()
@@ -10522,6 +10532,16 @@ def render_care_hub() -> None:
 
     access_token = st.session_state.get("access_token")
     transcript_policy_mode = get_transcript_policy_mode(access_token)
+    if transcript_policy_mode == "precheck":
+        st.caption(
+            "Transcript assist is enabled. Care Hub playback requires transcript review before audio playback."
+        )
+    elif transcript_policy_mode == "assist":
+        st.caption(
+            "Transcript assist can be requested when recording. When available, it appears under 'Transcript assist'."
+        )
+    else:
+        st.caption("Transcript assist is off for this care home.")
     render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
     is_care_queue_variant_screen = runtime_variant in {VARIANT_MOBILE, VARIANT_OFFICE}

@@ -20,6 +20,9 @@ Messages are social and non-urgent. Resident messages may include conversational
 
 Only the most recent voice message is kept and played. Older messages are automatically replaced. There is no message history.
 
+Optional transcript assist may be requested when recording messages.
+Transcript text may be shown to support accessibility and understanding, but may contain errors; voice remains the source of truth.
+
 ## Privacy and setting
 
 Messages are recorded and played within the care home environment. They are intended for the resident and their family or friends, but they are not guaranteed to be private in the care-home setting.
