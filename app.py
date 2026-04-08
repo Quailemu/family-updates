@@ -399,10 +399,12 @@ def redirect_to_public_landing() -> None:
     url = get_public_landing_url()
     safe_url = html.escape(url, quote=True)
     st.markdown(
-        f'<meta http-equiv="refresh" content="0;url={safe_url}">',
+        (
+            f'<script>window.location.replace("{safe_url}");</script>'
+            f'<noscript><meta http-equiv="refresh" content="0;url={safe_url}"></noscript>'
+        ),
         unsafe_allow_html=True,
     )
-    st.markdown(f"[Continue to main public page]({url})")
     st.stop()
 
 
