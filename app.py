@@ -10260,9 +10260,9 @@ def render_care_login() -> None:
         unsafe_allow_html=True,
     )
     app_variant = resolve_runtime_variant(route_hint=get_route())
-    login_label = "Care Hub – Mobile" if app_variant == VARIANT_MOBILE else "Care Hub – Office"
+    login_title = "Care Hub Mobile" if app_variant == VARIANT_MOBILE else "Care Hub Office"
     render_page_header(
-        f"{login_label} login",
+        login_title,
         brand_title="voicemailcare.com",
         show_variant_subheading=False,
         show_menu=app_variant != VARIANT_OFFICE,
@@ -10292,8 +10292,6 @@ def render_care_login() -> None:
 """,
             unsafe_allow_html=True,
         )
-    elif app_variant == VARIANT_OFFICE:
-        st.caption("Office login is a separate staff/admin access path.")
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
     office_requires_explicit_login = (
         app_variant == VARIANT_OFFICE
