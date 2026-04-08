@@ -1192,7 +1192,9 @@ def upsert_latest_message_with_fallback(
                     st.session_state["_messages_conflict_upsert_supported"] = True
                     return response, None
                 except Exception as legacy_exc:
-                    return None, str(legacy_exc)
+                    if not _is_missing_conflict_constraint_error(legacy_exc):
+                        return None, str(legacy_exc)
+                    st.session_state["_messages_conflict_upsert_supported"] = False
             if not _is_missing_conflict_constraint_error(exc):
                 return None, str(exc)
             st.session_state["_messages_conflict_upsert_supported"] = False
