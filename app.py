@@ -683,6 +683,41 @@ def _message_select_fields(
     return fields
 
 
+def _message_missing_optional_columns(exc: Exception) -> tuple[bool, bool]:
+    missing_audio_columns = bool(
+        _is_missing_column_error(exc, "audio_object_path")
+        or _is_missing_column_error(exc, "audio_source")
+    )
+    missing_transcript_columns = bool(
+        _is_missing_column_error(exc, "transcript_text")
+        or _is_missing_column_error(exc, "transcript_status")
+        or _is_missing_column_error(exc, "transcript_model")
+        or _is_missing_column_error(exc, "transcript_generated_at")
+    )
+    return missing_audio_columns, missing_transcript_columns
+
+
+def _flag_transcript_persistence_fallback(payload: dict | None) -> None:
+    st.session_state["_messages_missing_transcript_columns"] = True
+    if not isinstance(payload, dict):
+        return
+    status_value = str(payload.get("transcript_status") or "").strip().lower()
+    text_value = str(payload.get("transcript_text") or "").strip()
+    if status_value in {"ready", "failed"} or bool(text_value):
+        st.session_state["_transcript_persist_warning"] = (
+            "Transcript could not be saved because this deployment is missing transcript columns. "
+            "Apply Supabase migration 0023_messages_transcript_columns.sql."
+        )
+
+
+def consume_transcript_persist_warning() -> str | None:
+    warning = st.session_state.get("_transcript_persist_warning")
+    if warning:
+        st.session_state.pop("_transcript_persist_warning", None)
+        return str(warning)
+    return None
+
+
 def upload_audio_to_storage(
     audio_bytes: bytes,
     audio_mime_type: str,
@@ -1132,13 +1167,10 @@ def upsert_latest_message_with_fallback(
             st.session_state["_messages_conflict_upsert_supported"] = True
             return response, None
         except Exception as exc:
-            if _is_missing_column_error(exc, "audio_object_path") or _is_missing_column_error(
-                exc, "audio_source"
-            ) or _is_missing_column_error(exc, "transcript_text") or _is_missing_column_error(
-                exc, "transcript_status"
-            ) or _is_missing_column_error(exc, "transcript_model") or _is_missing_column_error(
-                exc, "transcript_generated_at"
-            ):
+            missing_audio_columns, missing_transcript_columns = _message_missing_optional_columns(exc)
+            if missing_audio_columns or missing_transcript_columns:
+                if missing_transcript_columns:
+                    _flag_transcript_persistence_fallback(payload)
                 legacy_payload = _strip_optional_message_audio_columns(payload)
                 try:
                     response = (
@@ -1171,13 +1203,10 @@ def upsert_latest_message_with_fallback(
             try:
                 response = supabase.table("messages").update(write_payload).eq("id", existing_id).execute()
             except Exception as exc:
-                if _is_missing_column_error(exc, "audio_object_path") or _is_missing_column_error(
-                    exc, "audio_source"
-                ) or _is_missing_column_error(exc, "transcript_text") or _is_missing_column_error(
-                    exc, "transcript_status"
-                ) or _is_missing_column_error(exc, "transcript_model") or _is_missing_column_error(
-                    exc, "transcript_generated_at"
-                ):
+                missing_audio_columns, missing_transcript_columns = _message_missing_optional_columns(exc)
+                if missing_audio_columns or missing_transcript_columns:
+                    if missing_transcript_columns:
+                        _flag_transcript_persistence_fallback(write_payload)
                     write_payload = _strip_optional_message_audio_columns(write_payload)
                     response = (
                         supabase.table("messages").update(write_payload).eq("id", existing_id).execute()
@@ -1188,13 +1217,10 @@ def upsert_latest_message_with_fallback(
             try:
                 response = supabase.table("messages").insert(write_payload).execute()
             except Exception as exc:
-                if _is_missing_column_error(exc, "audio_object_path") or _is_missing_column_error(
-                    exc, "audio_source"
-                ) or _is_missing_column_error(exc, "transcript_text") or _is_missing_column_error(
-                    exc, "transcript_status"
-                ) or _is_missing_column_error(exc, "transcript_model") or _is_missing_column_error(
-                    exc, "transcript_generated_at"
-                ):
+                missing_audio_columns, missing_transcript_columns = _message_missing_optional_columns(exc)
+                if missing_audio_columns or missing_transcript_columns:
+                    if missing_transcript_columns:
+                        _flag_transcript_persistence_fallback(write_payload)
                     write_payload = _strip_optional_message_audio_columns(write_payload)
                     response = supabase.table("messages").insert(write_payload).execute()
                 else:
@@ -4849,16 +4875,17 @@ def fetch_latest_messages_for_contact_user_ids(
         try:
             resp = query.execute()
         except Exception as exc:
-            if include_audio and (
-                _is_missing_column_error(exc, "audio_object_path")
-                or _is_missing_column_error(exc, "audio_source")
-            ):
+            missing_audio_columns, missing_transcript_columns = _message_missing_optional_columns(exc)
+            if include_audio and (missing_audio_columns or missing_transcript_columns):
+                if missing_transcript_columns:
+                    st.session_state["_messages_missing_transcript_columns"] = True
                 resp = (
                     supabase.table("messages")
                     .select(
                         _message_select_fields(
                             include_audio=include_audio,
                             include_optional_storage_columns=False,
+                            include_optional_transcript_columns=False,
                         )
                     )
                     .eq("resident_id", resident_id)
@@ -8763,6 +8790,9 @@ def render_family_send() -> None:
                     else:
                         if transcript_error and bool(state.get("transcribe_requested")):
                             st.warning(f"Message sent, but transcript failed: {transcript_error}")
+                        transcript_persist_warning = consume_transcript_persist_warning()
+                        if transcript_persist_warning:
+                            st.warning(transcript_persist_warning)
                         message_id = (
                             (
                                 resp.data[0].get("id")
@@ -11509,6 +11539,9 @@ def render_care_hub() -> None:
                         else:
                             if transcript_error and bool(state.get("transcribe_requested")):
                                 st.warning(f"Message sent, but transcript failed: {transcript_error}")
+                            transcript_persist_warning = consume_transcript_persist_warning()
+                            if transcript_persist_warning:
+                                st.warning(transcript_persist_warning)
                             message_id = (
                                 (
                                     resp.data[0].get("id")
@@ -11821,6 +11854,9 @@ def render_care_hub() -> None:
                         else:
                             if transcript_error and bool(state.get("office_transcribe_requested")):
                                 st.warning(f"Update sent, but transcript failed: {transcript_error}")
+                            transcript_persist_warning = consume_transcript_persist_warning()
+                            if transcript_persist_warning:
+                                st.warning(transcript_persist_warning)
                             office_message_id = (
                                 (
                                     office_resp.data[0].get("id")
