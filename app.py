@@ -11015,7 +11015,14 @@ def render_care_hub() -> None:
                     include_audio=True,
                 )
             latest_contact_user_id = str((latest or {}).get("contact_user_id") or "").strip()
-            if latest_contact_user_id:
+            selected_contact_user_id = str((selected_contact or {}).get("auth_user_id") or "").strip()
+            if selected_contact is not None and selected_contact_user_id:
+                # Keep queue-selected contact authoritative in mobile playback.
+                # This prevents label/audio drift if a fetched row carries a mismatched contact_user_id.
+                if latest_contact_user_id != selected_contact_user_id and latest is not None:
+                    latest = dict(latest)
+                    latest["contact_user_id"] = selected_contact_user_id
+            elif latest_contact_user_id:
                 matched_contact = next(
                     (
                         c
@@ -11081,7 +11088,7 @@ def render_care_hub() -> None:
                 )
                 if (
                     not playback_source
-                    and (is_mobile_variant or is_office_variant)
+                    and is_office_variant
                     and not manual_selected_active
                 ):
                     latest_any_contact = fetch_latest_message(
