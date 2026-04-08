@@ -11039,14 +11039,20 @@ def render_care_hub() -> None:
                 ):
                     st.session_state[manual_selection_key] = False
                     manual_selected_active = False
-                    selected_contact, latest, _, _ = find_next_playable_family_message_in_order(
+                    selected_contact, latest, queue_mode_selected = select_next_family_message_for_mobile(
                         resident_id,
+                        resident["care_home_id"],
                         contacts,
                         access_token,
-                        start_after_contact_user_id=state.get("selected_contact_user_id"),
-                        channel="resident_family",
                     )
                     if selected_contact:
+                        latest = fetch_latest_message_for_contact_with_mapping_repair(
+                            resident_id,
+                            access_token,
+                            selected_contact,
+                            channel="resident_family",
+                            include_audio=True,
+                        ) or latest
                         selected_contact_user_id = str(
                             (latest or {}).get("contact_user_id")
                             or selected_contact.get("auth_user_id")
@@ -11054,7 +11060,7 @@ def render_care_hub() -> None:
                         ).strip()
                         state["selected_contact_id"] = selected_contact.get("id")
                         state["selected_contact_user_id"] = selected_contact_user_id
-                        queue_mode_label = "Session order"
+                        queue_mode_label = queue_mode_selected or "Session order"
                         st.session_state[mobile_play_requested_key] = True
                         st.session_state[mobile_advance_pointer_key] = True
                     else:
@@ -11112,13 +11118,8 @@ def render_care_hub() -> None:
             latest_contact_user_id = str((latest or {}).get("contact_user_id") or "").strip()
             selected_contact_user_id = str((selected_contact or {}).get("auth_user_id") or "").strip()
             if selected_contact is not None and selected_contact_user_id:
-                # Keep queue-selected contact authoritative in mobile playback.
-                # This prevents label/audio drift if a fetched row carries a mismatched contact_user_id.
                 if latest_contact_user_id != selected_contact_user_id and latest is not None:
-                    if is_mobile_variant:
-                        latest = dict(latest)
-                        latest["contact_user_id"] = selected_contact_user_id
-                    elif is_office_variant and latest_contact_user_id:
+                    if latest_contact_user_id:
                         matched_contact = next(
                             (
                                 c
