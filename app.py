@@ -2069,7 +2069,7 @@ def _apply_family_registration_mapping(
         email=str(payload.get("email") or ""),
         first_name=str(payload.get("first_name") or ""),
         last_name=str(payload.get("last_name") or ""),
-        relationship="",
+        relationship=str(payload.get("relationship") or ""),
     )
     if contact_error or not contact_row:
         return False, contact_error or "Failed to upsert Family Member."
@@ -2211,6 +2211,10 @@ def render_office_family_registration_form(
         first_name = st.text_input("First name", key="office_family_first_name")
         last_name = st.text_input("Last name", key="office_family_last_name")
         email = st.text_input("Email", key="office_family_email")
+        relationship = st.text_input(
+            "Relationship to resident (for example: daughter, cousin)",
+            key="office_family_relationship",
+        )
         st.markdown("#### Section 2 — Link to Resident")
         resident_id = st.selectbox(
             "Resident",
@@ -2242,6 +2246,7 @@ def render_office_family_registration_form(
     first_value = first_name.strip()
     last_value = last_name.strip()
     normalized_email = email.strip().lower()
+    relationship_value = relationship.strip()
     if not first_value or not last_value or not normalized_email:
         st.error("First name, last name, and email are required.")
         return
@@ -2317,6 +2322,7 @@ def render_office_family_registration_form(
         "email": normalized_email,
         "first_name": first_value,
         "last_name": last_value,
+        "relationship": relationship_value,
     }
     mapping_ok, mapping_error = _apply_family_registration_mapping(access_token, payload)
     if mapping_ok:
