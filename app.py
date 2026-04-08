@@ -4086,8 +4086,11 @@ def run_daily_audit_log_retention_purge() -> None:
         return
 
 
-def clear_session_state() -> None:
+def clear_session_state(*, preserve_keys: set[str] | None = None) -> None:
+    preserved = preserve_keys or set()
     for key in list(st.session_state.keys()):
+        if key in preserved:
+            continue
         del st.session_state[key]
 
 
@@ -4133,7 +4136,11 @@ def enforce_session_timeout() -> None:
                 role,
                 st.session_state.get("active_care_home_id"),
             )
+        timeout_notice = (
+            "Your session timed out after inactivity. Please sign in again."
+        )
         clear_session_state()
+        st.session_state["session_timeout_notice"] = timeout_notice
         set_route(get_default_route(get_app_variant()))
         st.stop()
     st.session_state["last_active_at"] = now
@@ -8215,6 +8222,9 @@ def render_family_login_hub() -> None:
         show_variant_subheading=False,
         show_menu=False,
     )
+    timeout_notice = str(st.session_state.pop("session_timeout_notice", "") or "").strip()
+    if timeout_notice:
+        st.warning(timeout_notice)
     st.markdown(
         """
 <style>
@@ -10270,6 +10280,9 @@ def render_care_login() -> None:
         show_variant_subheading=False,
         show_menu=app_variant != VARIANT_OFFICE,
     )
+    timeout_notice = str(st.session_state.pop("session_timeout_notice", "") or "").strip()
+    if timeout_notice:
+        st.warning(timeout_notice)
     mobile_login_boxes = []
     if app_variant == VARIANT_MOBILE:
         mobile_login_boxes = [
@@ -10563,13 +10576,25 @@ def render_care_hub() -> None:
     search_value = st.text_input("Search residents", key="care_resident_search")
     if search_value:
         search_lower = search_value.strip().lower()
+        search_tokens = [token for token in search_lower.split() if token]
+
+        def resident_matches_search(resident: dict) -> bool:
+            preferred = str(resident.get("preferred_name") or "").strip().lower()
+            surname = str(resident.get("surname") or "").strip().lower()
+            room = str(resident.get("room") or "").strip().lower()
+            care_home = str(resident.get("care_home") or "").strip().lower()
+            full_name = " ".join(part for part in [preferred, surname] if part).strip()
+            searchable_fields = [preferred, surname, full_name, room, care_home]
+            if any(search_lower in field for field in searchable_fields if field):
+                return True
+            if search_tokens and full_name:
+                return all(token in full_name for token in search_tokens)
+            return False
+
         residents = [
             resident
             for resident in residents
-            if search_lower in resident["preferred_name"].lower()
-            or search_lower in resident["surname"].lower()
-            or (resident.get("room") and search_lower in resident["room"])
-            or (resident.get("care_home") and search_lower in resident["care_home"].lower())
+            if resident_matches_search(resident)
         ]
 
     if not residents:
