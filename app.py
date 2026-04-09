@@ -4613,26 +4613,30 @@ def render_active_care_home_custom_banner(care_home_profile: dict) -> bool:
         return False
     escaped_title = html.escape(banner_title)
     escaped_text = html.escape(banner_text)
-    st.markdown('<div class="vm-care-home-custom-banner">', unsafe_allow_html=True)
-    if escaped_title:
-        st.markdown(
-            f'<div class="vm-care-home-custom-banner-title">{escaped_title}</div>',
-            unsafe_allow_html=True,
-        )
-    if escaped_text:
-        st.markdown(
-            f'<div class="vm-care-home-custom-banner-text">{escaped_text}</div>',
-            unsafe_allow_html=True,
-        )
+    has_copy = bool(escaped_title or escaped_text)
+    if has_copy:
+        st.markdown('<div class="vm-care-home-custom-banner">', unsafe_allow_html=True)
+        if escaped_title:
+            st.markdown(
+                f'<div class="vm-care-home-custom-banner-title">{escaped_title}</div>',
+                unsafe_allow_html=True,
+            )
+        if escaped_text:
+            st.markdown(
+                f'<div class="vm-care-home-custom-banner-text">{escaped_text}</div>',
+                unsafe_allow_html=True,
+            )
     if banner_artwork_url:
         # Use browser-side rendering to avoid Streamlit server-side URL fetch limitations.
         safe_artwork_url = html.escape(banner_artwork_url.replace(" ", "%20"), quote=True)
         st.markdown(
             f'<img src="{safe_artwork_url}" alt="Care home custom banner artwork" '
-            'style="display:block;max-width:100%;height:auto;border-radius:6px;" />',
+            'style="display:block;max-width:100%;height:auto;border-radius:6px;margin:0 0 10px 0;" '
+            'onerror="this.style.display=\'none\';" />',
             unsafe_allow_html=True,
         )
-    st.markdown("</div>", unsafe_allow_html=True)
+    if has_copy:
+        st.markdown("</div>", unsafe_allow_html=True)
     return True
 
 
