@@ -12519,6 +12519,18 @@ def main() -> None:
     if route in ("/", "") and pre_auth_route not in ("/", ""):
         route = pre_auth_route
     st.session_state.route = route
+    early_public_route_redirects = {
+        "/pr-home": "/public/walkthrough-overview",
+        "/service-overview": "/public/walkthrough-overview",
+        "/public-docs": "/public/walkthrough-overview",
+        "/public/service-overview": "/public/walkthrough-overview",
+        "/public/how-it-works": "/public/walkthrough-overview",
+        "/public/resident-participation": "/public/walkthrough-overview",
+    }
+    early_public_target = early_public_route_redirects.get(route)
+    if early_public_target:
+        set_route(early_public_target)
+        return
     default_route = normalize_route(get_default_route(app_variant)) or "/"
     if route in ("/", ""):
         target_route = FAMILY_LOGIN_ROUTE if app_variant == VARIANT_FAMILY else default_route
@@ -12794,7 +12806,7 @@ def main() -> None:
     elif route == "/docs":
         render_docs()
     elif route == "/public-docs":
-        redirect_to_public_landing()
+        set_route("/public/walkthrough-overview")
     elif route == "/public/service-overview":
         set_route("/public/walkthrough-overview")
     elif route == "/public/how-it-works":
