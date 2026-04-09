@@ -11324,9 +11324,6 @@ def render_care_hub() -> None:
                         st.warning("No playable family messages are available for this resident.")
                         st.session_state[mobile_play_requested_key] = False
                         st.session_state[mobile_advance_pointer_key] = False
-                if mobile_family_messages_box_open:
-                    st.markdown("</div>", unsafe_allow_html=True)
-
             if latest is None:
                 if selected_contact is not None:
                     latest = fetch_latest_message_for_contact_with_mapping_repair(
@@ -11437,7 +11434,7 @@ def render_care_hub() -> None:
                 and selected_contact is not None
             ):
                 queue_mode_label = "Session order"
-            with st.container(border=True):
+            with st.container(border=not is_mobile_variant):
                 render_care_flow_title(
                     f"Latest family message to resident ({full_name})",
                     "inbound",
@@ -11616,6 +11613,8 @@ def render_care_hub() -> None:
                         # Rerun once after a successful play so the unplayed list updates immediately.
                         st.session_state[mobile_play_requested_key] = False
                         st.rerun()
+            if mobile_family_messages_box_open:
+                st.markdown("</div>", unsafe_allow_html=True)
 
         if is_mobile_variant or is_office_variant:
             with st.container(border=True):
