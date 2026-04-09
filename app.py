@@ -1538,9 +1538,12 @@ def consume_magic_link_callback() -> None:
         ]
     )
     if callback_sig and st.session_state.get("_last_magiclink_callback_sig") == callback_sig:
-        return
-    if callback_sig:
-        st.session_state["_last_magiclink_callback_sig"] = callback_sig
+        has_tokens = bool(
+            st.session_state.get("access_token")
+            and st.session_state.get("refresh_token")
+        )
+        if has_tokens:
+            return
 
     supabase, error = get_supabase_client()
     if error:
@@ -1585,6 +1588,8 @@ def consume_magic_link_callback() -> None:
                         del st.query_params[key]
                 except Exception:
                     pass
+            if callback_sig:
+                st.session_state["_last_magiclink_callback_sig"] = callback_sig
             return
         if auth_code:
             try:
@@ -1684,6 +1689,8 @@ def consume_magic_link_callback() -> None:
                 del st.query_params[key]
         except Exception:
             pass
+    if callback_sig:
+        st.session_state["_last_magiclink_callback_sig"] = callback_sig
 
 
 def normalize_auth_hash_fragment_on_login_routes() -> None:
@@ -8433,6 +8440,50 @@ def render_family_send() -> None:
             resident for resident in residents if resident["id"] == selected_resident_id
         ]
 
+    st.markdown(
+        """
+<style>
+.family-flow-title {
+  width: 100%;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.family-flow-title.resident {
+  background: rgba(47, 107, 79, 0.10);
+  border: 1px solid rgba(47, 107, 79, 0.24);
+}
+.family-flow-title.inbound {
+  background: rgba(44, 130, 201, 0.10);
+  border: 1px solid rgba(44, 130, 201, 0.24);
+}
+.family-flow-title.office {
+  background: rgba(201, 122, 44, 0.10);
+  border: 1px solid rgba(201, 122, 44, 0.24);
+}
+.family-flow-title.practical {
+  background: rgba(163, 90, 150, 0.10);
+  border: 1px solid rgba(163, 90, 150, 0.24);
+}
+.family-flow-title.outbound {
+  background: rgba(46, 142, 117, 0.10);
+  border: 1px solid rgba(46, 142, 117, 0.24);
+}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
+    def render_family_flow_title(text: str, tone: str) -> None:
+        safe_text = html.escape(text)
+        safe_tone = html.escape(tone)
+        st.markdown(
+            f"<div class='family-flow-title {safe_tone}'>{safe_text}</div>",
+            unsafe_allow_html=True,
+        )
+
     send_state = st.session_state.setdefault("family_send_state", {})
     has_pending_recording = any(
         bool((entry or {}).get("recording_bytes"))
@@ -8487,218 +8538,239 @@ def render_family_send() -> None:
         )
         full_name = f"{resident['preferred_name']} {resident['surname']}"
         room_label = f"Room {resident['room']}" if resident.get("room") else ""
+        family_display_name = str(st.session_state.get("family_display_name") or "Family member").strip()
 
-        st.markdown('<div class="vm-resident-card">', unsafe_allow_html=True)
-        st.markdown(f"**{full_name}**")
-        if care_home_name:
-            st.markdown(f"*Care home: {care_home_name}*")
-        if room_label:
-            st.markdown(f"*{room_label}*")
+        with st.container(border=True):
+            render_family_flow_title(
+                f"1. Resident ({full_name})",
+                "resident",
+            )
+            st.markdown(f"**{full_name}**")
+            if care_home_name:
+                st.markdown(f"Care home: {care_home_name}")
+            if room_label:
+                st.markdown(room_label)
 
-        st.markdown(f"**Latest message from {full_name} to Family Members**")
-        latest = fetch_latest_message(
-            resident_id,
-            "from_resident",
-            access_token,
-            family_id=resident.get("family_id") or resident_id,
-            channel="resident_family",
-            include_audio=True,
-        )
-        audio_bytes = decode_audio_payload(latest, access_token=access_token)
-        if audio_bytes:
-            st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
-            resident_sent_label = format_soft_message_period_label(latest.get("recorded_at"))
-            if resident_sent_label:
-                st.caption(resident_sent_label)
-        else:
-            st.markdown(
-                '<div class="vm-muted-line">No new messages.</div>',
-                unsafe_allow_html=True,
+        with st.container(border=True):
+            render_family_flow_title(
+                f"2. Latest message from resident ({full_name}) to family",
+                "inbound",
             )
-
-        st.markdown("**Care Hub update to Family (Office informational message)**")
-        st.caption("Latest office update for this resident. Office updates are informational only.")
-        latest_office_update = fetch_latest_message(
-            resident_id,
-            "office_to_family",
-            access_token,
-            family_id=resident.get("family_id") or resident_id,
-            channel="office_family",
-            include_audio=True,
-        )
-        latest_office_audio = decode_audio_payload(
-            latest_office_update,
-            access_token=access_token,
-        )
-        if latest_office_audio:
-            st.audio(
-                latest_office_audio,
-                format=latest_office_update.get("audio_mime_type") or "audio/wav",
-            )
-            office_soft_label = format_soft_message_period_label(
-                latest_office_update.get("recorded_at")
-            )
-            if office_soft_label:
-                st.caption(office_soft_label)
-        else:
-            st.markdown(
-                '<div class="vm-muted-line">No care hub updates.</div>',
-                unsafe_allow_html=True,
-            )
-
-        practical_message = fetch_latest_open_office_practical_message(
-            resident_id, access_token
-        )
-        if practical_message:
-            practical_message_id = str(practical_message.get("id") or "").strip()
-            practical_context_type = str(
-                practical_message.get("context_type") or OFFICE_PRACTICAL_CONTEXT_GENERAL
-            ).strip()
-            st.markdown("**Office practical message**")
-            st.markdown(
-                f"**{(practical_message.get('title') or 'Practical update').strip()}**"
-            )
-            st.markdown(str(practical_message.get("body") or "").strip())
-            if practical_context_type == OFFICE_PRACTICAL_CONTEXT_VISIT:
-                requested_date = str(practical_message.get("requested_date") or "").strip()
-                requested_time = str(practical_message.get("requested_time_window") or "").strip()
-                if requested_date:
-                    st.caption(f"Requested date: {requested_date}")
-                if requested_time:
-                    st.caption(f"Requested time window: {requested_time}")
-            st.caption("For urgent or medical matters, please call the care home directly.")
-            st.caption("Messages sent here are not monitored for emergencies.")
-            response_options = fetch_office_practical_message_options(
-                practical_message_id, access_token
-            )
-            existing_response = fetch_family_practical_response(
-                practical_message_id,
-                family_user_id,
+            latest = fetch_latest_message(
+                resident_id,
+                "from_resident",
                 access_token,
+                family_id=resident.get("family_id") or resident_id,
+                channel="resident_family",
+                include_audio=True,
             )
-            response_choice = (
-                str((existing_response or {}).get("primary_choice") or "").strip().lower()
-            )
-            choice_labels = ["Yes", "No", "Maybe"]
-            choice_to_value = {"Yes": "yes", "No": "no", "Maybe": "maybe"}
-            default_choice_index = (
-                choice_labels.index(response_choice.title())
-                if response_choice in {"yes", "no", "maybe"}
-                else 0
-            )
-            selected_choice_label = st.radio(
-                "Your response",
-                options=choice_labels,
-                index=default_choice_index,
-                horizontal=True,
-                key=f"family_practical_choice_{resident_id}_{practical_message_id}",
-            )
-            selected_option_ids: list[str] = []
-            existing_selected_option_ids = set(
-                (existing_response or {}).get("selected_option_ids") or []
-            )
-            for option in response_options:
-                option_id = str(option.get("id") or "").strip()
-                option_label = str(option.get("option_label") or "").strip()
-                if not option_id or not option_label:
-                    continue
-                checked = st.checkbox(
-                    option_label,
-                    value=option_id in existing_selected_option_ids,
-                    key=f"family_practical_check_{resident_id}_{practical_message_id}_{option_id}",
-                )
-                if checked:
-                    selected_option_ids.append(option_id)
-            note_value = ""
-            if bool(practical_message.get("allow_note", True)):
-                note_value = st.text_area(
-                    "Add a short note for the office (optional).",
-                    value=str((existing_response or {}).get("note") or ""),
-                    key=f"family_practical_note_{resident_id}_{practical_message_id}",
-                    max_chars=500,
-                )
-            planned_visit_time_value = ""
-            if practical_context_type == OFFICE_PRACTICAL_CONTEXT_VISIT:
-                planned_visit_time_value = st.text_input(
-                    "Planned visit time (optional)",
-                    value=str((existing_response or {}).get("planned_visit_time") or ""),
-                    key=f"family_practical_planned_visit_time_{resident_id}_{practical_message_id}",
-                    placeholder="Example: Saturday about 11am",
-                )
-            share_with_family_value = st.checkbox(
-                "Share this response with all Family Members",
-                value=bool((existing_response or {}).get("share_with_family", False)),
-                key=f"family_practical_share_{resident_id}_{practical_message_id}",
-            )
-            if st.button(
-                "Send response",
-                key=f"family_practical_submit_{resident_id}_{practical_message_id}",
-            ):
-                if not family_user_id:
-                    st.error("Your Family Member mapping could not be found. Please sign in again.")
-                else:
-                    ok, message = upsert_family_practical_response(
-                        practical_message_id,
-                        family_user_id,
-                        choice_to_value.get(selected_choice_label, "maybe"),
-                        note_value,
-                        selected_option_ids,
-                        planned_visit_time_value,
-                        share_with_family_value,
-                        access_token,
-                    )
-                    if ok:
-                        st.success("Response received.")
-                    else:
-                        st.error(message)
-            existing_response = fetch_family_practical_response(
-                practical_message_id,
-                family_user_id,
-                access_token,
-            )
-            shared_responses = fetch_shared_family_practical_responses(
-                practical_message_id,
-                family_user_id,
-                access_token,
-            )
-            if existing_response:
-                own_choice = str(existing_response.get("primary_choice") or "").strip().title()
-                if own_choice:
-                    st.caption(f"Your current response: {own_choice}")
-            st.caption("Shared responses from other Family Members:")
-            if shared_responses:
-                for shared_response in shared_responses:
-                    contact_name = str(shared_response.get("contact_name") or "Family Member")
-                    choice_label = str(shared_response.get("primary_choice") or "").strip().title()
-                    st.markdown(f"- {contact_name}: {choice_label}")
-                    shared_visit = str(shared_response.get("planned_visit_time") or "").strip()
-                    if shared_visit:
-                        st.caption(f"Planned visit: {shared_visit}")
-                    shared_note = str(shared_response.get("note") or "").strip()
-                    if shared_note:
-                        st.caption(f"Note: {shared_note}")
+            audio_bytes = decode_audio_payload(latest, access_token=access_token)
+            if audio_bytes:
+                st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
+                resident_sent_label = format_soft_message_period_label(latest.get("recorded_at"))
+                if resident_sent_label:
+                    st.caption(resident_sent_label)
             else:
-                st.caption("No shared responses yet.")
-        else:
-            st.caption("No open practical office messages for this resident.")
+                st.markdown(
+                    '<div class="vm-muted-line">No new messages.</div>',
+                    unsafe_allow_html=True,
+                )
 
-        st.markdown(f"**Latest message from you to {full_name}**")
-        latest_sent = fetch_latest_message(
-            resident_id,
-            "to_resident",
-            access_token,
-            contact_user_id=st.session_state.get("auth_uid"),
-            channel="resident_family",
-            include_audio=True,
-        )
-        if not latest_sent:
+        with st.container(border=True):
+            render_family_flow_title(
+                "3. Care Hub update to Family (Office informational message)",
+                "office",
+            )
+            st.caption("Latest office update for this resident. Office updates are informational only.")
+            latest_office_update = fetch_latest_message(
+                resident_id,
+                "office_to_family",
+                access_token,
+                family_id=resident.get("family_id") or resident_id,
+                channel="office_family",
+                include_audio=True,
+            )
+            latest_office_audio = decode_audio_payload(
+                latest_office_update,
+                access_token=access_token,
+            )
+            if latest_office_audio:
+                st.audio(
+                    latest_office_audio,
+                    format=latest_office_update.get("audio_mime_type") or "audio/wav",
+                )
+                office_soft_label = format_soft_message_period_label(
+                    latest_office_update.get("recorded_at")
+                )
+                if office_soft_label:
+                    st.caption(office_soft_label)
+            else:
+                st.markdown(
+                    '<div class="vm-muted-line">No care hub updates.</div>',
+                    unsafe_allow_html=True,
+                )
+
+        with st.container(border=True):
+            render_family_flow_title(
+                f"4. Office practical message to resident ({full_name})",
+                "practical",
+            )
+            practical_message = fetch_latest_open_office_practical_message(
+                resident_id, access_token
+            )
+            if practical_message:
+                practical_message_id = str(practical_message.get("id") or "").strip()
+                practical_context_type = str(
+                    practical_message.get("context_type") or OFFICE_PRACTICAL_CONTEXT_GENERAL
+                ).strip()
+                st.markdown(
+                    f"**{(practical_message.get('title') or 'Practical update').strip()}**"
+                )
+                st.markdown(str(practical_message.get("body") or "").strip())
+                if practical_context_type == OFFICE_PRACTICAL_CONTEXT_VISIT:
+                    requested_date = str(practical_message.get("requested_date") or "").strip()
+                    requested_time = str(practical_message.get("requested_time_window") or "").strip()
+                    if requested_date:
+                        st.caption(f"Requested date: {requested_date}")
+                    if requested_time:
+                        st.caption(f"Requested time window: {requested_time}")
+                st.caption("For urgent or medical matters, please call the care home directly.")
+                st.caption("Messages sent here are not monitored for emergencies.")
+                response_options = fetch_office_practical_message_options(
+                    practical_message_id, access_token
+                )
+                existing_response = fetch_family_practical_response(
+                    practical_message_id,
+                    family_user_id,
+                    access_token,
+                )
+                response_choice = (
+                    str((existing_response or {}).get("primary_choice") or "").strip().lower()
+                )
+                choice_labels = ["Yes", "No", "Maybe"]
+                choice_to_value = {"Yes": "yes", "No": "no", "Maybe": "maybe"}
+                default_choice_index = (
+                    choice_labels.index(response_choice.title())
+                    if response_choice in {"yes", "no", "maybe"}
+                    else 0
+                )
+                selected_choice_label = st.radio(
+                    "Your response",
+                    options=choice_labels,
+                    index=default_choice_index,
+                    horizontal=True,
+                    key=f"family_practical_choice_{resident_id}_{practical_message_id}",
+                )
+                selected_option_ids: list[str] = []
+                existing_selected_option_ids = set(
+                    (existing_response or {}).get("selected_option_ids") or []
+                )
+                for option in response_options:
+                    option_id = str(option.get("id") or "").strip()
+                    option_label = str(option.get("option_label") or "").strip()
+                    if not option_id or not option_label:
+                        continue
+                    checked = st.checkbox(
+                        option_label,
+                        value=option_id in existing_selected_option_ids,
+                        key=f"family_practical_check_{resident_id}_{practical_message_id}_{option_id}",
+                    )
+                    if checked:
+                        selected_option_ids.append(option_id)
+                note_value = ""
+                if bool(practical_message.get("allow_note", True)):
+                    note_value = st.text_area(
+                        "Add a short note for the office (optional).",
+                        value=str((existing_response or {}).get("note") or ""),
+                        key=f"family_practical_note_{resident_id}_{practical_message_id}",
+                        max_chars=500,
+                    )
+                planned_visit_time_value = ""
+                if practical_context_type == OFFICE_PRACTICAL_CONTEXT_VISIT:
+                    planned_visit_time_value = st.text_input(
+                        "Planned visit time (optional)",
+                        value=str((existing_response or {}).get("planned_visit_time") or ""),
+                        key=f"family_practical_planned_visit_time_{resident_id}_{practical_message_id}",
+                        placeholder="Example: Saturday about 11am",
+                    )
+                share_with_family_value = st.checkbox(
+                    "Share this response with all Family Members",
+                    value=bool((existing_response or {}).get("share_with_family", False)),
+                    key=f"family_practical_share_{resident_id}_{practical_message_id}",
+                )
+                if st.button(
+                    "Send response",
+                    key=f"family_practical_submit_{resident_id}_{practical_message_id}",
+                ):
+                    if not family_user_id:
+                        st.error("Your Family Member mapping could not be found. Please sign in again.")
+                    else:
+                        ok, message = upsert_family_practical_response(
+                            practical_message_id,
+                            family_user_id,
+                            choice_to_value.get(selected_choice_label, "maybe"),
+                            note_value,
+                            selected_option_ids,
+                            planned_visit_time_value,
+                            share_with_family_value,
+                            access_token,
+                        )
+                        if ok:
+                            st.success("Response received.")
+                        else:
+                            st.error(message)
+                existing_response = fetch_family_practical_response(
+                    practical_message_id,
+                    family_user_id,
+                    access_token,
+                )
+                shared_responses = fetch_shared_family_practical_responses(
+                    practical_message_id,
+                    family_user_id,
+                    access_token,
+                )
+                if existing_response:
+                    own_choice = str(existing_response.get("primary_choice") or "").strip().title()
+                    if own_choice:
+                        st.caption(f"Your current response: {own_choice}")
+                st.caption("Shared responses from other Family Members:")
+                if shared_responses:
+                    for shared_response in shared_responses:
+                        contact_name = str(shared_response.get("contact_name") or "Family Member")
+                        choice_label = str(shared_response.get("primary_choice") or "").strip().title()
+                        st.markdown(f"- {contact_name}: {choice_label}")
+                        shared_visit = str(shared_response.get("planned_visit_time") or "").strip()
+                        if shared_visit:
+                            st.caption(f"Planned visit: {shared_visit}")
+                        shared_note = str(shared_response.get("note") or "").strip()
+                        if shared_note:
+                            st.caption(f"Note: {shared_note}")
+                else:
+                    st.caption("No shared responses yet.")
+            else:
+                st.caption("No open practical office messages for this resident.")
+
+        with st.container(border=True):
+            render_family_flow_title(
+                f"5. Latest message from you ({family_display_name}) to resident ({full_name})",
+                "outbound",
+            )
             latest_sent = fetch_latest_message(
                 resident_id,
                 "to_resident",
                 access_token,
+                contact_user_id=st.session_state.get("auth_uid"),
                 channel="resident_family",
                 include_audio=True,
             )
+            if not latest_sent:
+                latest_sent = fetch_latest_message(
+                    resident_id,
+                    "to_resident",
+                    access_token,
+                    channel="resident_family",
+                    include_audio=True,
+                )
         latest_sent_audio = decode_audio_payload(latest_sent, access_token=access_token)
         last_message = state.get("last_message") or {}
         last_message_audio = last_message.get("audio_preview")
