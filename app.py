@@ -391,8 +391,20 @@ def set_route(route: str) -> None:
 
 
 def get_public_landing_url() -> str:
-    # Always route public back-links to the static marketing homepage.
-    return "https://voicemailcare.com"
+    # Prefer an explicit override, then current app host, so "Back to main public page"
+    # stays inside the active app and avoids legacy cross-site flash redirects.
+    configured_url = str(os.getenv("PUBLIC_LANDING_URL", "") or "").strip()
+    if configured_url:
+        return configured_url
+    try:
+        context = getattr(st, "context", None)
+        current_url = str(getattr(context, "url", "") or "").strip() if context is not None else ""
+        parsed = urlparse(current_url) if current_url else None
+        if parsed and parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}/?route=%2Fpublic%2Fwalkthrough-overview"
+    except Exception:
+        pass
+    return "https://voicemailcare-main.onrender.com/?route=%2Fpublic%2Fwalkthrough-overview"
 
 
 def redirect_to_public_landing() -> None:
@@ -7285,7 +7297,7 @@ OFFICE_LOGIN_ROUTE = "/care-hub/login"
 OFFICE_HOME_ROUTE = "/care-hub/inbox"
 MOBILE_LOGIN_ROUTE = "/care-hub/mobile/login"
 MOBILE_HOME_ROUTE = "/care-hub/mobile/inbox"
-PUBLIC_HOME_ROUTE = "/service-overview"
+PUBLIC_HOME_ROUTE = "/public/walkthrough-overview"
 FAMILY_PUBLIC_ROUTES = {
     "/family/login",
 }
@@ -12725,9 +12737,9 @@ def main() -> None:
     elif route == "/family/contact":
         render_family_contact()
     elif route == "/pr-home":
-        redirect_to_public_landing()
+        set_route("/public/walkthrough-overview")
     elif route == "/service-overview":
-        redirect_to_public_landing()
+        set_route("/public/walkthrough-overview")
     elif route == "/how-it-works/family":
         set_route("/family/how-it-works")
     elif route == "/family/how-it-works":
