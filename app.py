@@ -8440,9 +8440,7 @@ def render_family_send() -> None:
     resident_access_names = [
         f"{resident['preferred_name']} {resident['surname']}" for resident in residents
     ]
-    if len(resident_access_names) == 1:
-        st.caption(f"Registered residents: {resident_access_names[0]}")
-    else:
+    if len(resident_access_names) > 1:
         st.caption("Residents you can access: " + ", ".join(resident_access_names))
         resident_option_ids = [resident["id"] for resident in residents]
         resident_label_by_id = {
