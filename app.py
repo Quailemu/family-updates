@@ -404,7 +404,8 @@ def get_public_landing_url() -> str:
             return f"{parsed.scheme}://{parsed.netloc}/?route=%2Fpublic%2Fwalkthrough-overview"
     except Exception:
         pass
-    return "https://voicemailcare-main.onrender.com/?route=%2Fpublic%2Fwalkthrough-overview"
+    # Final fallback must stay on the current host (no cross-domain redirect).
+    return "/?route=%2Fpublic%2Fwalkthrough-overview"
 
 
 def redirect_to_public_landing() -> None:
