@@ -10721,7 +10721,12 @@ def render_care_hub() -> None:
     with st.container(border=True):
         if runtime_variant == VARIANT_MOBILE:
             render_care_flow_title("Search residents", "resident")
-        search_value = st.text_input("Search residents", key="care_resident_search")
+        search_value = st.text_input(
+            "Search residents",
+            key="care_resident_search",
+            label_visibility="collapsed",
+            placeholder="Search residents",
+        )
     if search_value:
         search_lower = search_value.strip().lower()
         search_tokens = [token for token in search_lower.split() if token]
