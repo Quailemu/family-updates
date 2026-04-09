@@ -12562,13 +12562,6 @@ def main() -> None:
         target_route = FAMILY_LOGIN_ROUTE if app_variant == VARIANT_FAMILY else default_route
         route = target_route
         st.session_state.route = route
-        if hasattr(st, "query_params"):
-            try:
-                current_route_param = normalize_route(st.query_params.get("route", "")) or "/"
-                if current_route_param != route:
-                    st.query_params["route"] = route
-            except Exception:
-                pass
     route_allowlisted = is_route_allowed(app_variant, route)
     if APP_DEBUG:
         print(
