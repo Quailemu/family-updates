@@ -10619,10 +10619,69 @@ def render_care_hub() -> None:
     line-height: 1.4;
     background: rgba(255,255,255,0.6);
   }}
+  .care-flow-title {{
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin: 0 0 8px 0;
+    font-weight: 700;
+    line-height: 1.35;
+  }}
+  .care-flow-title.resident {{
+    background: rgba(47, 107, 79, 0.10);
+    border: 1px solid rgba(47, 107, 79, 0.24);
+  }}
+  .care-flow-title.inbound {{
+    background: rgba(44, 130, 201, 0.10);
+    border: 1px solid rgba(44, 130, 201, 0.24);
+  }}
+  .care-flow-title.office {{
+    background: rgba(201, 122, 44, 0.10);
+    border: 1px solid rgba(201, 122, 44, 0.24);
+  }}
+  .care-flow-title.practical {{
+    background: rgba(163, 90, 150, 0.10);
+    border: 1px solid rgba(163, 90, 150, 0.24);
+  }}
+  .care-flow-title.outbound {{
+    background: rgba(46, 142, 117, 0.10);
+    border: 1px solid rgba(46, 142, 117, 0.24);
+  }}
+  .care-flow-box {{
+    border-radius: 10px;
+    padding: 10px 10px 2px 10px;
+    margin: 0 0 10px 0;
+  }}
+  .care-flow-box.resident {{
+    background: rgba(47, 107, 79, 0.05);
+    border: 1px solid rgba(47, 107, 79, 0.22);
+  }}
+  .care-flow-box.inbound {{
+    background: rgba(44, 130, 201, 0.05);
+    border: 1px solid rgba(44, 130, 201, 0.22);
+  }}
+  .care-flow-box.office {{
+    background: rgba(201, 122, 44, 0.05);
+    border: 1px solid rgba(201, 122, 44, 0.22);
+  }}
+  .care-flow-box.practical {{
+    background: rgba(163, 90, 150, 0.05);
+    border: 1px solid rgba(163, 90, 150, 0.22);
+  }}
+  .care-flow-box.outbound {{
+    background: rgba(46, 142, 117, 0.05);
+    border: 1px solid rgba(46, 142, 117, 0.22);
+  }}
 </style>
 """,
         unsafe_allow_html=True,
     )
+    def render_care_flow_title(text: str, tone: str) -> None:
+        safe_text = html.escape(text)
+        safe_tone = html.escape(tone)
+        st.markdown(
+            f"<div class='care-flow-title {safe_tone}'>{safe_text}</div>",
+            unsafe_allow_html=True,
+        )
     page_title = "Care Hub Mobile" if runtime_variant == VARIANT_MOBILE else "Care Hub Office"
     render_page_header(page_title)
     if runtime_variant == VARIANT_MOBILE:
@@ -10792,10 +10851,16 @@ def render_care_hub() -> None:
         )
         full_name = get_resident_full_name(resident)
         st.markdown('<div class="vm-resident-card">', unsafe_allow_html=True)
-        st.markdown("**Resident:**")
-        st.markdown(
-            f"**{format_resident_identity_label(resident, include_room=True, include_care_home=include_care_home_in_resident_labels, separator=' | ')}**"
-        )
+        st.markdown("<div class='care-flow-box resident'>", unsafe_allow_html=True)
+        render_care_flow_title(f"1. Resident ({full_name})", "resident")
+        st.markdown(f"**{full_name}**")
+        care_home_name = str(resident.get("care_home") or "").strip()
+        if care_home_name:
+            st.markdown(f"Care home: {care_home_name}")
+        room_label = str(resident.get("room") or "").strip()
+        if room_label:
+            st.markdown(f"Room {room_label}")
+        st.markdown("</div>", unsafe_allow_html=True)
 
         contacts = contacts_by_resident.get(resident_id)
         if contacts is None:
@@ -11353,6 +11418,11 @@ def render_care_hub() -> None:
                 and selected_contact is not None
             ):
                 queue_mode_label = "Session order"
+            st.markdown("<div class='care-flow-box inbound'>", unsafe_allow_html=True)
+            render_care_flow_title(
+                f"2. Latest family message to resident ({full_name})",
+                "inbound",
+            )
             if is_queue_playback_variant and queue_mode_label:
                 st.caption(f"Queue mode: {queue_mode_label}")
             if is_mobile_variant:
@@ -11527,8 +11597,14 @@ def render_care_hub() -> None:
                     # Rerun once after a successful play so the unplayed list updates immediately.
                     st.session_state[mobile_play_requested_key] = False
                     st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
         if is_mobile_variant or is_office_variant:
+            st.markdown("<div class='care-flow-box outbound'>", unsafe_allow_html=True)
+            render_care_flow_title(
+                f"3. Latest message from resident ({full_name}) to family",
+                "outbound",
+            )
             st.markdown(f"**Latest message from {full_name} to all Family Members**")
         else:
             st.markdown(f"**Latest message from {full_name} to {selected_contact_name}**")
@@ -11823,10 +11899,15 @@ def render_care_hub() -> None:
                                 int(state.get("recording_input_nonce", 0)) + 1
                             )
                             st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
         if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
-            st.markdown("**Care Hub ↔ Family**")
-            st.caption("Office update to Family")
+            st.markdown("<div class='care-flow-box office'>", unsafe_allow_html=True)
+            render_care_flow_title(
+                "4. Care Hub update to Family (Office informational message)",
+                "office",
+            )
+            st.caption("Latest office update for this resident. Office updates are informational only.")
             latest_office_update = fetch_latest_message(
                 resident_id,
                 "office_to_family",
@@ -12151,8 +12232,14 @@ def render_care_hub() -> None:
                             state["office_last_sent_fingerprint"] = sent_office_fp
                             activate_send_guard(send_guard_scope)
                             st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
             if runtime_variant == VARIANT_OFFICE:
+                st.markdown("<div class='care-flow-box practical'>", unsafe_allow_html=True)
+                render_care_flow_title(
+                    f"5. Office practical message to resident ({full_name})",
+                    "practical",
+                )
                 st.markdown("**Office practical message (structured family reply)**")
                 st.caption(
                     "Use this for low-risk practical communication only (for example visits, events, reminders, attendance, or item requests)."
@@ -12311,6 +12398,7 @@ def render_care_hub() -> None:
                             st.rerun()
                         else:
                             st.error(close_message)
+                st.markdown("</div>", unsafe_allow_html=True)
 
 
     # Navigation rendered at the top of the page.
