@@ -83,6 +83,18 @@ APP_OFFICE_LIVE_REFRESH = os.getenv("APP_OFFICE_LIVE_REFRESH", "0").strip().lowe
 }
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 SUPABASE_AUDIO_BUCKET = os.getenv("SUPABASE_AUDIO_BUCKET", "voice-messages").strip() or "voice-messages"
+MEDIA_BASE_URL = (
+    str(os.getenv("MEDIA_BASE_URL", "https://media.voicemailcare.com") or "").strip().rstrip("/")
+)
+CARE_HOME_BANNER_OBJECT_PATH = (
+    str(os.getenv("CARE_HOME_BANNER_OBJECT_PATH", "banners/office/care-home-banner.png") or "")
+    .strip()
+    .lstrip("/")
+)
+LEGACY_MEDIA_HOST_SUBSTRINGS = (
+    "voice-message.com",
+    "voicemailcare-main.onrender.com",
+)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_TRANSCRIPTION_MODEL = (
     os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe").strip()
@@ -406,6 +418,31 @@ def get_public_landing_url() -> str:
         pass
     # Final fallback must stay on the current host (no cross-domain redirect).
     return "/?route=%2Fpublic%2Fwalkthrough-overview"
+
+
+def _join_media_base_url(object_path: str) -> str:
+    base = str(MEDIA_BASE_URL or "").strip().rstrip("/")
+    path = quote(str(object_path or "").strip().lstrip("/"), safe="/")
+    if not path:
+        return ""
+    if not base:
+        return f"/{path}"
+    return f"{base}/{path}"
+
+
+def normalize_banner_artwork_url(raw_value: object) -> str:
+    raw = str(raw_value or "").strip()
+    if not raw:
+        return ""
+    if re.match(r"^https?://", raw, re.IGNORECASE):
+        parsed = urlparse(raw)
+        host = str(parsed.netloc or "").strip().lower()
+        if any(part in host for part in LEGACY_MEDIA_HOST_SUBSTRINGS):
+            legacy_path = unquote(str(parsed.path or "").strip().lstrip("/"))
+            if legacy_path:
+                return _join_media_base_url(legacy_path)
+        return raw
+    return _join_media_base_url(unquote(raw))
 
 
 def redirect_to_public_landing() -> None:
@@ -4445,7 +4482,9 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
             "name": str(row.get("name") or "").strip(),
             "branding_banner_title": str(row.get("branding_banner_title") or "").strip(),
             "branding_banner_text": str(row.get("branding_banner_text") or "").strip(),
-            "branding_banner_artwork_url": str(row.get("branding_banner_artwork_url") or "").strip(),
+            "branding_banner_artwork_url": normalize_banner_artwork_url(
+                row.get("branding_banner_artwork_url")
+            ),
             "care_hub_idle_timeout_seconds": normalize_care_hub_idle_timeout_seconds(
                 row.get("care_hub_idle_timeout_seconds")
             ),
@@ -4478,7 +4517,7 @@ def update_active_care_home_branding(
     name_value = str(care_home_name or "").strip()
     title_value = str(banner_title or "").strip()
     text_value = str(banner_text or "").strip()
-    artwork_value = str(banner_artwork_url or "").strip()
+    artwork_value = normalize_banner_artwork_url(banner_artwork_url)
     timeout_value = normalize_care_hub_idle_timeout_seconds(care_hub_idle_timeout_seconds)
     transcript_policy_value = normalize_transcript_policy_mode(transcript_policy_mode)
     if not name_value:
@@ -4489,8 +4528,6 @@ def update_active_care_home_branding(
         return False, "Banner title must be 120 characters or fewer."
     if len(text_value) > 800:
         return False, "Banner text must be 800 characters or fewer."
-    if artwork_value and not re.match(r"^https?://", artwork_value, re.IGNORECASE):
-        return False, "Artwork URL must start with http:// or https://"
     if len(artwork_value) > 1000:
         return False, "Artwork URL must be 1000 characters or fewer."
     supabase, error = get_authed_supabase(access_token)
@@ -4531,7 +4568,9 @@ def update_active_care_home_branding(
         persisted_name = str((persisted_profile or {}).get("name") or "").strip()
         persisted_title = str((persisted_profile or {}).get("branding_banner_title") or "").strip()
         persisted_text = str((persisted_profile or {}).get("branding_banner_text") or "").strip()
-        persisted_artwork = str((persisted_profile or {}).get("branding_banner_artwork_url") or "").strip()
+        persisted_artwork = normalize_banner_artwork_url(
+            (persisted_profile or {}).get("branding_banner_artwork_url")
+        )
         persisted_transcript_policy = normalize_transcript_policy_mode(
             (persisted_profile or {}).get("transcript_policy_mode")
         )
@@ -4610,7 +4649,9 @@ def render_active_care_home_custom_banner(care_home_profile: dict) -> bool:
         return False
     banner_title = str(care_home_profile.get("branding_banner_title") or "").strip()
     banner_text = str(care_home_profile.get("branding_banner_text") or "").strip()
-    banner_artwork_url = str(care_home_profile.get("branding_banner_artwork_url") or "").strip()
+    banner_artwork_url = normalize_banner_artwork_url(
+        care_home_profile.get("branding_banner_artwork_url")
+    )
     if not banner_title and not banner_text and not banner_artwork_url:
         return False
     escaped_title = html.escape(banner_title)
@@ -8604,6 +8645,8 @@ def render_family_send() -> None:
                     unsafe_allow_html=True,
                 )
 
+        outbound_section_slot = st.container()
+
         with st.container(border=True):
             render_family_flow_title(
                 "Care Hub update to Family (Office informational message)",
@@ -8640,7 +8683,7 @@ def render_family_send() -> None:
 
         with st.container(border=True):
             render_family_flow_title(
-                f"Office practical message to resident ({full_name})",
+                f"Office practical message to family ({family_display_name})",
                 "practical",
             )
             practical_message = fetch_latest_open_office_practical_message(
@@ -8778,7 +8821,7 @@ def render_family_send() -> None:
             else:
                 st.caption("No open practical office messages for this resident.")
 
-        with st.container(border=True):
+        with outbound_section_slot.container(border=True):
             render_family_flow_title(
                 f"Latest message from you ({family_display_name}) to resident ({full_name})",
                 "outbound",
@@ -9921,8 +9964,17 @@ def render_care_hub_banner_settings() -> None:
             "Banner image URL (optional)",
             value=str(care_home_profile.get("branding_banner_artwork_url") or ""),
             key="office_branding_banner_artwork_url_page",
-            help="Use a full https:// image URL for your logo or banner artwork.",
+            help=(
+                "Use a full https:// URL, or just an object path under MEDIA_BASE_URL "
+                f"(currently {MEDIA_BASE_URL or 'unset'})."
+            ),
         )
+        if MEDIA_BASE_URL:
+            st.caption(
+                "Example banner object path: "
+                f"`{CARE_HOME_BANNER_OBJECT_PATH}` -> "
+                f"`{_join_media_base_url(CARE_HOME_BANNER_OBJECT_PATH)}`"
+            )
         selected_idle_timeout = st.selectbox(
             "Idle sign-out time",
             options=timeout_options,
