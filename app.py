@@ -12517,10 +12517,7 @@ def main() -> None:
             )
         except Exception:
             should_consume_auth_callback = False
-    if (
-        pre_auth_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}
-        or should_consume_auth_callback
-    ):
+    if should_consume_auth_callback or recovered_request_path_auth:
         consume_magic_link_callback()
     route = get_route()
     if route in ("/", "") and pre_auth_route not in ("/", ""):
