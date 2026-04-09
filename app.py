@@ -8421,16 +8421,6 @@ def render_family_send() -> None:
 
     access_token = st.session_state.get("access_token")
     transcript_policy_mode = get_transcript_policy_mode(access_token)
-    if transcript_policy_mode == "precheck":
-        st.caption(
-            "Transcript assist is enabled for this care home. Transcript review is required before Care Hub playback."
-        )
-    elif transcript_policy_mode == "assist":
-        st.caption(
-            "Transcript assist is available when requested. When available, it appears under 'Transcript assist'."
-        )
-    else:
-        st.caption("Transcript assist is off for this care home.")
     care_home_name = fetch_active_care_home_name(access_token)
     family_user_record = get_family_user_for_session(access_token)
     family_user_id = str((family_user_record or {}).get("id") or "").strip()
@@ -8576,7 +8566,7 @@ def render_family_send() -> None:
 
         with st.container(border=True):
             render_family_flow_title(
-                f"1. Resident ({full_name})",
+                f"Resident ({full_name})",
                 "resident",
             )
             st.markdown(f"**{full_name}**")
@@ -8587,7 +8577,7 @@ def render_family_send() -> None:
 
         with st.container(border=True):
             render_family_flow_title(
-                f"2. Latest message from resident ({full_name}) to family",
+                f"Latest message from resident ({full_name}) to family",
                 "inbound",
             )
             latest = fetch_latest_message(
@@ -8612,7 +8602,7 @@ def render_family_send() -> None:
 
         with st.container(border=True):
             render_family_flow_title(
-                "3. Care Hub update to Family (Office informational message)",
+                "Care Hub update to Family (Office informational message)",
                 "office",
             )
             st.caption("Latest office update for this resident. Office updates are informational only.")
@@ -8646,7 +8636,7 @@ def render_family_send() -> None:
 
         with st.container(border=True):
             render_family_flow_title(
-                f"4. Office practical message to resident ({full_name})",
+                f"Office practical message to resident ({full_name})",
                 "practical",
             )
             practical_message = fetch_latest_open_office_practical_message(
@@ -8786,7 +8776,7 @@ def render_family_send() -> None:
 
         st.markdown("<div class='family-flow-box outbound'>", unsafe_allow_html=True)
         render_family_flow_title(
-            f"5. Latest message from you ({family_display_name}) to resident ({full_name})",
+            f"Latest message from you ({family_display_name}) to resident ({full_name})",
             "outbound",
         )
         latest_sent = fetch_latest_message(
@@ -10722,23 +10712,16 @@ def render_care_hub() -> None:
 
     access_token = st.session_state.get("access_token")
     transcript_policy_mode = get_transcript_policy_mode(access_token)
-    if transcript_policy_mode == "precheck":
-        st.caption(
-            "Transcript assist is enabled. Care Hub playback requires transcript review before audio playback."
-        )
-    elif transcript_policy_mode == "assist":
-        st.caption(
-            "Transcript assist can be requested when recording. When available, it appears under 'Transcript assist'."
-        )
-    else:
-        st.caption("Transcript assist is off for this care home.")
     render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
     is_care_queue_variant_screen = runtime_variant in {VARIANT_MOBILE, VARIANT_OFFICE}
     include_care_home_in_resident_labels = runtime_variant == VARIANT_MOBILE
     contacts_by_resident: dict[str, list[dict]] = {}
 
-    search_value = st.text_input("Search residents", key="care_resident_search")
+    with st.container(border=True):
+        if runtime_variant == VARIANT_MOBILE:
+            render_care_flow_title("Search residents", "resident")
+        search_value = st.text_input("Search residents", key="care_resident_search")
     if search_value:
         search_lower = search_value.strip().lower()
         search_tokens = [token for token in search_lower.split() if token]
@@ -10777,12 +10760,10 @@ def render_care_hub() -> None:
                 include_care_home=include_care_home_in_resident_labels,
                 separator=" | ",
             )
+        selected_resident_label = ""
         if len(resident_option_ids) == 1:
             selected_resident_id = resident_option_ids[0]
-            st.caption(
-                "Resident selected: "
-                + resident_label_by_id.get(selected_resident_id, "Resident")
-            )
+            selected_resident_label = resident_label_by_id.get(selected_resident_id, "Resident")
         else:
             selected_resident_id = st.selectbox(
                 "Select resident",
@@ -10790,6 +10771,9 @@ def render_care_hub() -> None:
                 format_func=lambda resident_id: resident_label_by_id.get(resident_id, "Resident"),
                 key="care_selected_resident_id",
             )
+            selected_resident_label = resident_label_by_id.get(selected_resident_id, "Resident")
+        if runtime_variant == VARIANT_MOBILE:
+            st.caption("Resident selected: " + selected_resident_label)
         residents = [
             resident for resident in residents if resident["id"] == selected_resident_id
         ]
@@ -10874,15 +10858,16 @@ def render_care_hub() -> None:
             },
         )
         full_name = get_resident_full_name(resident)
-        with st.container(border=True):
-            render_care_flow_title(f"1. Resident ({full_name})", "resident")
-            st.markdown(f"**{full_name}**")
-            care_home_name = str(resident.get("care_home") or "").strip()
-            if care_home_name:
-                st.markdown(f"Care home: {care_home_name}")
-            room_label = str(resident.get("room") or "").strip()
-            if room_label:
-                st.markdown(f"Room {room_label}")
+        if runtime_variant != VARIANT_MOBILE:
+            with st.container(border=True):
+                render_care_flow_title(f"Resident ({full_name})", "resident")
+                st.markdown(f"**{full_name}**")
+                care_home_name = str(resident.get("care_home") or "").strip()
+                if care_home_name:
+                    st.markdown(f"Care home: {care_home_name}")
+                room_label = str(resident.get("room") or "").strip()
+                if room_label:
+                    st.markdown(f"Room {room_label}")
 
         contacts = contacts_by_resident.get(resident_id)
         if contacts is None:
@@ -10938,9 +10923,6 @@ def render_care_hub() -> None:
             state["selected_contact_id"] = None
             state["selected_contact_user_id"] = None
         elif is_queue_playback_variant:
-            st.caption(
-                "Play messages follows a fixed contact order. Unplayed messages are always first."
-            )
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             keep_current_after_start = bool(st.session_state.get(mobile_play_requested_key, False))
             current_user_id = str(state.get("selected_contact_user_id") or "").strip()
@@ -11179,7 +11161,15 @@ def render_care_hub() -> None:
             contacts_sorted_for_queue = sort_contacts_for_playback(contacts)
             if contacts_sorted_for_queue:
                 effective_queue_next_contact = contacts_sorted_for_queue[0]
+        mobile_family_messages_box_open = False
         if contacts and (is_mobile_variant or is_office_variant):
+            if is_mobile_variant:
+                mobile_family_messages_box_open = True
+                st.markdown("<div class='care-flow-box inbound'>", unsafe_allow_html=True)
+                render_care_flow_title("Family messages", "inbound")
+                st.caption(
+                    "Play messages follows a fixed contact order. Unplayed messages are always first."
+                )
             st.caption(f"Unread family messages: {queue_unread_count}")
             if effective_queue_next_contact:
                 next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
@@ -11329,6 +11319,8 @@ def render_care_hub() -> None:
                         st.warning("No playable family messages are available for this resident.")
                         st.session_state[mobile_play_requested_key] = False
                         st.session_state[mobile_advance_pointer_key] = False
+                if mobile_family_messages_box_open:
+                    st.markdown("</div>", unsafe_allow_html=True)
 
             if latest is None:
                 if selected_contact is not None:
@@ -11442,7 +11434,7 @@ def render_care_hub() -> None:
                 queue_mode_label = "Session order"
             with st.container(border=True):
                 render_care_flow_title(
-                    f"2. Latest family message to resident ({full_name})",
+                    f"Latest family message to resident ({full_name})",
                     "inbound",
                 )
                 if is_queue_playback_variant and queue_mode_label:
@@ -11623,14 +11615,14 @@ def render_care_hub() -> None:
         if is_mobile_variant or is_office_variant:
             with st.container(border=True):
                 render_care_flow_title(
-                    f"3. Latest message from resident ({full_name}) to family",
+                    f"Latest message from resident ({full_name}) to family",
                     "outbound",
                 )
                 st.markdown(f"**Latest message from {full_name} to all Family Members**")
         else:
             with st.container(border=True):
                 render_care_flow_title(
-                    f"3. Latest message from resident ({full_name}) to family",
+                    f"Latest message from resident ({full_name}) to family",
                     "outbound",
                 )
                 st.markdown(f"**Latest message from {full_name} to {selected_contact_name}**")
@@ -11929,7 +11921,7 @@ def render_care_hub() -> None:
         if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
             with st.container(border=True):
                 render_care_flow_title(
-                    "4. Care Hub update to Family (Office informational message)",
+                    "Care Hub update to Family (Office informational message)",
                     "office",
                 )
                 st.caption("Latest office update for this resident. Office updates are informational only.")
@@ -12261,7 +12253,7 @@ def render_care_hub() -> None:
             if runtime_variant == VARIANT_OFFICE:
                 with st.container(border=True):
                     render_care_flow_title(
-                        f"5. Office practical message to resident ({full_name})",
+                        f"Office practical message to resident ({full_name})",
                         "practical",
                     )
                     st.markdown("**Office practical message (structured family reply)**")
