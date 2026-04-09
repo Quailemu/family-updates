@@ -8471,6 +8471,15 @@ def render_family_send() -> None:
   background: rgba(46, 142, 117, 0.10);
   border: 1px solid rgba(46, 142, 117, 0.24);
 }
+.family-flow-box {
+  border-radius: 10px;
+  padding: 10px 10px 2px 10px;
+  margin: 0 0 10px 0;
+}
+.family-flow-box.outbound {
+  background: rgba(46, 142, 117, 0.05);
+  border: 1px solid rgba(46, 142, 117, 0.22);
+}
 </style>
 """,
         unsafe_allow_html=True,
@@ -8750,27 +8759,27 @@ def render_family_send() -> None:
             else:
                 st.caption("No open practical office messages for this resident.")
 
-        with st.container(border=True):
-            render_family_flow_title(
-                f"5. Latest message from you ({family_display_name}) to resident ({full_name})",
-                "outbound",
-            )
+        st.markdown("<div class='family-flow-box outbound'>", unsafe_allow_html=True)
+        render_family_flow_title(
+            f"5. Latest message from you ({family_display_name}) to resident ({full_name})",
+            "outbound",
+        )
+        latest_sent = fetch_latest_message(
+            resident_id,
+            "to_resident",
+            access_token,
+            contact_user_id=st.session_state.get("auth_uid"),
+            channel="resident_family",
+            include_audio=True,
+        )
+        if not latest_sent:
             latest_sent = fetch_latest_message(
                 resident_id,
                 "to_resident",
                 access_token,
-                contact_user_id=st.session_state.get("auth_uid"),
                 channel="resident_family",
                 include_audio=True,
             )
-            if not latest_sent:
-                latest_sent = fetch_latest_message(
-                    resident_id,
-                    "to_resident",
-                    access_token,
-                    channel="resident_family",
-                    include_audio=True,
-                )
         latest_sent_audio = decode_audio_payload(latest_sent, access_token=access_token)
         last_message = state.get("last_message") or {}
         last_message_audio = last_message.get("audio_preview")
@@ -9031,6 +9040,7 @@ def render_family_send() -> None:
                         st.session_state.pop(f"family_upload_{resident_id}", None)
                         st.session_state.pop(f"family_audio_input_{resident_id}", None)
                         st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
     render_action_row(
