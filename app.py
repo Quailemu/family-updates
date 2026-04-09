@@ -10967,44 +10967,43 @@ def render_care_hub() -> None:
                 else:
                     st.session_state[manual_selection_key] = False
                     manual_selected_active = False
-            queue_selected_contact, queue_latest, queue_mode_label = select_next_family_message_for_mobile(
-                resident_id,
-                resident["care_home_id"],
-                contacts,
-                access_token,
-            )
             if selected_contact is None and keep_current_after_start and (current_user_id or current_contact_id):
-                queue_user_id = str((queue_selected_contact or {}).get("auth_user_id") or "").strip()
-                queue_contact_id = str((queue_selected_contact or {}).get("id") or "").strip()
-                if (queue_user_id and queue_user_id == current_user_id) or (
-                    queue_contact_id and queue_contact_id == current_contact_id
-                ):
-                    selected_contact = next(
-                        (
-                            c
-                            for c in contacts
-                            if (
-                                (current_user_id and str(c.get("auth_user_id") or "").strip() == current_user_id)
-                                or (current_contact_id and str(c.get("id") or "").strip() == current_contact_id)
-                            )
-                        ),
-                        None,
-                    )
-                    if selected_contact:
-                        latest = fetch_latest_message_for_contact_with_mapping_repair(
-                            resident_id,
-                            access_token,
-                            selected_contact,
-                            channel="resident_family",
-                            include_audio=True,
+                selected_contact = next(
+                    (
+                        c
+                        for c in contacts
+                        if (
+                            (current_user_id and str(c.get("auth_user_id") or "").strip() == current_user_id)
+                            or (current_contact_id and str(c.get("id") or "").strip() == current_contact_id)
                         )
-                        queue_mode_label = "Session order"
-                    else:
-                        selected_contact, latest = queue_selected_contact, queue_latest
+                    ),
+                    None,
+                )
+                if selected_contact:
+                    queue_mode_label = "Session order"
+
+            if selected_contact is None:
+                if queue_next_contact is not None:
+                    selected_contact = queue_next_contact
+                    queue_mode_label = (
+                        "Unplayed first (round 0)" if queue_unread_count > 0 else "Session order"
+                    )
                 else:
-                    selected_contact, latest = queue_selected_contact, queue_latest
-            elif selected_contact is None:
-                selected_contact, latest = queue_selected_contact, queue_latest
+                    contacts_sorted = sort_contacts_for_playback(contacts)
+                    selected_contact = contacts_sorted[0] if contacts_sorted else None
+                    if selected_contact:
+                        queue_mode_label = "Session order"
+
+            if selected_contact is not None and latest is None:
+                latest = fetch_latest_message_for_contact_with_mapping_repair(
+                    resident_id,
+                    access_token,
+                    selected_contact,
+                    channel="resident_family",
+                    include_audio=True,
+                )
+                if latest is None and not queue_mode_label:
+                    queue_mode_label = "No family messages available."
             state["selected_contact_id"] = (selected_contact or {}).get("id")
             state["selected_contact_user_id"] = (selected_contact or {}).get("auth_user_id")
         elif is_office_variant:
