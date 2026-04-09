@@ -3696,6 +3696,10 @@ def get_contact_last_played_recorded_at(
 ) -> str:
     if not resident_id or not care_home_id or not contact_user_id:
         return ""
+    cache_key = f"contact_last_played_cache::{resident_id}::{care_home_id}::{contact_user_id}"
+    cache = st.session_state.get(cache_key, None)
+    if isinstance(cache, str):
+        return cache
     supabase, error = get_authed_supabase(access_token)
     if error:
         return ""
@@ -3712,8 +3716,11 @@ def get_contact_last_played_recorded_at(
     except Exception:
         return ""
     if not resp.data:
+        st.session_state[cache_key] = ""
         return ""
-    return str(resp.data[0].get("last_played_recorded_at") or "").strip()
+    last_played = str(resp.data[0].get("last_played_recorded_at") or "").strip()
+    st.session_state[cache_key] = last_played
+    return last_played
 
 
 def set_contact_last_played_recorded_at(
@@ -3741,6 +3748,8 @@ def set_contact_last_played_recorded_at(
             payload,
             on_conflict="resident_id,contact_user_id",
         ).execute()
+        cache_key = f"contact_last_played_cache::{resident_id}::{care_home_id}::{contact_user_id}"
+        st.session_state[cache_key] = played_value
     except Exception:
         return
 
@@ -3759,6 +3768,10 @@ def clear_resident_contact_playback_state(
         supabase.table("resident_contact_playback_state").delete().eq(
             "resident_id", resident_id
         ).eq("care_home_id", care_home_id).execute()
+        cache_prefix = f"contact_last_played_cache::{resident_id}::{care_home_id}::"
+        for key in list(st.session_state.keys()):
+            if str(key).startswith(cache_prefix):
+                st.session_state.pop(key, None)
         return True
     except Exception:
         return False
