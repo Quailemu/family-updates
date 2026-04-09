@@ -7316,7 +7316,7 @@ OFFICE_LOGIN_ROUTE = "/care-hub/login"
 OFFICE_HOME_ROUTE = "/care-hub/inbox"
 MOBILE_LOGIN_ROUTE = "/care-hub/mobile/login"
 MOBILE_HOME_ROUTE = "/care-hub/mobile/inbox"
-PUBLIC_HOME_ROUTE = "/public/walkthrough-overview"
+PUBLIC_HOME_ROUTE = "/pr-home"
 FAMILY_PUBLIC_ROUTES = {
     "/family/login",
 }
@@ -12539,8 +12539,7 @@ def main() -> None:
         route = pre_auth_route
     st.session_state.route = route
     early_public_route_redirects = {
-        "/pr-home": "/public/walkthrough-overview",
-        "/service-overview": "/public/walkthrough-overview",
+        "/service-overview": "/pr-home",
         "/public-docs": "/public/walkthrough-overview",
         "/public/service-overview": "/public/walkthrough-overview",
         "/public/how-it-works": "/public/walkthrough-overview",
@@ -12779,9 +12778,9 @@ def main() -> None:
     elif route == "/family/contact":
         render_family_contact()
     elif route == "/pr-home":
-        set_route("/public/walkthrough-overview")
+        render_pr_homepage()
     elif route == "/service-overview":
-        set_route("/public/walkthrough-overview")
+        set_route("/pr-home")
     elif route == "/how-it-works/family":
         set_route("/family/how-it-works")
     elif route == "/family/how-it-works":
@@ -12834,7 +12833,7 @@ def main() -> None:
     elif route == "/public-docs":
         set_route("/public/walkthrough-overview")
     elif route == "/public/service-overview":
-        set_route("/public/walkthrough-overview")
+        set_route("/pr-home")
     elif route == "/public/how-it-works":
         set_route("/public/walkthrough-overview")
     elif route == "/public/resident-participation":
