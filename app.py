@@ -3482,8 +3482,9 @@ def sort_contacts_for_playback(contacts: list[dict]) -> list[dict]:
     return sorted(
         contacts,
         key=lambda c: (
-            str(c.get("full_name") or "").strip().casefold(),
             str(c.get("id") or ""),
+            str(c.get("full_name") or "").strip().casefold(),
+            str(c.get("auth_user_id") or "").strip(),
         ),
     )
 
@@ -8776,287 +8777,286 @@ def render_family_send() -> None:
             else:
                 st.caption("No open practical office messages for this resident.")
 
-        st.markdown("<div class='family-flow-box outbound'>", unsafe_allow_html=True)
-        render_family_flow_title(
-            f"Latest message from you ({family_display_name}) to resident ({full_name})",
-            "outbound",
-        )
-        latest_sent = fetch_latest_message(
-            resident_id,
-            "to_resident",
-            access_token,
-            contact_user_id=st.session_state.get("auth_uid"),
-            channel="resident_family",
-            include_audio=True,
-        )
-        if not latest_sent:
+        with st.container(border=True):
+            render_family_flow_title(
+                f"Latest message from you ({family_display_name}) to resident ({full_name})",
+                "outbound",
+            )
             latest_sent = fetch_latest_message(
                 resident_id,
                 "to_resident",
                 access_token,
+                contact_user_id=st.session_state.get("auth_uid"),
                 channel="resident_family",
                 include_audio=True,
             )
-        latest_sent_audio = decode_audio_payload(latest_sent, access_token=access_token)
-        last_message = state.get("last_message") or {}
-        last_message_audio = last_message.get("audio_preview")
-        if isinstance(last_message_audio, memoryview):
-            last_message_audio = last_message_audio.tobytes()
-        if not isinstance(last_message_audio, (bytes, bytearray)):
-            last_message_audio = None
-        last_message_audio_mime = (
-            str(last_message.get("audio_mime_type") or "").strip() or "audio/wav"
-        )
-        show_recent_send_feedback = bool(last_message and not state.get("recording_bytes"))
-        if latest_sent and not state.get("recording_bytes"):
-            if latest_sent_audio:
-                st.audio(
-                    latest_sent_audio,
-                    format=latest_sent.get("audio_mime_type") or "audio/wav",
+            if not latest_sent:
+                latest_sent = fetch_latest_message(
+                    resident_id,
+                    "to_resident",
+                    access_token,
+                    channel="resident_family",
+                    include_audio=True,
                 )
-            elif last_message_audio:
-                st.audio(last_message_audio, format=last_message_audio_mime)
-                st.caption("Showing a copy of the message you just sent.")
-            else:
-                st.success("Latest Family → Resident message is saved.")
-            latest_sent_at = latest_sent.get("recorded_at")
-            if latest_sent_at and not show_recent_send_feedback:
-                latest_sent_label = format_soft_message_period_label(latest_sent_at)
-                if latest_sent_label:
-                    st.caption(latest_sent_label)
-        if last_message and not state.get("recording_bytes"):
-            sent_at = last_message.get("sent_at")
-            sent_display = format_soft_message_period_label(sent_at) if sent_at else None
-            st.success("Message sent")
-            if last_message_audio:
-                st.audio(last_message_audio, format=last_message_audio_mime)
-            if sent_display:
-                st.caption(sent_display)
-            if st.button(
-                "Record new message (replaces previous)",
-                key=f"family_record_new_{resident_id}",
-            ):
-                state["recording_bytes"] = None
-                state["recording_mime_type"] = "audio/wav"
-                state["recording_fingerprint"] = None
-                reset_outbox_state_on_new_recording(
-                    state,
-                    ack_widget_key=f"family_listened_{resident_id}",
-                )
-                st.session_state.pop(f"family_upload_{resident_id}", None)
-                st.session_state.pop(f"family_audio_input_{resident_id}", None)
-                st.rerun()
-            continue
-
-        native_recording_available = hasattr(st, "audio_input")
-        if native_recording_available:
-            recorded_from_native = st.audio_input(
-                f"Record voice message to {full_name}",
-                key=f"family_audio_input_{resident_id}",
+            latest_sent_audio = decode_audio_payload(latest_sent, access_token=access_token)
+            last_message = state.get("last_message") or {}
+            last_message_audio = last_message.get("audio_preview")
+            if isinstance(last_message_audio, memoryview):
+                last_message_audio = last_message_audio.tobytes()
+            if not isinstance(last_message_audio, (bytes, bytearray)):
+                last_message_audio = None
+            last_message_audio_mime = (
+                str(last_message.get("audio_mime_type") or "").strip() or "audio/wav"
             )
-            render_slow_speech_hint()
-            if recorded_from_native is not None:
-                native_bytes = recorded_from_native.getvalue()
-                if native_bytes:
-                    native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
-                else:
-                    native_fp = None
-                if not native_bytes:
-                    st.warning(
-                        "That recording could not be captured correctly. Please record again."
+            show_recent_send_feedback = bool(last_message and not state.get("recording_bytes"))
+            if latest_sent and not state.get("recording_bytes"):
+                if latest_sent_audio:
+                    st.audio(
+                        latest_sent_audio,
+                        format=latest_sent.get("audio_mime_type") or "audio/wav",
                     )
-                elif native_fp != state.get("recording_fingerprint"):
+                elif last_message_audio:
+                    st.audio(last_message_audio, format=last_message_audio_mime)
+                    st.caption("Showing a copy of the message you just sent.")
+                else:
+                    st.success("Latest Family → Resident message is saved.")
+                latest_sent_at = latest_sent.get("recorded_at")
+                if latest_sent_at and not show_recent_send_feedback:
+                    latest_sent_label = format_soft_message_period_label(latest_sent_at)
+                    if latest_sent_label:
+                        st.caption(latest_sent_label)
+            if last_message and not state.get("recording_bytes"):
+                sent_at = last_message.get("sent_at")
+                sent_display = format_soft_message_period_label(sent_at) if sent_at else None
+                st.success("Message sent")
+                if last_message_audio:
+                    st.audio(last_message_audio, format=last_message_audio_mime)
+                if sent_display:
+                    st.caption(sent_display)
+                if st.button(
+                    "Record new message (replaces previous)",
+                    key=f"family_record_new_{resident_id}",
+                ):
+                    state["recording_bytes"] = None
+                    state["recording_mime_type"] = "audio/wav"
+                    state["recording_fingerprint"] = None
                     reset_outbox_state_on_new_recording(
                         state,
                         ack_widget_key=f"family_listened_{resident_id}",
                     )
-                    state["recording_bytes"] = native_bytes
-                    state["recording_fingerprint"] = native_fp
-                    state["recording_mime_type"] = (
-                        getattr(recorded_from_native, "type", None) or "audio/wav"
-                    )
-        else:
-            st.warning(
-                "Recording is unavailable in this browser. Please allow microphone access."
-            )
-        if state.get("recording_bytes"):
-            st.caption("Captured message preview:")
-            st.audio(
-                state["recording_bytes"],
-                format=state.get("recording_mime_type") or "audio/wav",
-            )
-            if st.button(
-                "Discard recording and try again",
-                key=f"family_discard_recording_{resident_id}",
-                use_container_width=True,
-            ):
-                state["recording_bytes"] = None
-                state["recording_mime_type"] = "audio/wav"
-                state["recording_fingerprint"] = None
-                reset_outbox_state_on_new_recording(
-                    state,
-                    ack_widget_key=f"family_listened_{resident_id}",
-                )
-                st.session_state.pop(f"family_audio_input_{resident_id}", None)
-                st.rerun()
-            state["preview_confirmed"] = st.checkbox(
-                "I have listened to this message.",
-                value=state.get("preview_confirmed", False),
-                key=f"family_listened_{resident_id}",
-            )
-            if transcript_policy_mode == "off":
-                state["transcribe_requested"] = False
-                st.caption("Transcript assist is off for this care home.")
-            elif transcript_policy_mode == "precheck":
-                state["transcribe_requested"] = True
-                st.caption(
-                    "Transcript is required by care home policy before Care Hub playback."
-                )
-            else:
-                state["transcribe_requested"] = st.checkbox(
-                    "Create transcript for accessibility/support",
-                    value=state.get("transcribe_requested", True),
-                    key=f"family_transcribe_{resident_id}",
-                )
-                st.caption(
-                    "Transcript is optional, may contain errors, and replaces with the next message."
-                )
-            ensure_transcript_preview_state(
-                state,
-                state.get("recording_bytes") or b"",
-                state.get("recording_mime_type") or "audio/wav",
-                requested=bool(state.get("transcribe_requested")),
-            )
-            if bool(state.get("transcribe_requested")):
-                transcript_preview_text = str(state.get("transcript_preview_text") or "").strip()
-                transcript_preview_status = str(
-                    state.get("transcript_preview_status") or ""
-                ).strip()
-                transcript_preview_error = str(
-                    state.get("transcript_preview_error") or ""
-                ).strip()
-                if transcript_preview_text and transcript_preview_status == "ready":
-                    st.markdown("**Transcript preview (before send)**")
-                    st.caption("Transcript may contain errors. Voice remains the source of truth.")
-                    st.markdown(transcript_preview_text)
-                elif transcript_preview_status == "failed":
-                    st.warning(
-                        "Transcript preview could not be generated before send."
-                        + (f" {transcript_preview_error}" if transcript_preview_error else "")
-                    )
-        else:
-            state["preview_confirmed"] = False
-            state["transcribe_requested"] = False
-            clear_transcript_preview_state(state)
+                    st.session_state.pop(f"family_upload_{resident_id}", None)
+                    st.session_state.pop(f"family_audio_input_{resident_id}", None)
+                    st.rerun()
+                continue
 
-        confirmation_line = f"Sending to: {full_name}"
-        if room_label:
-            confirmation_line = f"{confirmation_line}, {room_label}"
-        st.markdown(
-            f'<div class="vm-muted-line">{confirmation_line}</div>',
-            unsafe_allow_html=True,
-        )
-
-        can_send = bool(state.get("recording_bytes") and state.get("preview_confirmed"))
-        if st.button(
-            "Send message",
-            key=f"family_send_{resident_id}",
-            disabled=not can_send,
-        ):
-            if not can_send:
-                st.info("Please record and listen before sending.")
+            native_recording_available = hasattr(st, "audio_input")
+            if native_recording_available:
+                recorded_from_native = st.audio_input(
+                    f"Record voice message to {full_name}",
+                    key=f"family_audio_input_{resident_id}",
+                )
+                render_slow_speech_hint()
+                if recorded_from_native is not None:
+                    native_bytes = recorded_from_native.getvalue()
+                    if native_bytes:
+                        native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
+                    else:
+                        native_fp = None
+                    if not native_bytes:
+                        st.warning(
+                            "That recording could not be captured correctly. Please record again."
+                        )
+                    elif native_fp != state.get("recording_fingerprint"):
+                        reset_outbox_state_on_new_recording(
+                            state,
+                            ack_widget_key=f"family_listened_{resident_id}",
+                        )
+                        state["recording_bytes"] = native_bytes
+                        state["recording_fingerprint"] = native_fp
+                        state["recording_mime_type"] = (
+                            getattr(recorded_from_native, "type", None) or "audio/wav"
+                        )
             else:
-                supabase, error = get_authed_supabase(access_token)
-                if error:
-                    st.error(error)
-                else:
-                    audio_bytes = state["recording_bytes"] or b""
-                    audio_mime_type = state.get("recording_mime_type") or "audio/wav"
-                    now_iso = __import__("datetime").datetime.utcnow().isoformat()
-                    audio_object_path, upload_error = upload_audio_to_storage(
-                        audio_bytes,
-                        audio_mime_type,
-                        resident_id=resident_id,
-                        direction="to_resident",
-                    )
-                    use_inline_fallback = not bool(audio_object_path)
-                    if APP_DEBUG and upload_error:
-                        print(f"[audio-upload] to_resident fallback to inline payload: {upload_error}")
-                    payload = {
-                        "resident_id": resident_id,
-                        "contact_user_id": st.session_state.get("auth_uid"),
-                        "family_id": resident.get("family_id") or resident_id,
-                        "channel": "resident_family",
-                        "direction": "to_resident",
-                        "audio_storage_path": (
-                            base64.b64encode(audio_bytes).decode("ascii")
-                            if use_inline_fallback
-                            else ""
-                        ),
-                        "audio_object_path": audio_object_path,
-                        "audio_source": "inline" if use_inline_fallback else "storage",
-                        "audio_mime_type": audio_mime_type,
-                        "audio_bytes": len(audio_bytes),
-                        "recorded_at": now_iso,
-                    }
-                    transcript_fields, transcript_error = build_transcript_fields_from_preview(
+                st.warning(
+                    "Recording is unavailable in this browser. Please allow microphone access."
+                )
+            if state.get("recording_bytes"):
+                st.caption("Captured message preview:")
+                st.audio(
+                    state["recording_bytes"],
+                    format=state.get("recording_mime_type") or "audio/wav",
+                )
+                if st.button(
+                    "Discard recording and try again",
+                    key=f"family_discard_recording_{resident_id}",
+                    use_container_width=True,
+                ):
+                    state["recording_bytes"] = None
+                    state["recording_mime_type"] = "audio/wav"
+                    state["recording_fingerprint"] = None
+                    reset_outbox_state_on_new_recording(
                         state,
-                        audio_bytes,
-                        audio_mime_type,
-                        requested=bool(state.get("transcribe_requested")),
+                        ack_widget_key=f"family_listened_{resident_id}",
                     )
-                    payload.update(transcript_fields)
-                    resp, upsert_error = upsert_latest_message_with_fallback(
-                        supabase,
-                        payload,
-                        "resident_id,contact_user_id,direction,channel",
-                        {
+                    st.session_state.pop(f"family_audio_input_{resident_id}", None)
+                    st.rerun()
+                state["preview_confirmed"] = st.checkbox(
+                    "I have listened to this message.",
+                    value=state.get("preview_confirmed", False),
+                    key=f"family_listened_{resident_id}",
+                )
+                if transcript_policy_mode == "off":
+                    state["transcribe_requested"] = False
+                    st.caption("Transcript assist is off for this care home.")
+                elif transcript_policy_mode == "precheck":
+                    state["transcribe_requested"] = True
+                    st.caption(
+                        "Transcript is required by care home policy before Care Hub playback."
+                    )
+                else:
+                    state["transcribe_requested"] = st.checkbox(
+                        "Create transcript for accessibility/support",
+                        value=state.get("transcribe_requested", True),
+                        key=f"family_transcribe_{resident_id}",
+                    )
+                    st.caption(
+                        "Transcript is optional, may contain errors, and replaces with the next message."
+                    )
+                ensure_transcript_preview_state(
+                    state,
+                    state.get("recording_bytes") or b"",
+                    state.get("recording_mime_type") or "audio/wav",
+                    requested=bool(state.get("transcribe_requested")),
+                )
+                if bool(state.get("transcribe_requested")):
+                    transcript_preview_text = str(state.get("transcript_preview_text") or "").strip()
+                    transcript_preview_status = str(
+                        state.get("transcript_preview_status") or ""
+                    ).strip()
+                    transcript_preview_error = str(
+                        state.get("transcript_preview_error") or ""
+                    ).strip()
+                    if transcript_preview_text and transcript_preview_status == "ready":
+                        st.markdown("**Transcript preview (before send)**")
+                        st.caption("Transcript may contain errors. Voice remains the source of truth.")
+                        st.markdown(transcript_preview_text)
+                    elif transcript_preview_status == "failed":
+                        st.warning(
+                            "Transcript preview could not be generated before send."
+                            + (f" {transcript_preview_error}" if transcript_preview_error else "")
+                        )
+            else:
+                state["preview_confirmed"] = False
+                state["transcribe_requested"] = False
+                clear_transcript_preview_state(state)
+
+            confirmation_line = f"Sending to: {full_name}"
+            if room_label:
+                confirmation_line = f"{confirmation_line}, {room_label}"
+            st.markdown(
+                f'<div class="vm-muted-line">{confirmation_line}</div>',
+                unsafe_allow_html=True,
+            )
+
+            can_send = bool(state.get("recording_bytes") and state.get("preview_confirmed"))
+            if st.button(
+                "Send message",
+                key=f"family_send_{resident_id}",
+                disabled=not can_send,
+            ):
+                if not can_send:
+                    st.info("Please record and listen before sending.")
+                else:
+                    supabase, error = get_authed_supabase(access_token)
+                    if error:
+                        st.error(error)
+                    else:
+                        audio_bytes = state["recording_bytes"] or b""
+                        audio_mime_type = state.get("recording_mime_type") or "audio/wav"
+                        now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                        audio_object_path, upload_error = upload_audio_to_storage(
+                            audio_bytes,
+                            audio_mime_type,
+                            resident_id=resident_id,
+                            direction="to_resident",
+                        )
+                        use_inline_fallback = not bool(audio_object_path)
+                        if APP_DEBUG and upload_error:
+                            print(f"[audio-upload] to_resident fallback to inline payload: {upload_error}")
+                        payload = {
                             "resident_id": resident_id,
                             "contact_user_id": st.session_state.get("auth_uid"),
+                            "family_id": resident.get("family_id") or resident_id,
                             "channel": "resident_family",
                             "direction": "to_resident",
-                        },
-                    )
-                    if upsert_error:
-                        st.error(upsert_error)
-                    else:
-                        if transcript_error and bool(state.get("transcribe_requested")):
-                            st.warning(f"Message sent, but transcript failed: {transcript_error}")
-                        transcript_persist_warning = consume_transcript_persist_warning()
-                        if transcript_persist_warning:
-                            st.warning(transcript_persist_warning)
-                        message_id = (
-                            (
-                                resp.data[0].get("id")
-                                if hasattr(resp, "data")
-                                and isinstance(resp.data, list)
-                                and resp.data
+                            "audio_storage_path": (
+                                base64.b64encode(audio_bytes).decode("ascii")
+                                if use_inline_fallback
+                                else ""
+                            ),
+                            "audio_object_path": audio_object_path,
+                            "audio_source": "inline" if use_inline_fallback else "storage",
+                            "audio_mime_type": audio_mime_type,
+                            "audio_bytes": len(audio_bytes),
+                            "recorded_at": now_iso,
+                        }
+                        transcript_fields, transcript_error = build_transcript_fields_from_preview(
+                            state,
+                            audio_bytes,
+                            audio_mime_type,
+                            requested=bool(state.get("transcribe_requested")),
+                        )
+                        payload.update(transcript_fields)
+                        resp, upsert_error = upsert_latest_message_with_fallback(
+                            supabase,
+                            payload,
+                            "resident_id,contact_user_id,direction,channel",
+                            {
+                                "resident_id": resident_id,
+                                "contact_user_id": st.session_state.get("auth_uid"),
+                                "channel": "resident_family",
+                                "direction": "to_resident",
+                            },
+                        )
+                        if upsert_error:
+                            st.error(upsert_error)
+                        else:
+                            if transcript_error and bool(state.get("transcribe_requested")):
+                                st.warning(f"Message sent, but transcript failed: {transcript_error}")
+                            transcript_persist_warning = consume_transcript_persist_warning()
+                            if transcript_persist_warning:
+                                st.warning(transcript_persist_warning)
+                            message_id = (
+                                (
+                                    resp.data[0].get("id")
+                                    if hasattr(resp, "data")
+                                    and isinstance(resp.data, list)
+                                    and resp.data
+                                    else None
+                                )
+                                if resp is not None
                                 else None
                             )
-                            if resp is not None
-                            else None
-                        )
-                        log_audit_event(
-                            "message_sent",
-                            "family",
-                            resident["care_home_id"],
-                            message_id,
-                        )
-                        bump_message_cache_epoch()
-                        state["recording_bytes"] = None
-                        state["recording_mime_type"] = "audio/wav"
-                        state["preview_confirmed"] = False
-                        state["transcribe_requested"] = False
-                        clear_transcript_preview_state(state)
-                        state["last_message"] = {
-                            "sent_at": now_iso,
-                            "audio_preview": bytes(audio_bytes),
-                            "audio_mime_type": audio_mime_type,
-                        }
-                        st.session_state.pop(f"family_upload_{resident_id}", None)
-                        st.session_state.pop(f"family_audio_input_{resident_id}", None)
-                        st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+                            log_audit_event(
+                                "message_sent",
+                                "family",
+                                resident["care_home_id"],
+                                message_id,
+                            )
+                            bump_message_cache_epoch()
+                            state["recording_bytes"] = None
+                            state["recording_mime_type"] = "audio/wav"
+                            state["preview_confirmed"] = False
+                            state["transcribe_requested"] = False
+                            clear_transcript_preview_state(state)
+                            state["last_message"] = {
+                                "sent_at": now_iso,
+                                "audio_preview": bytes(audio_bytes),
+                                "audio_mime_type": audio_mime_type,
+                            }
+                            st.session_state.pop(f"family_upload_{resident_id}", None)
+                            st.session_state.pop(f"family_audio_input_{resident_id}", None)
+                            st.rerun()
 
 
     render_action_row(
@@ -10720,7 +10720,8 @@ def render_care_hub() -> None:
     include_care_home_in_resident_labels = runtime_variant == VARIANT_MOBILE
     contacts_by_resident: dict[str, list[dict]] = {}
 
-    with st.container(border=True):
+    resident_search_container = st.container(border=True)
+    with resident_search_container:
         if runtime_variant == VARIANT_MOBILE:
             render_care_flow_title("Search residents", "resident")
         search_value = st.text_input(
@@ -10768,19 +10769,20 @@ def render_care_hub() -> None:
                 separator=" | ",
             )
         selected_resident_label = ""
-        if len(resident_option_ids) == 1:
-            selected_resident_id = resident_option_ids[0]
-            selected_resident_label = resident_label_by_id.get(selected_resident_id, "Resident")
-        else:
-            selected_resident_id = st.selectbox(
-                "Select resident",
-                resident_option_ids,
-                format_func=lambda resident_id: resident_label_by_id.get(resident_id, "Resident"),
-                key="care_selected_resident_id",
-            )
-            selected_resident_label = resident_label_by_id.get(selected_resident_id, "Resident")
-        if runtime_variant == VARIANT_MOBILE:
-            st.caption("Resident selected: " + selected_resident_label)
+        with resident_search_container:
+            if len(resident_option_ids) == 1:
+                selected_resident_id = resident_option_ids[0]
+                selected_resident_label = resident_label_by_id.get(selected_resident_id, "Resident")
+            else:
+                selected_resident_id = st.selectbox(
+                    "Select resident",
+                    resident_option_ids,
+                    format_func=lambda resident_id: resident_label_by_id.get(resident_id, "Resident"),
+                    key="care_selected_resident_id",
+                )
+                selected_resident_label = resident_label_by_id.get(selected_resident_id, "Resident")
+            if runtime_variant == VARIANT_MOBILE:
+                st.caption("Resident selected: " + selected_resident_label)
         residents = [
             resident for resident in residents if resident["id"] == selected_resident_id
         ]
@@ -11154,6 +11156,12 @@ def render_care_hub() -> None:
         selected_contact_name = (
             (selected_contact or {}).get("full_name") or "family contact"
         )
+        ordered_contacts_for_queue = sort_contacts_for_playback(contacts)
+        queue_position_by_contact_id = {
+            str(contact.get("id") or "").strip(): idx + 1
+            for idx, contact in enumerate(ordered_contacts_for_queue)
+            if str(contact.get("id") or "").strip()
+        }
         effective_queue_next_contact = queue_next_contact
         if (
             is_mobile_variant
@@ -11164,9 +11172,8 @@ def render_care_hub() -> None:
         if effective_queue_next_contact is None and selected_contact is not None:
             effective_queue_next_contact = selected_contact
         if effective_queue_next_contact is None and contacts:
-            contacts_sorted_for_queue = sort_contacts_for_playback(contacts)
-            if contacts_sorted_for_queue:
-                effective_queue_next_contact = contacts_sorted_for_queue[0]
+            if ordered_contacts_for_queue:
+                effective_queue_next_contact = ordered_contacts_for_queue[0]
         mobile_family_messages_box_open = False
         if contacts and (is_mobile_variant or is_office_variant):
             if is_mobile_variant:
@@ -11180,10 +11187,13 @@ def render_care_hub() -> None:
             if effective_queue_next_contact:
                 next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
                 next_relationship = ((effective_queue_next_contact.get("relationship") or "").strip())
+                next_contact_id = str(effective_queue_next_contact.get("id") or "").strip()
+                next_position = queue_position_by_contact_id.get(next_contact_id)
+                next_prefix = f"{next_position}. " if next_position else ""
                 next_display = (
-                    f"{next_name} ({next_relationship.title()})"
+                    f"{next_prefix}{next_name} ({next_relationship.title()})"
                     if next_relationship
-                    else f"{next_name} (Family Member)"
+                    else f"{next_prefix}{next_name} (Family Member)"
                 )
                 st.caption(f"Next in queue: {next_display}")
             else:
@@ -11193,10 +11203,13 @@ def render_care_hub() -> None:
                 for unread_contact in queue_unread_contacts:
                     unread_name = (unread_contact.get("full_name") or "family contact").strip()
                     unread_relationship = ((unread_contact.get("relationship") or "").strip())
+                    unread_contact_id = str(unread_contact.get("id") or "").strip()
+                    unread_position = queue_position_by_contact_id.get(unread_contact_id)
+                    unread_prefix = f"{unread_position}. " if unread_position else ""
                     unread_display = (
-                        f"{unread_name} ({unread_relationship.title()})"
+                        f"{unread_prefix}{unread_name} ({unread_relationship.title()})"
                         if unread_relationship
-                        else f"{unread_name} (Family Member)"
+                        else f"{unread_prefix}{unread_name} (Family Member)"
                     )
                     st.markdown(f"- {unread_display}")
             send_guard_scope = f"care_send_{resident_id}"
@@ -11208,17 +11221,17 @@ def render_care_hub() -> None:
                     f"({send_guard_remaining}s)"
                 )
 
-            playlist_contacts = sort_contacts_for_playback(contacts)
+            playlist_contacts = ordered_contacts_for_queue
             if playlist_contacts:
                 with st.expander("Select from family playlist"):
                     playlist_options = []
-                    for playlist_contact in playlist_contacts:
+                    for playlist_index, playlist_contact in enumerate(playlist_contacts, start=1):
                         playlist_name = (playlist_contact.get("full_name") or "family contact").strip()
                         playlist_relationship = ((playlist_contact.get("relationship") or "").strip())
                         playlist_label = (
-                            f"{playlist_name} ({playlist_relationship.title()})"
+                            f"{playlist_index}. {playlist_name} ({playlist_relationship.title()})"
                             if playlist_relationship
-                            else f"{playlist_name} (Family Member)"
+                            else f"{playlist_index}. {playlist_name} (Family Member)"
                         )
                         playlist_options.append((playlist_label, playlist_contact))
                     selected_playlist_label = st.selectbox(
@@ -11288,43 +11301,6 @@ def render_care_hub() -> None:
         if is_mobile_variant or is_office_variant:
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
-            if is_mobile_variant:
-                if st.button(
-                    "Play next family message",
-                    key=f"care_play_next_{resident_id}",
-                    disabled=send_guard_active,
-                    use_container_width=True,
-                ):
-                    st.session_state[manual_selection_key] = False
-                    manual_selected_active = False
-                    selected_contact, latest, queue_mode_selected = select_next_family_message_for_mobile(
-                        resident_id,
-                        resident["care_home_id"],
-                        contacts,
-                        access_token,
-                    )
-                    if selected_contact:
-                        latest = fetch_latest_message_for_contact_with_mapping_repair(
-                            resident_id,
-                            access_token,
-                            selected_contact,
-                            channel="resident_family",
-                            include_audio=True,
-                        ) or latest
-                        selected_contact_user_id = str(
-                            (latest or {}).get("contact_user_id")
-                            or selected_contact.get("auth_user_id")
-                            or ""
-                        ).strip()
-                        state["selected_contact_id"] = selected_contact.get("id")
-                        state["selected_contact_user_id"] = selected_contact_user_id
-                        queue_mode_label = queue_mode_selected or "Session order"
-                        st.session_state[mobile_play_requested_key] = True
-                        st.session_state[mobile_advance_pointer_key] = True
-                    else:
-                        st.warning("No playable family messages are available for this resident.")
-                        st.session_state[mobile_play_requested_key] = False
-                        st.session_state[mobile_advance_pointer_key] = False
             if latest is None:
                 if selected_contact is not None:
                     latest = fetch_latest_message_for_contact_with_mapping_repair(
@@ -11429,13 +11405,17 @@ def render_care_hub() -> None:
                 if selected_contact_relationship
                 else f"{selected_contact_name} (Family Member)"
             )
+            selected_contact_id = str((selected_contact or {}).get("id") or "").strip()
+            selected_contact_position = queue_position_by_contact_id.get(selected_contact_id)
+            if selected_contact_position:
+                selected_contact_display = f"{selected_contact_position}. {selected_contact_display}"
             if (
                 is_queue_playback_variant
                 and queue_mode_label == "No family messages available."
                 and selected_contact is not None
             ):
                 queue_mode_label = "Session order"
-            with st.container(border=not is_mobile_variant):
+            with st.container(border=True):
                 render_care_flow_title(
                     f"Latest family message to resident ({full_name})",
                     "inbound",
@@ -11448,8 +11428,45 @@ def render_care_hub() -> None:
                     st.caption(f"Office review playing: {selected_contact_display}")
     
                 st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
+                if is_mobile_variant:
+                    if st.button(
+                        "Play next family message",
+                        key=f"care_play_next_{resident_id}",
+                        disabled=send_guard_active,
+                        use_container_width=True,
+                    ):
+                        st.session_state[manual_selection_key] = False
+                        manual_selected_active = False
+                        selected_contact, latest, queue_mode_selected = select_next_family_message_for_mobile(
+                            resident_id,
+                            resident["care_home_id"],
+                            contacts,
+                            access_token,
+                        )
+                        if selected_contact:
+                            latest = fetch_latest_message_for_contact_with_mapping_repair(
+                                resident_id,
+                                access_token,
+                                selected_contact,
+                                channel="resident_family",
+                                include_audio=True,
+                            ) or latest
+                            selected_contact_user_id = str(
+                                (latest or {}).get("contact_user_id")
+                                or selected_contact.get("auth_user_id")
+                                or ""
+                            ).strip()
+                            state["selected_contact_id"] = selected_contact.get("id")
+                            state["selected_contact_user_id"] = selected_contact_user_id
+                            queue_mode_label = queue_mode_selected or "Session order"
+                            st.session_state[mobile_play_requested_key] = True
+                            st.session_state[mobile_advance_pointer_key] = True
+                        else:
+                            st.warning("No playable family messages are available for this resident.")
+                            st.session_state[mobile_play_requested_key] = False
+                            st.session_state[mobile_advance_pointer_key] = False
                 mobile_play_requested = bool(st.session_state.get(mobile_play_requested_key, False))
-                should_attempt_playback = (not is_mobile_variant) or mobile_play_requested
+                should_attempt_playback = (not is_mobile_variant) or mobile_play_requested or bool(latest)
                 playback_source = None
                 playback_source_kind = "none"
                 should_show_message = should_attempt_playback
@@ -12530,13 +12547,27 @@ def main() -> None:
     }
     early_public_target = early_public_route_redirects.get(route)
     if early_public_target:
-        set_route(early_public_target)
-        return
+        route = early_public_target
+        st.session_state.route = route
+        if hasattr(st, "query_params"):
+            try:
+                current_route_param = normalize_route(st.query_params.get("route", "")) or "/"
+                if current_route_param != route:
+                    st.query_params["route"] = route
+            except Exception:
+                pass
     default_route = normalize_route(get_default_route(app_variant)) or "/"
     if route in ("/", ""):
         target_route = FAMILY_LOGIN_ROUTE if app_variant == VARIANT_FAMILY else default_route
-        set_route(target_route)
-        return
+        route = target_route
+        st.session_state.route = route
+        if hasattr(st, "query_params"):
+            try:
+                current_route_param = normalize_route(st.query_params.get("route", "")) or "/"
+                if current_route_param != route:
+                    st.query_params["route"] = route
+            except Exception:
+                pass
     route_allowlisted = is_route_allowed(app_variant, route)
     if APP_DEBUG:
         print(
