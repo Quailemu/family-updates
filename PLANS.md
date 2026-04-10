@@ -15,6 +15,9 @@ Homepage buttons (only):
 Canonical interface sentence:
 The platform has three app interfaces: Family Hub, Care Hub – Mobile, and Care Hub – Office.
 
+How-it-works diagram note (public-facing):
+The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub – Mobile, and Care Hub – Office.
+
 Homepage public info copy (before feedback section):
 ## Familiar voices
 A simple communication tool for care homes, residents, and their families.

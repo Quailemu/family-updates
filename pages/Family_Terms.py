@@ -8,7 +8,7 @@ st.markdown(
 Version 1.0  
 Effective Date: [Insert Date]
 
-These Terms apply to individuals using the Family app provided through a participating care home.
+These Terms apply to individuals using Family Hub provided through a participating care home.
 
 By accessing or using the service, you agree to these Terms.
 

@@ -10,9 +10,9 @@ Communication participants: residents, Family Members, and Care Hub channels (Of
 
 Start with the diagram. It shows the communication channels and message directions.
 
-## The three app interfaces
+## The three service access paths
 
-- Family Hub
+- Family Hub (Multi-Channel)
 - Care Hub - Mobile
 - Care Hub - Office
 

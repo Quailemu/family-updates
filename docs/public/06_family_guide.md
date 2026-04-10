@@ -8,7 +8,7 @@
 
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
-## What this app is for
+## What Family Hub is for
 
 Family Hub is for Family Members granted by the care home.  
 It supports:

@@ -10,9 +10,9 @@ This guide explains how voicemailcare.com is used for simple, non-urgent social 
 
 It sets out how the service works and its intended use.
 
-## App Version
-Families and friends use the **Family app only**.
-The Family app does not include Care Hub features.
+## Access Version
+Families and friends use the **Family Hub only**.
+Family Hub does not include Care Hub features.
 
 ## How the Service Works
 

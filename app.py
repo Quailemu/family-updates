@@ -2840,7 +2840,7 @@ def render_how_it_works_diagram_and_notes() -> None:
     else:
         st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
     st.markdown(
-        "- The diagram shows the three app interfaces: Family, Care Hub – Mobile, and Care Hub – Office.\n"
+        "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub – Mobile, and Care Hub – Office.\n"
         "- Each Family Member has their own individual communication channel to the resident.\n"
         "- Office practical messages collect quick structured family responses to support efficient, inclusive practical decision-making.\n"
         "- The care home reviews responses and makes the final operational decision.\n"
@@ -2880,7 +2880,7 @@ def render_how_it_works_video_links(
 
 
 def render_how_it_works_family() -> None:
-    render_page_header("How it works — Family")
+    render_page_header("How it works — Family Hub")
     render_how_it_works_cartoon()
     st.markdown(
         """
@@ -2906,14 +2906,14 @@ def render_how_it_works_family() -> None:
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
-    render_how_it_works_video_links("Family", "/public/walkthrough-family", "how_family")
+    render_how_it_works_video_links("Family Hub", "/public/walkthrough-family", "how_family")
     render_how_it_works_diagram_and_notes()
     family_back_route = (
         get_home_route(VARIANT_FAMILY)
         if st.session_state.get("auth_uid")
         else get_login_route(VARIANT_FAMILY)
     )
-    render_route_link("Back to Family", family_back_route, key="family_how_it_works_back_link")
+    render_route_link("Back to Family Hub", family_back_route, key="family_how_it_works_back_link")
 
 
 def render_how_it_works_mobile() -> None:
@@ -3085,7 +3085,7 @@ def render_family_terms() -> None:
         if st.session_state.get("auth_uid")
         else get_login_route(VARIANT_FAMILY)
     )
-    render_route_link("Back to Family", family_back_route, key="family_terms_back_link")
+    render_route_link("Back to Family Hub", family_back_route, key="family_terms_back_link")
 
 
 def render_family_contact() -> None:
@@ -7146,7 +7146,7 @@ def render_home(active: str) -> None:
         else:
             st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
         st.markdown(
-            "- The diagram shows the three app interfaces: Family, Care Hub – Mobile, and Care Hub – Office.\n"
+            "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub – Mobile, and Care Hub – Office.\n"
             "- Each family member has their own individual communication channel to the resident, managed by the care home.\n"
             "- Office practical messages collect quick structured family responses to support efficient, inclusive practical decision-making.\n"
             "- The care home reviews responses and makes the final operational decision.\n"
@@ -13051,3 +13051,4 @@ if __name__ == "__main__":
         st.error("Application error while rendering.")
         st.error(str(exc))
         st.exception(exc)
+
