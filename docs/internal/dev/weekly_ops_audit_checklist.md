@@ -22,9 +22,11 @@ Frequency: once per week (and again after any production deployment).
 
 - Verify all public walkthrough video URLs load directly in browser.
 - Confirm these app walkthrough env vars point to `media.voicemailcare.com`:
-  - `PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL`
-  - `PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL`
-  - `PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL`
+  - `PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL`
+  - `PUBLIC_FAMILY_RECORD_VIDEO_URL`
+  - `PUBLIC_MOBILE_RECORD_VIDEO_URL`
+  - `PUBLIC_OFFICE_RECORD_VIDEO_URL`
+- Quick test URL: `https://media.voicemailcare.com/video-walkthrough.mp4`
 - Confirm service-flow walkthrough URLs are still correct and working.
 - Remove duplicate or obsolete large video uploads when safe.
 

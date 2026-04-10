@@ -86,6 +86,11 @@ SUPABASE_AUDIO_BUCKET = os.getenv("SUPABASE_AUDIO_BUCKET", "voice-messages").str
 MEDIA_BASE_URL = (
     str(os.getenv("MEDIA_BASE_URL", "https://media.voicemailcare.com") or "").strip().rstrip("/")
 )
+MEDIA_TEST_VIDEO_OBJECT_PATH = (
+    str(os.getenv("MEDIA_TEST_VIDEO_OBJECT_PATH", "video-walkthrough.mp4") or "")
+    .strip()
+    .lstrip("/")
+)
 CARE_HOME_BANNER_OBJECT_PATH = (
     str(os.getenv("CARE_HOME_BANNER_OBJECT_PATH", "banners/office/care-home-banner.png") or "")
     .strip()
@@ -7082,7 +7087,7 @@ def render_home(active: str) -> None:
                 "Family",
                 "For families and friends to send and hear non-urgent messages.",
                 "/public/walkthrough-family",
-                "PUBLIC_FAMILY_RECORD_VIDEO_URL,PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_FAMILY_URL",
+                "PUBLIC_FAMILY_RECORD_VIDEO_URL",
                 "assets/voice-message-family-walkthrough-v1.mp4",
             ),
             (
@@ -7090,7 +7095,7 @@ def render_home(active: str) -> None:
                 "Care Hub – Mobile",
                 "For care staff to play family messages and support resident recordings.",
                 "/public/walkthrough-mobile",
-                "PUBLIC_MOBILE_RECORD_VIDEO_URL,PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_MOBILE_URL",
+                "PUBLIC_MOBILE_RECORD_VIDEO_URL",
                 "assets/voice-message-mobile-walkthrough-v1.mp4",
             ),
             (
@@ -7098,7 +7103,7 @@ def render_home(active: str) -> None:
                 "Care Hub – Office",
                 "For office oversight, one-way updates, and practical structured messages.",
                 "/public/walkthrough-office",
-                "PUBLIC_OFFICE_RECORD_VIDEO_URL,PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_OFFICE_URL",
+                "PUBLIC_OFFICE_RECORD_VIDEO_URL",
                 "assets/voice-message-office-walkthrough-v1.mp4",
             ),
         ]
@@ -7302,7 +7307,7 @@ def render_home(active: str) -> None:
             )
             st.markdown("### Start here: Service flow overview (90 seconds)")
             overview_video = resolve_public_video_source(
-                "PUBLIC_VIDEO_OVERVIEW_URL",
+                "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
                 "assets/voice-message-flow-overview-v1.mp4",
             )
             if overview_video:
@@ -7942,10 +7947,31 @@ def normalize_public_video_url(raw_value: str) -> str:
     # Strip accidental wrapping quotes.
     if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
         value = value[1:-1].strip()
-    return value
+    if not value:
+        return ""
+    if re.match(r"^https?://", value, re.IGNORECASE):
+        parsed = urlparse(value)
+        host = str(parsed.netloc or "").strip().lower()
+        if any(part in host for part in LEGACY_MEDIA_HOST_SUBSTRINGS):
+            media_path = unquote(str(parsed.path or "").strip().lstrip("/"))
+            if media_path:
+                return _join_media_base_url(media_path)
+        return value
+    # Allow object-path values like "video-walkthrough.mp4".
+    return _join_media_base_url(unquote(value))
 
 
 DEFAULT_PUBLIC_VIDEO_URLS: dict[str, str] = {}
+if MEDIA_TEST_VIDEO_OBJECT_PATH:
+    _default_test_video_url = _join_media_base_url(MEDIA_TEST_VIDEO_OBJECT_PATH)
+    DEFAULT_PUBLIC_VIDEO_URLS.update(
+        {
+            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL": _default_test_video_url,
+            "PUBLIC_FAMILY_RECORD_VIDEO_URL": _default_test_video_url,
+            "PUBLIC_MOBILE_RECORD_VIDEO_URL": _default_test_video_url,
+            "PUBLIC_OFFICE_RECORD_VIDEO_URL": _default_test_video_url,
+        }
+    )
 
 
 def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
@@ -12940,7 +12966,7 @@ def main() -> None:
     elif route == "/public/walkthrough-family":
         render_public_walkthrough_page(
             "Family Record video",
-            "PUBLIC_FAMILY_RECORD_VIDEO_URL,PUBLIC_VIDEO_FAMILY_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_FAMILY_URL",
+            "PUBLIC_FAMILY_RECORD_VIDEO_URL",
             "assets/voice-message-family-walkthrough-v1.mp4",
             [
                 "How a Family Member sends Family -> Resident voice messages.",
@@ -12953,7 +12979,7 @@ def main() -> None:
     elif route == "/public/walkthrough-family-flow":
         render_public_walkthrough_page(
             "Family Diagram video",
-            "PUBLIC_FAMILY_DIAGRAM_VIDEO_URL,PUBLIC_VIDEO_FAMILY_FLOW_WALKTHROUGH_URL",
+            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
             "assets/voice-message-family-walkthrough-v1.mp4",
             [
                 "How Family fits into the overall service flow diagram.",
@@ -12966,7 +12992,7 @@ def main() -> None:
     elif route == "/public/walkthrough-overview":
         render_public_walkthrough_page(
             "Universal Diagram video",
-            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL,PUBLIC_VIDEO_OVERVIEW_URL",
+            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
             "assets/voice-message-flow-overview-v1.mp4",
             [
                 "How the overall service flow works across the three app interfaces.",
@@ -12978,7 +13004,7 @@ def main() -> None:
     elif route == "/public/walkthrough-mobile":
         render_public_walkthrough_page(
             "Care Hub – Mobile Record video",
-            "PUBLIC_MOBILE_RECORD_VIDEO_URL,PUBLIC_VIDEO_MOBILE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_MOBILE_URL",
+            "PUBLIC_MOBILE_RECORD_VIDEO_URL",
             "assets/voice-message-mobile-walkthrough-v1.mp4",
             [
                 "How staff play Family -> Resident messages to the resident.",
@@ -12991,7 +13017,7 @@ def main() -> None:
     elif route == "/public/walkthrough-mobile-flow":
         render_public_walkthrough_page(
             "Care Hub – Mobile Diagram video",
-            "PUBLIC_MOBILE_DIAGRAM_VIDEO_URL,PUBLIC_VIDEO_MOBILE_FLOW_WALKTHROUGH_URL",
+            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
             "assets/voice-message-mobile-walkthrough-v1.mp4",
             [
                 "How Mobile sits within the service flow diagram.",
@@ -13004,7 +13030,7 @@ def main() -> None:
     elif route == "/public/walkthrough-office":
         render_public_walkthrough_page(
             "Care Hub – Office Record video",
-            "PUBLIC_OFFICE_RECORD_VIDEO_URL,PUBLIC_VIDEO_OFFICE_APP_WALKTHROUGH_URL,PUBLIC_VIDEO_OFFICE_URL",
+            "PUBLIC_OFFICE_RECORD_VIDEO_URL",
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
                 "How Office reviews resident-linked family messages.",
@@ -13017,7 +13043,7 @@ def main() -> None:
     elif route == "/public/walkthrough-office-flow":
         render_public_walkthrough_page(
             "Care Hub – Office Diagram video",
-            "PUBLIC_OFFICE_DIAGRAM_VIDEO_URL,PUBLIC_VIDEO_OFFICE_FLOW_WALKTHROUGH_URL",
+            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
                 "How Office governance and oversight appear in the service flow diagram.",
