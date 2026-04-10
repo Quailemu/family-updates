@@ -9622,166 +9622,61 @@ def render_pr_homepage() -> None:
     st.markdown(
         """
         <style>
-        .pr-root {
-            background: #FAF6EE;
-            color: #2B2B2B;
-        }
-        .pr-wrap {
-            max-width: 960px;
+        .vm-home-shell {
+            max-width: 980px;
             margin: 0 auto;
-            padding: 28px 20px 32px;
+            padding: 18px 14px 24px;
         }
-        .pr-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding-bottom: 14px;
+        .vm-home-card {
+            background: #ffffff;
+            border: 1px solid rgba(31, 31, 31, 0.12);
+            border-radius: 14px;
+            padding: 14px;
         }
-        .pr-header-title {
-            font-size: 26px;
+        .vm-home-brand {
+            margin: 0 0 8px 0;
+            font-size: 1.05rem;
             font-weight: 700;
-            color: #2B2B2B;
+            color: #1f1f1f;
         }
-        .pr-hero {
-            text-align: center;
-            padding: 10px 0 18px;
-        }
-        .pr-hero h1 {
-            font-size: 38px;
-            font-weight: 800;
-            margin: 8px 0 6px;
-        }
-        .pr-subheading {
-            font-size: 18px;
-            color: #2B2B2B;
-            margin-bottom: 4px;
-        }
-        .pr-calm {
-            font-size: 14px;
-            color: #6B7280;
-            margin-bottom: 14px;
-        }
-        .pr-explain {
-            max-width: 720px;
-            margin: 0 auto;
-            font-size: 15px;
-            color: #2B2B2B;
-            line-height: 1.55;
-        }
-        .pr-buttons .stButton > button {
-            background: #D6E8F5 !important;
-            color: #2B2B2B !important;
-            border: 1px solid #EDE6DC !important;
-            font-weight: 600 !important;
-        }
-        .pr-buttons .stButton > button:hover {
-            background: #C4DFF1 !important;
-        }
-        .pr-buttons .stButton > button:active {
-            background: #BBD4E6 !important;
-        }
-        .pr-content {
-            margin-top: 14px;
-            margin-bottom: 22px;
-            color: #2B2B2B;
-            line-height: 1.6;
-        }
-        .pr-footer {
-            text-align: center;
-            color: #6B7280;
-            font-size: 13px;
-            margin-top: 12px;
-        }
-        .pr-footer a {
-            color: #6B7280;
-            text-decoration: none;
-            padding: 0 4px;
-        }
-        .pr-footer a:hover {
-            color: #2B2B2B;
+        .vm-home-caption {
+            margin: 8px 0 0 0;
+            color: #4b5563;
+            font-size: 0.93rem;
         }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    st.markdown('<div class="pr-root">', unsafe_allow_html=True)
-    st.markdown('<div class="pr-wrap">', unsafe_allow_html=True)
-
-    logo_path = Path(__file__).resolve().parent / "assets" / "logo.png"
-    header_cols = st.columns([0.12, 0.88], gap="small")
-    with header_cols[0]:
-        if logo_path.exists():
-            st.image(logo_path.read_bytes(), width=64)
-    with header_cols[1]:
-        st.markdown('<div class="pr-header-title">voicemailcare.com</div>', unsafe_allow_html=True)
-
-    st.markdown('<div class="pr-hero">', unsafe_allow_html=True)
-    st.markdown("<h1>One message in. One message out.</h1>", unsafe_allow_html=True)
+    st.markdown('<div class="vm-home-shell">', unsafe_allow_html=True)
+    st.markdown('<div class="vm-home-card">', unsafe_allow_html=True)
+    st.markdown('<p class="vm-home-brand">voicemailcare.com</p>', unsafe_allow_html=True)
+    cartoon_path = Path(__file__).resolve().parent / "site" / "assets" / "cartoon-voicemailcare.png"
+    if cartoon_path.exists():
+        st.image(cartoon_path.read_bytes(), use_container_width=True)
+    else:
+        st.caption("Landing artwork missing: site/assets/cartoon-voicemailcare.png")
     st.markdown(
-        '<div class="pr-subheading">Non-urgent social voice messages between residents and Family Members, with optional structured Office practical replies.</div>',
+        '<p class="vm-home-caption">Choose an interface to continue.</p>',
         unsafe_allow_html=True,
     )
-    st.markdown('<div class="pr-calm">No threads. No pressure.</div>', unsafe_allow_html=True)
-    diagram_path = Path(__file__).resolve().parent / "assets" / "voice-message-flow-diagram.png"
-    if diagram_path.exists():
-        st.image(
-            diagram_path.read_bytes(),
-            use_container_width=True,
-        )
-    st.markdown(
-        """
-<div class="pr-explain">
-Each channel keeps only the latest message.<br />
-A new message replaces the previous message in that channel.<br />
-Office general updates are one-way; Office practical messages allow structured family replies (Yes/No/Maybe, optional tick-boxes, optional short note).<br />
-For urgent, medical, safeguarding, or emergency matters, contact the care home directly.
-</div>
-""",
-        unsafe_allow_html=True,
-    )
+
+    action_cols = st.columns(3, gap="small")
+    with action_cols[0]:
+        if st.button("Family", key="pr_entry_family", use_container_width=True):
+            set_route(FAMILY_LOGIN_ROUTE)
+            st.stop()
+    with action_cols[1]:
+        if st.button("Care Hub - Mobile", key="pr_entry_mobile", use_container_width=True):
+            set_route(MOBILE_LOGIN_ROUTE)
+            st.stop()
+    with action_cols[2]:
+        if st.button("Care Hub - Office", key="pr_entry_office", use_container_width=True):
+            set_route(OFFICE_LOGIN_ROUTE)
+            st.stop()
     st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown('<div class="pr-content">', unsafe_allow_html=True)
-    info_cols = st.columns(3, gap="small")
-    with info_cols[0]:
-        if st.button("Learn about Family Hub", key="pr_info_family", use_container_width=True):
-            set_route("/public/walkthrough-family")
-            st.stop()
-    with info_cols[1]:
-        if st.button("Learn about Care Hub - Mobile", key="pr_info_mobile", use_container_width=True):
-            set_route("/public/walkthrough-mobile")
-            st.stop()
-    with info_cols[2]:
-        if st.button("Learn about Care Hub - Office", key="pr_info_office", use_container_width=True):
-            set_route("/public/walkthrough-office")
-            st.stop()
-    st.markdown(
-        "**Family Hub**: non-urgent social voice messages between Family Members and residents, "
-        "plus structured replies to Office practical messages."
-    )
-    st.markdown(
-        "**Care Hub - Mobile**: staff-assisted playback and resident recording support, including fair rotating "
-        "playback with unplayed family messages first."
-    )
-    st.markdown(
-        "**Care Hub - Office**: governance and oversight, one-way general family updates, and practical messages "
-        "with structured family responses."
-    )
     st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown(
-        """
-<div class="pr-footer">
-<a href="?route=/public/privacy-notice">Privacy Notice</a> ·
-<a href="?route=/public/safeguarding-and-consent">Safeguarding &amp; Consent</a> ·
-<a href="?route=/public/complaints-and-concerns">Complaints &amp; Concerns</a>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("</div></div>", unsafe_allow_html=True)
 
 
 def render_care_hub_banner_settings() -> None:
