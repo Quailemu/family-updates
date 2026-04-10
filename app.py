@@ -11116,130 +11116,244 @@ def render_care_hub() -> None:
         if effective_queue_next_contact is None and contacts:
             if ordered_contacts_for_queue:
                 effective_queue_next_contact = ordered_contacts_for_queue[0]
-        mobile_family_messages_box_open = False
         if contacts and (is_mobile_variant or is_office_variant):
             if is_mobile_variant:
-                mobile_family_messages_box_open = True
-                st.markdown("<div class='care-flow-box inbound'>", unsafe_allow_html=True)
-                render_care_flow_title("Family messages", "inbound")
-                st.caption(
-                    "Play messages follows a fixed contact order. Unplayed messages are always first."
-                )
-            st.caption(f"Unread family messages: {queue_unread_count}")
-            if effective_queue_next_contact:
-                next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
-                next_relationship = ((effective_queue_next_contact.get("relationship") or "").strip())
-                next_contact_id = str(effective_queue_next_contact.get("id") or "").strip()
-                next_position = queue_position_by_contact_id.get(next_contact_id)
-                next_prefix = f"{next_position}. " if next_position else ""
-                next_display = (
-                    f"{next_prefix}{next_name} ({next_relationship.title()})"
-                    if next_relationship
-                    else f"{next_prefix}{next_name} (Family Member)"
-                )
-                st.caption(f"Next in queue: {next_display}")
-            else:
-                st.caption("Next in queue: none")
-            if queue_unread_contacts:
-                st.caption("Unplayed list:")
-                for unread_contact in queue_unread_contacts:
-                    unread_name = (unread_contact.get("full_name") or "family contact").strip()
-                    unread_relationship = ((unread_contact.get("relationship") or "").strip())
-                    unread_contact_id = str(unread_contact.get("id") or "").strip()
-                    unread_position = queue_position_by_contact_id.get(unread_contact_id)
-                    unread_prefix = f"{unread_position}. " if unread_position else ""
-                    unread_display = (
-                        f"{unread_prefix}{unread_name} ({unread_relationship.title()})"
-                        if unread_relationship
-                        else f"{unread_prefix}{unread_name} (Family Member)"
+                with st.container(border=True):
+                    render_care_flow_title("Family messages", "inbound")
+                    st.caption(
+                        "Play messages follows a fixed contact order. Unplayed messages are always first."
                     )
-                    st.markdown(f"- {unread_display}")
-            send_guard_scope = f"care_send_{resident_id}"
-            send_guard_remaining = get_send_guard_remaining_seconds(send_guard_scope)
-            send_guard_active = send_guard_remaining > 0
-            if send_guard_active:
-                st.warning(
-                    "Please wait until you see the sent confirmation before playing another message. "
-                    f"({send_guard_remaining}s)"
-                )
-
-            playlist_contacts = ordered_contacts_for_queue
-            if playlist_contacts:
-                with st.expander("Select from family playlist"):
-                    playlist_options = []
-                    for playlist_index, playlist_contact in enumerate(playlist_contacts, start=1):
-                        playlist_name = (playlist_contact.get("full_name") or "family contact").strip()
-                        playlist_relationship = ((playlist_contact.get("relationship") or "").strip())
-                        playlist_label = (
-                            f"{playlist_index}. {playlist_name} ({playlist_relationship.title()})"
-                            if playlist_relationship
-                            else f"{playlist_index}. {playlist_name} (Family Member)"
+                    st.caption(f"Unread family messages: {queue_unread_count}")
+                    if effective_queue_next_contact:
+                        next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
+                        next_relationship = ((effective_queue_next_contact.get("relationship") or "").strip())
+                        next_contact_id = str(effective_queue_next_contact.get("id") or "").strip()
+                        next_position = queue_position_by_contact_id.get(next_contact_id)
+                        next_prefix = f"{next_position}. " if next_position else ""
+                        next_display = (
+                            f"{next_prefix}{next_name} ({next_relationship.title()})"
+                            if next_relationship
+                            else f"{next_prefix}{next_name} (Family Member)"
                         )
-                        playlist_options.append((playlist_label, playlist_contact))
-                    selected_playlist_label = st.selectbox(
-                        "Family Member",
-                        options=[label for label, _ in playlist_options],
-                        key=f"care_playlist_select_{resident_id}",
-                    )
-                    if st.button(
-                        "Play selected family message",
-                        key=f"care_playlist_play_{resident_id}",
-                        disabled=send_guard_active,
-                        use_container_width=True,
-                    ):
-                        selected_contact = next(
-                            (
-                                contact
-                                for label, contact in playlist_options
-                                if label == selected_playlist_label
-                            ),
-                            None,
-                        )
-                        if selected_contact:
-                            st.session_state[manual_selection_key] = True
-                            manual_selected_active = True
-                            state["selected_contact_id"] = selected_contact.get("id")
-                            latest = fetch_latest_message_for_contact_with_mapping_repair(
-                                resident_id,
-                                access_token,
-                                selected_contact,
-                                channel="resident_family",
-                                include_audio=True,
+                        st.caption(f"Next in queue: {next_display}")
+                    else:
+                        st.caption("Next in queue: none")
+                    if queue_unread_contacts:
+                        st.caption("Unplayed list:")
+                        for unread_contact in queue_unread_contacts:
+                            unread_name = (unread_contact.get("full_name") or "family contact").strip()
+                            unread_relationship = ((unread_contact.get("relationship") or "").strip())
+                            unread_contact_id = str(unread_contact.get("id") or "").strip()
+                            unread_position = queue_position_by_contact_id.get(unread_contact_id)
+                            unread_prefix = f"{unread_position}. " if unread_position else ""
+                            unread_display = (
+                                f"{unread_prefix}{unread_name} ({unread_relationship.title()})"
+                                if unread_relationship
+                                else f"{unread_prefix}{unread_name} (Family Member)"
                             )
-                            resolved_contact_user_id = str(
-                                (latest or {}).get("contact_user_id")
-                                or selected_contact.get("auth_user_id")
-                                or ""
-                            ).strip()
-                            state["selected_contact_user_id"] = resolved_contact_user_id
-                            latest_message_id = str((latest or {}).get("id") or "").strip()
-                            if latest_message_id and not has_message_been_played_since_recorded(
-                                latest,
-                                resident_id=resident_id,
-                                care_home_id=resident["care_home_id"],
+                            st.markdown(f"- {unread_display}")
+                    send_guard_scope = f"care_send_{resident_id}"
+                    send_guard_remaining = get_send_guard_remaining_seconds(send_guard_scope)
+                    send_guard_active = send_guard_remaining > 0
+                    if send_guard_active:
+                        st.warning(
+                            "Please wait until you see the sent confirmation before playing another message. "
+                            f"({send_guard_remaining}s)"
+                        )
+
+                    playlist_contacts = ordered_contacts_for_queue
+                    if playlist_contacts:
+                        with st.expander("Select from family playlist"):
+                            playlist_options = []
+                            for playlist_index, playlist_contact in enumerate(playlist_contacts, start=1):
+                                playlist_name = (playlist_contact.get("full_name") or "family contact").strip()
+                                playlist_relationship = ((playlist_contact.get("relationship") or "").strip())
+                                playlist_label = (
+                                    f"{playlist_index}. {playlist_name} ({playlist_relationship.title()})"
+                                    if playlist_relationship
+                                    else f"{playlist_index}. {playlist_name} (Family Member)"
+                                )
+                                playlist_options.append((playlist_label, playlist_contact))
+                            selected_playlist_label = st.selectbox(
+                                "Family Member",
+                                options=[label for label, _ in playlist_options],
+                                key=f"care_playlist_select_{resident_id}",
+                            )
+                            if st.button(
+                                "Play selected family message",
+                                key=f"care_playlist_play_{resident_id}",
+                                disabled=send_guard_active,
+                                use_container_width=True,
                             ):
-                                latest_contact_user_id = str(
+                                selected_contact = next(
+                                    (
+                                        contact
+                                        for label, contact in playlist_options
+                                        if label == selected_playlist_label
+                                    ),
+                                    None,
+                                )
+                                if selected_contact:
+                                    st.session_state[manual_selection_key] = True
+                                    manual_selected_active = True
+                                    state["selected_contact_id"] = selected_contact.get("id")
+                                    latest = fetch_latest_message_for_contact_with_mapping_repair(
+                                        resident_id,
+                                        access_token,
+                                        selected_contact,
+                                        channel="resident_family",
+                                        include_audio=True,
+                                    )
+                                    resolved_contact_user_id = str(
+                                        (latest or {}).get("contact_user_id")
+                                        or selected_contact.get("auth_user_id")
+                                        or ""
+                                    ).strip()
+                                    state["selected_contact_user_id"] = resolved_contact_user_id
+                                    latest_message_id = str((latest or {}).get("id") or "").strip()
+                                    if latest_message_id and not has_message_been_played_since_recorded(
+                                        latest,
+                                        resident_id=resident_id,
+                                        care_home_id=resident["care_home_id"],
+                                    ):
+                                        latest_contact_user_id = str(
+                                            (latest or {}).get("contact_user_id")
+                                            or selected_contact.get("auth_user_id")
+                                            or ""
+                                        ).strip()
+                                        latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
+                                        log_audit_event(
+                                            "message_played",
+                                            "care_hub",
+                                            resident["care_home_id"],
+                                            latest_message_id,
+                                            resident_id=resident_id,
+                                        )
+                                        set_contact_last_played_recorded_at(
+                                            resident_id,
+                                            resident["care_home_id"],
+                                            latest_contact_user_id,
+                                            latest_recorded_at,
+                                            access_token,
+                                        )
+                                    if is_mobile_variant:
+                                        st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
+            else:
+                st.caption(f"Unread family messages: {queue_unread_count}")
+                if effective_queue_next_contact:
+                    next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
+                    next_relationship = ((effective_queue_next_contact.get("relationship") or "").strip())
+                    next_contact_id = str(effective_queue_next_contact.get("id") or "").strip()
+                    next_position = queue_position_by_contact_id.get(next_contact_id)
+                    next_prefix = f"{next_position}. " if next_position else ""
+                    next_display = (
+                        f"{next_prefix}{next_name} ({next_relationship.title()})"
+                        if next_relationship
+                        else f"{next_prefix}{next_name} (Family Member)"
+                    )
+                    st.caption(f"Next in queue: {next_display}")
+                else:
+                    st.caption("Next in queue: none")
+                if queue_unread_contacts:
+                    st.caption("Unplayed list:")
+                    for unread_contact in queue_unread_contacts:
+                        unread_name = (unread_contact.get("full_name") or "family contact").strip()
+                        unread_relationship = ((unread_contact.get("relationship") or "").strip())
+                        unread_contact_id = str(unread_contact.get("id") or "").strip()
+                        unread_position = queue_position_by_contact_id.get(unread_contact_id)
+                        unread_prefix = f"{unread_position}. " if unread_position else ""
+                        unread_display = (
+                            f"{unread_prefix}{unread_name} ({unread_relationship.title()})"
+                            if unread_relationship
+                            else f"{unread_prefix}{unread_name} (Family Member)"
+                        )
+                        st.markdown(f"- {unread_display}")
+                send_guard_scope = f"care_send_{resident_id}"
+                send_guard_remaining = get_send_guard_remaining_seconds(send_guard_scope)
+                send_guard_active = send_guard_remaining > 0
+                if send_guard_active:
+                    st.warning(
+                        "Please wait until you see the sent confirmation before playing another message. "
+                        f"({send_guard_remaining}s)"
+                    )
+
+                playlist_contacts = ordered_contacts_for_queue
+                if playlist_contacts:
+                    with st.expander("Select from family playlist"):
+                        playlist_options = []
+                        for playlist_index, playlist_contact in enumerate(playlist_contacts, start=1):
+                            playlist_name = (playlist_contact.get("full_name") or "family contact").strip()
+                            playlist_relationship = ((playlist_contact.get("relationship") or "").strip())
+                            playlist_label = (
+                                f"{playlist_index}. {playlist_name} ({playlist_relationship.title()})"
+                                if playlist_relationship
+                                else f"{playlist_index}. {playlist_name} (Family Member)"
+                            )
+                            playlist_options.append((playlist_label, playlist_contact))
+                        selected_playlist_label = st.selectbox(
+                            "Family Member",
+                            options=[label for label, _ in playlist_options],
+                            key=f"care_playlist_select_{resident_id}",
+                        )
+                        if st.button(
+                            "Play selected family message",
+                            key=f"care_playlist_play_{resident_id}",
+                            disabled=send_guard_active,
+                            use_container_width=True,
+                        ):
+                            selected_contact = next(
+                                (
+                                    contact
+                                    for label, contact in playlist_options
+                                    if label == selected_playlist_label
+                                ),
+                                None,
+                            )
+                            if selected_contact:
+                                st.session_state[manual_selection_key] = True
+                                manual_selected_active = True
+                                state["selected_contact_id"] = selected_contact.get("id")
+                                latest = fetch_latest_message_for_contact_with_mapping_repair(
+                                    resident_id,
+                                    access_token,
+                                    selected_contact,
+                                    channel="resident_family",
+                                    include_audio=True,
+                                )
+                                resolved_contact_user_id = str(
                                     (latest or {}).get("contact_user_id")
                                     or selected_contact.get("auth_user_id")
                                     or ""
                                 ).strip()
-                                latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
-                                log_audit_event(
-                                    "message_played",
-                                    "care_hub",
-                                    resident["care_home_id"],
-                                    latest_message_id,
+                                state["selected_contact_user_id"] = resolved_contact_user_id
+                                latest_message_id = str((latest or {}).get("id") or "").strip()
+                                if latest_message_id and not has_message_been_played_since_recorded(
+                                    latest,
                                     resident_id=resident_id,
-                                )
-                                set_contact_last_played_recorded_at(
-                                    resident_id,
-                                    resident["care_home_id"],
-                                    latest_contact_user_id,
-                                    latest_recorded_at,
-                                    access_token,
-                                )
-                            if is_mobile_variant:
-                                st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
+                                    care_home_id=resident["care_home_id"],
+                                ):
+                                    latest_contact_user_id = str(
+                                        (latest or {}).get("contact_user_id")
+                                        or selected_contact.get("auth_user_id")
+                                        or ""
+                                    ).strip()
+                                    latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
+                                    log_audit_event(
+                                        "message_played",
+                                        "care_hub",
+                                        resident["care_home_id"],
+                                        latest_message_id,
+                                        resident_id=resident_id,
+                                    )
+                                    set_contact_last_played_recorded_at(
+                                        resident_id,
+                                        resident["care_home_id"],
+                                        latest_contact_user_id,
+                                        latest_recorded_at,
+                                        access_token,
+                                    )
+                                if is_mobile_variant:
+                                    st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
         if is_mobile_variant or is_office_variant:
             mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
             mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
@@ -11573,24 +11687,16 @@ def render_care_hub() -> None:
                         # Rerun once after a successful play so the unplayed list updates immediately.
                         st.session_state[mobile_play_requested_key] = False
                         st.rerun()
-            if mobile_family_messages_box_open:
-                st.markdown("</div>", unsafe_allow_html=True)
-
-        if is_mobile_variant or is_office_variant:
-            with st.container(border=True):
-                render_care_flow_title(
-                    f"Latest message from resident ({full_name}) to family",
-                    "outbound",
-                )
+        with st.container(border=True):
+            render_care_flow_title(
+                f"Latest message from resident ({full_name}) to family",
+                "outbound",
+            )
+            if is_mobile_variant or is_office_variant:
                 st.markdown(f"**Latest message from {full_name} to all Family Members**")
-        else:
-            with st.container(border=True):
-                render_care_flow_title(
-                    f"Latest message from resident ({full_name}) to family",
-                    "outbound",
-                )
+            else:
                 st.markdown(f"**Latest message from {full_name} to {selected_contact_name}**")
-    
+
             latest_sent = fetch_latest_message(
                 resident_id,
                 "from_resident",
@@ -11626,39 +11732,78 @@ def render_care_hub() -> None:
                     resident_id=resident_id,
                 )
             if is_mobile_variant or is_office_variant:
-                if hasattr(st, "audio_input"):
-                    recorded_from_native = st.audio_input(
-                        f"Record voice message from {full_name} to all Family Members",
-                        key=f"care_audio_input_{resident_id}_{state.get('recording_input_nonce', 0)}",
-                    )
+                native_recording_available = hasattr(st, "audio_input")
+                native_recorder_error = False
+                recorded_from_native = None
+                if native_recording_available:
+                    try:
+                        recorded_from_native = st.audio_input(
+                            f"Record voice message from {full_name} to all Family Members",
+                            key=f"care_audio_input_{resident_id}_{state.get('recording_input_nonce', 0)}",
+                        )
+                    except Exception:
+                        native_recorder_error = True
+                        recorded_from_native = None
                     render_slow_speech_hint()
-                    if recorded_from_native is not None:
-                        native_bytes = recorded_from_native.getvalue()
-                        if native_bytes:
-                            native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
-                        else:
-                            native_fp = None
-                        if not native_bytes:
-                            st.warning(
-                                "That recording could not be captured correctly. Please record again."
-                            )
-                        # Once user has confirmed preview for current recording, avoid resetting
-                        # from duplicate/replayed audio_input payloads on rerun.
-                        elif state.get("preview_confirmed") and state.get("recording_bytes"):
-                            pass
-                        elif native_fp != state.get("recording_fingerprint"):
+                if recorded_from_native is not None:
+                    native_bytes = recorded_from_native.getvalue()
+                    if native_bytes:
+                        native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
+                    else:
+                        native_fp = None
+                    if not native_bytes:
+                        st.warning(
+                            "That recording could not be captured correctly. Please record again."
+                        )
+                    # Once user has confirmed preview for current recording, avoid resetting
+                    # from duplicate/replayed audio_input payloads on rerun.
+                    elif state.get("preview_confirmed") and state.get("recording_bytes"):
+                        pass
+                    elif native_fp != state.get("recording_fingerprint"):
+                        reset_outbox_state_on_new_recording(
+                            state,
+                            ack_widget_key=f"care_listened_{resident_id}",
+                            clear_care_last_sent_for_resident=resident_id,
+                        )
+                        state["recording_bytes"] = native_bytes
+                        state["recording_fingerprint"] = native_fp
+                        state["recording_mime_type"] = (
+                            getattr(recorded_from_native, "type", None) or "audio/wav"
+                        )
+                elif not native_recording_available or native_recorder_error:
+                    if native_recorder_error:
+                        st.warning(
+                            "Microphone recorder could not load in this browser view. "
+                            "Use the upload option below."
+                        )
+                    else:
+                        st.warning("Native microphone recording is unavailable in this environment.")
+                    uploaded_recording = st.file_uploader(
+                        "Upload recorded voice message",
+                        type=["wav", "mp3", "m4a", "ogg", "webm"],
+                        key=f"care_upload_{resident_id}_{state.get('recording_input_nonce', 0)}",
+                    )
+                    if uploaded_recording is not None:
+                        upload_bytes = uploaded_recording.getvalue()
+                        upload_fp = (
+                            __import__("hashlib").sha1(upload_bytes).hexdigest()
+                            if upload_bytes
+                            else None
+                        )
+                        if not upload_bytes:
+                            st.warning("Uploaded audio file is empty. Please choose another file.")
+                        elif upload_fp != state.get("recording_fingerprint"):
                             reset_outbox_state_on_new_recording(
                                 state,
                                 ack_widget_key=f"care_listened_{resident_id}",
                                 clear_care_last_sent_for_resident=resident_id,
                             )
-                            state["recording_bytes"] = native_bytes
-                            state["recording_fingerprint"] = native_fp
+                            state["recording_bytes"] = upload_bytes
+                            state["recording_fingerprint"] = upload_fp
                             state["recording_mime_type"] = (
-                                getattr(recorded_from_native, "type", None) or "audio/wav"
+                                getattr(uploaded_recording, "type", None)
+                                or "audio/wav"
                             )
-                else:
-                    st.warning("Native microphone recording is unavailable in this environment.")
     
                 st.caption(
                     "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
