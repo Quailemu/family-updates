@@ -7318,13 +7318,9 @@ def render_home(active: str) -> None:
     )
     st.markdown(
         "voicemailcare.com  \n"
-        "One message in. One message out.  \n"
-        "No threads. No pressure.\n\n"
-        "The service supports non-urgent social voice messages between residents and Family Members.  \n"
-        "The care home office may also send non-urgent general updates about daily life in the home.  \n"
-        "Office updates are one-way informational messages.\n\n"
-        "This is not a live service. Messages are played when staff are available, to fit around care routines.  \n"
-        "The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries."
+        "Public guides and walkthrough videos.\n\n"
+        "Choose Family, Care Hub - Mobile, or Care Hub - Office to continue.  \n"
+        "This is not a live service. Messages are played when staff are available."
     )
 
     button_cols = st.columns(3, gap="small")
@@ -8081,9 +8077,7 @@ def render_public_walkthrough_page(
         key=f"walkthrough_back_{page_title.lower().replace(' ', '_').replace('–', '-')}",
     )
     render_page_header(page_title, show_menu=False, show_variant_subheading=False)
-    st.caption(
-        "Note: App name updated to voicemailcare.com."
-    )
+    st.caption("voicemailcare.com")
     normalized_title = page_title.strip().lower()
     if normalized_title.endswith("record video"):
         st.caption("Record video — Send a voice message.")
