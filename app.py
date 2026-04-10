@@ -9672,11 +9672,16 @@ def render_pr_homepage() -> None:
     st.markdown('<div class="vm-home-shell">', unsafe_allow_html=True)
     st.markdown('<div class="vm-home-card">', unsafe_allow_html=True)
     st.markdown('<p class="vm-home-brand">voicemailcare.com</p>', unsafe_allow_html=True)
-    cartoon_path = Path(__file__).resolve().parent / "site" / "assets" / "cartoon-voicemailcare.png"
-    if cartoon_path.exists():
+    base_dir = Path(__file__).resolve().parent
+    cartoon_candidates = [
+        base_dir / "site" / "assets" / "cartoon-voicemailcare.png",
+        base_dir / "assets" / "cartoon-voicemailcare.png",
+    ]
+    cartoon_path = next((candidate for candidate in cartoon_candidates if candidate.exists()), None)
+    if cartoon_path is not None:
         st.image(cartoon_path.read_bytes(), use_container_width=True)
     else:
-        st.caption("Landing artwork missing: site/assets/cartoon-voicemailcare.png")
+        st.caption("Landing artwork missing: site/assets/cartoon-voicemailcare.png or assets/cartoon-voicemailcare.png")
     st.markdown(
         '<p class="vm-home-caption">Choose an interface to continue.</p>',
         unsafe_allow_html=True,
