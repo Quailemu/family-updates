@@ -11450,21 +11450,6 @@ def render_care_hub() -> None:
                         state["selected_contact_id"] = matched_contact.get("id")
                         state["selected_contact_user_id"] = matched_contact.get("auth_user_id")
 
-            selected_contact_name = (
-                (selected_contact or {}).get("full_name") or "family contact"
-            )
-            selected_contact_relationship = (
-                ((selected_contact or {}).get("relationship") or "").strip()
-            )
-            selected_contact_display = (
-                f"{selected_contact_name} ({selected_contact_relationship.title()})"
-                if selected_contact_relationship
-                else f"{selected_contact_name} (Family Member)"
-            )
-            selected_contact_id = str((selected_contact or {}).get("id") or "").strip()
-            selected_contact_position = queue_position_by_contact_id.get(selected_contact_id)
-            if selected_contact_position:
-                selected_contact_display = f"{selected_contact_position}. {selected_contact_display}"
             if (
                 is_queue_playback_variant
                 and queue_mode_label == "No family messages available."
@@ -11476,14 +11461,6 @@ def render_care_hub() -> None:
                     f"Latest family message to resident ({full_name})",
                     "inbound",
                 )
-                if is_queue_playback_variant and queue_mode_label:
-                    st.caption(f"Queue mode: {queue_mode_label}")
-                if is_mobile_variant:
-                    st.caption(f"Now playing from: {selected_contact_display}")
-                else:
-                    st.caption(f"Office review playing: {selected_contact_display}")
-    
-                st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
                 if is_mobile_variant:
                     if st.button(
                         "Play next family message",
@@ -11687,6 +11664,28 @@ def render_care_hub() -> None:
                         # Rerun once after a successful play so the unplayed list updates immediately.
                         st.session_state[mobile_play_requested_key] = False
                         st.rerun()
+                selected_contact_name = (
+                    (selected_contact or {}).get("full_name") or "family contact"
+                )
+                selected_contact_relationship = (
+                    ((selected_contact or {}).get("relationship") or "").strip()
+                )
+                selected_contact_display = (
+                    f"{selected_contact_name} ({selected_contact_relationship.title()})"
+                    if selected_contact_relationship
+                    else f"{selected_contact_name} (Family Member)"
+                )
+                selected_contact_id = str((selected_contact or {}).get("id") or "").strip()
+                selected_contact_position = queue_position_by_contact_id.get(selected_contact_id)
+                if selected_contact_position:
+                    selected_contact_display = f"{selected_contact_position}. {selected_contact_display}"
+                if is_queue_playback_variant and queue_mode_label:
+                    st.caption(f"Queue mode: {queue_mode_label}")
+                if is_mobile_variant:
+                    st.caption(f"Now playing from: {selected_contact_display}")
+                else:
+                    st.caption(f"Office review playing: {selected_contact_display}")
+                st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
         with st.container(border=True):
             render_care_flow_title(
                 f"Latest message from resident ({full_name}) to family",
