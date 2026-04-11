@@ -8435,6 +8435,7 @@ def render_audio_safe(
 
 
 def render_family_login_hub() -> None:
+    st.warning("BUILD MARKER LOGIN: transcript-patch-2026-04-11-b")
     inject_login_css()
     st.markdown(
         f"""
@@ -8591,6 +8592,7 @@ def render_family_login() -> None:
 
 def render_family_send() -> None:
     require_family_access()
+    st.warning("BUILD MARKER: transcript-patch-2026-04-11-b")
     st.markdown(
         f"""
 <style>
@@ -8823,16 +8825,18 @@ def render_family_send() -> None:
                 resident_sent_label = format_soft_message_period_label(latest.get("recorded_at"))
                 if resident_sent_label:
                     st.caption(resident_sent_label)
+            else:
+                st.markdown(
+                    '<div class="vm-muted-line">No new messages.</div>',
+                    unsafe_allow_html=True,
+                )
+            if latest:
+                st.caption("Transcript debug: inbound transcript control should appear below.")
                 render_transcript_assist(
                     latest,
                     policy_mode=transcript_policy_mode,
                     care_home_id=resident.get("care_home_id"),
                     resident_id=resident_id,
-                )
-            else:
-                st.markdown(
-                    '<div class="vm-muted-line">No new messages.</div>',
-                    unsafe_allow_html=True,
                 )
 
         outbound_section_slot = st.container()
@@ -8865,16 +8869,18 @@ def render_family_send() -> None:
                 )
                 if office_soft_label:
                     st.caption(office_soft_label)
+            else:
+                st.markdown(
+                    '<div class="vm-muted-line">No care hub updates.</div>',
+                    unsafe_allow_html=True,
+                )
+            if latest_office_update:
+                st.caption("Transcript debug: office update transcript control should appear below.")
                 render_transcript_assist(
                     latest_office_update,
                     policy_mode=transcript_policy_mode,
                     care_home_id=resident.get("care_home_id"),
                     resident_id=resident_id,
-                )
-            else:
-                st.markdown(
-                    '<div class="vm-muted-line">No care hub updates.</div>',
-                    unsafe_allow_html=True,
                 )
 
         with st.container(border=True):
@@ -9048,18 +9054,27 @@ def render_family_send() -> None:
             last_message_audio_mime = (
                 str(last_message.get("audio_mime_type") or "").strip() or "audio/wav"
             )
+            last_message_transcript_text = str(last_message.get("transcript_text") or "").strip()
+            last_message_transcript_status = str(last_message.get("transcript_status") or "").strip().lower()
+            fallback_last_message_for_transcript = None
+            if last_message_audio:
+                fallback_last_message_for_transcript = {
+                    "id": "",
+                    "transcript_text": last_message_transcript_text or None,
+                    "transcript_status": (
+                        last_message_transcript_status
+                        if last_message_transcript_status
+                        else ("ready" if last_message_transcript_text else "not_requested")
+                    ),
+                    "audio_storage_path": base64.b64encode(bytes(last_message_audio)).decode("ascii"),
+                    "audio_mime_type": last_message_audio_mime,
+                }
             show_recent_send_feedback = bool(last_message and not state.get("recording_bytes"))
             if latest_sent and not state.get("recording_bytes"):
                 if latest_sent_audio:
                     st.audio(
                         latest_sent_audio,
                         format=latest_sent.get("audio_mime_type") or "audio/wav",
-                    )
-                    render_transcript_assist(
-                        latest_sent,
-                        policy_mode=transcript_policy_mode,
-                        care_home_id=resident.get("care_home_id"),
-                        resident_id=resident_id,
                     )
                 elif last_message_audio:
                     st.audio(last_message_audio, format=last_message_audio_mime)
@@ -9071,15 +9086,25 @@ def render_family_send() -> None:
                     latest_sent_label = format_soft_message_period_label(latest_sent_at)
                     if latest_sent_label:
                         st.caption(latest_sent_label)
+                if not show_recent_send_feedback:
+                    st.caption("Transcript debug: outbound transcript control should appear below.")
+                    render_transcript_assist(
+                        latest_sent,
+                        policy_mode=transcript_policy_mode,
+                        care_home_id=resident.get("care_home_id"),
+                        resident_id=resident_id,
+                    )
             if last_message and not state.get("recording_bytes"):
                 sent_at = last_message.get("sent_at")
                 sent_display = format_soft_message_period_label(sent_at) if sent_at else None
                 st.success("Message sent")
                 if last_message_audio:
                     st.audio(last_message_audio, format=last_message_audio_mime)
-                if latest_sent:
+                transcript_source = latest_sent or fallback_last_message_for_transcript
+                if transcript_source:
+                    st.caption("Transcript debug: recent send transcript control should appear below.")
                     render_transcript_assist(
-                        latest_sent,
+                        transcript_source,
                         policy_mode=transcript_policy_mode,
                         care_home_id=resident.get("care_home_id"),
                         resident_id=resident_id,
@@ -9158,6 +9183,7 @@ def render_family_send() -> None:
                     value=state.get("preview_confirmed", False),
                     key=f"family_listened_{resident_id}",
                 )
+                st.caption("Transcript debug: recording preview transcript control should appear below.")
                 render_transcript_preview_controls(
                     state,
                     state.get("recording_bytes") or b"",
@@ -9273,6 +9299,8 @@ def render_family_send() -> None:
                                 "sent_at": now_iso,
                                 "audio_preview": bytes(audio_bytes),
                                 "audio_mime_type": audio_mime_type,
+                                "transcript_text": transcript_fields.get("transcript_text"),
+                                "transcript_status": transcript_fields.get("transcript_status"),
                             }
                             st.session_state.pop(f"family_upload_{resident_id}", None)
                             st.session_state.pop(f"family_audio_input_{resident_id}", None)
