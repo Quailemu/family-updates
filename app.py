@@ -903,6 +903,7 @@ def clear_transcript_preview_state(state: dict, prefix: str = "") -> None:
         "transcript_preview_model",
         "transcript_preview_generated_at",
         "transcript_preview_error",
+        "transcript_preview_visible",
     ):
         state.pop(f"{prefix}{key}", None)
 
@@ -995,6 +996,93 @@ def build_transcript_fields_from_preview(
         audio_mime_type,
         requested=requested,
     )
+
+
+def render_transcript_preview_controls(
+    state: dict,
+    audio_bytes: bytes,
+    audio_mime_type: str,
+    *,
+    policy_mode: str,
+    key_scope: str,
+    prefix: str = "",
+) -> None:
+    if not isinstance(state, dict) or not audio_bytes:
+        return
+    requested_key = f"{prefix}transcribe_requested"
+    visible_key = f"{prefix}transcript_preview_visible"
+    mode = normalize_transcript_policy_mode(policy_mode)
+    if mode == "precheck":
+        state[requested_key] = True
+
+    transcript_preview_text = str(state.get(f"{prefix}transcript_preview_text") or "").strip()
+    transcript_preview_status = str(
+        state.get(f"{prefix}transcript_preview_status") or ""
+    ).strip().lower()
+    transcript_preview_error = str(
+        state.get(f"{prefix}transcript_preview_error") or ""
+    ).strip()
+    transcript_preview_visible = bool(state.get(visible_key, False))
+
+    if transcript_preview_text and transcript_preview_status == "ready":
+        transcript_button_label = (
+            "Hide transcript" if transcript_preview_visible else "View transcript"
+        )
+    elif transcript_preview_status == "failed":
+        transcript_button_label = "Retry transcript"
+    else:
+        transcript_button_label = "View transcript"
+
+    if st.button(
+        transcript_button_label,
+        key=f"{key_scope}_{prefix or 'main'}_transcript_preview_toggle",
+    ):
+        if transcript_preview_text and transcript_preview_status == "ready":
+            state[visible_key] = not transcript_preview_visible
+        else:
+            state[requested_key] = True
+            ensure_transcript_preview_state(
+                state,
+                audio_bytes,
+                audio_mime_type,
+                requested=True,
+                prefix=prefix,
+            )
+            transcript_preview_text = str(state.get(f"{prefix}transcript_preview_text") or "").strip()
+            transcript_preview_status = str(
+                state.get(f"{prefix}transcript_preview_status") or ""
+            ).strip().lower()
+            if transcript_preview_text and transcript_preview_status == "ready":
+                state[visible_key] = True
+            transcript_preview_visible = bool(state.get(visible_key, False))
+
+    if bool(state.get(requested_key)):
+        ensure_transcript_preview_state(
+            state,
+            audio_bytes,
+            audio_mime_type,
+            requested=True,
+            prefix=prefix,
+        )
+        transcript_preview_text = str(state.get(f"{prefix}transcript_preview_text") or "").strip()
+        transcript_preview_status = str(
+            state.get(f"{prefix}transcript_preview_status") or ""
+        ).strip().lower()
+        transcript_preview_error = str(
+            state.get(f"{prefix}transcript_preview_error") or ""
+        ).strip()
+
+    if transcript_preview_text and transcript_preview_status == "ready" and bool(
+        state.get(visible_key, False)
+    ):
+        st.markdown("**Transcript preview (before send)**")
+        st.caption("Transcript may contain errors. Voice remains the source of truth.")
+        st.markdown(transcript_preview_text)
+    elif bool(state.get(requested_key)) and transcript_preview_status == "failed":
+        st.warning(
+            "Transcript preview could not be generated before send."
+            + (f" {transcript_preview_error}" if transcript_preview_error else "")
+        )
 
 
 def _download_audio_from_storage(
@@ -2836,14 +2924,14 @@ def render_safeguarding_block() -> None:
 
 
 def render_how_it_works_diagram_and_notes() -> None:
-    diagram_path = Path("assets/voice-message-flow-diagram.png")
+    diagram_path = Path("assets/system diagram.png")
     if diagram_path.exists():
         try:
             st.image(str(diagram_path), caption="Voicemailcare.com flow diagram", use_container_width=True)
         except TypeError:
             st.image(str(diagram_path), caption="Voicemailcare.com flow diagram", use_column_width=True)
     else:
-        st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
+        st.error("Flow diagram image not found: assets/system diagram.png")
     st.markdown(
         "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub – Mobile, and Care Hub – Office.\n"
         "- Each Family Member has their own individual communication channel to the resident.\n"
@@ -5649,6 +5737,57 @@ def render_transcript_assist(
         status_value = str(row.get("transcript_status") or "").strip().lower()
         return text_value, status_value
 
+    def _persist_transcript_fields(message_id: str, transcript_fields: dict) -> None:
+        normalized_id = str(message_id or "").strip()
+        if not normalized_id:
+            return
+        access_token = str(st.session_state.get("access_token") or "").strip()
+        supabase, error = get_authed_supabase(access_token)
+        if error or supabase is None:
+            return
+        update_payload = {
+            "transcript_text": transcript_fields.get("transcript_text"),
+            "transcript_status": transcript_fields.get("transcript_status"),
+            "transcript_model": transcript_fields.get("transcript_model"),
+            "transcript_generated_at": transcript_fields.get("transcript_generated_at"),
+        }
+        try:
+            _ = (
+                supabase.table("messages")
+                .update(update_payload)
+                .eq("id", normalized_id)
+                .execute()
+            )
+        except Exception as exc:
+            if (
+                _is_missing_column_error(exc, "transcript_text")
+                or _is_missing_column_error(exc, "transcript_status")
+                or _is_missing_column_error(exc, "transcript_model")
+                or _is_missing_column_error(exc, "transcript_generated_at")
+            ):
+                st.session_state["_messages_missing_transcript_columns"] = True
+
+    def _generate_transcript_for_message(message_obj: dict) -> tuple[str, str, str]:
+        if not isinstance(message_obj, dict):
+            return "", "failed", "Message is unavailable."
+        audio_bytes = decode_audio_payload(message_obj, access_token=st.session_state.get("access_token"))
+        if not audio_bytes:
+            return "", "failed", "Audio is unavailable for transcript generation."
+        audio_mime_type = str(message_obj.get("audio_mime_type") or "").strip() or "audio/wav"
+        transcript_fields, transcript_error = build_transcript_fields(
+            audio_bytes,
+            audio_mime_type,
+            requested=True,
+        )
+        status_value = str(transcript_fields.get("transcript_status") or "").strip().lower()
+        text_value = str(transcript_fields.get("transcript_text") or "").strip()
+        message_id = str(message_obj.get("id") or "").strip()
+        if message_id:
+            _persist_transcript_fields(message_id, transcript_fields)
+        if status_value == "ready" and text_value:
+            return text_value, status_value, ""
+        return "", status_value or "failed", transcript_error or "Transcript could not be generated."
+
     try:
         mode = normalize_transcript_policy_mode(policy_mode)
         if not isinstance(message, dict):
@@ -5667,9 +5806,36 @@ def render_transcript_assist(
             f"{str(message.get('channel') or '').strip()}::"
             f"{str(message.get('recorded_at') or '').strip()}"
         )
+        toggle_key = f"transcript_toggle::{resident_id or ''}::{message_key}"
+        transcript_visible = bool(st.session_state.get(toggle_key, False))
+
+        if transcript_text and status == "ready":
+            toggle_label = "Hide transcript" if transcript_visible else "View transcript"
+        elif status == "failed":
+            toggle_label = "Retry transcript"
+        else:
+            toggle_label = "View transcript"
+
+        if st.button(
+            toggle_label,
+            key=f"transcript_toggle_btn::{resident_id or ''}::{message_key}",
+        ):
+            if transcript_text and status == "ready":
+                st.session_state[toggle_key] = not transcript_visible
+                transcript_visible = bool(st.session_state.get(toggle_key, False))
+            else:
+                generated_text, generated_status, generated_error = _generate_transcript_for_message(message)
+                if generated_text and generated_status == "ready":
+                    transcript_text = generated_text
+                    status = "ready"
+                    st.session_state[toggle_key] = True
+                    transcript_visible = True
+                else:
+                    status = generated_status or "failed"
+                    st.warning(generated_error or "Transcript could not be generated.")
+
         if transcript_text:
-            st.caption("Transcript assist is available for this message.")
-            with st.expander("Transcript assist", expanded=True):
+            if transcript_visible:
                 st.markdown(transcript_text)
                 st.caption("Transcript may contain errors. Voice remains the source of truth.")
             if mode != "precheck":
@@ -5694,12 +5860,10 @@ def render_transcript_assist(
             if not reviewed:
                 st.warning("Transcript review is required before playback (policy mode: precheck).")
             return True
-        if mode == "off":
-            return True
         if status == "failed":
-            st.caption("Transcript was requested but is not available for this message.")
+            st.caption("Transcript is not available for this message.")
         elif status == "not_requested":
-            st.caption("Transcript was not requested for this message.")
+            st.caption("Transcript has not been requested for this message.")
         if mode == "precheck":
             st.caption("Transcript is unavailable. Playback remains available.")
         return True
@@ -7134,7 +7298,7 @@ def render_home(active: str) -> None:
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("<h2>How it works</h2>", unsafe_allow_html=True)
-        public_diagram_path = Path("assets/voice-message-flow-diagram.png")
+        public_diagram_path = Path("assets/system diagram.png")
         if public_diagram_path.exists():
             try:
                 st.image(
@@ -7149,7 +7313,7 @@ def render_home(active: str) -> None:
                     use_column_width=True,
                 )
         else:
-            st.error("Flow diagram image not found: assets/voice-message-flow-diagram.png")
+            st.error("Flow diagram image not found: assets/system diagram.png")
         st.markdown(
             "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub – Mobile, and Care Hub – Office.\n"
             "- Each family member has their own individual communication channel to the resident, managed by the care home.\n"
@@ -7277,7 +7441,7 @@ def render_home(active: str) -> None:
 
     st.markdown('<div class="vm-wrap vm-stage">', unsafe_allow_html=True)
     if get_app_variant() == VARIANT_PUBLIC:
-        public_diagram_path = Path("assets/voice-message-flow-diagram.png")
+        public_diagram_path = Path("assets/system diagram.png")
         if public_diagram_path.exists():
             try:
                 st.image(
@@ -8659,6 +8823,12 @@ def render_family_send() -> None:
                 resident_sent_label = format_soft_message_period_label(latest.get("recorded_at"))
                 if resident_sent_label:
                     st.caption(resident_sent_label)
+                render_transcript_assist(
+                    latest,
+                    policy_mode=transcript_policy_mode,
+                    care_home_id=resident.get("care_home_id"),
+                    resident_id=resident_id,
+                )
             else:
                 st.markdown(
                     '<div class="vm-muted-line">No new messages.</div>',
@@ -8695,6 +8865,12 @@ def render_family_send() -> None:
                 )
                 if office_soft_label:
                     st.caption(office_soft_label)
+                render_transcript_assist(
+                    latest_office_update,
+                    policy_mode=transcript_policy_mode,
+                    care_home_id=resident.get("care_home_id"),
+                    resident_id=resident_id,
+                )
             else:
                 st.markdown(
                     '<div class="vm-muted-line">No care hub updates.</div>',
@@ -8879,6 +9055,12 @@ def render_family_send() -> None:
                         latest_sent_audio,
                         format=latest_sent.get("audio_mime_type") or "audio/wav",
                     )
+                    render_transcript_assist(
+                        latest_sent,
+                        policy_mode=transcript_policy_mode,
+                        care_home_id=resident.get("care_home_id"),
+                        resident_id=resident_id,
+                    )
                 elif last_message_audio:
                     st.audio(last_message_audio, format=last_message_audio_mime)
                     st.caption("Showing a copy of the message you just sent.")
@@ -8895,6 +9077,13 @@ def render_family_send() -> None:
                 st.success("Message sent")
                 if last_message_audio:
                     st.audio(last_message_audio, format=last_message_audio_mime)
+                if latest_sent:
+                    render_transcript_assist(
+                        latest_sent,
+                        policy_mode=transcript_policy_mode,
+                        care_home_id=resident.get("care_home_id"),
+                        resident_id=resident_id,
+                    )
                 if sent_display:
                     st.caption(sent_display)
                 if st.button(
@@ -8969,46 +9158,13 @@ def render_family_send() -> None:
                     value=state.get("preview_confirmed", False),
                     key=f"family_listened_{resident_id}",
                 )
-                if transcript_policy_mode == "off":
-                    state["transcribe_requested"] = False
-                    st.caption("Transcript assist is off for this care home.")
-                elif transcript_policy_mode == "precheck":
-                    state["transcribe_requested"] = True
-                    st.caption(
-                        "Transcript is required by care home policy before Care Hub playback."
-                    )
-                else:
-                    state["transcribe_requested"] = st.checkbox(
-                        "Create transcript for accessibility/support",
-                        value=state.get("transcribe_requested", True),
-                        key=f"family_transcribe_{resident_id}",
-                    )
-                    st.caption(
-                        "Transcript is optional, may contain errors, and replaces with the next message."
-                    )
-                ensure_transcript_preview_state(
+                render_transcript_preview_controls(
                     state,
                     state.get("recording_bytes") or b"",
                     state.get("recording_mime_type") or "audio/wav",
-                    requested=bool(state.get("transcribe_requested")),
+                    policy_mode=transcript_policy_mode,
+                    key_scope=f"family_preview_{resident_id}",
                 )
-                if bool(state.get("transcribe_requested")):
-                    transcript_preview_text = str(state.get("transcript_preview_text") or "").strip()
-                    transcript_preview_status = str(
-                        state.get("transcript_preview_status") or ""
-                    ).strip()
-                    transcript_preview_error = str(
-                        state.get("transcript_preview_error") or ""
-                    ).strip()
-                    if transcript_preview_text and transcript_preview_status == "ready":
-                        st.markdown("**Transcript preview (before send)**")
-                        st.caption("Transcript may contain errors. Voice remains the source of truth.")
-                        st.markdown(transcript_preview_text)
-                    elif transcript_preview_status == "failed":
-                        st.warning(
-                            "Transcript preview could not be generated before send."
-                            + (f" {transcript_preview_error}" if transcript_preview_error else "")
-                        )
             else:
                 state["preview_confirmed"] = False
                 state["transcribe_requested"] = False
@@ -11147,6 +11303,8 @@ def render_care_hub() -> None:
         if effective_queue_next_contact is None and contacts:
             if ordered_contacts_for_queue:
                 effective_queue_next_contact = ordered_contacts_for_queue[0]
+        mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
+        mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
         if contacts and (is_mobile_variant or is_office_variant):
             if is_mobile_variant:
                 with st.container(border=True):
@@ -11385,9 +11543,43 @@ def render_care_hub() -> None:
                                     )
                                 if is_mobile_variant:
                                     st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
+                    if st.button(
+                        "Play next family message",
+                        key=f"care_play_next_{resident_id}",
+                        disabled=send_guard_active,
+                        use_container_width=True,
+                    ):
+                        st.session_state[manual_selection_key] = False
+                        manual_selected_active = False
+                        selected_contact, latest, queue_mode_selected = select_next_family_message_for_mobile(
+                            resident_id,
+                            resident["care_home_id"],
+                            contacts,
+                            access_token,
+                        )
+                        if selected_contact:
+                            latest = fetch_latest_message_for_contact_with_mapping_repair(
+                                resident_id,
+                                access_token,
+                                selected_contact,
+                                channel="resident_family",
+                                include_audio=True,
+                            ) or latest
+                            selected_contact_user_id = str(
+                                (latest or {}).get("contact_user_id")
+                                or selected_contact.get("auth_user_id")
+                                or ""
+                            ).strip()
+                            state["selected_contact_id"] = selected_contact.get("id")
+                            state["selected_contact_user_id"] = selected_contact_user_id
+                            queue_mode_label = queue_mode_selected or "Session order"
+                            st.session_state[mobile_play_requested_key] = True
+                            st.session_state[mobile_advance_pointer_key] = True
+                        else:
+                            st.warning("No playable family messages are available for this resident.")
+                            st.session_state[mobile_play_requested_key] = False
+                            st.session_state[mobile_advance_pointer_key] = False
         if is_mobile_variant or is_office_variant:
-            mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
-            mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
             if latest is None:
                 if selected_contact is not None:
                     latest = fetch_latest_message_for_contact_with_mapping_repair(
@@ -11492,43 +11684,6 @@ def render_care_hub() -> None:
                     f"Latest family message to resident ({full_name})",
                     "inbound",
                 )
-                if is_mobile_variant:
-                    if st.button(
-                        "Play next family message",
-                        key=f"care_play_next_{resident_id}",
-                        disabled=send_guard_active,
-                        use_container_width=True,
-                    ):
-                        st.session_state[manual_selection_key] = False
-                        manual_selected_active = False
-                        selected_contact, latest, queue_mode_selected = select_next_family_message_for_mobile(
-                            resident_id,
-                            resident["care_home_id"],
-                            contacts,
-                            access_token,
-                        )
-                        if selected_contact:
-                            latest = fetch_latest_message_for_contact_with_mapping_repair(
-                                resident_id,
-                                access_token,
-                                selected_contact,
-                                channel="resident_family",
-                                include_audio=True,
-                            ) or latest
-                            selected_contact_user_id = str(
-                                (latest or {}).get("contact_user_id")
-                                or selected_contact.get("auth_user_id")
-                                or ""
-                            ).strip()
-                            state["selected_contact_id"] = selected_contact.get("id")
-                            state["selected_contact_user_id"] = selected_contact_user_id
-                            queue_mode_label = queue_mode_selected or "Session order"
-                            st.session_state[mobile_play_requested_key] = True
-                            st.session_state[mobile_advance_pointer_key] = True
-                        else:
-                            st.warning("No playable family messages are available for this resident.")
-                            st.session_state[mobile_play_requested_key] = False
-                            st.session_state[mobile_advance_pointer_key] = False
                 mobile_play_requested = bool(st.session_state.get(mobile_play_requested_key, False))
                 should_attempt_playback = (not is_mobile_variant) or mobile_play_requested or bool(latest)
                 playback_source = None
@@ -11850,46 +12005,13 @@ def render_care_hub() -> None:
                         value=state.get("preview_confirmed", False),
                         key=f"care_listened_{resident_id}",
                     )
-                    if transcript_policy_mode == "off":
-                        state["transcribe_requested"] = False
-                        st.caption("Transcript assist is off for this care home.")
-                    elif transcript_policy_mode == "precheck":
-                        state["transcribe_requested"] = True
-                        st.caption(
-                            "Transcript is required by care home policy before Care Hub playback."
-                        )
-                    else:
-                        state["transcribe_requested"] = st.checkbox(
-                            "Create transcript for accessibility/support",
-                            value=state.get("transcribe_requested", True),
-                            key=f"care_transcribe_{resident_id}",
-                        )
-                        st.caption(
-                            "Transcript is optional, may contain errors, and replaces with the next message."
-                        )
-                    ensure_transcript_preview_state(
+                    render_transcript_preview_controls(
                         state,
                         state.get("recording_bytes") or b"",
                         state.get("recording_mime_type") or "audio/wav",
-                        requested=bool(state.get("transcribe_requested")),
+                        policy_mode=transcript_policy_mode,
+                        key_scope=f"care_preview_{resident_id}",
                     )
-                    if bool(state.get("transcribe_requested")):
-                        transcript_preview_text = str(state.get("transcript_preview_text") or "").strip()
-                        transcript_preview_status = str(
-                            state.get("transcript_preview_status") or ""
-                        ).strip()
-                        transcript_preview_error = str(
-                            state.get("transcript_preview_error") or ""
-                        ).strip()
-                        if transcript_preview_text and transcript_preview_status == "ready":
-                            st.markdown("**Transcript preview (before send)**")
-                            st.caption("Transcript may contain errors. Voice remains the source of truth.")
-                            st.markdown(transcript_preview_text)
-                        elif transcript_preview_status == "failed":
-                            st.warning(
-                                "Transcript preview could not be generated before send."
-                                + (f" {transcript_preview_error}" if transcript_preview_error else "")
-                            )
                     if st.button(
                         "Reset recorder",
                         key=f"care_reset_recorder_{resident_id}",
@@ -12174,49 +12296,14 @@ def render_care_hub() -> None:
                         value=state.get("office_preview_confirmed", False),
                         key=f"care_office_listened_{resident_id}",
                     )
-                    if transcript_policy_mode == "off":
-                        state["office_transcribe_requested"] = False
-                        st.caption("Transcript assist is off for this care home.")
-                    elif transcript_policy_mode == "precheck":
-                        state["office_transcribe_requested"] = True
-                        st.caption(
-                            "Transcript is required by care home policy before Care Hub playback."
-                        )
-                    else:
-                        state["office_transcribe_requested"] = st.checkbox(
-                            "Create transcript for accessibility/support",
-                            value=state.get("office_transcribe_requested", True),
-                            key=f"care_office_transcribe_{resident_id}",
-                        )
-                        st.caption(
-                            "Transcript is optional, may contain errors, and replaces with the next message."
-                        )
-                    ensure_transcript_preview_state(
+                    render_transcript_preview_controls(
                         state,
                         state.get("office_recording_bytes") or b"",
                         state.get("office_recording_mime_type") or "audio/wav",
-                        requested=bool(state.get("office_transcribe_requested")),
+                        policy_mode=transcript_policy_mode,
+                        key_scope=f"care_office_preview_{resident_id}",
                         prefix="office_",
                     )
-                    if bool(state.get("office_transcribe_requested")):
-                        transcript_preview_text = str(
-                            state.get("office_transcript_preview_text") or ""
-                        ).strip()
-                        transcript_preview_status = str(
-                            state.get("office_transcript_preview_status") or ""
-                        ).strip()
-                        transcript_preview_error = str(
-                            state.get("office_transcript_preview_error") or ""
-                        ).strip()
-                        if transcript_preview_text and transcript_preview_status == "ready":
-                            st.markdown("**Transcript preview (before send)**")
-                            st.caption("Transcript may contain errors. Voice remains the source of truth.")
-                            st.markdown(transcript_preview_text)
-                        elif transcript_preview_status == "failed":
-                            st.warning(
-                                "Transcript preview could not be generated before send."
-                                + (f" {transcript_preview_error}" if transcript_preview_error else "")
-                            )
                     if st.button(
                         "Reset care hub recorder",
                         key=f"care_office_reset_recorder_{resident_id}",
@@ -13082,4 +13169,5 @@ if __name__ == "__main__":
         st.error("Application error while rendering.")
         st.error(str(exc))
         st.exception(exc)
+
 
