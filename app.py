@@ -1039,6 +1039,7 @@ def render_transcript_preview_controls(
     ):
         if transcript_preview_text and transcript_preview_status == "ready":
             state[visible_key] = not transcript_preview_visible
+            st.rerun()
         else:
             state[requested_key] = True
             ensure_transcript_preview_state(
@@ -1054,6 +1055,7 @@ def render_transcript_preview_controls(
             ).strip().lower()
             if transcript_preview_text and transcript_preview_status == "ready":
                 state[visible_key] = True
+                st.rerun()
             transcript_preview_visible = bool(state.get(visible_key, False))
 
     if bool(state.get(requested_key)):
@@ -2924,14 +2926,6 @@ def render_safeguarding_block() -> None:
 
 
 def render_how_it_works_diagram_and_notes() -> None:
-    diagram_path = Path("assets/system diagram.png")
-    if diagram_path.exists():
-        try:
-            st.image(str(diagram_path), caption="Voicemailcare.com flow diagram", use_container_width=True)
-        except TypeError:
-            st.image(str(diagram_path), caption="Voicemailcare.com flow diagram", use_column_width=True)
-    else:
-        st.error("Flow diagram image not found: assets/system diagram.png")
     st.markdown(
         "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub – Mobile, and Care Hub – Office.\n"
         "- Each Family Member has their own individual communication channel to the resident.\n"
@@ -2942,8 +2936,8 @@ def render_how_it_works_diagram_and_notes() -> None:
 
 
 def render_how_it_works_cartoon() -> None:
-    cartoon_path = Path("assets/cartoon-voicemailcare.png")
-    if not cartoon_path.exists():
+    cartoon_path = resolve_asset_file("cartoon-voicemailcare.png")
+    if cartoon_path is None:
         return
     try:
         st.image(str(cartoon_path), use_container_width=True)
@@ -5822,14 +5816,14 @@ def render_transcript_assist(
         ):
             if transcript_text and status == "ready":
                 st.session_state[toggle_key] = not transcript_visible
-                transcript_visible = bool(st.session_state.get(toggle_key, False))
+                st.rerun()
             else:
                 generated_text, generated_status, generated_error = _generate_transcript_for_message(message)
                 if generated_text and generated_status == "ready":
                     transcript_text = generated_text
                     status = "ready"
                     st.session_state[toggle_key] = True
-                    transcript_visible = True
+                    st.rerun()
                 else:
                     status = generated_status or "failed"
                     st.warning(generated_error or "Transcript could not be generated.")
@@ -5868,6 +5862,9 @@ def render_transcript_assist(
             st.caption("Transcript is unavailable. Playback remains available.")
         return True
     except Exception as exc:
+        # Streamlit control-flow exceptions (for rerun/stop) must propagate.
+        if exc.__class__.__name__ in {"RerunException", "StopException"}:
+            raise
         if APP_DEBUG:
             print(f"[transcript-assist] suppressed error: {exc}", flush=True)
         st.caption("Transcript assist is temporarily unavailable. Playback remains available.")
@@ -5892,6 +5889,22 @@ def load_home_logo_svg() -> str:
         return logo_path.read_text(encoding="utf-8")
     except OSError:
         return ""
+
+
+def resolve_asset_file(filename: str) -> Path | None:
+    base_dir = Path(__file__).resolve().parent
+    name = str(filename or "").strip()
+    if not name:
+        return None
+    candidates = [
+        base_dir / "assets" / name,
+        base_dir / "site" / "assets" / name,
+        Path("assets") / name,
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
 
 
 def render_corner_logo() -> None:
@@ -7298,22 +7311,6 @@ def render_home(active: str) -> None:
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("<h2>How it works</h2>", unsafe_allow_html=True)
-        public_diagram_path = Path("assets/system diagram.png")
-        if public_diagram_path.exists():
-            try:
-                st.image(
-                    str(public_diagram_path),
-                    caption="Voicemailcare.com flow diagram",
-                    use_container_width=True,
-                )
-            except TypeError:
-                st.image(
-                    str(public_diagram_path),
-                    caption="Voicemailcare.com flow diagram",
-                    use_column_width=True,
-                )
-        else:
-            st.error("Flow diagram image not found: assets/system diagram.png")
         st.markdown(
             "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub – Mobile, and Care Hub – Office.\n"
             "- Each family member has their own individual communication channel to the resident, managed by the care home.\n"
@@ -7441,44 +7438,30 @@ def render_home(active: str) -> None:
 
     st.markdown('<div class="vm-wrap vm-stage">', unsafe_allow_html=True)
     if get_app_variant() == VARIANT_PUBLIC:
-        public_diagram_path = Path("assets/system diagram.png")
-        if public_diagram_path.exists():
+        st.markdown("Communication participants")
+        st.markdown(
+            "This diagram shows how voice messages and updates are organised across channels. "
+            "Each Family Member has their own individual channel for "
+            "Family/Friend -> Resident messages, managed by the care home. Care Hub - Mobile plays these family messages in a "
+            "fair rotating order, with unplayed messages first."
+        )
+        st.markdown(
+            "Resident -> Family channel keeps the latest resident message shared to all Family Members. "
+            "The care home can also send a one-way Office update to all Family Members. "
+            "Office practical messages collect quick structured family responses, and the care home makes the final operational decision. "
+            "Each Family Member channel keeps only the latest message. "
+            "A new message replaces only the previous message in that channel."
+        )
+        st.markdown("### Start here: Service flow overview (90 seconds)")
+        overview_video = resolve_public_video_source(
+            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
+            "assets/voice-message-flow-overview-v1.mp4",
+        )
+        if overview_video:
             try:
-                st.image(
-                    str(public_diagram_path),
-                    caption="Voicemailcare.com flow diagram",
-                    use_container_width=True,
-                )
-            except TypeError:
-                st.image(
-                    str(public_diagram_path),
-                    caption="Voicemailcare.com flow diagram",
-                    use_column_width=True,
-                )
-            st.markdown("Communication participants")
-            st.markdown(
-                "This diagram shows how voice messages and updates are organised across channels. "
-                "Each Family Member has their own individual channel for "
-                "Family/Friend -> Resident messages, managed by the care home. Care Hub – Mobile plays these family messages in a "
-                "fair rotating order, with unplayed messages first."
-            )
-            st.markdown(
-                "Resident -> Family channel keeps the latest resident message shared to all Family Members. "
-                "The care home can also send a one-way Office update to all Family Members. "
-                "Office practical messages collect quick structured family responses, and the care home makes the final operational decision. "
-                "Each Family Member channel keeps only the latest message. "
-                "A new message replaces only the previous message in that channel."
-            )
-            st.markdown("### Start here: Service flow overview (90 seconds)")
-            overview_video = resolve_public_video_source(
-                "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
-                "assets/voice-message-flow-overview-v1.mp4",
-            )
-            if overview_video:
-                try:
-                    st.video(overview_video)
-                except Exception:
-                    pass
+                st.video(overview_video)
+            except Exception:
+                pass
     st.markdown("### Service overview")
     current_variant = get_app_variant()
     render_public_landing_link(
