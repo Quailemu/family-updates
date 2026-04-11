@@ -8435,7 +8435,6 @@ def render_audio_safe(
 
 
 def render_family_login_hub() -> None:
-    st.warning("BUILD MARKER LOGIN: transcript-patch-2026-04-11-b")
     inject_login_css()
     st.markdown(
         f"""
@@ -8592,7 +8591,6 @@ def render_family_login() -> None:
 
 def render_family_send() -> None:
     require_family_access()
-    st.warning("BUILD MARKER: transcript-patch-2026-04-11-b")
     st.markdown(
         f"""
 <style>
@@ -8831,7 +8829,6 @@ def render_family_send() -> None:
                     unsafe_allow_html=True,
                 )
             if latest:
-                st.caption("Transcript debug: inbound transcript control should appear below.")
                 render_transcript_assist(
                     latest,
                     policy_mode=transcript_policy_mode,
@@ -8875,7 +8872,6 @@ def render_family_send() -> None:
                     unsafe_allow_html=True,
                 )
             if latest_office_update:
-                st.caption("Transcript debug: office update transcript control should appear below.")
                 render_transcript_assist(
                     latest_office_update,
                     policy_mode=transcript_policy_mode,
@@ -9087,7 +9083,6 @@ def render_family_send() -> None:
                     if latest_sent_label:
                         st.caption(latest_sent_label)
                 if not show_recent_send_feedback:
-                    st.caption("Transcript debug: outbound transcript control should appear below.")
                     render_transcript_assist(
                         latest_sent,
                         policy_mode=transcript_policy_mode,
@@ -9102,7 +9097,6 @@ def render_family_send() -> None:
                     st.audio(last_message_audio, format=last_message_audio_mime)
                 transcript_source = latest_sent or fallback_last_message_for_transcript
                 if transcript_source:
-                    st.caption("Transcript debug: recent send transcript control should appear below.")
                     render_transcript_assist(
                         transcript_source,
                         policy_mode=transcript_policy_mode,
@@ -9183,7 +9177,6 @@ def render_family_send() -> None:
                     value=state.get("preview_confirmed", False),
                     key=f"family_listened_{resident_id}",
                 )
-                st.caption("Transcript debug: recording preview transcript control should appear below.")
                 render_transcript_preview_controls(
                     state,
                     state.get("recording_bytes") or b"",
