@@ -12699,7 +12699,7 @@ def render_care_hub_register_family() -> None:
             "Family registration is only available in Care Hub - Office."
         )
         return
-    back_route = get_office_home_route(bool(st.session_state.get("auth_uid")))
+    back_route = OFFICE_HOME_ROUTE
     render_page_header("Register a Family Member", show_menu=False)
     render_route_link(
         "Back to dashboard",
