@@ -6101,7 +6101,7 @@ def render_header_menu(menu_key: str) -> None:
         if show_back_only and app_variant not in (VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE):
             return
         if app_variant == VARIANT_OFFICE:
-            st.markdown("**Care Hub â€“ Office**")
+            st.markdown("**Care Hub - Office**")
             clicked_action = None
             if st.button("How it works", key=f"{menu_key}_office_how_it_works"):
                 clicked_action = ("route", "/care-hub-office/how-it-works")
@@ -6118,7 +6118,7 @@ def render_header_menu(menu_key: str) -> None:
             if st.button("Sign out", key=f"{menu_key}_office_sign_out"):
                 clicked_action = ("sign_out", "care_hub")
 
-            st.markdown("â€” Daily Use â€”")
+            st.markdown("- Daily Use -")
             if st.button("Care Hub handbook", key=f"{menu_key}_office_doc_handbook"):
                 clicked_action = ("doc", "docs/office/05_care_home_guide.md")
             if st.button("Registering a family member", key=f"{menu_key}_office_doc_register_family"):
@@ -6128,7 +6128,7 @@ def render_header_menu(menu_key: str) -> None:
             if st.button("Office Q&A", key=f"{menu_key}_office_doc_qa"):
                 clicked_action = ("route", "/care-hub/office/qa")
 
-            st.markdown("â€” Governance â€”")
+            st.markdown("- Governance -")
             if st.button("Videos", key=f"{menu_key}_office_service_overview"):
                 clicked_action = ("route", "/docs")
             if st.button("Care home responsibilities", key=f"{menu_key}_office_doc_responsibilities"):
@@ -6138,7 +6138,7 @@ def render_header_menu(menu_key: str) -> None:
             if st.button("Privacy notice", key=f"{menu_key}_office_privacy"):
                 clicked_action = ("route", "/public/privacy-notice")
 
-            st.markdown("â€” Formal â€”")
+            st.markdown("- Formal -")
             if st.button("Complaints & concerns", key=f"{menu_key}_office_complaints"):
                 clicked_action = ("route", "/public/complaints-and-concerns")
             if st.button("Contracts & templates", key=f"{menu_key}_contracts"):
