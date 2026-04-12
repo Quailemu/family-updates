@@ -2,7 +2,7 @@
 
 # Family Q&A
 
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+![Voice message flow diagram](../../assets/system diagram.png)
 
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
@@ -38,3 +38,4 @@ A: No. It is a structured response to a specific Office message.
 
 Q: Do I get read receipts or delivery confirmations?  
 A: No.
+

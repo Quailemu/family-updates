@@ -4,7 +4,7 @@
 
 This summary is for Care Hub – Office users. It outlines the separation of apps, office responsibilities, and the message and safeguarding boundaries.
 
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+![Voice message flow diagram](../../assets/system diagram.png)
 
 Example: Jane
 
@@ -76,3 +76,4 @@ Duplicate registrations are prevented automatically.
 
 - Safeguarding, consent, and capacity duties remain with the care home.
 - The platform does not provide monitoring, alerts, or professional judgement.
+

@@ -4,7 +4,7 @@
 
 ![Voicemail Care cartoon overview](../../assets/cartoon-voicemailcare.png)
 
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+![Voice message flow diagram](../../assets/system diagram.png)
 
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
@@ -55,3 +55,4 @@ You can reply with:
 
 Do not use this service for urgent, medical, safeguarding, or emergency communication.  
 For those matters, contact the care home directly.
+

@@ -2,7 +2,7 @@
 
 # Care Hub - Mobile training and instructions
 
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+![Voice message flow diagram](../../assets/system diagram.png)
 
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
@@ -49,3 +49,4 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 - This is not an emergency or urgent service.
 - Do not use this channel for clinical, medication, appointment, or safeguarding content.
 - For those matters, follow normal care home escalation routes.
+

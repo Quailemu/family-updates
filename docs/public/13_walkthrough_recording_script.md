@@ -1,6 +1,6 @@
 ![logo](../../assets/logo.png)
 
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+![Voice message flow diagram](../../assets/system diagram.png)
 
 # Public walkthrough recording script (60-90 seconds)
 
@@ -29,3 +29,4 @@ Family and Care Hub are separate experiences.
 Family users use the Family Hub.
 Care staff use Care Hub – Mobile.
 Senior staff use Care Hub – Office.
+

@@ -4,7 +4,7 @@
 
 ![Voicemail Care cartoon overview](../../assets/cartoon-voicemailcare.png)
 
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+![Voice message flow diagram](../../assets/system diagram.png)
 
 Communication participants: residents, Family Members, and Care Hub channels (Office and Mobile).
 
@@ -70,3 +70,4 @@ Messages are handled within normal care routines.
 
 This service is non-urgent and non-clinical.  
 For urgent, medical, safeguarding, or emergency matters, contact the care home directly.
+

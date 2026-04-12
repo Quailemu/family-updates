@@ -47,7 +47,7 @@ If all other current family messages have already been played, that new message 
 
 ## Voice Message Flow Example
 
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+![Voice message flow diagram](../../assets/system diagram.png)
 
 Example resident flow
 
@@ -194,3 +194,4 @@ For consent, authority, and safeguarding governance, refer to the Safeguarding a
 ## Time display
 
 Where timing labels are shown in care communication views, the app uses date-only labels. Exact clock times and AM/PM markers are not shown.
+

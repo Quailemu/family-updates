@@ -2,7 +2,7 @@
 
 # Care Hub - Office training and instructions
 
-![Voice message flow diagram](../../assets/voice-message-flow-diagram.png)
+![Voice message flow diagram](../../assets/system diagram.png)
 
 Example: Jane
 
@@ -45,3 +45,4 @@ Transcript text may contain errors; voice remains the source of truth.
 - This is not an emergency or urgent service.
 - Not live messaging.
 - For clinical, medication, appointment, safeguarding, or emergency matters, use normal care home processes.
+
