@@ -2364,7 +2364,7 @@ def render_office_family_registration_form(
         )
 
     with st.form("office_register_family_member_form"):
-        st.markdown("#### Section 1 â€” Family Member Details")
+        st.markdown("#### Section 1 - Family Member Details")
         first_name = st.text_input("First name", key="office_family_first_name")
         last_name = st.text_input("Last name", key="office_family_last_name")
         email = st.text_input("Email", key="office_family_email")
@@ -2372,14 +2372,14 @@ def render_office_family_registration_form(
             "Relationship to resident (for example: daughter, cousin)",
             key="office_family_relationship",
         )
-        st.markdown("#### Section 2 â€” Link to Resident")
+        st.markdown("#### Section 2 - Link to Resident")
         resident_id = st.selectbox(
             "Resident",
             resident_options,
             format_func=lambda rid: resident_label_by_id.get(rid, "Resident"),
             key="office_family_resident_select",
         )
-        st.markdown("#### Section 3 â€” Confirmation")
+        st.markdown("#### Section 3 - Confirmation")
         resident_access_confirmed = st.checkbox(
             f"I confirm that {active_care_home_name} has decided this person may be added "
             "as a Family Member for this resident and is solely responsible "
