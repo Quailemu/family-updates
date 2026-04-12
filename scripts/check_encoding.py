@@ -37,6 +37,13 @@ PATTERN_REGEXES = [
 REGEX = re.compile("|".join(PATTERN_REGEXES))
 
 
+def safe_print(text: str) -> None:
+    stream = sys.stdout
+    encoding = stream.encoding or "utf-8"
+    data = (str(text) + "\n").encode(encoding, errors="backslashreplace")
+    stream.buffer.write(data)
+
+
 def iter_files():
     for target in INCLUDE_ROOTS:
         if not target.exists():
@@ -66,15 +73,14 @@ def main() -> int:
                 findings.append((path.relative_to(ROOT), lineno, line.strip()))
 
     if findings:
-        print("Encoding check failed. Possible mojibake found:")
+        safe_print("Encoding check failed. Possible mojibake found:")
         for rel, lineno, line in findings:
-            print(f"{rel}:{lineno}: {line}")
+            safe_print(f"{rel}:{lineno}: {line}")
         return 1
 
-    print("Encoding check passed.")
+    safe_print("Encoding check passed.")
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
-
