@@ -3061,13 +3061,13 @@ def render_how_it_works_mobile() -> None:
 
 
 def render_how_it_works_office_overview() -> None:
-    render_page_header("How it works â€” Care Hub â€“ Office")
+    render_page_header("How it works - Care Hub - Office")
     render_how_it_works_cartoon()
     if get_app_variant() == VARIANT_PUBLIC:
         office_back_label = "Back to public page"
         office_back_route = get_home_route(VARIANT_PUBLIC)
     else:
-        office_back_label = "Back to Care Hub â€“ Office"
+        office_back_label = "Back to Care Hub - Office"
         office_back_route = get_home_route(VARIANT_OFFICE)
     render_route_link(
         office_back_label,
