@@ -26,14 +26,15 @@ SKIP_SUFFIXES = {
     ".zip",
 }
 
-PATTERNS = [
-    "â€“",
-    "â€”",
-    "â€¢",
-    "â†",
-    "Ã.",
+# Typical mojibake fragments, defined via escapes to avoid source-encoding drift.
+PATTERN_REGEXES = [
+    r"\u00e2\u20ac[\u0080-\u00ff]",  # â€…
+    r"\u00e2\u2020[\u0080-\u00ff]",  # â†…
+    r"\u00c3[\u0080-\u00bf]",        # Ã...
+    r"\u00c2[\u0080-\u00bf]",        # Â...
+    r"\ufffd",                       # replacement char �
 ]
-REGEX = re.compile("|".join(PATTERNS))
+REGEX = re.compile("|".join(PATTERN_REGEXES))
 
 
 def iter_files():
