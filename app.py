@@ -2932,7 +2932,7 @@ def render_safeguarding_block() -> None:
 
 def render_how_it_works_diagram_and_notes() -> None:
     st.markdown(
-        "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub â€“ Mobile, and Care Hub â€“ Office.\n"
+        "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub - Mobile, and Care Hub - Office.\n"
         "- Each Family Member has their own individual communication channel to the resident.\n"
         "- Office practical messages collect quick structured family responses to support efficient, inclusive practical decision-making.\n"
         "- The care home reviews responses and makes the final operational decision.\n"
@@ -2972,7 +2972,7 @@ def render_how_it_works_video_links(
 
 
 def render_how_it_works_family() -> None:
-    render_page_header("How it works â€” Family Hub")
+    render_page_header("How it works - Family Hub")
     render_how_it_works_cartoon()
     st.markdown(
         """
@@ -2992,7 +2992,7 @@ def render_how_it_works_family() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voicemailcare.com â€” for non-urgent social voice messages between residents and Family Members.",
+        "voicemailcare.com - for non-urgent social voice messages between residents and Family Members.",
         "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
         "Family access uses secure email login links. No SMS and no phone-number login.",
     ]
@@ -3009,13 +3009,13 @@ def render_how_it_works_family() -> None:
 
 
 def render_how_it_works_mobile() -> None:
-    render_page_header("How it works â€” Care Hub â€“ Mobile")
+    render_page_header("How it works - Care Hub - Mobile")
     render_how_it_works_cartoon()
     if get_app_variant() == VARIANT_PUBLIC:
         mobile_back_label = "Back to public page"
         mobile_back_route = get_home_route(VARIANT_PUBLIC)
     else:
-        mobile_back_label = "Back to Care Hub â€“ Mobile"
+        mobile_back_label = "Back to Care Hub - Mobile"
         mobile_back_route = get_home_route(VARIANT_MOBILE)
     render_route_link(
         mobile_back_label,
@@ -3040,15 +3040,15 @@ def render_how_it_works_mobile() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voicemailcare.com â€” for non-urgent social voice messages between residents and Family Members.",
+        "voicemailcare.com - for non-urgent social voice messages between residents and Family Members.",
         "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
-        "Care Hub â€“ Mobile uses individual staff PIN access for day-to-day use.",
+        "Care Hub - Mobile uses individual staff PIN access for day-to-day use.",
         "Secure email link is used only for first sign-in or expired-session recovery.",
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     render_how_it_works_video_links(
-        "Care Hub â€“ Mobile",
+        "Care Hub - Mobile",
         "/public/walkthrough-mobile",
         "how_mobile",
     )
@@ -3092,16 +3092,16 @@ def render_how_it_works_office_overview() -> None:
         unsafe_allow_html=True,
     )
     info_boxes = [
-        "voicemailcare.com â€” for non-urgent social voice messages between residents and Family Members.",
+        "voicemailcare.com - for non-urgent social voice messages between residents and Family Members.",
         "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
-        "Care Hub â€“ Office is a separate staff/admin access path.",
+        "Care Hub - Office is a separate staff/admin access path.",
         "Office authentication is distinct from Family email links and Mobile staff PIN access.",
         "If Office 2FA is enabled, users complete Office verification after login.",
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     render_how_it_works_video_links(
-        "Care Hub â€“ Office",
+        "Care Hub - Office",
         "/public/walkthrough-office",
         "how_office",
     )
@@ -6393,7 +6393,7 @@ def render_front_page_descriptor() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="front-page-info-box">voicemailcare.com â€” for non-urgent social voice messages.</div>',
+        '<div class="front-page-info-box">voicemailcare.com - for non-urgent social voice messages.</div>',
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -7277,7 +7277,7 @@ def render_home(active: str) -> None:
             ),
             (
                 VARIANT_MOBILE,
-                "Care Hub â€“ Mobile",
+                "Care Hub - Mobile",
                 "For care staff to play family messages and support resident recordings.",
                 "/public/walkthrough-mobile",
                 "PUBLIC_MOBILE_RECORD_VIDEO_URL",
@@ -7285,7 +7285,7 @@ def render_home(active: str) -> None:
             ),
             (
                 VARIANT_OFFICE,
-                "Care Hub â€“ Office",
+                "Care Hub - Office",
                 "For office oversight, one-way updates, and practical structured messages.",
                 "/public/walkthrough-office",
                 "PUBLIC_OFFICE_RECORD_VIDEO_URL",
@@ -7297,9 +7297,9 @@ def render_home(active: str) -> None:
             if variant == VARIANT_FAMILY:
                 watch_label = "Watch Family Record video"
             elif variant == VARIANT_MOBILE:
-                watch_label = "Watch Care Hub â€“ Mobile Record video"
+                watch_label = "Watch Care Hub - Mobile Record video"
             else:
-                watch_label = "Watch Care Hub â€“ Office Record video"
+                watch_label = "Watch Care Hub - Office Record video"
             with app_cols[idx]:
                 if st.button(watch_label, key=f"public_watch_{variant}", use_container_width=True):
                     set_route(walkthrough_route)
@@ -7320,7 +7320,7 @@ def render_home(active: str) -> None:
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("<h2>How it works</h2>", unsafe_allow_html=True)
         st.markdown(
-            "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub â€“ Mobile, and Care Hub â€“ Office.\n"
+            "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub - Mobile, and Care Hub - Office.\n"
             "- Each family member has their own individual communication channel to the resident, managed by the care home.\n"
             "- Office practical messages collect quick structured family responses to support efficient, inclusive practical decision-making.\n"
             "- The care home reviews responses and makes the final operational decision.\n"
@@ -7341,15 +7341,15 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>Office -&gt; Family (one-way updates)</h3>
-              <div>Care Hub â€“ Office sends the latest general update voice message to all Family Members. No replies in this general update channel. A new update replaces the previous general update.</div>
+              <div>Care Hub - Office sends the latest general update voice message to all Family Members. No replies in this general update channel. A new update replaces the previous general update.</div>
             </div>
             <div class="public-card">
               <h3>Office practical text message (structured replies from family)</h3>
-              <div>Care Hub â€“ Office can also send the latest practical text message for a resident. Family replies are designed to be minimal: Yes/No/Maybe plus optional tick-box selections, with only a short optional note.</div>
+              <div>Care Hub - Office can also send the latest practical text message for a resident. Family replies are designed to be minimal: Yes/No/Maybe plus optional tick-box selections, with only a short optional note.</div>
             </div>
             <div class="public-card pink">
               <h3>Resident -&gt; Family (one message out)</h3>
-              <div>Care Hub â€“ Mobile supports the resident to record the latest message to all Family Members. A new recording replaces the previous resident message.</div>
+              <div>Care Hub - Mobile supports the resident to record the latest message to all Family Members. A new recording replaces the previous resident message.</div>
             </div>
             <div class="public-card">
               <h3>Family -&gt; Resident (one message each)</h3>
@@ -7387,11 +7387,11 @@ def render_home(active: str) -> None:
               </div>
               <div class="public-card pink">
                 <h3>Care Hub playback</h3>
-                <div>Family messages are played to residents in Care Hub â€“ Mobile and are operationally visible in Care Hub â€“ Office.</div>
+                <div>Family messages are played to residents in Care Hub - Mobile and are operationally visible in Care Hub - Office.</div>
               </div>
               <div class="public-card">
                 <h3>No live pressure</h3>
-                <div>No notifications, no delivery/read receipts, and no typing indicators. Message date is shown without time in Family and Care Hub â€“ Mobile views.</div>
+                <div>No notifications, no delivery/read receipts, and no typing indicators. Message date is shown without time in Family and Care Hub - Mobile views.</div>
               </div>
             </div>
             """,
@@ -7405,8 +7405,8 @@ def render_home(active: str) -> None:
             <div class="public-card">
               <h3>Roles and important boundaries</h3>
               <div><strong>Family Members:</strong> Family Members send messages and listen to the resident's current shared reply.</div>
-              <div><strong>Care Hub â€“ Mobile:</strong> staff play family messages and support resident recordings.</div>
-              <div><strong>Care Hub â€“ Office:</strong> oversight plus one-way updates to family.</div>
+              <div><strong>Care Hub - Mobile:</strong> staff play family messages and support resident recordings.</div>
+              <div><strong>Care Hub - Office:</strong> oversight plus one-way updates to family.</div>
               <div style="margin-top:8px;">This service is for social communication only. It is not for medical updates, health information, safeguarding communication, or urgent enquiries. For those matters, contact the care home directly using normal channels.</div>
             </div>
             """,
@@ -7473,7 +7473,7 @@ def render_home(active: str) -> None:
     st.markdown("### Service overview")
     current_variant = get_app_variant()
     render_public_landing_link(
-        "â† Back to main public page",
+        "Back to main public page",
         key=f"service_overview_back_to_public_docs_{current_variant}",
     )
     st.markdown(
@@ -7486,7 +7486,7 @@ def render_home(active: str) -> None:
     button_cols = st.columns(3, gap="small")
     render_public_app_buttons(button_cols)
 
-    # Homepage buttons are handled above (Family / Care Hub â€“ Mobile / Care Hub â€“ Office).
+    # Homepage buttons are handled above (Family / Care Hub - Mobile / Care Hub - Office).
 
     st.markdown('<div style="margin-top:-8px;"></div>', unsafe_allow_html=True)
 
@@ -8155,8 +8155,8 @@ def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
 def render_public_app_buttons(cols: list) -> None:
     entries = [
         ("Family", "/public/walkthrough-family"),
-        ("Care Hub â€“ Mobile", "/public/walkthrough-mobile"),
-        ("Care Hub â€“ Office", "/public/walkthrough-office"),
+        ("Care Hub - Mobile", "/public/walkthrough-mobile"),
+        ("Care Hub - Office", "/public/walkthrough-office"),
     ]
     for idx, (label, route) in enumerate(entries):
         with cols[idx]:
@@ -8313,14 +8313,14 @@ def get_expected_variants_for_route(route: str) -> list[str]:
 def get_care_hub_label() -> str:
     runtime_variant = resolve_runtime_variant(route_hint=get_route())
     if runtime_variant == VARIANT_MOBILE:
-        return "Care Hub â€“ Mobile"
+        return "Care Hub - Mobile"
     if runtime_variant == VARIANT_OFFICE:
-        return "Care Hub â€“ Office"
+        return "Care Hub - Office"
     app_variant = get_app_variant()
     if app_variant == VARIANT_MOBILE:
-        return "Care Hub â€“ Mobile"
+        return "Care Hub - Mobile"
     if app_variant == VARIANT_OFFICE:
-        return "Care Hub â€“ Office"
+        return "Care Hub - Office"
     return "Care Hub"
 
 
@@ -9387,14 +9387,14 @@ def render_docs() -> None:
     walkthrough_cols_mid = st.columns(2, gap="small")
     with walkthrough_cols_mid[0]:
         if st.button(
-            "Care Hub â€“ Mobile Diagram video",
+            "Care Hub - Mobile Diagram video",
             key="docs_walkthrough_mobile_flow",
             use_container_width=True,
         ):
             set_route("/public/walkthrough-mobile-flow")
     with walkthrough_cols_mid[1]:
         if st.button(
-            "Care Hub â€“ Office Diagram video",
+            "Care Hub - Office Diagram video",
             key="docs_walkthrough_office_flow",
             use_container_width=True,
         ):
@@ -9408,7 +9408,7 @@ def render_docs() -> None:
         ):
             set_route("/public/walkthrough-family")
         if st.button(
-            "Care Hub â€“ Office Record video",
+            "Care Hub - Office Record video",
             key="docs_walkthrough_office_audio",
             use_container_width=True,
         ):
@@ -9472,7 +9472,7 @@ def render_docs() -> None:
             st.write("")
 
     render_route_link(
-        "Back to Care Hub â€“ Office",
+        "Back to Care Hub - Office",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="docs_home_link",
     )
@@ -9655,7 +9655,7 @@ def render_public_document(doc_path: str, back_route: str = "/public/walkthrough
     use_qa_search = doc_path.endswith("10_faq.md")
     app_variant = get_app_variant()
     if app_variant == VARIANT_PUBLIC:
-        st.markdown(f"[â† Back to videos](?route={back_route})")
+        st.markdown(f"[Back to videos](?route={back_route})")
         render_page_header(get_public_document_title(doc_path), show_menu=False, show_variant_subheading=False)
         if use_qa_search:
             render_qa_document(doc_path, search_key="public_faq_search")
@@ -9667,7 +9667,7 @@ def render_public_document(doc_path: str, back_route: str = "/public/walkthrough
     if app_variant == VARIANT_FAMILY:
         render_page_header(get_public_document_title(doc_path), show_variant_subheading=False)
         render_route_link(
-            "â† Back to Family Hub login",
+            "Back to Family Hub login",
             get_login_route(VARIANT_FAMILY),
             key="public_doc_back_family_login_link",
         )
@@ -9683,7 +9683,7 @@ def render_public_document(doc_path: str, back_route: str = "/public/walkthrough
         office_home_route = get_office_home_route(is_authed)
         render_page_header(get_public_document_title(doc_path), show_variant_subheading=False)
         render_route_link(
-            "â† Back to dashboard",
+            "Back to dashboard",
             office_home_route,
             key="public_doc_back_office_dashboard_link",
         )
@@ -9709,7 +9709,7 @@ def render_public_document(doc_path: str, back_route: str = "/public/walkthrough
             render_document_content(doc_path)
         return
     render_route_link(
-        "â† Back to videos",
+        "Back to videos",
         back_route,
         key="public_doc_back_service_overview_top",
     )
@@ -9721,7 +9721,7 @@ def render_public_document(doc_path: str, back_route: str = "/public/walkthrough
     else:
         render_document_content(doc_path)
     render_route_link(
-        "â† Back to videos",
+        "Back to videos",
         back_route,
         key="public_doc_back_service_overview_bottom",
     )
@@ -9733,7 +9733,7 @@ def render_public_docs() -> None:
     render_page_header("Public Documents")
     if app_variant == VARIANT_FAMILY:
         if st.button(
-            "â† Back to Family Hub login",
+            "Back to Family Hub login",
             key="public_docs_back_family_login_link",
             use_container_width=True,
         ):
@@ -9741,7 +9741,7 @@ def render_public_docs() -> None:
             set_route(get_login_route(VARIANT_FAMILY))
     if app_variant == VARIANT_OFFICE:
         render_route_link(
-            "â† Back to dashboard",
+            "Back to dashboard",
             get_office_home_route(bool(st.session_state.get("auth_uid"))),
             key="public_docs_back_office_dashboard_link",
         )
@@ -9756,28 +9756,28 @@ def render_public_docs() -> None:
     elif app_variant == VARIANT_MOBILE:
         public_docs = [
             ("Universal Diagram video", "/public/walkthrough-overview"),
-            ("Care Hub â€“ Mobile Diagram video", "/public/walkthrough-mobile-flow"),
+            ("Care Hub - Mobile Diagram video", "/public/walkthrough-mobile-flow"),
             ("Family Record video", "/public/walkthrough-family"),
-            ("Care Hub â€“ Mobile Record video", "/public/walkthrough-mobile"),
+            ("Care Hub - Mobile Record video", "/public/walkthrough-mobile"),
         ]
     elif app_variant == VARIANT_OFFICE:
         public_docs = [
             ("Universal Diagram video", "/public/walkthrough-overview"),
             ("Family Diagram video", "/public/walkthrough-family-flow"),
             ("Family Record video", "/public/walkthrough-family"),
-            ("Care Hub â€“ Mobile Diagram video", "/public/walkthrough-mobile-flow"),
-            ("Care Hub â€“ Office Diagram video", "/public/walkthrough-office-flow"),
-            ("Care Hub â€“ Office Record video", "/public/walkthrough-office"),
+            ("Care Hub - Mobile Diagram video", "/public/walkthrough-mobile-flow"),
+            ("Care Hub - Office Diagram video", "/public/walkthrough-office-flow"),
+            ("Care Hub - Office Record video", "/public/walkthrough-office"),
         ]
     else:
         public_docs = [
             ("Universal Diagram video", "/public/walkthrough-overview"),
             ("Family Diagram video", "/public/walkthrough-family-flow"),
-            ("Care Hub â€“ Mobile Diagram video", "/public/walkthrough-mobile-flow"),
-            ("Care Hub â€“ Office Diagram video", "/public/walkthrough-office-flow"),
+            ("Care Hub - Mobile Diagram video", "/public/walkthrough-mobile-flow"),
+            ("Care Hub - Office Diagram video", "/public/walkthrough-office-flow"),
             ("Family Record video", "/public/walkthrough-family"),
-            ("Care Hub â€“ Mobile Record video", "/public/walkthrough-mobile"),
-            ("Care Hub â€“ Office Record video", "/public/walkthrough-office"),
+            ("Care Hub - Mobile Record video", "/public/walkthrough-mobile"),
+            ("Care Hub - Office Record video", "/public/walkthrough-office"),
         ]
     public_docs.extend(
         [
@@ -9796,13 +9796,13 @@ def render_public_docs() -> None:
     if app_variant == VARIANT_OFFICE:
         is_authed = bool(st.session_state.get("auth_uid"))
         render_route_link(
-            "Back to Care Hub â€“ Office",
+            "Back to Care Hub - Office",
             get_office_home_route(is_authed),
             key="public_docs_back_office_link",
         )
     elif app_variant == VARIANT_MOBILE:
         render_route_link(
-            "Back to Care Hub â€“ Mobile",
+            "Back to Care Hub - Mobile",
             get_home_route(app_variant),
             key="public_docs_back_mobile_link",
         )
@@ -9886,7 +9886,7 @@ def render_pr_homepage() -> None:
 def render_care_hub_banner_settings() -> None:
     require_care_access()
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
-        render_wrong_variant("Operational variables are only available in Care Hub â€“ Office.")
+        render_wrong_variant("Operational variables are only available in Care Hub - Office.")
         return
     save_notice_state_key = "office_operational_save_notice"
     render_page_header("Operational Variables")
@@ -10002,10 +10002,10 @@ def render_care_hub_banner_settings() -> None:
     st.markdown("**Issues**")
     st.checkbox("Log / escalate incidents", key="office_checks_issues_log_escalate")
     st.markdown("### Office care home banner")
-    st.caption("Add your logo or your own banner design for Care Hub â€“ Office and Family views.")
+    st.caption("Add your logo or your own banner design for Care Hub - Office and Family views.")
     st.markdown("### Operational settings")
     st.caption(
-        "Choose how long Care Hub can stay idle before it signs out. This applies to Care Hub â€“ Office and Care Hub â€“ Mobile."
+        "Choose how long Care Hub can stay idle before it signs out. This applies to Care Hub - Office and Care Hub - Mobile."
     )
     st.caption(
         "Transcript policy controls safety/accessibility behavior for Care Hub playback (voice remains source of truth)."
@@ -10110,7 +10110,7 @@ def render_care_hub_banner_settings() -> None:
 def render_care_hub_security() -> None:
     require_care_access()
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
-        render_wrong_variant("Security settings are only available in Care Hub â€“ Office.")
+        render_wrong_variant("Security settings are only available in Care Hub - Office.")
         return
     render_page_header("Account & Security")
     access_token = st.session_state.get("access_token")
@@ -10246,7 +10246,7 @@ def render_care_hub_security() -> None:
                 st.session_state.pop("mfa_show_codes", None)
 
     render_route_link(
-        "Back to Care Hub â€“ Office",
+        "Back to Care Hub - Office",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="mfa_back_office_link",
     )
@@ -10262,7 +10262,7 @@ def render_care_hub_mfa() -> None:
     )
     if not auth_uid:
         render_access_gate(
-            "Please sign in to access Care Hub â€“ Office.",
+            "Please sign in to access Care Hub - Office.",
             get_login_route(VARIANT_OFFICE),
             "care_hub",
         )
@@ -10432,7 +10432,7 @@ def render_contracts() -> None:
             st.session_state["contracts_active"] = ""
 
     render_route_link(
-        "Back to Care Hub â€“ Office",
+        "Back to Care Hub - Office",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="contracts_home_link",
     )
@@ -10495,7 +10495,7 @@ def render_subscription_billing() -> None:
     billing_box("Invoice download functionality will be available here.")
 
     render_route_link(
-        "Back to Care Hub â€“ Office",
+        "Back to Care Hub - Office",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="billing_home_link",
     )
@@ -11038,7 +11038,7 @@ def render_care_hub() -> None:
             if runtime_variant == VARIANT_OFFICE:
                 st.warning(
                     "No Family Members are linked to this resident yet. "
-                    "Register a family member in Care Hub â€“ Office before sending messages."
+                    "Register a family member in Care Hub - Office before sending messages."
                 )
                 if st.button(
                     "Register family member now",
@@ -12672,13 +12672,13 @@ def render_care_hub_register_family() -> None:
     require_care_access()
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
         render_wrong_variant(
-            "Family registration is only available in Care Hub â€“ Office."
+            "Family registration is only available in Care Hub - Office."
         )
         return
     back_route = get_office_home_route(bool(st.session_state.get("auth_uid")))
     render_page_header("Register a Family Member", show_menu=False)
     render_route_link(
-        "â† Back to dashboard",
+        "Back to dashboard",
         back_route,
         key="office_register_family_back_dashboard_link",
     )
@@ -13039,7 +13039,7 @@ def main() -> None:
         render_page_header("Office Q&A", show_variant_subheading=False)
         render_care_home_identity_banner(st.session_state.get("access_token"))
         render_route_link(
-            "â† Back to dashboard",
+            "Back to dashboard",
             get_office_home_route(bool(st.session_state.get("auth_uid"))),
             key="office_qa_back_dashboard_link",
         )
@@ -13192,5 +13192,9 @@ if __name__ == "__main__":
         st.error("Application error while rendering.")
         st.error(str(exc))
         st.exception(exc)
+
+
+
+
 
 
