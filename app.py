@@ -7471,11 +7471,35 @@ def render_home(active: str) -> None:
             except Exception:
                 pass
     st.markdown("### Service overview")
-    current_variant = get_app_variant()
-    render_public_landing_link(
-        "Back to main public page",
-        key=f"service_overview_back_to_public_docs_{current_variant}",
-    )
+    current_variant = resolve_runtime_variant(route_hint=get_route())
+    if current_variant == VARIANT_MOBILE:
+        render_route_link(
+            "Back to Care Hub - Mobile",
+            get_home_route(VARIANT_MOBILE),
+            key="service_overview_back_mobile",
+        )
+    elif current_variant == VARIANT_OFFICE:
+        render_route_link(
+            "Back to Care Hub - Office",
+            get_office_home_route(bool(st.session_state.get("auth_uid"))),
+            key="service_overview_back_office",
+        )
+    elif current_variant == VARIANT_FAMILY:
+        family_back_route = (
+            get_home_route(VARIANT_FAMILY)
+            if bool(st.session_state.get("auth_uid"))
+            else get_login_route(VARIANT_FAMILY)
+        )
+        render_route_link(
+            "Back to Family Hub",
+            family_back_route,
+            key="service_overview_back_family",
+        )
+    else:
+        render_public_landing_link(
+            "Back to main public page",
+            key=f"service_overview_back_to_public_docs_{current_variant}",
+        )
     st.markdown(
         "voicemailcare.com  \n"
         "Public guides and walkthrough videos.\n\n"
