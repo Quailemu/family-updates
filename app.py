@@ -6160,7 +6160,7 @@ def render_header_menu(menu_key: str) -> None:
                 return
         if app_variant not in (VARIANT_OFFICE, VARIANT_MOBILE, VARIANT_FAMILY):
             if st.button("Public info", key=f"{menu_key}_public_docs"):
-                redirect_to_public_landing()
+                set_route("/pr-home")
                 return
         if app_variant == VARIANT_MOBILE:
             is_authed = bool(st.session_state.get("auth_uid"))
@@ -6175,7 +6175,7 @@ def render_header_menu(menu_key: str) -> None:
             else:
                 render_route_link("Back", back_target, key=f"{menu_key}_mobile_back_link")
             if st.button("Public info", key=f"{menu_key}_mobile_public_docs"):
-                redirect_to_public_landing()
+                set_route("/pr-home")
                 return
             if st.button("Videos", key=f"{menu_key}_mobile_videos"):
                 set_route("/public/walkthrough-family")
