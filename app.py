@@ -5025,14 +5025,14 @@ def fetch_latest_message(
         if APP_DEBUG and direction == "from_resident":
             if latest:
                 print(
-                    "Loading Residentâ†’Family message:",
+                    "Loading Resident->Family message:",
                     latest.get("id"),
                     latest.get("recorded_at"),
                     latest.get("contact_user_id"),
                 )
             else:
                 print(
-                    "Loading Residentâ†’Family message: none",
+                    "Loading Resident->Family message: none",
                     resident_id,
                     contact_user_id,
                 )
@@ -6962,7 +6962,7 @@ def render_home(active: str) -> None:
               background: #ffffff !important;
               display: none !important; /* remove the thin coloured/blank bar */
             }
-            /* Remove extra top padding that can create a â€œsecond barâ€ look */
+            /* Remove extra top padding that can create a "second bar" look */
             div.block-container {
               padding-top: 1rem !important;
             }
@@ -8282,7 +8282,7 @@ def render_public_walkthrough_page(
     render_route_link(
         "Back",
         effective_back_route,
-        key=f"walkthrough_back_{page_title.lower().replace(' ', '_').replace('â€“', '-').replace('–', '-')}",
+        key=f"walkthrough_back_{page_title.lower().replace(' ', '_').replace('–', '-').replace('—', '-')}",
     )
     render_page_header(page_title, show_menu=False, show_variant_subheading=False)
     st.caption("voicemailcare.com")
@@ -9094,7 +9094,7 @@ def render_family_send() -> None:
                     st.audio(last_message_audio, format=last_message_audio_mime)
                     st.caption("Showing a copy of the message you just sent.")
                 else:
-                    st.success("Latest Family â†’ Resident message is saved.")
+                    st.success("Latest Family -> Resident message is saved.")
                 latest_sent_at = latest_sent.get("recorded_at")
                 if latest_sent_at and not show_recent_send_feedback:
                     latest_sent_label = format_soft_message_period_label(latest_sent_at)
@@ -9930,7 +9930,7 @@ def render_care_hub_banner_settings() -> None:
     st.caption(
         "Review and confirm these settings during setup so day-to-day use is consistent from launch."
     )
-    st.markdown("### âœ… Voice Message â€“ Office Checks")
+    st.markdown("### Voice Message - Office Checks")
     st.markdown("**Daily**")
     st.checkbox("Login", key="office_checks_daily_login")
     st.checkbox("Send & playback test message", key="office_checks_daily_send_playback")
@@ -10502,11 +10502,11 @@ def render_subscription_billing() -> None:
     billing_box("Status: Pilot (example)")
 
     st.markdown("## Current Plan")
-    billing_box("Up to 50 residents: Â£195 + VAT per month")
-    billing_box("51+ residents: Â£295 + VAT per month")
+    billing_box("Up to 50 residents: £195 + VAT per month")
+    billing_box("51+ residents: £295 + VAT per month")
 
     st.markdown("## Pilot Details (if applicable)")
-    billing_box("Â£75 + VAT one-time pilot fee")
+    billing_box("£75 + VAT one-time pilot fee")
     billing_box("Credited against first month if continuing")
 
     st.markdown("## Billing Terms")
@@ -11292,9 +11292,9 @@ def render_care_hub() -> None:
             for contact in filtered_contacts:
                 relationship = (contact.get("relationship") or "").strip()
                 if relationship:
-                    contact_options.append(f"{contact['full_name']} â€” {relationship.title()}")
+                    contact_options.append(f"{contact['full_name']} - {relationship.title()}")
                 else:
-                    contact_options.append(f"{contact['full_name']} â€” Family Member")
+                    contact_options.append(f"{contact['full_name']} - Family Member")
 
             current_selected_id = state.get("selected_contact_id")
             default_index = 0
@@ -11951,7 +11951,7 @@ def render_care_hub() -> None:
                     else:
                         st.audio(latest_sent_audio)
                 else:
-                    st.success("Latest Resident â†’ Family message is saved.")
+                    st.success("Latest Resident -> Family message is saved.")
                 latest_sent_at = latest_sent.get("recorded_at")
                 if latest_sent_at:
                     latest_sent_label = format_soft_message_period_label(latest_sent_at)
@@ -12087,7 +12087,7 @@ def render_care_hub() -> None:
                 if is_office_variant:
                     confirmation_line = (
                         "Sending on behalf of:<br/>"
-                        f"{full_name} â€” {room_display} \u2192 all Family Members"
+                        f"{full_name} - {room_display} -> all Family Members"
                     )
                 else:
                     care_home_display = (
@@ -12095,7 +12095,7 @@ def render_care_hub() -> None:
                     )
                     confirmation_line = (
                         "Sending on behalf of:<br/>"
-                        f"{full_name} â€” {room_display} â€” {care_home_display} \u2192 all Family Members"
+                        f"{full_name} - {room_display} - {care_home_display} -> all Family Members"
                     )
                 st.markdown(
                     f'<div class="vm-muted-line">{confirmation_line}</div>',
@@ -12204,7 +12204,7 @@ def render_care_hub() -> None:
                                 bump_message_cache_epoch()
                                 if APP_DEBUG:
                                     print(
-                                        "Saving Residentâ†’Family message:",
+                                        "Saving Resident->Family message:",
                                         message_id,
                                         now_iso,
                                         "broadcast",
