@@ -9593,8 +9593,8 @@ def render_document_boxes(doc_path: str, strip_first_heading: bool = True) -> No
         raw_text = "\n".join(remaining_lines).strip()
         if not raw_text:
             return
-        text = re.sub(r"^\s*[-*]\s+", "â€¢ ", raw_text, flags=re.M).strip()
-        if re.fullmatch(r"[â€¢\-\*\s]+", text):
+        text = re.sub(r"^\s*[-*]\s+", "- ", raw_text, flags=re.M).strip()
+        if re.fullmatch(r"[-*\s]+", text):
             return
         if not text:
             return
