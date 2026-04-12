@@ -6076,7 +6076,7 @@ def render_header_menu(menu_key: str) -> None:
     app_variant = resolve_runtime_variant(route_hint=current_route)
     prev_route = st.session_state.get("prev_page") or "/"
     show_back_only = current_route.startswith("/how-it-works/") and prev_route in ("/", "", None)
-    with st.popover("â‰¡"):
+    with st.popover("\u2630"):
         # Prevent first action from clipping at the popover edge on small screens.
         st.markdown('<div style="height:0.9rem"></div>', unsafe_allow_html=True)
         if app_variant == VARIANT_OFFICE:
