@@ -423,11 +423,11 @@ def get_public_landing_url() -> str:
         current_url = str(getattr(context, "url", "") or "").strip() if context is not None else ""
         parsed = urlparse(current_url) if current_url else None
         if parsed and parsed.scheme and parsed.netloc:
-            return f"{parsed.scheme}://{parsed.netloc}/?route=%2Fpublic%2Fwalkthrough-overview"
+            return f"{parsed.scheme}://{parsed.netloc}/?route=%2Fpr-home"
     except Exception:
         pass
     # Final fallback must stay on the current host (no cross-domain redirect).
-    return "/?route=%2Fpublic%2Fwalkthrough-overview"
+    return "/?route=%2Fpr-home"
 
 
 def _join_media_base_url(object_path: str) -> str:
@@ -7600,7 +7600,7 @@ VARIANT_CONFIG = {
         },
     },
     VARIANT_MOBILE: {
-        "label": "Care Hub â€“ Mobile",
+        "label": "Care Hub - Mobile",
         "default_route": MOBILE_LOGIN_ROUTE,
         "how_it_works_route": "/care-hub-mobile/how-it-works",
         "allowed_routes": {
@@ -7636,7 +7636,7 @@ VARIANT_CONFIG = {
         },
     },
     VARIANT_OFFICE: {
-        "label": "Care Hub â€“ Office",
+        "label": "Care Hub - Office",
         "default_route": OFFICE_LOGIN_ROUTE,
         "how_it_works_route": "/care-hub-office/how-it-works",
         "allowed_routes": {
@@ -8256,17 +8256,17 @@ def render_public_walkthrough_page(
             else MOBILE_HOME_ROUTE
         )
     render_route_link(
-        "â† Back",
+        "Back",
         effective_back_route,
-        key=f"walkthrough_back_{page_title.lower().replace(' ', '_').replace('â€“', '-')}",
+        key=f"walkthrough_back_{page_title.lower().replace(' ', '_').replace('â€“', '-').replace('–', '-')}",
     )
     render_page_header(page_title, show_menu=False, show_variant_subheading=False)
     st.caption("voicemailcare.com")
     normalized_title = page_title.strip().lower()
     if normalized_title.endswith("record video"):
-        st.caption("Record video â€” Send a voice message.")
+        st.caption("Record video - Send a voice message.")
     elif normalized_title.endswith("diagram video"):
-        st.caption("Diagram video â€” How the system works.")
+        st.caption("Diagram video - How the system works.")
     video_source = resolve_public_video_source(video_env_var, local_video_path)
     if video_source:
         try:
@@ -12766,10 +12766,10 @@ def main() -> None:
     st.session_state.route = route
     early_public_route_redirects = {
         "/service-overview": "/pr-home",
-        "/public-docs": "/public/walkthrough-overview",
-        "/public/service-overview": "/public/walkthrough-overview",
-        "/public/how-it-works": "/public/walkthrough-overview",
-        "/public/resident-participation": "/public/walkthrough-overview",
+        "/public-docs": "/pr-home",
+        "/public/service-overview": "/pr-home",
+        "/public/how-it-works": "/pr-home",
+        "/public/resident-participation": "/pr-home",
     }
     early_public_target = early_public_route_redirects.get(route)
     if early_public_target:
@@ -13057,13 +13057,13 @@ def main() -> None:
     elif route == "/docs":
         render_docs()
     elif route == "/public-docs":
-        set_route("/public/walkthrough-overview")
+        set_route("/pr-home")
     elif route == "/public/service-overview":
         set_route("/pr-home")
     elif route == "/public/how-it-works":
-        set_route("/public/walkthrough-overview")
+        set_route("/pr-home")
     elif route == "/public/resident-participation":
-        set_route("/public/walkthrough-overview")
+        set_route("/pr-home")
     elif route == "/public/family-guide":
         set_route("/public/walkthrough-family")
     elif route == "/public/qa":
@@ -13118,7 +13118,7 @@ def main() -> None:
         )
     elif route == "/public/walkthrough-mobile":
         render_public_walkthrough_page(
-            "Care Hub â€“ Mobile Record video",
+            "Care Hub - Mobile Record video",
             "PUBLIC_MOBILE_RECORD_VIDEO_URL",
             "assets/voice-message-mobile-walkthrough-v1.mp4",
             [
@@ -13131,7 +13131,7 @@ def main() -> None:
         )
     elif route == "/public/walkthrough-mobile-flow":
         render_public_walkthrough_page(
-            "Care Hub â€“ Mobile Diagram video",
+            "Care Hub - Mobile Diagram video",
             "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
             "assets/voice-message-mobile-walkthrough-v1.mp4",
             [
@@ -13144,7 +13144,7 @@ def main() -> None:
         )
     elif route == "/public/walkthrough-office":
         render_public_walkthrough_page(
-            "Care Hub â€“ Office Record video",
+            "Care Hub - Office Record video",
             "PUBLIC_OFFICE_RECORD_VIDEO_URL",
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
@@ -13157,7 +13157,7 @@ def main() -> None:
         )
     elif route == "/public/walkthrough-office-flow":
         render_public_walkthrough_page(
-            "Care Hub â€“ Office Diagram video",
+            "Care Hub - Office Diagram video",
             "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
