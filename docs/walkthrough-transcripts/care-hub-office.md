@@ -153,6 +153,13 @@ This shows the question that has been sent to the family, together with the avai
 
 ---
 
+"And here we can see the follow-through response from the family:
+'Richard has confirmed that he will be making the dental hygienist appointment for Judy, and he will take her himself.'
+
+That gives clear continuity from the previous practical message."
+
+---
+
 "Now I'll open the menu."
 
 *click menu*
