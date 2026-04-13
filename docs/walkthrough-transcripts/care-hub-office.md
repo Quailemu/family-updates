@@ -36,6 +36,8 @@ and select
 'Mark listened and move to next'
 to progress the queue order."
 
+"In Care Hub - Office, this playback is review-only and does not change queue order."
+
 "I'll just click the transcript button, which is useful if you want to read what was said."
 
 *pause*
@@ -161,3 +163,4 @@ This gives a simple explanation of how the Care Hub Office works."
 "So overall, the Care Hub Office page allows the care home to review family messages, review the latest resident message to family, record a message on behalf of the resident, send office updates and reassurance, and manage structured practical communication with family members.
 
 It is designed to keep communication simple, clear, and non-urgent."
+

@@ -1,4 +1,4 @@
-# System Diagram Walkthrough Transcript
+﻿# System Diagram Walkthrough Transcript
 
 "This is the systems diagram for voicemailcare.com.
 
@@ -26,6 +26,8 @@ The service is non-live and non-urgent."
 
 Unplayed messages are first, in family order.
 
+After unplayed messages, playback continues in the same fixed family order.
+
 Order changes only when staff confirm listened and select 'Mark listened and move to next.'"
 
 ---
@@ -33,4 +35,5 @@ Order changes only when staff confirm listened and select 'Mark listened and mov
 "In Care Hub - Office, playback is review-only.
 
 Reviewing a message in Office does not change queue order."
+
 

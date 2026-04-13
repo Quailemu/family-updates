@@ -11377,6 +11377,11 @@ def render_care_hub() -> None:
                     st.caption(
                         "Play messages follows a fixed contact order. Unplayed messages are always first."
                     )
+                    st.caption(
+                        "Queue order only changes after Mobile confirmation: "
+                        "'I confirm this message has been listened to with the resident' "
+                        "then 'Mark listened and move to next'."
+                    )
                     st.caption(f"Unread family messages: {queue_unread_count}")
                     if effective_queue_next_contact:
                         next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
@@ -11469,6 +11474,7 @@ def render_care_hub() -> None:
                                         st.session_state[f"care_mobile_listened_confirm_{resident_id}"] = False
             else:
                 st.caption(f"Unread family messages: {queue_unread_count}")
+                st.caption("Office playback is review-only and does not change queue order.")
                 if effective_queue_next_contact:
                     next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
                     next_relationship = ((effective_queue_next_contact.get("relationship") or "").strip())
@@ -13077,6 +13083,7 @@ def main() -> None:
                 "How a Family Member sends Family -> Resident voice messages.",
                 "How family listens to the resident's current shared message.",
                 "How Office updates and practical structured replies appear in Family.",
+                "Family view does not change Care Hub playback queue order.",
                 "Non-live expectations and calm communication boundaries.",
             ],
             fallback_doc_path="docs/public/06_family_guide.md",
@@ -13117,6 +13124,7 @@ def main() -> None:
             [
                 "How staff play Family -> Resident messages to the resident.",
                 "Queue order is fixed: unplayed messages are first, in family order.",
+                "After unplayed messages, playback continues in the same fixed family order.",
                 "Order changes only after staff confirm listened and tap 'Mark listened and move to next'.",
                 "How staff support Resident -> Family recording.",
                 "How playback and recording fit around care routines.",
@@ -13146,6 +13154,7 @@ def main() -> None:
             [
                 "How Office reviews resident-linked family messages.",
                 "Office playback is review-only and does not change queue order.",
+                "The listened confirmation checkbox is Mobile-only.",
                 "How Office publishes one-way voice updates to all Family Members.",
                 "How Office sends practical text requests and reviews structured replies.",
                 "How Office oversight supports low-pressure, non-urgent communication.",

@@ -1,6 +1,6 @@
-# Family Hub Walkthrough Transcript
+ï»¿# Family Hub Walkthrough Transcript
 
-“Okay, so this is the Family Hub page on voicemailcare.com.
+â€œOkay, so this is the Family Hub page on voicemailcare.com.
 
 This is the page a family member sees when they log in.
 
@@ -16,70 +16,70 @@ First, we come to the latest message from the resident.
 
 This is the most recent voice message sent from Judy Smith to the family.
 
-I’m going to press play and listen to that now.”
+Iâ€™m going to press play and listen to that now.â€
 
 *pause for playback*
 
-“So that is the latest message from the resident.
+â€œSo that is the latest message from the resident.
 
-I’ll just click the transcript button, which is useful if you want to read what was said.”
+Iâ€™ll just click the transcript button, which is useful if you want to read what was said.â€
 
 *pause*
 
 ---
 
-“Next on the page is the latest message from Kate S to the resident.
+â€œNext on the page is the latest message from Kate S to the resident.
 
-I’m going to press play to review that message.”
+Iâ€™m going to press play to review that message.â€
 
 *pause for playback*
 
-“So that is the latest message from Kate S.”
+â€œSo that is the latest message from Kate S.â€
 
-*pause — click transcript silently*
+*pause â€” click transcript silently*
 
 ---
 
-“Below that is the section to record a new voice message to Judy Smith.
+â€œBelow that is the section to record a new voice message to Judy Smith.
 
-I’m going to start recording.”
+Iâ€™m going to start recording.â€
 
 *pause as recording starts*
 
-“I’m now recording a new message.
+â€œIâ€™m now recording a new message.
 
 For example:
-‘Hello Judy, it’s Kate. Just wanted to wish you a very happy birthday. I hope you have a lovely day and we’re all thinking of you.’”
+â€˜Hello Judy, itâ€™s Kate. Just wanted to wish you a very happy birthday. I hope you have a lovely day and weâ€™re all thinking of you.â€™â€
 
 *pause*
 
-“And now I’ll stop the recording.
+â€œAnd now Iâ€™ll stop the recording.
 
-I can play it back to check it.”
+I can play it back to check it.â€
 
 *pause for playback*
 
-“And once I’m happy with it, I can send the message.”
+â€œAnd once Iâ€™m happy with it, I can send the message.â€
 
 *pause*
 
-“And the message has now been sent.”
+â€œAnd the message has now been sent.â€
 
 ---
 
-“Next, we come to the Care Hub update to family.
+â€œNext, we come to the Care Hub update to family.
 
-I’m going to press play on that now.”
+Iâ€™m going to press play on that now.â€
 
 *pause for playback*
 
-“So that is the latest update from the office.”
+â€œSo that is the latest update from the office.â€
 
-*pause — click transcript silently*
+*pause â€” click transcript silently*
 
 ---
 
-“Finally, we come to the office practical message to the family.
+â€œFinally, we come to the office practical message to the family.
 
 In this example, this is about a dental hygiene appointment.
 
@@ -87,22 +87,25 @@ The message asks whether Kate S would like to arrange the appointment and transp
 
 This section allows a response using the options provided.
 
-There may also be space to add a short note, and options such as indicating a planned visit or sharing the response with other family members.”
+There may also be space to add a short note, and options such as indicating a planned visit or sharing the response with other family members.â€
 
 ---
 
-“Now I’ll just open the menu.”
+â€œNow Iâ€™ll just open the menu.â€
 
 *click menu*
 
-“This gives access to additional pages such as How it works, videos, and other information.
+â€œThis gives access to additional pages such as How it works, videos, and other information.
 
-I’ll also open the How it works page.
+Iâ€™ll also open the How it works page.
 
-This gives a simple explanation of how the system works.”
+This gives a simple explanation of how the system works.â€
 
 ---
 
-“So overall, the Family Hub page allows the family member to listen to the latest message from the resident, review the latest message already sent, record and send a new voice message, listen to the latest care home update, and respond to practical messages from the care home.
+â€œSo overall, the Family Hub page allows the family member to listen to the latest message from the resident, review the latest message already sent, record and send a new voice message, listen to the latest care home update, and respond to practical messages from the care home.
 
-It’s designed to keep communication simple, clear, and suitable for non-urgent contact.”
+Family Hub does not change Care Hub playback queue order.
+
+Itâ€™s designed to keep communication simple, clear, and suitable for non-urgent contact.â€
+

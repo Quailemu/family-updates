@@ -1,4 +1,4 @@
-# Care Hub Mobile Walkthrough Transcript
+﻿# Care Hub Mobile Walkthrough Transcript
 
 "This is the Care Hub - Mobile page on voicemailcare.com.
 
@@ -9,6 +9,8 @@ This page is used by care staff during resident routines."
 "Family messages are played in a fixed family order.
 
 Unplayed messages are presented first.
+
+After all unplayed messages are completed, playback continues in the same fixed family order.
 
 Playback alone does not change order.
 
@@ -24,4 +26,5 @@ Only then does the queue move to the next family message."
 "Care Hub - Mobile also supports recording the latest resident message to all family members.
 
 The communication flow is non-live and non-urgent."
+
 
