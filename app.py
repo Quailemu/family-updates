@@ -11435,6 +11435,17 @@ def render_care_hub() -> None:
                     send_guard_remaining = get_send_guard_remaining_seconds(send_guard_scope)
                     send_guard_active = send_guard_remaining > 0
                     if send_guard_active:
+                        recent_sent = st.session_state.get("care_last_sent")
+                        recent_sent_message = (
+                            str((recent_sent or {}).get("message") or "Message sent to all Family Members.")
+                            if isinstance(recent_sent, dict)
+                            and str((recent_sent or {}).get("resident_id") or "").strip() == str(resident_id).strip()
+                            and (time.time() - float((recent_sent or {}).get("sent_at_ts") or 0.0))
+                            <= float(SEND_ACTION_GUARD_SECONDS + 2)
+                            else ""
+                        )
+                        if recent_sent_message:
+                            st.success(recent_sent_message)
                         st.warning(
                             "Please wait until you see the sent confirmation before playing another message. "
                             f"({send_guard_remaining}s)"
@@ -11531,6 +11542,17 @@ def render_care_hub() -> None:
                 send_guard_remaining = get_send_guard_remaining_seconds(send_guard_scope)
                 send_guard_active = send_guard_remaining > 0
                 if send_guard_active:
+                    recent_sent = st.session_state.get("care_last_sent")
+                    recent_sent_message = (
+                        str((recent_sent or {}).get("message") or "Message sent to all Family Members.")
+                        if isinstance(recent_sent, dict)
+                        and str((recent_sent or {}).get("resident_id") or "").strip() == str(resident_id).strip()
+                        and (time.time() - float((recent_sent or {}).get("sent_at_ts") or 0.0))
+                        <= float(SEND_ACTION_GUARD_SECONDS + 2)
+                        else ""
+                    )
+                    if recent_sent_message:
+                        st.success(recent_sent_message)
                     st.warning(
                         "Please wait until you see the sent confirmation before playing another message. "
                         f"({send_guard_remaining}s)"
@@ -12218,6 +12240,7 @@ def render_care_hub() -> None:
                                     "resident_id": resident_id,
                                     "contact_id": None,
                                     "message": "Message sent to all Family Members.",
+                                    "sent_at_ts": time.time(),
                                 }
                                 activate_send_guard(send_guard_scope)
                                 state["recording_input_nonce"] = (
