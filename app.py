@@ -110,6 +110,14 @@ OPENAI_TRANSCRIPTION_MODEL = (
     os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe").strip()
     or "gpt-4o-mini-transcribe"
 )
+OPENAI_TRANSCRIPTION_TIMEOUT_SECONDS = max(
+    int(os.getenv("OPENAI_TRANSCRIPTION_TIMEOUT_SECONDS", "25")),
+    5,
+)
+OPENAI_TRANSCRIPTION_MAX_BYTES = max(
+    int(os.getenv("OPENAI_TRANSCRIPTION_MAX_BYTES", str(25 * 1024 * 1024))),
+    1024 * 1024,
+)
 OFFICE_UPDATE_CATEGORIES = (
     "General reassurance",
     "Daily life",
@@ -847,6 +855,9 @@ def _audio_extension_from_mime(audio_mime_type: str) -> str:
 def transcribe_audio_bytes(audio_bytes: bytes, audio_mime_type: str) -> tuple[str | None, str | None]:
     if not audio_bytes:
         return None, "No audio bytes."
+    if len(audio_bytes) > OPENAI_TRANSCRIPTION_MAX_BYTES:
+        max_mb = round(OPENAI_TRANSCRIPTION_MAX_BYTES / (1024 * 1024), 1)
+        return None, f"Audio is too large for transcript generation (limit {max_mb} MB)."
     if not OPENAI_API_KEY:
         return None, "OPENAI_API_KEY is not configured."
     if OpenAI is None:
@@ -855,7 +866,11 @@ def transcribe_audio_bytes(audio_bytes: bytes, audio_mime_type: str) -> tuple[st
     audio_file = io.BytesIO(audio_bytes)
     audio_file.name = f"message.{extension}"
     try:
-        client = OpenAI(api_key=OPENAI_API_KEY)
+        client = OpenAI(
+            api_key=OPENAI_API_KEY,
+            timeout=float(OPENAI_TRANSCRIPTION_TIMEOUT_SECONDS),
+            max_retries=0,
+        )
         result = client.audio.transcriptions.create(
             model=OPENAI_TRANSCRIPTION_MODEL,
             file=audio_file,
@@ -1047,13 +1062,14 @@ def render_transcript_preview_controls(
             st.rerun()
         else:
             state[requested_key] = True
-            ensure_transcript_preview_state(
-                state,
-                audio_bytes,
-                audio_mime_type,
-                requested=True,
-                prefix=prefix,
-            )
+            with st.spinner("Generating transcript..."):
+                ensure_transcript_preview_state(
+                    state,
+                    audio_bytes,
+                    audio_mime_type,
+                    requested=True,
+                    prefix=prefix,
+                )
             transcript_preview_text = str(state.get(f"{prefix}transcript_preview_text") or "").strip()
             transcript_preview_status = str(
                 state.get(f"{prefix}transcript_preview_status") or ""
@@ -1063,14 +1079,15 @@ def render_transcript_preview_controls(
                 st.rerun()
             transcript_preview_visible = bool(state.get(visible_key, False))
 
-    if bool(state.get(requested_key)):
-        ensure_transcript_preview_state(
-            state,
-            audio_bytes,
-            audio_mime_type,
-            requested=True,
-            prefix=prefix,
-        )
+    if bool(state.get(requested_key)) and transcript_preview_status not in {"ready", "failed"}:
+        with st.spinner("Refreshing transcript..."):
+            ensure_transcript_preview_state(
+                state,
+                audio_bytes,
+                audio_mime_type,
+                requested=True,
+                prefix=prefix,
+            )
         transcript_preview_text = str(state.get(f"{prefix}transcript_preview_text") or "").strip()
         transcript_preview_status = str(
             state.get(f"{prefix}transcript_preview_status") or ""
@@ -5823,7 +5840,8 @@ def render_transcript_assist(
                 st.session_state[toggle_key] = not transcript_visible
                 st.rerun()
             else:
-                generated_text, generated_status, generated_error = _generate_transcript_for_message(message)
+                with st.spinner("Generating transcript..."):
+                    generated_text, generated_status, generated_error = _generate_transcript_for_message(message)
                 if generated_text and generated_status == "ready":
                     transcript_text = generated_text
                     status = "ready"
