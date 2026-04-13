@@ -11469,12 +11469,16 @@ def render_care_hub() -> None:
                                         or ""
                                     ).strip()
                                     state["selected_contact_user_id"] = resolved_contact_user_id
-                                    if is_mobile_variant:
+                                    if is_mobile_variant or is_office_variant:
+                                        listen_prefix = "care_mobile" if is_mobile_variant else "care_office"
                                         st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
-                                        st.session_state[f"care_mobile_listened_confirm_{resident_id}"] = False
+                                        st.session_state[f"{listen_prefix}_listened_confirm_{resident_id}"] = False
             else:
                 st.caption(f"Unread family messages: {queue_unread_count}")
-                st.caption("Office playback is review-only and does not change queue order.")
+                st.caption(
+                    "Office playback does not change order unless staff explicitly mark listened "
+                    "and move to next."
+                )
                 if effective_queue_next_contact:
                     next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
                     next_relationship = ((effective_queue_next_contact.get("relationship") or "").strip())
@@ -11561,9 +11565,10 @@ def render_care_hub() -> None:
                                     or ""
                                 ).strip()
                                 state["selected_contact_user_id"] = resolved_contact_user_id
-                                if is_mobile_variant:
+                                if is_mobile_variant or is_office_variant:
+                                    listen_prefix = "care_mobile" if is_mobile_variant else "care_office"
                                     st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
-                                    st.session_state[f"care_mobile_listened_confirm_{resident_id}"] = False
+                                    st.session_state[f"{listen_prefix}_listened_confirm_{resident_id}"] = False
                     if st.button(
                         "Play next family message",
                         key=f"care_play_next_{resident_id}",
@@ -11596,7 +11601,8 @@ def render_care_hub() -> None:
                             queue_mode_label = queue_mode_selected or "Session order"
                             st.session_state[mobile_play_requested_key] = True
                             st.session_state[mobile_advance_pointer_key] = False
-                            st.session_state[f"care_mobile_listened_confirm_{resident_id}"] = False
+                            listen_prefix = "care_mobile" if is_mobile_variant else "care_office"
+                            st.session_state[f"{listen_prefix}_listened_confirm_{resident_id}"] = False
                         else:
                             st.warning("No playable family messages are available for this resident.")
                             st.session_state[mobile_play_requested_key] = False
@@ -11794,9 +11800,10 @@ def render_care_hub() -> None:
                         unsafe_allow_html=True,
                     )
 
-                if is_mobile_variant:
+                if is_mobile_variant or is_office_variant:
                     latest_message_id = str((latest or {}).get("id") or "").strip()
-                    listened_confirm_key = f"care_mobile_listened_confirm_{resident_id}"
+                    listened_prefix = "care_mobile" if is_mobile_variant else "care_office"
+                    listened_confirm_key = f"{listened_prefix}_listened_confirm_{resident_id}"
                     already_marked_played = bool(
                         latest_message_id
                         and has_message_been_played_since_recorded(
@@ -11815,7 +11822,7 @@ def render_care_hub() -> None:
                             )
                             if st.button(
                                 "Mark listened and move to next",
-                                key=f"care_mobile_mark_listened_next_{resident_id}",
+                                key=f"{listened_prefix}_mark_listened_next_{resident_id}",
                                 use_container_width=True,
                                 disabled=not bool(st.session_state.get(listened_confirm_key, False)),
                             ):
@@ -13153,8 +13160,8 @@ def main() -> None:
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
                 "How Office reviews resident-linked family messages.",
-                "Office playback is review-only and does not change queue order.",
-                "The listened confirmation checkbox is Mobile-only.",
+                "Office playback does not change queue order unless staff explicitly mark listened and move next.",
+                "Office and Mobile can both use listened confirmation when playback was with the resident.",
                 "How Office publishes one-way voice updates to all Family Members.",
                 "How Office sends practical text requests and reviews structured replies.",
                 "How Office oversight supports low-pressure, non-urgent communication.",

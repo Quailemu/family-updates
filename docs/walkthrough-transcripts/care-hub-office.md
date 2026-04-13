@@ -2,7 +2,7 @@
 
 "Okay, so this is the Care Hub Office page on voicemailcare.com.
 
-This is the page used by the care home.
+This is the page used by the care home office.
 
 The menu icon provides information.
 
@@ -36,7 +36,7 @@ and select
 'Mark listened and move to next'
 to progress the queue order."
 
-"In Care Hub - Office, this playback is review-only and does not change queue order."
+"In Care Hub - Office, playback does not change queue order unless staff explicitly confirm listened and move to next."
 
 "I'll just click the transcript button, which is useful if you want to read what was said."
 
