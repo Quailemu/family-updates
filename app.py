@@ -11446,34 +11446,9 @@ def render_care_hub() -> None:
                                         or ""
                                     ).strip()
                                     state["selected_contact_user_id"] = resolved_contact_user_id
-                                    latest_message_id = str((latest or {}).get("id") or "").strip()
-                                    if latest_message_id and not has_message_been_played_since_recorded(
-                                        latest,
-                                        resident_id=resident_id,
-                                        care_home_id=resident["care_home_id"],
-                                    ):
-                                        latest_contact_user_id = str(
-                                            (latest or {}).get("contact_user_id")
-                                            or selected_contact.get("auth_user_id")
-                                            or ""
-                                        ).strip()
-                                        latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
-                                        log_audit_event(
-                                            "message_played",
-                                            "care_hub",
-                                            resident["care_home_id"],
-                                            latest_message_id,
-                                            resident_id=resident_id,
-                                        )
-                                        set_contact_last_played_recorded_at(
-                                            resident_id,
-                                            resident["care_home_id"],
-                                            latest_contact_user_id,
-                                            latest_recorded_at,
-                                            access_token,
-                                        )
                                     if is_mobile_variant:
                                         st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
+                                        st.session_state[f"care_mobile_listened_confirm_{resident_id}"] = False
             else:
                 st.caption(f"Unread family messages: {queue_unread_count}")
                 if effective_queue_next_contact:
@@ -11562,34 +11537,9 @@ def render_care_hub() -> None:
                                     or ""
                                 ).strip()
                                 state["selected_contact_user_id"] = resolved_contact_user_id
-                                latest_message_id = str((latest or {}).get("id") or "").strip()
-                                if latest_message_id and not has_message_been_played_since_recorded(
-                                    latest,
-                                    resident_id=resident_id,
-                                    care_home_id=resident["care_home_id"],
-                                ):
-                                    latest_contact_user_id = str(
-                                        (latest or {}).get("contact_user_id")
-                                        or selected_contact.get("auth_user_id")
-                                        or ""
-                                    ).strip()
-                                    latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
-                                    log_audit_event(
-                                        "message_played",
-                                        "care_hub",
-                                        resident["care_home_id"],
-                                        latest_message_id,
-                                        resident_id=resident_id,
-                                    )
-                                    set_contact_last_played_recorded_at(
-                                        resident_id,
-                                        resident["care_home_id"],
-                                        latest_contact_user_id,
-                                        latest_recorded_at,
-                                        access_token,
-                                    )
                                 if is_mobile_variant:
                                     st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
+                                    st.session_state[f"care_mobile_listened_confirm_{resident_id}"] = False
                     if st.button(
                         "Play next family message",
                         key=f"care_play_next_{resident_id}",
@@ -11621,7 +11571,8 @@ def render_care_hub() -> None:
                             state["selected_contact_user_id"] = selected_contact_user_id
                             queue_mode_label = queue_mode_selected or "Session order"
                             st.session_state[mobile_play_requested_key] = True
-                            st.session_state[mobile_advance_pointer_key] = True
+                            st.session_state[mobile_advance_pointer_key] = False
+                            st.session_state[f"care_mobile_listened_confirm_{resident_id}"] = False
                         else:
                             st.warning("No playable family messages are available for this resident.")
                             st.session_state[mobile_play_requested_key] = False
@@ -11806,7 +11757,9 @@ def render_care_hub() -> None:
                         if played_label:
                             st.caption(played_label)
                         if is_mobile_variant:
-                            st.caption("Press 'Play next family message' for the next contact.")
+                            st.caption(
+                                "Order stays fixed until you confirm: 'Mark listened and move to next'."
+                            )
                         else:
                             st.caption("Use Office review controls or playlist selection to continue.")
                     else:
@@ -11816,25 +11769,38 @@ def render_care_hub() -> None:
                         '<div class="vm-muted-line">No new messages.</div>',
                         unsafe_allow_html=True,
                     )
-                    if is_mobile_variant and bool(
-                        st.session_state.get(mobile_advance_pointer_key, False)
-                    ):
-                        st.caption("Message payload could not be played. Skipping to next contact.")
-    
+
                 if is_mobile_variant:
                     latest_message_id = str((latest or {}).get("id") or "").strip()
-                    advance_pointer_now = bool(st.session_state.get(mobile_advance_pointer_key, False))
-                    refresh_queue_after_play = False
-                    if advance_pointer_now:
-                        if precheck_blocking:
-                            st.caption("Playback queue paused until transcript precheck is completed.")
-                            st.session_state[mobile_advance_pointer_key] = False
+                    listened_confirm_key = f"care_mobile_listened_confirm_{resident_id}"
+                    already_marked_played = bool(
+                        latest_message_id
+                        and has_message_been_played_since_recorded(
+                            latest,
+                            resident_id=resident_id,
+                            care_home_id=resident["care_home_id"],
+                        )
+                    )
+                    if played_now and latest_message_id:
+                        if already_marked_played:
+                            st.caption("This message is already marked as listened.")
                         else:
-                            if played_now and latest_message_id and not has_message_been_played_since_recorded(
-                                latest,
-                                resident_id=resident_id,
-                                care_home_id=resident["care_home_id"],
+                            st.checkbox(
+                                "I confirm this message has been listened to with the resident.",
+                                key=listened_confirm_key,
+                            )
+                            if st.button(
+                                "Mark listened and move to next",
+                                key=f"care_mobile_mark_listened_next_{resident_id}",
+                                use_container_width=True,
+                                disabled=not bool(st.session_state.get(listened_confirm_key, False)),
                             ):
+                                latest_contact_user_id = str(
+                                    (latest or {}).get("contact_user_id")
+                                    or state.get("selected_contact_user_id")
+                                    or ""
+                                ).strip()
+                                latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
                                 log_audit_event(
                                     "message_played",
                                     "care_hub",
@@ -11842,61 +11808,43 @@ def render_care_hub() -> None:
                                     latest_message_id,
                                     resident_id=resident_id,
                                 )
-                            latest_contact_user_id = str(
-                                (latest or {}).get("contact_user_id")
-                                or state.get("selected_contact_user_id")
-                                or ""
-                            ).strip()
-                            latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
-                            if played_now and latest_contact_user_id and latest_recorded_at:
-                                set_contact_last_played_recorded_at(
+                                if latest_contact_user_id and latest_recorded_at:
+                                    set_contact_last_played_recorded_at(
+                                        resident_id,
+                                        resident["care_home_id"],
+                                        latest_contact_user_id,
+                                        latest_recorded_at,
+                                        access_token,
+                                    )
+                                    cache_key = f"care_mobile_played_cache_{resident_id}"
+                                    cache = st.session_state.get(cache_key)
+                                    if not isinstance(cache, dict):
+                                        cache = {}
+                                    cache[latest_contact_user_id] = latest_recorded_at
+                                    st.session_state[cache_key] = cache
+                                    st.session_state[f"care_mobile_last_played_{resident_id}"] = {
+                                        "contact_user_id": latest_contact_user_id,
+                                        "recorded_at": latest_recorded_at,
+                                    }
+                                next_contact_user_id = get_next_contact_user_id_with_message(
+                                    resident_id,
+                                    contacts,
+                                    access_token,
+                                    state.get("selected_contact_user_id"),
+                                )
+                                set_resident_playback_pointer(
                                     resident_id,
                                     resident["care_home_id"],
-                                    latest_contact_user_id,
-                                    latest_recorded_at,
+                                    next_contact_user_id,
                                     access_token,
                                 )
-                                cache_key = f"care_mobile_played_cache_{resident_id}"
-                                cache = st.session_state.get(cache_key)
-                                if not isinstance(cache, dict):
-                                    cache = {}
-                                cache[latest_contact_user_id] = latest_recorded_at
-                                st.session_state[cache_key] = cache
-                                st.session_state[f"care_mobile_last_played_{resident_id}"] = {
-                                    "contact_user_id": latest_contact_user_id,
-                                    "recorded_at": latest_recorded_at,
-                                }
-                            next_contact_user_id = get_next_contact_user_id_with_message(
-                                resident_id,
-                                contacts,
-                                access_token,
-                                state.get("selected_contact_user_id"),
-                            )
-                            set_resident_playback_pointer(
-                                resident_id,
-                                resident["care_home_id"],
-                                next_contact_user_id,
-                                access_token,
-                            )
-                            st.session_state[f"care_mobile_pointer_{resident_id}"] = (
-                                next_contact_user_id or ""
-                            )
-                            if APP_DEBUG:
-                                st.caption(
-                                    "Queue debug: "
-                                    f"current={state.get('selected_contact_user_id')} "
-                                    f"played_message={latest_message_id} "
-                                    f"next={next_contact_user_id or 'none'}"
+                                st.session_state[f"care_mobile_pointer_{resident_id}"] = (
+                                    next_contact_user_id or ""
                                 )
-                            if played_now:
-                                refresh_queue_after_play = True
-                    if advance_pointer_now:
-                        st.session_state[mobile_advance_pointer_key] = False
-                    if refresh_queue_after_play:
-                        # Queue/unplayed list is computed earlier in this render.
-                        # Rerun once after a successful play so the unplayed list updates immediately.
-                        st.session_state[mobile_play_requested_key] = False
-                        st.rerun()
+                                st.session_state[mobile_play_requested_key] = False
+                                st.session_state[mobile_advance_pointer_key] = False
+                                st.session_state[listened_confirm_key] = False
+                                st.rerun()
                 selected_contact_name = (
                     (selected_contact or {}).get("full_name") or "family contact"
                 )
