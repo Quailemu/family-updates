@@ -413,7 +413,7 @@ def set_route(route: str) -> None:
 
 
 def get_public_landing_url() -> str:
-    # Prefer an explicit override, then current app host, so "Back to main public page"
+    # Prefer an explicit override, then current app host, so "Back to hub selection"
     # stays inside the active app and avoids legacy cross-site flash redirects.
     configured_url = str(os.getenv("PUBLIC_LANDING_URL", "") or "").strip()
     if configured_url:
@@ -3012,7 +3012,7 @@ def render_how_it_works_mobile() -> None:
     render_page_header("How it works - Care Hub - Mobile")
     render_how_it_works_cartoon()
     if get_app_variant() == VARIANT_PUBLIC:
-        mobile_back_label = "Back to public page"
+        mobile_back_label = "Back to hub selection"
         mobile_back_route = get_home_route(VARIANT_PUBLIC)
     else:
         mobile_back_label = "Back to Care Hub - Mobile"
@@ -3064,7 +3064,7 @@ def render_how_it_works_office_overview() -> None:
     render_page_header("How it works - Care Hub - Office")
     render_how_it_works_cartoon()
     if get_app_variant() == VARIANT_PUBLIC:
-        office_back_label = "Back to public page"
+        office_back_label = "Back to hub selection"
         office_back_route = get_home_route(VARIANT_PUBLIC)
     else:
         office_back_label = "Back to Care Hub - Office"
@@ -6159,7 +6159,7 @@ def render_header_menu(menu_key: str) -> None:
                 set_route(get_how_it_works_route(app_variant))
                 return
         if app_variant not in (VARIANT_OFFICE, VARIANT_MOBILE, VARIANT_FAMILY):
-            if st.button("Public info", key=f"{menu_key}_public_docs"):
+            if st.button("Hub selection", key=f"{menu_key}_public_docs"):
                 set_route("/pr-home")
                 return
         if app_variant == VARIANT_MOBILE:
@@ -6169,12 +6169,12 @@ def render_header_menu(menu_key: str) -> None:
                 back_target = prev_route
             if normalize_route(back_target) == normalize_route(current_route):
                 render_public_landing_link(
-                    "Back to main public page",
+                    "Back to hub selection",
                     key=f"{menu_key}_mobile_back_public_link",
                 )
             else:
                 render_route_link("Back", back_target, key=f"{menu_key}_mobile_back_link")
-            if st.button("Public info", key=f"{menu_key}_mobile_public_docs"):
+            if st.button("Hub selection", key=f"{menu_key}_mobile_public_docs"):
                 set_route("/pr-home")
                 return
             if st.button("Videos", key=f"{menu_key}_mobile_videos"):
@@ -6220,7 +6220,7 @@ def render_header_menu(menu_key: str) -> None:
             ):
                 back_target = prev_route
             render_public_landing_link(
-                "Back to main public page",
+                "Back to hub selection",
                 key=f"{menu_key}_family_back_public_link",
             )
             render_route_link(
@@ -7497,7 +7497,7 @@ def render_home(active: str) -> None:
         )
     else:
         render_public_landing_link(
-            "Back to main public page",
+            "Back to hub selection",
             key=f"service_overview_back_to_public_docs_{current_variant}",
         )
     st.markdown(
@@ -7875,12 +7875,14 @@ def _resolve_variant_from_route(route: str) -> str | None:
         return VARIANT_FAMILY
     if (
         normalized.startswith("/care-hub/mobile")
+        or normalized.startswith("/care-hub-mobile")
         or normalized.startswith("/mobile")
         or normalized == "/how-it-works/mobile"
     ):
         return VARIANT_MOBILE
     if (
         normalized.startswith("/care-hub")
+        or normalized.startswith("/care-hub-office")
         or normalized.startswith("/office")
         or normalized in {"/billing", "/contracts", "/docs"}
         or normalized == "/how-it-works/office"
@@ -8228,16 +8230,16 @@ def render_public_walkthrough_page(
     if not effective_back_route:
         app_variant = resolve_runtime_variant(route_hint=current_route)
         if app_variant == VARIANT_PUBLIC:
-            effective_back_route = "/service-overview"
+            effective_back_route = PUBLIC_HOME_ROUTE
         elif app_variant == VARIANT_OFFICE:
             if st.session_state.get("auth_uid"):
                 effective_back_route = "/docs"
             else:
-                effective_back_route = "/service-overview"
+                effective_back_route = PUBLIC_HOME_ROUTE
         elif app_variant in {VARIANT_MOBILE, VARIANT_FAMILY}:
-            effective_back_route = "/service-overview"
+            effective_back_route = PUBLIC_HOME_ROUTE
         else:
-            effective_back_route = "/service-overview"
+            effective_back_route = PUBLIC_HOME_ROUTE
     # If an authenticated user opened walkthrough pages from login flow/history,
     # keep Back inside the authenticated app home rather than returning to login.
     if (
@@ -8274,7 +8276,7 @@ def render_public_walkthrough_page(
             and st.session_state.get("active_role") != "family"
         )
     )
-    if care_session and effective_back_route in {"/public/walkthrough-overview", "/service-overview", "/"}:
+    if care_session and effective_back_route in {"/public/walkthrough-overview", "/service-overview", PUBLIC_HOME_ROUTE, "/"}:
         effective_back_route = (
             OFFICE_HOME_ROUTE
             if bool(st.session_state.get("office_login_explicit"))
@@ -8591,7 +8593,7 @@ def render_family_login_hub() -> None:
 
     for box in login_info_boxes:
         st.markdown(f'<div class="family-login-box">{box}</div>', unsafe_allow_html=True)
-    render_public_landing_link("Back to main public page", key="family_login_back_public")
+    render_public_landing_link("Back to hub selection", key="family_login_back_public")
 
     # Logged-out Family view is intentionally login-only to avoid pre-login routing issues.
 
@@ -10682,7 +10684,7 @@ def render_care_login() -> None:
         for box in mobile_login_boxes:
             st.markdown(f'<div class="care-login-box">{box}</div>', unsafe_allow_html=True)
         render_public_landing_link(
-            "Back to main public page",
+            "Back to hub selection",
             key=f"care_login_back_public_{app_variant}",
         )
         return
@@ -10769,7 +10771,7 @@ def render_care_login() -> None:
         else:
             st.error(message)
     render_public_landing_link(
-        "Back to main public page",
+        "Back to hub selection",
         key=f"care_login_back_public_{app_variant}",
     )
 
@@ -10895,9 +10897,9 @@ def render_care_hub() -> None:
     page_title = "Care Hub Mobile" if runtime_variant == VARIANT_MOBILE else "Care Hub Office"
     render_page_header(page_title)
     if runtime_variant == VARIANT_MOBILE:
-        render_public_landing_button("Back to main public page")
+        render_public_landing_button("Back to hub selection")
     elif runtime_variant == VARIANT_OFFICE:
-        render_public_landing_button("Back to main public page")
+        render_public_landing_button("Back to hub selection")
     if (
         runtime_variant == VARIANT_MOBILE
         and st.session_state.pop("mobile_pin_just_accepted", False)
