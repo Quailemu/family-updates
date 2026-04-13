@@ -1,5 +1,7 @@
 ﻿# Care Hub Mobile Walkthrough Transcript
 
+> Transcript style requirement: This script is written for a screen recording narrated in a calm, clear, spoken style for viewers to watch and listen to. Keep wording simple, practical, and walkthrough-focused, matching the existing transcript tone and structure.
+
 "This is the Care Hub - Mobile page on voicemailcare.com.
 
 This page is used by care staff during resident routines."
@@ -26,5 +28,6 @@ Only then does the queue move to the next family message."
 "Care Hub - Mobile also supports recording the latest resident message to all family members.
 
 The communication flow is non-live and non-urgent."
+
 
 

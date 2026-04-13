@@ -1,5 +1,7 @@
 ﻿# Family Hub Walkthrough Transcript
 
+> Transcript style requirement: This script is written for a screen recording narrated in a calm, clear, spoken style for viewers to watch and listen to. Keep wording simple, practical, and walkthrough-focused, matching the existing transcript tone and structure.
+
 “Okay, so this is the Family Hub page on voicemailcare.com.
 
 This is the page a family member sees when they log in.
@@ -108,4 +110,5 @@ This gives a simple explanation of how the system works.”
 Family Hub does not change Care Hub playback queue order.
 
 It’s designed to keep communication simple, clear, and suitable for non-urgent contact.”
+
 

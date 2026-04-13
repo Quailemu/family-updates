@@ -1,5 +1,7 @@
 ﻿# Care Hub Office Walkthrough Transcript
 
+> Transcript style requirement: This script is written for a screen recording narrated in a calm, clear, spoken style for viewers to watch and listen to. Keep wording simple, practical, and walkthrough-focused, matching the existing transcript tone and structure.
+
 "Okay, so this is the Care Hub Office page on voicemailcare.com.
 
 This is the page used by the care home office.
@@ -30,13 +32,14 @@ I'm going to press play and listen to that now."
 
 "So that is the latest family message.
 
-In Care Hub - Mobile, after playback with the resident, staff then confirm:
-'I confirm this message has been listened to with the resident,'
-and select
-'Mark listened and move to next'
-to progress the queue order."
+In Care Hub - Office, playback by itself does not change queue order.
 
-"In Care Hub - Office, playback does not change queue order unless staff explicitly confirm listened and move to next."
+If this message has been played with the resident, staff tick
+'I confirm this message has been listened to with the resident'
+and select
+'Mark listened and move to next.'
+
+If staff are only previewing the message, they leave it unticked, so the queue order stays the same."
 
 "I'll just click the transcript button, which is useful if you want to read what was said."
 
@@ -163,4 +166,5 @@ This gives a simple explanation of how the Care Hub Office works."
 "So overall, the Care Hub Office page allows the care home to review family messages, review the latest resident message to family, record a message on behalf of the resident, send office updates and reassurance, and manage structured practical communication with family members.
 
 It is designed to keep communication simple, clear, and non-urgent."
+
 
