@@ -1,6 +1,11 @@
 repos:
   - repo: local
     hooks:
+      - id: normalize-mojibake-text
+        name: Normalize mojibake text (check)
+        entry: python scripts/normalize_text.py --check
+        language: system
+        pass_filenames: false
       - id: check-mojibake-encoding
         name: Check mojibake encoding
         entry: python scripts/check_encoding.py
