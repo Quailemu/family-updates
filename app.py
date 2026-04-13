@@ -8195,6 +8195,7 @@ def render_public_walkthrough_page(
     role_summary: list[str],
     back_route: str | None = None,
     fallback_doc_path: str | None = None,
+    transcript_doc_path: str | None = None,
 ) -> None:
     def _is_walkthrough_route(route_value: str) -> bool:
         normalized = normalize_route(route_value)
@@ -8309,6 +8310,23 @@ def render_public_walkthrough_page(
         if fallback_doc_path:
             st.caption("Showing written guide instead:")
             render_document_boxes(fallback_doc_path, strip_first_heading=True)
+    if transcript_doc_path:
+        transcript_path = Path(transcript_doc_path)
+        if transcript_path.exists():
+            transcript_toggle_key = f"walkthrough_transcript_visible::{current_route}"
+            transcript_visible = bool(st.session_state.get(transcript_toggle_key, False))
+            transcript_label = "Hide transcript" if transcript_visible else "View transcript"
+            if st.button(
+                transcript_label,
+                key=f"walkthrough_transcript_toggle_{page_title.lower().replace(' ', '_').replace('-', '_')}",
+                use_container_width=False,
+            ):
+                transcript_visible = not transcript_visible
+                st.session_state[transcript_toggle_key] = transcript_visible
+            if transcript_visible:
+                render_document_boxes(transcript_doc_path, strip_first_heading=False)
+        else:
+            st.caption("Transcript coming soon.")
     st.markdown("### What this video shows")
     for line in role_summary:
         st.markdown(f"- {line}")
@@ -13062,6 +13080,7 @@ def main() -> None:
                 "Non-live expectations and calm communication boundaries.",
             ],
             fallback_doc_path="docs/public/06_family_guide.md",
+            transcript_doc_path="docs/walkthrough-transcripts/family-hub.md",
         )
     elif route == "/public/walkthrough-family-flow":
         render_public_walkthrough_page(
@@ -13075,6 +13094,7 @@ def main() -> None:
                 "How non-live communication boundaries are applied.",
             ],
             fallback_doc_path="docs/public/06_family_guide.md",
+            transcript_doc_path="docs/walkthrough-transcripts/family-hub.md",
         )
     elif route == "/public/walkthrough-overview":
         render_public_walkthrough_page(
@@ -13087,6 +13107,7 @@ def main() -> None:
                 "Where Office updates and practical structured messages fit.",
                 "Non-live, non-urgent communication boundaries.",
             ],
+            transcript_doc_path="docs/walkthrough-transcripts/system-diagram.md",
         )
     elif route == "/public/walkthrough-mobile":
         render_public_walkthrough_page(
@@ -13095,11 +13116,13 @@ def main() -> None:
             "assets/voice-message-mobile-walkthrough-v1.mp4",
             [
                 "How staff play Family -> Resident messages to the resident.",
-                "Queue behaviour: unplayed first, then fair rotating replay.",
+                "Queue order is fixed: unplayed messages are first, in family order.",
+                "Order changes only after staff confirm listened and tap 'Mark listened and move to next'.",
                 "How staff support Resident -> Family recording.",
                 "How playback and recording fit around care routines.",
             ],
             fallback_doc_path="docs/public/02_how_it_works.md",
+            transcript_doc_path="docs/walkthrough-transcripts/care-hub-mobile.md",
         )
     elif route == "/public/walkthrough-mobile-flow":
         render_public_walkthrough_page(
@@ -13113,6 +13136,7 @@ def main() -> None:
                 "How non-live care-routine delivery is represented in the flow.",
             ],
             fallback_doc_path="docs/public/02_how_it_works.md",
+            transcript_doc_path="docs/walkthrough-transcripts/care-hub-mobile.md",
         )
     elif route == "/public/walkthrough-office":
         render_public_walkthrough_page(
@@ -13121,11 +13145,13 @@ def main() -> None:
             "assets/voice-message-office-walkthrough-v1.mp4",
             [
                 "How Office reviews resident-linked family messages.",
+                "Office playback is review-only and does not change queue order.",
                 "How Office publishes one-way voice updates to all Family Members.",
                 "How Office sends practical text requests and reviews structured replies.",
                 "How Office oversight supports low-pressure, non-urgent communication.",
             ],
             fallback_doc_path="docs/public/02_how_it_works.md",
+            transcript_doc_path="docs/walkthrough-transcripts/care-hub-office.md",
         )
     elif route == "/public/walkthrough-office-flow":
         render_public_walkthrough_page(
@@ -13139,6 +13165,7 @@ def main() -> None:
                 "How calm, non-urgent communication boundaries are enforced.",
             ],
             fallback_doc_path="docs/public/02_how_it_works.md",
+            transcript_doc_path="docs/walkthrough-transcripts/care-hub-office.md",
         )
     elif route == "/public-privacy":
         set_route("/public/privacy-notice")
