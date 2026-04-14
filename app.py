@@ -11518,9 +11518,9 @@ def render_care_hub() -> None:
                         "Play messages follows a fixed contact order. Unplayed messages are always first."
                     )
                     st.caption(
-                        "Queue order only changes after Mobile confirmation: "
-                        "'I confirm this message has been listened to with the resident' "
-                        "then 'Mark listened and move to next'."
+                        "Playback does not change order by itself. "
+                        "Order changes only after listened confirmation and "
+                        "'Mark listened and move to next'."
                     )
                     st.caption(f"Unread family messages: {queue_unread_count}")
                     if effective_queue_next_contact:
@@ -11623,8 +11623,9 @@ def render_care_hub() -> None:
             else:
                 st.caption(f"Unread family messages: {queue_unread_count}")
                 st.caption(
-                    "Office playback does not change order unless staff explicitly mark listened "
-                    "and move to next."
+                    "Playback does not change order by itself. "
+                    "Order changes only after listened confirmation and "
+                    "'Mark listened and move to next'."
                 )
                 if effective_queue_next_contact:
                     next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
@@ -11942,10 +11943,14 @@ def render_care_hub() -> None:
                             st.caption(played_label)
                         if is_mobile_variant:
                             st.caption(
-                                "Order stays fixed until you confirm: 'Mark listened and move to next'."
+                                "Playback alone does not change order. "
+                                "Use listened confirmation and 'Mark listened and move to next'."
                             )
                         else:
-                            st.caption("Use Office review controls or playlist selection to continue.")
+                            st.caption(
+                                "Playback alone does not change order. "
+                                "Use listened confirmation and 'Mark listened and move to next'."
+                            )
                     else:
                         st.caption("Playback locked until transcript review is complete.")
                 elif should_show_message and not has_playback_source:
