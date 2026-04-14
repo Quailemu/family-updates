@@ -7642,6 +7642,27 @@ def get_route() -> str:
     return normalize_route(route) or "/"
 
 
+def clear_legacy_streamlit_page_param_once() -> None:
+    """Strip stale Streamlit multipage query params that can trigger page-not-found notices."""
+    if not hasattr(st, "query_params"):
+        return
+    try:
+        legacy_page = str(st.query_params.get("page", "") or "").strip()
+    except Exception:
+        return
+    if not legacy_page:
+        st.session_state.pop("_legacy_page_param_cleared", None)
+        return
+    if bool(st.session_state.get("_legacy_page_param_cleared", False)):
+        return
+    try:
+        del st.query_params["page"]
+    except Exception:
+        pass
+    st.session_state["_legacy_page_param_cleared"] = True
+    st.rerun()
+
+
 # Canonical runtime variants. These must stay aligned with config.get_app_variant().
 VARIANT_PUBLIC = "public"
 VARIANT_FAMILY = "family"
@@ -12841,6 +12862,7 @@ def main() -> None:
     )
     raw_variant = get_raw_app_variant()
     init_state()
+    clear_legacy_streamlit_page_param_once()
     pre_auth_route = get_route()
     request_path = _get_request_path()
     recovered_request_path_auth = _recover_auth_callback_params_from_route_path(request_path)
