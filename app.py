@@ -11566,7 +11566,7 @@ def render_care_hub() -> None:
                         )
                         if recent_sent_message:
                             st.success(recent_sent_message)
-                        st.warning(
+                        st.caption(
                             "Please wait until you see the sent confirmation before playing another message. "
                             f"({send_guard_remaining}s)"
                         )
@@ -11678,7 +11678,7 @@ def render_care_hub() -> None:
                     )
                     if recent_sent_message:
                         st.success(recent_sent_message)
-                    st.warning(
+                    st.caption(
                         "Please wait until you see the sent confirmation before playing another message. "
                         f"({send_guard_remaining}s)"
                     )
