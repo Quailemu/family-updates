@@ -11566,10 +11566,6 @@ def render_care_hub() -> None:
                         )
                         if recent_sent_message:
                             st.success(recent_sent_message)
-                        st.caption(
-                            "Please wait until you see the sent confirmation before playing another message. "
-                            f"({send_guard_remaining}s)"
-                        )
 
                     playlist_contacts = ordered_contacts_for_queue
                     if playlist_contacts:
@@ -11589,11 +11585,6 @@ def render_care_hub() -> None:
                                 options=[label for label, _ in playlist_options],
                                 key=f"care_playlist_select_{resident_id}",
                             )
-                            if send_guard_active:
-                                st.caption(
-                                    "Please wait for sent confirmation before using this play button "
-                                    f"({send_guard_remaining}s)."
-                                )
                             if st.button(
                                 "Play selected family message",
                                 key=f"care_playlist_play_{resident_id}",
@@ -11678,10 +11669,6 @@ def render_care_hub() -> None:
                     )
                     if recent_sent_message:
                         st.success(recent_sent_message)
-                    st.caption(
-                        "Please wait until you see the sent confirmation before playing another message. "
-                        f"({send_guard_remaining}s)"
-                    )
 
                 playlist_contacts = ordered_contacts_for_queue
                 if playlist_contacts:
@@ -11701,11 +11688,6 @@ def render_care_hub() -> None:
                             options=[label for label, _ in playlist_options],
                             key=f"care_playlist_select_{resident_id}",
                         )
-                        if send_guard_active:
-                            st.caption(
-                                "Please wait for sent confirmation before using this play button "
-                                f"({send_guard_remaining}s)."
-                            )
                         if st.button(
                             "Play selected family message",
                             key=f"care_playlist_play_{resident_id}",
@@ -11741,11 +11723,6 @@ def render_care_hub() -> None:
                                     listen_prefix = "care_mobile" if is_mobile_variant else "care_office"
                                     st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
                                     st.session_state[f"{listen_prefix}_listened_confirm_{resident_id}"] = False
-                    if send_guard_active:
-                        st.caption(
-                            "Please wait for sent confirmation before using this play button "
-                            f"({send_guard_remaining}s)."
-                        )
                     if st.button(
                         "Play next family message",
                         key=f"care_play_next_{resident_id}",
