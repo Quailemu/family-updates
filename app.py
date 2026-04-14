@@ -9268,7 +9268,6 @@ def render_family_send() -> None:
             if last_message and not state.get("recording_bytes"):
                 sent_at = last_message.get("sent_at")
                 sent_display = format_soft_message_period_label(sent_at) if sent_at else None
-                st.success("Message sent")
                 if last_message_audio:
                     st.audio(last_message_audio, format=last_message_audio_mime)
                 transcript_source = latest_sent or fallback_last_message_for_transcript
@@ -9295,6 +9294,7 @@ def render_family_send() -> None:
                     st.session_state.pop(f"family_upload_{resident_id}", None)
                     st.session_state.pop(f"family_audio_input_{resident_id}", None)
                     st.rerun()
+                st.success("Message sent")
                 continue
 
             native_recording_available = hasattr(st, "audio_input")
@@ -11589,6 +11589,11 @@ def render_care_hub() -> None:
                                 options=[label for label, _ in playlist_options],
                                 key=f"care_playlist_select_{resident_id}",
                             )
+                            if send_guard_active:
+                                st.caption(
+                                    "Please wait for sent confirmation before using this play button "
+                                    f"({send_guard_remaining}s)."
+                                )
                             if st.button(
                                 "Play selected family message",
                                 key=f"care_playlist_play_{resident_id}",
@@ -11696,6 +11701,11 @@ def render_care_hub() -> None:
                             options=[label for label, _ in playlist_options],
                             key=f"care_playlist_select_{resident_id}",
                         )
+                        if send_guard_active:
+                            st.caption(
+                                "Please wait for sent confirmation before using this play button "
+                                f"({send_guard_remaining}s)."
+                            )
                         if st.button(
                             "Play selected family message",
                             key=f"care_playlist_play_{resident_id}",
@@ -11731,6 +11741,11 @@ def render_care_hub() -> None:
                                     listen_prefix = "care_mobile" if is_mobile_variant else "care_office"
                                     st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
                                     st.session_state[f"{listen_prefix}_listened_confirm_{resident_id}"] = False
+                    if send_guard_active:
+                        st.caption(
+                            "Please wait for sent confirmation before using this play button "
+                            f"({send_guard_remaining}s)."
+                        )
                     if st.button(
                         "Play next family message",
                         key=f"care_play_next_{resident_id}",
@@ -12243,10 +12258,6 @@ def render_care_hub() -> None:
                     "After pressing Send, wait for the sent confirmation before playing another message."
                 )
                 last_sent = st.session_state.get("care_last_sent")
-                if sent_now:
-                    st.success("Message sent.")
-                elif last_sent and last_sent.get("resident_id") == resident_id:
-                    st.success(last_sent.get("message", "Message sent."))
     
                 can_send = bool(
                     state.get("recording_bytes")
@@ -12364,6 +12375,10 @@ def render_care_hub() -> None:
                                     int(state.get("recording_input_nonce", 0)) + 1
                                 )
                                 st.rerun()
+                if sent_now:
+                    st.success("Message sent.")
+                elif last_sent and last_sent.get("resident_id") == resident_id:
+                    st.success(last_sent.get("message", "Message sent."))
 
         if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
             with st.container(border=True):
@@ -12511,13 +12526,6 @@ def render_care_hub() -> None:
                     state["office_transcribe_requested"] = False
                     clear_transcript_preview_state(state, prefix="office_")
     
-                if (
-                    runtime_variant == VARIANT_OFFICE
-                    and state.get("office_last_sent_label")
-                    and not state.get("office_recording_bytes")
-                ):
-                    st.success(state.get("office_last_sent_label"))
-    
                 if runtime_variant == VARIANT_OFFICE:
                     st.markdown("**Office update**")
                     st.caption(
@@ -12661,6 +12669,12 @@ def render_care_hub() -> None:
                                 state["office_last_sent_fingerprint"] = sent_office_fp
                                 activate_send_guard(send_guard_scope)
                                 st.rerun()
+                if (
+                    runtime_variant == VARIANT_OFFICE
+                    and state.get("office_last_sent_label")
+                    and not state.get("office_recording_bytes")
+                ):
+                    st.success(state.get("office_last_sent_label"))
 
             if runtime_variant == VARIANT_OFFICE:
                 with st.container(border=True):
