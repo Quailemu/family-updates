@@ -9221,7 +9221,7 @@ def render_family_send() -> None:
                     "audio_mime_type": last_message_audio_mime,
                 }
             show_recent_send_feedback = bool(last_message and not state.get("recording_bytes"))
-            if latest_sent and not state.get("recording_bytes"):
+            if latest_sent:
                 if latest_sent_audio:
                     st.audio(
                         latest_sent_audio,
@@ -12058,7 +12058,7 @@ def render_care_hub() -> None:
                 latest_sent,
                 access_token=access_token,
             )
-            if latest_sent and not state.get("recording_bytes"):
+            if latest_sent:
                 if latest_sent_audio:
                     if latest_sent_audio_kind == "bytes":
                         st.audio(
