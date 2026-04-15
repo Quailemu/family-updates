@@ -1660,7 +1660,19 @@ def _normalize_magic_link_redirect_url_for_variant(redirect_to: str, app_variant
             query_map["route"] = canonical_login_route
         normalized_path = "/"
         normalized_query = urlencode(query_map)
-        return urlunparse(parsed._replace(path=normalized_path, query=normalized_query))
+        target_scheme = parsed.scheme or "https"
+        target_netloc = parsed.netloc
+        if CANONICAL_PUBLIC_HOST:
+            target_scheme = "https"
+            target_netloc = CANONICAL_PUBLIC_HOST
+        return urlunparse(
+            parsed._replace(
+                scheme=target_scheme,
+                netloc=target_netloc,
+                path=normalized_path,
+                query=normalized_query,
+            )
+        )
     except Exception:
         return value
 
