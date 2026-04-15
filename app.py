@@ -6373,7 +6373,7 @@ def render_header_menu(menu_key: str) -> None:
                 set_route("/pr-home")
                 return
             if st.button("How it works", key=f"{menu_key}_mobile_how_it_works"):
-                set_route("/docs")
+                set_route("/public/walkthrough-overview")
                 return
             if st.button("Mobile Q&A", key=f"{menu_key}_mobile_qa"):
                 set_route("/care-hub/mobile/qa")
