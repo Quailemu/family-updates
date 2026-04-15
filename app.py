@@ -7507,7 +7507,7 @@ def render_home(active: str) -> None:
         for idx, (variant, label, summary, walkthrough_route, video_env_var, local_video_path) in enumerate(app_entries):
             target_url = get_public_app_url(variant)
             if variant == VARIANT_FAMILY:
-                watch_label = "Watch Family Record video"
+                watch_label = "Watch Family Hub walkthrough video"
             elif variant == VARIANT_MOBILE:
                 watch_label = "Watch Care Hub - Mobile Record video"
             else:
@@ -7822,7 +7822,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
         "/public/safeguarding-and-consent": "Safeguarding and Consent | voicemailcare.com",
         "/public/faq": "Family and Care Hub Q&A | voicemailcare.com",
         "/public/qa": "Family and Care Hub Q&A | voicemailcare.com",
-        "/public/walkthrough-family": "Family Hub Record Video | voicemailcare.com",
+        "/public/walkthrough-family": "Family Hub walkthrough video | voicemailcare.com",
         "/public/walkthrough-mobile": "Care Hub - Mobile Record Video | voicemailcare.com",
         "/public/walkthrough-office": "Care Hub - Office Walkthrough | voicemailcare.com",
         "/public/walkthrough-overview": "voicemailcare systems video | voicemailcare.com",
@@ -10391,24 +10391,24 @@ def render_public_docs() -> None:
     if app_variant == VARIANT_FAMILY:
         public_docs = [
             ("voicemailcare systems video", "/public/walkthrough-overview"),
-            ("Family Record video", "/public/walkthrough-family"),
+            ("Family Hub walkthrough video", "/public/walkthrough-family"),
         ]
     elif app_variant == VARIANT_MOBILE:
         public_docs = [
             ("voicemailcare systems video", "/public/walkthrough-overview"),
-            ("Family Record video", "/public/walkthrough-family"),
+            ("Family Hub walkthrough video", "/public/walkthrough-family"),
             ("Care Hub - Mobile Record video", "/public/walkthrough-mobile"),
         ]
     elif app_variant == VARIANT_OFFICE:
         public_docs = [
             ("voicemailcare systems video", "/public/walkthrough-overview"),
-            ("Family Record video", "/public/walkthrough-family"),
+            ("Family Hub walkthrough video", "/public/walkthrough-family"),
             ("Care Hub - Office Walkthrough", "/public/walkthrough-office"),
         ]
     else:
         public_docs = [
             ("voicemailcare systems video", "/public/walkthrough-overview"),
-            ("Family Record video", "/public/walkthrough-family"),
+            ("Family Hub walkthrough video", "/public/walkthrough-family"),
             ("Care Hub - Mobile Record video", "/public/walkthrough-mobile"),
             ("Care Hub - Office Walkthrough", "/public/walkthrough-office"),
         ]
@@ -13691,7 +13691,7 @@ def main() -> None:
         render_public_document("docs/public/safeguarding_and_consent.md")
     elif route == "/public/walkthrough-family":
         render_public_walkthrough_page(
-            "Family Record video",
+            "Family Hub walkthrough video",
             "PUBLIC_FAMILY_RECORD_VIDEO_URL",
             "assets/voice-message-family-walkthrough-v1.mp4",
             [
