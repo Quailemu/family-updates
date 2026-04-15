@@ -3137,14 +3137,31 @@ def render_how_it_works_mobile() -> None:
         "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
         "Care Hub - Mobile uses individual staff PIN access for day-to-day use.",
         "Secure email link is used only for first sign-in or expired-session recovery.",
+        "Care Hub - Office is a separate staff/admin access path.",
+        "Office authentication is distinct from Family email links and Mobile staff PIN access.",
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
-    render_how_it_works_video_links(
-        "Care Hub - Mobile",
-        "/public/walkthrough-mobile",
-        "how_mobile",
-    )
+    st.markdown("### Watch videos")
+    mobile_video_cols = st.columns(3, gap="small")
+    with mobile_video_cols[0]:
+        render_route_link(
+            "voicemailcare systems video",
+            "/public/walkthrough-overview",
+            key="how_mobile_video_overview_link",
+        )
+    with mobile_video_cols[1]:
+        render_route_link(
+            "Care Hub - Mobile Record video",
+            "/public/walkthrough-mobile",
+            key="how_mobile_video_mobile_link",
+        )
+    with mobile_video_cols[2]:
+        render_route_link(
+            "Family Hub walkthrough video",
+            "/public/walkthrough-family",
+            key="how_mobile_video_family_link",
+        )
     render_how_it_works_diagram_and_notes()
     render_route_link(
         mobile_back_label,
@@ -6373,7 +6390,7 @@ def render_header_menu(menu_key: str) -> None:
                 set_route("/pr-home")
                 return
             if st.button("How it works", key=f"{menu_key}_mobile_how_it_works"):
-                set_route("/public/walkthrough-overview")
+                set_route("/care-hub-mobile/how-it-works")
                 return
             if st.button("Mobile Q&A", key=f"{menu_key}_mobile_qa"):
                 set_route("/care-hub/mobile/qa")
