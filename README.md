@@ -32,6 +32,18 @@ Runtime resolves app variant from request path first:
 
 `APP_VARIANT` remains as fallback for local/dev or unmapped paths.
 
+## Deployment topology (current live)
+
+- Live Render service: `voicemailcare-main`
+- Primary domain (indexed): `https://voicemailcare.com`
+- Media domain: `https://media.voicemailcare.com`
+
+### Legacy infrastructure status
+
+- Any previous Render project names and auth-cookie env groups that now use an `old-` prefix are legacy.
+- Legacy `old-*` Render resources are not part of active runtime documentation for this service.
+- Legacy preview/host URLs are redirected to the canonical domain where configured.
+
 ## Run by variant
 
 ```bat

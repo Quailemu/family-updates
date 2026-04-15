@@ -47,7 +47,7 @@ If all other current family messages have already been played, that new message 
 
 ## Voice Message Flow Example
 
-![Voice message flow diagram](../../assets/system diagram.png)
+![Voice message flow diagram](../../assets/system-diagram.png)
 
 Example resident flow
 

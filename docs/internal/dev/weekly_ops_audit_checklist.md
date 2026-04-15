@@ -32,6 +32,10 @@ Frequency: once per week (and again after any production deployment).
 
 ## 3) Render audit (runtime + config)
 
+- Active live service: `voicemailcare-main`
+- Primary domain must be: `voicemailcare.com`
+- Media domain must be: `media.voicemailcare.com`
+- Treat any Render resources with `old-` prefixes as legacy only (not active runtime).
 - Confirm all required env vars are present and correctly named.
 - Check logs for:
   - 4xx/5xx spikes

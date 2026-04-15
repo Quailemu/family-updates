@@ -4,7 +4,7 @@
 
 This summary is for Care Hub – Office users. It outlines the separation of apps, office responsibilities, and the message and safeguarding boundaries.
 
-![Voice message flow diagram](../../assets/system diagram.png)
+![Voice message flow diagram](../../assets/system-diagram.png)
 
 Example: Jane
 

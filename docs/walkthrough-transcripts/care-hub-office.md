@@ -1,4 +1,4 @@
-﻿# Care Hub Office Walkthrough Transcript
+# Care Hub Office Walkthrough Transcript
 
 > Transcript style requirement: This script is written for a screen recording narrated in a calm, clear, spoken style for viewers to watch and listen to. Keep wording simple, practical, and walkthrough-focused, matching the existing transcript tone and structure.
 

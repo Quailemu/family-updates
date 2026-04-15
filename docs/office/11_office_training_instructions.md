@@ -2,7 +2,7 @@
 
 # Care Hub - Office training and instructions
 
-![Voice message flow diagram](../../assets/system diagram.png)
+![Voice message flow diagram](../../assets/system-diagram.png)
 
 Example: Jane
 

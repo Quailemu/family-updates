@@ -2,7 +2,7 @@
 
 # Service overview
 
-![Voice message flow diagram](../../assets/system diagram.png)
+![Voice message flow diagram](../../assets/system-diagram.png)
 
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 

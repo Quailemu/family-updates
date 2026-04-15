@@ -110,6 +110,22 @@ LEGACY_MEDIA_HOST_SUBSTRINGS = (
     "voice-message.com",
     "voicemailcare-main.onrender.com",
 )
+CANONICAL_PUBLIC_HOST = str(os.getenv("CANONICAL_PUBLIC_HOST", "voicemailcare.com") or "").strip().lower()
+CANONICAL_PUBLIC_HOST_ALIASES = tuple(
+    host.strip().lower()
+    for host in str(os.getenv("CANONICAL_PUBLIC_HOST_ALIASES", "www.voicemailcare.com") or "").split(",")
+    if host.strip()
+)
+NON_CANONICAL_REDIRECT_HOST_SUFFIXES = tuple(
+    suffix.strip().lower()
+    for suffix in str(
+        os.getenv("NON_CANONICAL_REDIRECT_HOST_SUFFIXES", ".streamlit.app,.onrender.com") or ""
+    ).split(",")
+    if suffix.strip()
+)
+NON_CANONICAL_HOST_REDIRECT_ENABLED = str(
+    os.getenv("NON_CANONICAL_HOST_REDIRECT_ENABLED", "1") or ""
+).strip().lower() in {"1", "true", "yes", "on"}
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_TRANSCRIPTION_MODEL = (
     os.getenv("OPENAI_TRANSCRIPTION_MODEL", "gpt-4o-mini-transcribe").strip()
@@ -200,6 +216,44 @@ def normalize_route(route: str | None) -> str:
         value = "/care-hub/mobile/login"
     elif normalized_lower == "/office/login":
         value = "/care-hub/login"
+    else:
+        legacy_direct_aliases = {
+            "/care_hub_-_mobile": "/care-hub/mobile/login",
+            "/care_hub_mobile": "/care-hub/mobile/login",
+            "/care_hub_-_office": "/care-hub/login",
+            "/care_hub_office": "/care-hub/login",
+            "/family_terms": "/public/family-terms-of-use",
+            "/privacy_notice": "/public/privacy-notice",
+            "/safeguarding_and_consent": "/public/safeguarding-and-consent",
+            "/complaints": "/public/complaints-and-concerns",
+            "/pricing": "/pr-home",
+        }
+        if normalized_lower in legacy_direct_aliases:
+            value = legacy_direct_aliases[normalized_lower]
+        else:
+            legacy_candidate = normalized_lower.lstrip("/")
+            if legacy_candidate.startswith("pages/"):
+                legacy_candidate = legacy_candidate.split("/", 1)[1]
+            if legacy_candidate.endswith(".py"):
+                legacy_candidate = legacy_candidate[:-3]
+            legacy_slug = re.sub(r"[^a-z0-9]+", "_", legacy_candidate).strip("_")
+            if legacy_slug.startswith("pages_"):
+                legacy_slug = legacy_slug[len("pages_") :]
+            if legacy_slug.startswith("page_"):
+                legacy_slug = legacy_slug[len("page_") :]
+            legacy_slug_aliases = {
+                "family": "/family/login",
+                "care_hub_mobile": "/care-hub/mobile/login",
+                "care_hub_office": "/care-hub/login",
+                "family_terms": "/public/family-terms-of-use",
+                "privacy_notice": "/public/privacy-notice",
+                "safeguarding_and_consent": "/public/safeguarding-and-consent",
+                "complaints": "/public/complaints-and-concerns",
+                "pricing": "/pr-home",
+            }
+            mapped = legacy_slug_aliases.get(legacy_slug, "")
+            if mapped:
+                value = mapped
     if len(value) > 1 and value.endswith("/"):
         value = value[:-1]
     return value
@@ -6227,10 +6281,10 @@ def render_header_menu(menu_key: str) -> None:
         if app_variant == VARIANT_OFFICE:
             st.markdown("**Care Hub - Office**")
             clicked_action = None
+            if st.button("Back to Office messages", key=f"{menu_key}_inbox"):
+                clicked_action = ("route", get_home_route(app_variant))
             if st.button("How it works", key=f"{menu_key}_office_how_it_works"):
                 clicked_action = ("route", "/care-hub-office/how-it-works")
-            if st.button("Inbox", key=f"{menu_key}_inbox"):
-                clicked_action = ("route", get_home_route(app_variant))
             if st.button("Register family member", key=f"{menu_key}_register_family"):
                 clicked_action = ("route", "/care-hub/register-family")
             if st.button("Operational variables", key=f"{menu_key}_operational_variables"):
@@ -7587,7 +7641,7 @@ def render_home(active: str) -> None:
         st.markdown("### Start here: Service flow overview (90 seconds)")
         overview_video = resolve_public_video_source(
             "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
-            "assets/voice-message-flow-overview-v1.mp4",
+            "assets/system-Walkthrough.mp4",
         )
         if overview_video:
             try:
@@ -7649,6 +7703,272 @@ def get_route() -> str:
     return normalize_route(route) or "/"
 
 
+def _map_legacy_streamlit_page_to_route(legacy_page: str) -> str:
+    raw_value = str(legacy_page or "").strip()
+    if not raw_value:
+        return ""
+    raw_value = unquote(raw_value).strip()
+    if "/" in raw_value:
+        raw_value = raw_value.split("/")[-1].strip()
+    if raw_value.lower().endswith(".py"):
+        raw_value = raw_value[:-3]
+    slug = re.sub(r"[^a-z0-9]+", "_", raw_value.lower()).strip("_")
+    if slug.startswith("pages_"):
+        slug = slug[len("pages_") :]
+    if slug.startswith("page_"):
+        slug = slug[len("page_") :]
+    page_to_route = {
+        "family": "/family/login",
+        "care_hub_mobile": "/care-hub/mobile/login",
+        "care_hub_office": "/care-hub/login",
+        "pricing": "/pr-home",
+        "privacy_notice": "/public/privacy-notice",
+        "family_terms": "/public/family-terms-of-use",
+        "safeguarding_and_consent": "/public/safeguarding-and-consent",
+        "complaints": "/public/complaints-and-concerns",
+    }
+    mapped = page_to_route.get(slug, "")
+    if not mapped:
+        if "family" in slug:
+            mapped = "/family/login"
+        elif "mobile" in slug:
+            mapped = "/care-hub/mobile/login"
+        elif "office" in slug or "care_hub" in slug:
+            mapped = "/care-hub/login"
+        elif "privacy" in slug:
+            mapped = "/public/privacy-notice"
+        elif "safeguard" in slug or "consent" in slug:
+            mapped = "/public/safeguarding-and-consent"
+        elif "complaint" in slug:
+            mapped = "/public/complaints-and-concerns"
+        elif "term" in slug:
+            mapped = "/public/family-terms-of-use"
+        elif "price" in slug:
+            mapped = "/pr-home"
+    return normalize_route(mapped)
+
+
+def _route_from_request_path(raw_path: str) -> str:
+    path = normalize_route(raw_path) or "/"
+    path_lower = path.lower()
+    if path_lower.startswith("/family"):
+        return FAMILY_LOGIN_ROUTE
+    if path_lower.startswith("/care_hub_-_mobile") or path_lower.startswith("/care_hub_mobile"):
+        return MOBILE_LOGIN_ROUTE
+    if path_lower.startswith("/care_hub_-_office") or path_lower.startswith("/care_hub_office"):
+        return OFFICE_LOGIN_ROUTE
+    if path_lower.startswith("/mobile") or path_lower.startswith("/care-hub/mobile"):
+        return MOBILE_LOGIN_ROUTE
+    if path_lower.startswith("/office") or path_lower.startswith("/care-hub"):
+        return OFFICE_LOGIN_ROUTE
+    first = path_lower.lstrip("/").split("/", 1)[0].strip()
+    mapped = _map_legacy_streamlit_page_to_route(first)
+    if mapped:
+        return mapped
+    if path_lower.startswith("/public"):
+        return "/public/walkthrough-overview"
+    return PUBLIC_HOME_ROUTE
+
+
+def _get_canonical_hosts() -> set[str]:
+    canonical_hosts = {CANONICAL_PUBLIC_HOST, *CANONICAL_PUBLIC_HOST_ALIASES}
+    return {value.strip(".").lower() for value in canonical_hosts if value}
+
+
+def _build_seo_metadata(route: str) -> dict[str, str]:
+    normalized_route = normalize_route(route) or PUBLIC_HOME_ROUTE
+    route_titles: dict[str, str] = {
+        "/pr-home": "VoicemailCare – Simple communication for care homes and families",
+        "/family/login": "Family Hub | voicemailcare.com",
+        "/care-hub/mobile/login": "Care Hub - Mobile | voicemailcare.com",
+        "/care-hub/login": "Care Hub - Office | voicemailcare.com",
+        "/public/privacy-notice": "Privacy Notice | voicemailcare.com",
+        "/public/family-terms-of-use": "Family Terms of Use | voicemailcare.com",
+        "/public/complaints-and-concerns": "Complaints and Concerns | voicemailcare.com",
+        "/public/safeguarding-and-consent": "Safeguarding and Consent | voicemailcare.com",
+        "/public/faq": "Family and Care Hub Q&A | voicemailcare.com",
+        "/public/qa": "Family and Care Hub Q&A | voicemailcare.com",
+        "/public/walkthrough-family": "Family Hub Record Video | voicemailcare.com",
+        "/public/walkthrough-mobile": "Care Hub - Mobile Record Video | voicemailcare.com",
+        "/public/walkthrough-office": "Care Hub - Office Walkthrough | voicemailcare.com",
+        "/public/walkthrough-overview": "voicemailcare systems video | voicemailcare.com",
+    }
+    route_descriptions: dict[str, str] = {
+        "/pr-home": "VoicemailCare helps care homes and families stay connected through simple, non-urgent voice messaging.",
+        "/family/login": "Family Hub access for non-urgent social voice messages. Not a live service.",
+        "/care-hub/mobile/login": "Care Hub - Mobile access for staff playback and resident recordings within care routines.",
+        "/care-hub/login": "Care Hub - Office access for oversight, family registration, and operational communication.",
+        "/public/privacy-notice": "Privacy notice for voicemailcare.com, including controller/processor roles and retention boundaries.",
+        "/public/family-terms-of-use": "Family Terms of Use for voicemailcare.com and non-urgent message boundaries.",
+        "/public/complaints-and-concerns": "How to raise platform concerns and where care-home responsibilities apply.",
+        "/public/safeguarding-and-consent": "Safeguarding and consent boundaries for voicemailcare.com in care settings.",
+        "/public/faq": "Frequently asked questions for Family Hub and Care Hub usage.",
+        "/public/qa": "Frequently asked questions for Family Hub and Care Hub usage.",
+        "/public/walkthrough-family": "Walkthrough video for Family Hub message recording and playback boundaries.",
+        "/public/walkthrough-mobile": "Walkthrough video for Care Hub - Mobile playback and resident recording workflows.",
+        "/public/walkthrough-office": "Walkthrough video for Care Hub - Office oversight and practical structured messaging.",
+        "/public/walkthrough-overview": "System diagram walkthrough across Family Hub, Care Hub - Mobile, and Care Hub - Office.",
+    }
+    if normalized_route == "/public/service-overview":
+        normalized_route = "/pr-home"
+    title = route_titles.get(normalized_route, "voicemailcare.com")
+    description = route_descriptions.get(
+        normalized_route,
+        "voicemailcare.com for non-urgent social voice messages between residents and family members.",
+    )
+    return {"route": normalized_route, "title": title, "description": description}
+
+
+def apply_seo_head_tags(route: str, app_variant: str) -> None:
+    seo = _build_seo_metadata(route)
+    canonical_route = seo["route"]
+    title = seo["title"]
+    description = seo["description"]
+    host = _get_request_host()
+    canonical_hosts = _get_canonical_hosts()
+    is_canonical_host = bool(host) and host in canonical_hosts
+    is_public_route = canonical_route.startswith("/public/") or canonical_route in {
+        "/pr-home",
+        "/family/login",
+        "/care-hub/login",
+        "/care-hub/mobile/login",
+        "/service-overview",
+    }
+    should_index = is_canonical_host and is_public_route and app_variant in {VARIANT_PUBLIC, VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE}
+    robots = (
+        "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+        if should_index
+        else "noindex,nofollow,noarchive"
+    )
+    if canonical_route == PUBLIC_HOME_ROUTE:
+        canonical_url = f"https://{CANONICAL_PUBLIC_HOST}"
+    else:
+        canonical_url = f"https://{CANONICAL_PUBLIC_HOST}/?{urlencode({'route': canonical_route})}"
+    seo_payload = {
+        "title": title,
+        "description": description,
+        "canonical_url": canonical_url,
+        "robots": robots,
+    }
+    seo_payload_js = json.dumps(seo_payload)
+    components.html(
+        f"""
+<script>
+(function () {{
+  try {{
+    var seo = {seo_payload_js};
+    var topWin = window.parent && window.parent.document ? window.parent : window;
+    var doc = topWin.document || document;
+    if (!doc || !doc.head) return;
+    doc.title = seo.title;
+    function upsertMeta(attrName, attrValue, content) {{
+      if (!attrValue) return;
+      var selector = 'meta[' + attrName + '=\"' + attrValue + '\"]';
+      var node = doc.head.querySelector(selector);
+      if (!node) {{
+        node = doc.createElement('meta');
+        node.setAttribute(attrName, attrValue);
+        doc.head.appendChild(node);
+      }}
+      node.setAttribute('content', content || '');
+    }}
+    function upsertLink(relValue, hrefValue) {{
+      var selector = 'link[rel=\"' + relValue + '\"]';
+      var node = doc.head.querySelector(selector);
+      if (!node) {{
+        node = doc.createElement('link');
+        node.setAttribute('rel', relValue);
+        doc.head.appendChild(node);
+      }}
+      node.setAttribute('href', hrefValue || '');
+    }}
+    upsertMeta('name', 'description', seo.description);
+    upsertMeta('name', 'robots', seo.robots);
+    upsertMeta('property', 'og:site_name', 'voicemailcare.com');
+    upsertMeta('property', 'og:type', 'website');
+    upsertMeta('property', 'og:title', seo.title);
+    upsertMeta('property', 'og:description', seo.description);
+    upsertMeta('property', 'og:url', seo.canonical_url);
+    upsertMeta('name', 'twitter:card', 'summary');
+    upsertMeta('name', 'twitter:title', seo.title);
+    upsertMeta('name', 'twitter:description', seo.description);
+    upsertLink('canonical', seo.canonical_url);
+  }} catch (e) {{
+    // SEO metadata updates are best-effort only.
+  }}
+}})();
+</script>
+""",
+        height=0,
+        width=0,
+    )
+
+
+def redirect_non_canonical_host_once() -> None:
+    if not NON_CANONICAL_HOST_REDIRECT_ENABLED:
+        return
+    if not CANONICAL_PUBLIC_HOST:
+        return
+    host = _get_request_host()
+    if not host:
+        return
+    if host in {"localhost", "127.0.0.1", "::1"}:
+        return
+    canonical_hosts = _get_canonical_hosts()
+    if host in canonical_hosts:
+        return
+    if not any(host.endswith(suffix) for suffix in NON_CANONICAL_REDIRECT_HOST_SUFFIXES):
+        return
+    request_path = _get_request_path()
+    query_map: dict[str, str] = {}
+    try:
+        context = getattr(st, "context", None)
+        current_url = str(getattr(context, "url", "") or "").strip() if context is not None else ""
+        parsed_url = urlparse(current_url) if current_url else None
+        if parsed_url:
+            for key, raw_value in parse_qsl(parsed_url.query, keep_blank_values=True):
+                key_text = str(key or "").strip()
+                if not key_text:
+                    continue
+                query_map[key_text] = str(raw_value or "")
+    except Exception:
+        query_map = {}
+    route = normalize_route(query_map.get("route", "")) or ""
+    if not route:
+        route = _map_legacy_streamlit_page_to_route(query_map.get("page", ""))
+    if not route:
+        route = _route_from_request_path(request_path)
+    # For legacy onrender links surfaced by search engines, always land on the public home
+    # instead of honoring stale deep links (for example deprecated walkthrough routes).
+    if host.endswith(".onrender.com"):
+        route = PUBLIC_HOME_ROUTE
+    redirect_query_map: dict[str, str] = {"route": route}
+    for key in ("code", "token_hash", "token", "type", "access_token", "refresh_token"):
+        value = str(query_map.get(key, "") or "").strip()
+        if value:
+            redirect_query_map[key] = value
+    target_url = f"https://{CANONICAL_PUBLIC_HOST}/?{urlencode(redirect_query_map)}"
+    target_url_js = json.dumps(target_url)
+    components.html(
+        f"""
+<script>
+(function () {{
+  try {{
+    var target = {target_url_js};
+    var topWin = window.parent && window.parent.location ? window.parent : window;
+    topWin.location.replace(target);
+  }} catch (e) {{
+    window.location.replace({target_url_js});
+  }}
+}})();
+</script>
+""",
+        height=0,
+        width=0,
+    )
+    st.stop()
+
+
 def clear_legacy_streamlit_page_param_once() -> None:
     """Strip stale Streamlit multipage query params that can trigger page-not-found notices."""
     if not hasattr(st, "query_params"):
@@ -7662,6 +7982,17 @@ def clear_legacy_streamlit_page_param_once() -> None:
         return
     if bool(st.session_state.get("_legacy_page_param_cleared", False)):
         return
+    mapped_route = _map_legacy_streamlit_page_to_route(legacy_page)
+    if mapped_route:
+        try:
+            current_route = normalize_route(st.query_params.get("route", "")) or ""
+        except Exception:
+            current_route = ""
+        if not current_route or current_route == "/":
+            try:
+                st.query_params["route"] = mapped_route
+            except Exception:
+                pass
     try:
         del st.query_params["page"]
     except Exception:
@@ -8287,6 +8618,24 @@ def normalize_public_video_url(raw_value: str) -> str:
     return _join_media_base_url(unquote(value))
 
 
+def _video_url_variants(url: str) -> list[str]:
+    normalized = normalize_public_video_url(url)
+    if not normalized:
+        return []
+    variants = [normalized]
+    try:
+        parsed = urlparse(normalized)
+        path = str(parsed.path or "")
+        lowered_path = path.lower()
+        if path and lowered_path != path:
+            lowered_url = urlunparse(parsed._replace(path=lowered_path))
+            if lowered_url not in variants:
+                variants.append(lowered_url)
+    except Exception:
+        pass
+    return variants
+
+
 DEFAULT_PUBLIC_VIDEO_URLS: dict[str, str] = {}
 if MEDIA_TEST_VIDEO_OBJECT_PATH:
     _default_test_video_url = _join_media_base_url(MEDIA_TEST_VIDEO_OBJECT_PATH)
@@ -8310,17 +8659,19 @@ if OFFICE_RECORD_VIDEO_OBJECT_PATH:
 def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
     candidate_vars = [candidate.strip() for candidate in str(env_var).split(",") if candidate.strip()]
     for candidate in candidate_vars:
-        url = normalize_public_video_url(os.getenv(candidate, ""))
-        parsed = urlparse(url) if url else None
-        host = ((parsed.netloc if parsed else "") or "").lower()
-        if url and host.endswith("dropbox.com"):
-            continue
-        if url:
-            return url
+        raw_url = os.getenv(candidate, "")
+        for url in _video_url_variants(raw_url):
+            parsed = urlparse(url) if url else None
+            host = ((parsed.netloc if parsed else "") or "").lower()
+            if url and host.endswith("dropbox.com"):
+                continue
+            if url:
+                return url
     for candidate in candidate_vars:
-        fallback_url = normalize_public_video_url(DEFAULT_PUBLIC_VIDEO_URLS.get(candidate, ""))
-        if fallback_url:
-            return fallback_url
+        fallback_raw = DEFAULT_PUBLIC_VIDEO_URLS.get(candidate, "")
+        for fallback_url in _video_url_variants(fallback_raw):
+            if fallback_url:
+                return fallback_url
     local_file = Path(local_path)
     if local_file.exists():
         return str(local_file)
@@ -12834,11 +13185,12 @@ def render_care_hub_register_family() -> None:
 
 def main() -> None:
     st.set_page_config(
-        page_title="voicemailcare.com",
+        page_title="VoicemailCare – Simple communication for care homes and families",
         page_icon="ðŸ—£ï¸",
         layout="centered",
         initial_sidebar_state="collapsed",
     )
+    redirect_non_canonical_host_once()
     raw_variant = get_raw_app_variant()
     init_state()
     clear_legacy_streamlit_page_param_once()
@@ -12930,6 +13282,7 @@ def main() -> None:
         target_route = FAMILY_LOGIN_ROUTE if app_variant == VARIANT_FAMILY else default_route
         route = target_route
         st.session_state.route = route
+    apply_seo_head_tags(route, app_variant)
     route_allowlisted = is_route_allowed(app_variant, route)
     if APP_DEBUG:
         print(
@@ -13241,8 +13594,8 @@ def main() -> None:
     elif route == "/public/walkthrough-overview":
         render_public_walkthrough_page(
             "voicemailcare systems video",
-            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
-            "assets/voice-message-flow-overview-v1.mp4",
+            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL,PUBLIC_SYSTEMS_VIDEO_URL,PUBLIC_OVERVIEW_VIDEO_URL",
+            "assets/system-Walkthrough.mp4",
             [
                 "How the overall service flow works across the three app interfaces.",
                 "Channel boundaries and replacement-only rules.",
@@ -13300,8 +13653,17 @@ def main() -> None:
     elif route == "/care-hub/mfa":
         render_care_hub_mfa()
     else:
-        st.header("Page not found")
-        st.write(f"Unknown route: {route}")
+        fallback_route = (
+            _map_legacy_streamlit_page_to_route(route)
+            or _route_from_request_path(request_path)
+            or default_route
+            or PUBLIC_HOME_ROUTE
+        )
+        fallback_route = normalize_route(fallback_route) or PUBLIC_HOME_ROUTE
+        if fallback_route == route:
+            fallback_route = PUBLIC_HOME_ROUTE
+        set_route(fallback_route)
+        st.stop()
 
 
 if __name__ == "__main__":

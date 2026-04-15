@@ -4,6 +4,17 @@ Master plan: `docs/VOICE_MESSAGE_MASTER_PLAN.md`
 
 ## Product variants (Family, Care Hub Mobile, Care Hub Office)
 
+## Deployment infrastructure (active)
+
+- Live Render service: `voicemailcare-main`
+- Primary custom domain: `https://voicemailcare.com`
+- Media domain: `https://media.voicemailcare.com`
+
+### Legacy infrastructure (not active runtime)
+
+- Any older Render project names or env groups now prefixed with `old-` are legacy.
+- Legacy `old-*` resources are not active infrastructure and should not be referenced as current deployment targets.
+
 ## System overview diagram
 
 ```mermaid
