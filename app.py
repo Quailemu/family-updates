@@ -8020,6 +8020,8 @@ FAMILY_PUBLIC_ROUTES = {
 }
 OFFICE_PUBLIC_ROUTES = {
     "/care-hub/login",
+    "/care-hub-office/how-it-works",
+    "/how-it-works/office",
     "/public/service-overview",
     "/public/how-it-works",
     "/public/resident-participation",
