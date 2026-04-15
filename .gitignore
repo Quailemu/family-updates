@@ -12,3 +12,4 @@ Thumbs.db
 supabase/.temp/
 assets.lnk
 assets/*.mp4
+!assets/system-Walkthrough.mp4
