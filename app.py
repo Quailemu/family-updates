@@ -6372,8 +6372,8 @@ def render_header_menu(menu_key: str) -> None:
             if st.button("Hub selection", key=f"{menu_key}_mobile_public_docs"):
                 set_route("/pr-home")
                 return
-            if st.button("Videos", key=f"{menu_key}_mobile_videos"):
-                set_route("/public/walkthrough-family")
+            if st.button("How it works", key=f"{menu_key}_mobile_how_it_works"):
+                set_route("/docs")
                 return
             if st.button("Mobile Q&A", key=f"{menu_key}_mobile_qa"):
                 set_route("/care-hub/mobile/qa")
@@ -10005,31 +10005,34 @@ def render_docs() -> None:
         unsafe_allow_html=True,
     )
     require_care_access()
+    app_variant = resolve_runtime_variant(route_hint=get_route())
     render_page_header("Documents")
-    st.markdown("### Videos")
+    st.markdown("### How it works")
     st.caption(
         "Walkthrough videos for Care Hub - Mobile, Care Hub - Office, and Family Hub, plus the voicemailcare systems video."
     )
-    walkthrough_cols_top = st.columns(2, gap="small")
-    with walkthrough_cols_top[0]:
+    if st.button(
+        "voicemailcare systems walkthrough video",
+        key="docs_walkthrough_overview",
+        use_container_width=True,
+    ):
+        set_route("/public/walkthrough-overview")
+    if st.button(
+        "Family Hub walkthrough video",
+        key="docs_walkthrough_family_audio",
+        use_container_width=True,
+    ):
+        set_route("/public/walkthrough-family")
+    if app_variant == VARIANT_MOBILE:
         if st.button(
-            "voicemailcare systems video",
-            key="docs_walkthrough_overview",
+            "Care Hub - Mobile walkthrough video",
+            key="docs_walkthrough_mobile_audio",
             use_container_width=True,
         ):
-            set_route("/public/walkthrough-overview")
-    with walkthrough_cols_top[1]:
-        pass
-    walkthrough_cols_bottom = st.columns(1, gap="small")
-    with walkthrough_cols_bottom[0]:
+            set_route("/public/walkthrough-mobile")
+    else:
         if st.button(
-            "Family Record video",
-            key="docs_walkthrough_family_audio",
-            use_container_width=True,
-        ):
-            set_route("/public/walkthrough-family")
-        if st.button(
-            "Care Hub - Office Walkthrough",
+            "Care Hub - Office walkthrough video",
             key="docs_walkthrough_office_audio",
             use_container_width=True,
         ):
