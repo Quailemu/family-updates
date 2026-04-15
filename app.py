@@ -10230,7 +10230,7 @@ def render_public_document(doc_path: str, back_route: str = "/public/walkthrough
     # Render all public documents in the boxed style for consistency.
     use_boxes = True
     use_qa_search = doc_path.endswith("10_faq.md")
-    app_variant = get_app_variant()
+    app_variant = resolve_runtime_variant(route_hint=get_route())
     if app_variant == VARIANT_PUBLIC:
         st.markdown(f"[Back to videos](?route={back_route})")
         render_page_header(get_public_document_title(doc_path), show_menu=False, show_variant_subheading=False)
@@ -10305,7 +10305,7 @@ def render_public_document(doc_path: str, back_route: str = "/public/walkthrough
 
 
 def render_public_docs() -> None:
-    app_variant = get_app_variant()
+    app_variant = resolve_runtime_variant(route_hint=get_route())
 
     render_page_header("Public Documents")
     if app_variant == VARIANT_FAMILY:
