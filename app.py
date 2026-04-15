@@ -43,10 +43,10 @@ FAMILY_SESSION_TIMEOUT_SECONDS = int(
 # Guard against accidental very-low timeout values in deployment config.
 # Care Hub sessions should not expire during normal short pauses in workflow.
 CARE_HUB_SESSION_TIMEOUT_SECONDS = max(
-    int(os.getenv("CARE_HUB_SESSION_TIMEOUT_SECONDS", str(60 * 30))),
-    60 * 30,
+    int(os.getenv("CARE_HUB_SESSION_TIMEOUT_SECONDS", str(60 * 90))),
+    60 * 60,
 )
-CARE_HUB_IDLE_TIMEOUT_OPTIONS_SECONDS = (60 * 30, 60 * 60, 60 * 90, 60 * 120)
+CARE_HUB_IDLE_TIMEOUT_OPTIONS_SECONDS = (60 * 60, 60 * 90, 60 * 120)
 TRANSCRIPT_POLICY_MODES = ("off", "assist", "precheck")
 APP_DEBUG = os.getenv("APP_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
 APP_LIVE_REFRESH = os.getenv("APP_LIVE_REFRESH", "1").strip().lower() in {
