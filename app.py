@@ -6285,7 +6285,7 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", get_home_route(app_variant))
             if st.button("How it works", key=f"{menu_key}_office_how_it_works"):
                 clicked_action = ("route", "/care-hub-office/how-it-works")
-            if st.button("Register family member", key=f"{menu_key}_register_family"):
+            if st.button("Register contact", key=f"{menu_key}_register_family"):
                 clicked_action = ("route", "/care-hub/register-family")
             if st.button("Operational variables", key=f"{menu_key}_operational_variables"):
                 clicked_action = ("route", "/care-hub/operational-variables")
@@ -6297,7 +6297,7 @@ def render_header_menu(menu_key: str) -> None:
             st.markdown("- Daily Use -")
             if st.button("Care Hub handbook", key=f"{menu_key}_office_doc_handbook"):
                 clicked_action = ("doc", "docs/office/05_care_home_guide.md")
-            if st.button("Registering a family member", key=f"{menu_key}_office_doc_register_family"):
+            if st.button("Registering a contact", key=f"{menu_key}_office_doc_register_family"):
                 clicked_action = ("doc", "docs/office/10_registering_family_member.md")
             if st.button("Handover checklist", key=f"{menu_key}_office_doc_handover"):
                 clicked_action = ("doc", "docs/office/care_home_handover_checklist.md")
@@ -9979,7 +9979,7 @@ def render_docs() -> None:
             "summary": "Day-to-day Care Hub use (Office and Mobile).",
         },
         {
-            "title": "Registering a family member",
+            "title": "Registering a contact",
             "path": "docs/office/10_registering_family_member.md",
             "summary": "How to invite and register a Family Member.",
         },
@@ -11582,10 +11582,10 @@ def render_care_hub() -> None:
             if runtime_variant == VARIANT_OFFICE:
                 st.warning(
                     "No Family Members are linked to this resident yet. "
-                    "Register a family member in Care Hub - Office before sending messages."
+                    "Register a contact in Care Hub - Office before sending messages."
                 )
                 if st.button(
-                    "Register family member now",
+                    "Register contact now",
                     key=f"care_register_family_cta_{resident_id}",
                     use_container_width=True,
                 ):
@@ -11594,7 +11594,7 @@ def render_care_hub() -> None:
             else:
                 st.warning(
                     "No Family Members are linked to this resident yet. "
-                    "Ask Office staff to register a family member."
+                    "Ask Office staff to register a contact."
                 )
             st.markdown("</div>", unsafe_allow_html=True)
             continue
@@ -13193,11 +13193,11 @@ def render_care_hub_register_family() -> None:
     require_care_access()
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
         render_wrong_variant(
-            "Family registration is only available in Care Hub - Office."
+            "Contact registration is only available in Care Hub - Office."
         )
         return
     back_route = OFFICE_HOME_ROUTE
-    render_page_header("Register a Family Member", show_menu=False)
+    render_page_header("Register a Contact", show_menu=False)
     render_route_link(
         "Back to Office messages",
         back_route,
