@@ -8838,10 +8838,9 @@ def render_public_walkthrough_page(
     elif normalized_title.endswith("diagram video") or normalized_title.endswith("systems video"):
         st.caption("Diagram video - How the system works.")
     video_source: str | None = None
-    if normalized_title.endswith("diagram video") or normalized_title.endswith("systems video"):
-        local_system_video = Path(local_video_path)
-        if local_system_video.exists():
-            video_source = str(local_system_video)
+    local_video_file = Path(local_video_path)
+    if local_video_file.exists():
+        video_source = str(local_video_file)
     if not video_source:
         video_source = resolve_public_video_source(video_env_var, local_video_path)
     if video_source:
