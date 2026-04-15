@@ -178,14 +178,14 @@ AUTH_COOKIE_NAME = "vm_auth_rt"
 AUTH_COOKIE_MAX_AGE_SECONDS = int(os.getenv("AUTH_COOKIE_MAX_AGE_SECONDS", str(60 * 60 * 24 * 14)))
 AUTH_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "1").strip().lower() in {"1", "true", "yes", "on"}
 AUTH_COOKIE_SIGNING_KEY = os.getenv("AUTH_COOKIE_SIGNING_KEY", "").strip()
-AUTH_COOKIE_PERSISTENCE_MODE = os.getenv("AUTH_COOKIE_PERSISTENCE_ENABLED", "0").strip().lower()
+AUTH_COOKIE_PERSISTENCE_MODE = os.getenv("AUTH_COOKIE_PERSISTENCE_ENABLED", "").strip().lower()
 if AUTH_COOKIE_PERSISTENCE_MODE in {"1", "true", "yes", "on"}:
     AUTH_COOKIE_PERSISTENCE_ENABLED = True
 elif AUTH_COOKIE_PERSISTENCE_MODE in {"0", "false", "no", "off"}:
     AUTH_COOKIE_PERSISTENCE_ENABLED = False
 else:
-    # Security-first default for production: require explicit opt-in.
-    AUTH_COOKIE_PERSISTENCE_ENABLED = False
+    # Auto-enable durable auth cookies when a signing key is configured.
+    AUTH_COOKIE_PERSISTENCE_ENABLED = bool(AUTH_COOKIE_SIGNING_KEY)
 AUTH_STATE_KEYS = (
     "auth_uid",
     "access_token",
@@ -342,13 +342,13 @@ def restore_auth_session_from_cookie() -> None:
         return
     if st.session_state.get("_auth_cookie_restored"):
         return
-    st.session_state["_auth_cookie_restored"] = True
     # Keep a currently valid in-memory session; do not overwrite it on startup.
     if (
         st.session_state.get("auth_uid")
         and st.session_state.get("access_token")
         and st.session_state.get("refresh_token")
     ):
+        st.session_state["_auth_cookie_restored"] = True
         return
     if not AUTH_COOKIE_SIGNING_KEY:
         return
@@ -357,6 +357,7 @@ def restore_auth_session_from_cookie() -> None:
     if not refresh_token:
         if raw_cookie:
             clear_auth_cookie()
+        st.session_state["_auth_cookie_restored"] = True
         return
     supabase, error = get_supabase_client()
     if error:
@@ -370,6 +371,7 @@ def restore_auth_session_from_cookie() -> None:
         user = getattr(auth_result, "user", None)
         if not session:
             clear_auth_cookie()
+            st.session_state["_auth_cookie_restored"] = True
             return
         st.session_state["access_token"] = getattr(session, "access_token", "")
         st.session_state["refresh_token"] = getattr(session, "refresh_token", "")
@@ -381,6 +383,7 @@ def restore_auth_session_from_cookie() -> None:
         if not st.session_state.get("access_token") or not st.session_state.get("refresh_token"):
             clear_auth_session_state()
             clear_auth_cookie()
+            st.session_state["_auth_cookie_restored"] = True
             return
         # Rebuild role state from authoritative DB mappings.
         try:
@@ -416,9 +419,10 @@ def restore_auth_session_from_cookie() -> None:
             pass
         # Rotate cookie to the latest refresh token to keep long-running sessions durable.
         persist_auth_cookie(st.session_state["refresh_token"])
+        st.session_state["_auth_cookie_restored"] = True
     except Exception:
-        clear_auth_session_state()
-        clear_auth_cookie()
+        # Transient auth backend failures should not force immediate logout.
+        st.session_state.pop("_auth_cookie_restored", None)
 
 
 def is_family_authenticated() -> bool:
