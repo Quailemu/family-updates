@@ -7962,34 +7962,41 @@ def redirect_non_canonical_host_once() -> None:
         f"""
 <script>
 (function () {{
-  try {{
-    var target = {target_url_js};
-    var appendAuthFromHash = function (targetUrl, sourceUrl) {{
-      try {{
-        var src = new URL(sourceUrl);
-        var dst = new URL(targetUrl);
-        var hash = (src.hash || "").replace(/^#/, "");
-        if (!hash) return targetUrl;
-        var hashParams = new URLSearchParams(hash);
-        var allowed = ["access_token", "refresh_token", "token_hash", "token", "type", "code"];
-        for (var i = 0; i < allowed.length; i++) {{
-          var key = allowed[i];
-          var value = (hashParams.get(key) || "").trim();
-          if (value && !dst.searchParams.get(key)) {{
-            dst.searchParams.set(key, value);
-          }}
+  var target = {target_url_js};
+  var appendAuthFromHash = function (targetUrl, sourceUrl) {{
+    try {{
+      var src = new URL(sourceUrl);
+      var dst = new URL(targetUrl);
+      var hash = (src.hash || "").replace(/^#/, "");
+      if (!hash) return targetUrl;
+      var hashParams = new URLSearchParams(hash);
+      var allowed = ["access_token", "refresh_token", "token_hash", "token", "type", "code"];
+      for (var i = 0; i < allowed.length; i++) {{
+        var key = allowed[i];
+        var value = (hashParams.get(key) || "").trim();
+        if (value && !dst.searchParams.get(key)) {{
+          dst.searchParams.set(key, value);
         }}
-        return dst.toString();
-      }} catch (e) {{
-        return targetUrl;
       }}
-    }};
-    var topWin = window.parent && window.parent.location ? window.parent : window;
-    target = appendAuthFromHash(target, topWin.location.href);
-    topWin.location.replace(target);
-  }} catch (e) {{
-    window.location.replace({target_url_js});
-  }}
+      return dst.toString();
+    }} catch (e) {{
+      return targetUrl;
+    }}
+  }};
+  var currentHref = window.location.href;
+  try {{
+    if (window.parent && window.parent !== window) {{
+      currentHref = window.parent.location.href;
+    }}
+  }} catch (e) {{}}
+  target = appendAuthFromHash(target, currentHref);
+  try {{
+    if (window.parent && window.parent !== window) {{
+      window.parent.location.replace(target);
+      return;
+    }}
+  }} catch (e) {{}}
+  window.location.replace(target);
 }})();
 </script>
 """,
