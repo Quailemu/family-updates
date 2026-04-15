@@ -8624,6 +8624,17 @@ def _video_url_variants(url: str) -> list[str]:
     if not normalized:
         return []
     variants = [normalized]
+    def _prepend_unique(values: list[str]) -> None:
+        nonlocal variants
+        ordered: list[str] = []
+        for value in values:
+            if value and value not in ordered:
+                ordered.append(value)
+        for value in variants:
+            if value and value not in ordered:
+                ordered.append(value)
+        variants = ordered
+
     try:
         parsed = urlparse(normalized)
         path = str(parsed.path or "")
@@ -8642,20 +8653,22 @@ def _video_url_variants(url: str) -> list[str]:
                 "/system-Walkthrough.MP4",
                 "/system-walkthrough.MP4",
             ]
+            preferred_urls: list[str] = []
             for candidate_path in path_candidates:
                 candidate_url = urlunparse(parsed._replace(path=candidate_path))
-                if candidate_url not in variants:
-                    variants.append(candidate_url)
+                preferred_urls.append(candidate_url)
+            _prepend_unique(preferred_urls)
         if host in media_hosts and ("family" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
             path_candidates = [
+                "/voice-message-family-walkthrough-v1.mp4",
                 "/familyhub-walkthrough.mp4",
                 "/familyhub%20%20walkthrough.mp4",
-                "/voice-message-family-walkthrough-v1.mp4",
             ]
+            preferred_urls: list[str] = []
             for candidate_path in path_candidates:
                 candidate_url = urlunparse(parsed._replace(path=candidate_path))
-                if candidate_url not in variants:
-                    variants.append(candidate_url)
+                preferred_urls.append(candidate_url)
+            _prepend_unique(preferred_urls)
     except Exception:
         pass
     return variants
@@ -9938,9 +9951,10 @@ def render_docs() -> None:
     )
     require_care_access()
     render_page_header("Documents")
-    render_care_home_identity_banner(st.session_state.get("access_token"))
     st.markdown("### Videos")
-    st.caption("Two video types: Record video and voicemailcare systems video.")
+    st.caption(
+        "Walkthrough videos for Care Hub - Mobile, Care Hub - Office, and Family Hub, plus the voicemailcare systems video."
+    )
     walkthrough_cols_top = st.columns(2, gap="small")
     with walkthrough_cols_top[0]:
         if st.button(
