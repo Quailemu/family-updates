@@ -8632,6 +8632,20 @@ def _video_url_variants(url: str) -> list[str]:
             lowered_url = urlunparse(parsed._replace(path=lowered_path))
             if lowered_url not in variants:
                 variants.append(lowered_url)
+        host = str(parsed.netloc or "").strip().lower()
+        media_hosts = {"media.voicemailcare.com", "media.voice-message.com"}
+        path_lstrip = path.lstrip("/")
+        if host in media_hosts and path_lstrip.lower().startswith("system-walkthrough"):
+            path_candidates = [
+                "/system-Walkthrough.mp4",
+                "/system-walkthrough.mp4",
+                "/system-Walkthrough.MP4",
+                "/system-walkthrough.MP4",
+            ]
+            for candidate_path in path_candidates:
+                candidate_url = urlunparse(parsed._replace(path=candidate_path))
+                if candidate_url not in variants:
+                    variants.append(candidate_url)
     except Exception:
         pass
     return variants
@@ -8647,6 +8661,9 @@ if MEDIA_TEST_VIDEO_OBJECT_PATH:
             "PUBLIC_OFFICE_RECORD_VIDEO_URL": _default_test_video_url,
         }
     )
+DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL"] = _join_media_base_url(
+    "system-Walkthrough.mp4"
+)
 if FAMILY_RECORD_VIDEO_OBJECT_PATH:
     DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_RECORD_VIDEO_URL"] = _join_media_base_url(
         FAMILY_RECORD_VIDEO_OBJECT_PATH
