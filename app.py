@@ -8646,6 +8646,16 @@ def _video_url_variants(url: str) -> list[str]:
                 candidate_url = urlunparse(parsed._replace(path=candidate_path))
                 if candidate_url not in variants:
                     variants.append(candidate_url)
+        if host in media_hosts and ("family" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
+            path_candidates = [
+                "/familyhub-walkthrough.mp4",
+                "/familyhub%20%20walkthrough.mp4",
+                "/voice-message-family-walkthrough-v1.mp4",
+            ]
+            for candidate_path in path_candidates:
+                candidate_url = urlunparse(parsed._replace(path=candidate_path))
+                if candidate_url not in variants:
+                    variants.append(candidate_url)
     except Exception:
         pass
     return variants
