@@ -6293,8 +6293,6 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", "/care-hub/security")
             if st.button("Subscription & Billing", key=f"{menu_key}_billing"):
                 clicked_action = ("route", "/billing")
-            if st.button("Sign out", key=f"{menu_key}_office_sign_out"):
-                clicked_action = ("sign_out", "care_hub")
 
             st.markdown("- Daily Use -")
             if st.button("Care Hub handbook", key=f"{menu_key}_office_doc_handbook"):
@@ -6321,6 +6319,9 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", "/public/complaints-and-concerns")
             if st.button("Contracts & templates", key=f"{menu_key}_contracts"):
                 clicked_action = ("route", "/contracts")
+            st.markdown("---")
+            if st.button("Log out (return to login)", key=f"{menu_key}_office_sign_out"):
+                clicked_action = ("sign_out", "care_hub")
             if clicked_action:
                 action_type, payload = clicked_action
                 if action_type == "route":
@@ -13171,12 +13172,10 @@ def render_care_hub_register_family() -> None:
     back_route = OFFICE_HOME_ROUTE
     render_page_header("Register a Family Member", show_menu=False)
     render_route_link(
-        "Back to dashboard",
+        "Back to Office messages",
         back_route,
         key="office_register_family_back_dashboard_link",
     )
-    if st.button("Back to dashboard", key="office_register_family_back_dashboard_fallback"):
-        set_route(back_route)
     access_token = st.session_state.get("access_token")
     render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
