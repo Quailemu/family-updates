@@ -7943,9 +7943,13 @@ def redirect_non_canonical_host_once() -> None:
         route = _map_legacy_streamlit_page_to_route(query_map.get("page", ""))
     if not route:
         route = _route_from_request_path(request_path)
-    # For legacy onrender links surfaced by search engines, always land on the public home
-    # instead of honoring stale deep links (for example deprecated walkthrough routes).
-    if host.endswith(".onrender.com"):
+    has_auth_callback_params = any(
+        bool(str(query_map.get(key, "") or "").strip())
+        for key in ("code", "token_hash", "token", "type", "access_token", "refresh_token")
+    )
+    # For legacy onrender links surfaced by search engines, land on the public home.
+    # Keep auth callback routes intact so magic-link sign-in can complete.
+    if host.endswith(".onrender.com") and not has_auth_callback_params:
         route = PUBLIC_HOME_ROUTE
     redirect_query_map: dict[str, str] = {"route": route}
     for key in ("code", "token_hash", "token", "type", "access_token", "refresh_token"):
