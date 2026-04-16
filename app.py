@@ -8826,6 +8826,17 @@ def _video_url_variants(url: str) -> list[str]:
                 candidate_url = urlunparse(parsed._replace(path=candidate_path))
                 preferred_urls.append(candidate_url)
             _prepend_unique(preferred_urls)
+        if host in media_hosts and ("mobile" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
+            path_candidates = [
+                "/carehub-mobile-walkthrough.MP4",
+                "/carehub-mobile-walkthrough.mp4",
+                "/voice-message-mobile-walkthrough-v1.mp4",
+            ]
+            preferred_urls: list[str] = []
+            for candidate_path in path_candidates:
+                candidate_url = urlunparse(parsed._replace(path=candidate_path))
+                preferred_urls.append(candidate_url)
+            _prepend_unique(preferred_urls)
     except Exception:
         pass
     return variants
