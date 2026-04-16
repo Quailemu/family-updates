@@ -8914,36 +8914,36 @@ if MEDIA_TEST_VIDEO_OBJECT_PATH:
 DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL"] = _join_media_base_url(
     "system-Walkthrough.mp4"
 )
-if FAMILY_RECORD_VIDEO_OBJECT_PATH:
-    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_RECORD_VIDEO_URL"] = _join_media_base_url(
-        FAMILY_RECORD_VIDEO_OBJECT_PATH
-    )
-    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-        FAMILY_RECORD_VIDEO_OBJECT_PATH
-    )
-    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILYHUB_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-        FAMILY_RECORD_VIDEO_OBJECT_PATH
-    )
-if MOBILE_RECORD_VIDEO_OBJECT_PATH:
-    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_MOBILE_RECORD_VIDEO_URL"] = _join_media_base_url(
-        MOBILE_RECORD_VIDEO_OBJECT_PATH
-    )
-    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_MOBILE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-        MOBILE_RECORD_VIDEO_OBJECT_PATH
-    )
-    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_CAREHUB_MOBILE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-        MOBILE_RECORD_VIDEO_OBJECT_PATH
-    )
-if OFFICE_RECORD_VIDEO_OBJECT_PATH:
-    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_OFFICE_RECORD_VIDEO_URL"] = _join_media_base_url(
-        OFFICE_RECORD_VIDEO_OBJECT_PATH
-    )
-    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_OFFICE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-        OFFICE_RECORD_VIDEO_OBJECT_PATH
-    )
-    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_CAREHUB_OFFICE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-        OFFICE_RECORD_VIDEO_OBJECT_PATH
-    )
+_family_record_path = FAMILY_RECORD_VIDEO_OBJECT_PATH or "familyhub-walkthrough.mp4"
+DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_RECORD_VIDEO_URL"] = _join_media_base_url(
+    _family_record_path
+)
+DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+    _family_record_path
+)
+DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILYHUB_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+    _family_record_path
+)
+_mobile_record_path = MOBILE_RECORD_VIDEO_OBJECT_PATH or "carehub-mobile-walkthrough.MP4"
+DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_MOBILE_RECORD_VIDEO_URL"] = _join_media_base_url(
+    _mobile_record_path
+)
+DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_MOBILE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+    _mobile_record_path
+)
+DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_CAREHUB_MOBILE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+    _mobile_record_path
+)
+_office_record_path = OFFICE_RECORD_VIDEO_OBJECT_PATH or "Carehub-Office-Walkthrough.mp4"
+DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_OFFICE_RECORD_VIDEO_URL"] = _join_media_base_url(
+    _office_record_path
+)
+DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_OFFICE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+    _office_record_path
+)
+DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_CAREHUB_OFFICE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+    _office_record_path
+)
 
 
 def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
