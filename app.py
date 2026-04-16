@@ -3056,6 +3056,16 @@ def set_help_video_selection(video_id: str) -> None:
         st.session_state["help_videos_selected"] = video_id
 
 
+def get_help_video_route(video_id: str) -> str:
+    mapping = {
+        HELP_VIDEO_SYSTEMS: "/public/walkthrough-overview",
+        HELP_VIDEO_MOBILE: "/public/walkthrough-mobile",
+        HELP_VIDEO_FAMILY: "/public/walkthrough-family",
+        HELP_VIDEO_OFFICE: "/public/walkthrough-office",
+    }
+    return mapping.get(video_id, PUBLIC_HELP_VIDEOS_ROUTE)
+
+
 def get_help_video_entries() -> list[dict[str, str]]:
     entries: list[dict[str, str]] = [
         {
@@ -7618,8 +7628,7 @@ def render_home(active: str) -> None:
         for idx, (label, video_id) in enumerate(shortcuts):
             with shortcut_cols[idx]:
                 if st.button(label, key=f"public_help_shortcut_{video_id}", use_container_width=True):
-                    set_help_video_selection(video_id)
-                    set_route(PUBLIC_HELP_VIDEOS_ROUTE)
+                    set_route(get_help_video_route(video_id))
         st.caption("Available before login")
         if st.button("View help videos", key="public_watch_help_videos", use_container_width=True):
             set_route(PUBLIC_HELP_VIDEOS_ROUTE)
@@ -10662,8 +10671,7 @@ def render_pr_homepage() -> None:
     for idx, (label, video_id) in enumerate(shortcuts):
         with shortcut_cols[idx]:
             if st.button(label, key=f"pr_help_shortcut_{video_id}", use_container_width=True):
-                set_help_video_selection(video_id)
-                set_route(PUBLIC_HELP_VIDEOS_ROUTE)
+                set_route(get_help_video_route(video_id))
                 st.stop()
     st.caption("Available before login")
     if st.button("View help videos", key="pr_view_help_videos", use_container_width=True):
