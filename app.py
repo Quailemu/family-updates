@@ -3143,25 +3143,24 @@ def render_how_it_works_mobile() -> None:
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     st.markdown("### Watch videos")
-    mobile_video_cols = st.columns(3, gap="small")
-    with mobile_video_cols[0]:
-        render_route_link(
-            "voicemailcare systems video",
-            "/public/walkthrough-overview",
-            key="how_mobile_video_overview_link",
-        )
-    with mobile_video_cols[1]:
-        render_route_link(
-            "Care Hub - Mobile Record video",
-            "/public/walkthrough-mobile",
-            key="how_mobile_video_mobile_link",
-        )
-    with mobile_video_cols[2]:
-        render_route_link(
-            "Family Hub walkthrough video",
-            "/public/walkthrough-family",
-            key="how_mobile_video_family_link",
-        )
+    if st.button(
+        "voicemailcare systems video",
+        key="how_mobile_video_overview_link",
+        use_container_width=True,
+    ):
+        set_route("/public/walkthrough-overview")
+    if st.button(
+        "Care Hub - Mobile Record video",
+        key="how_mobile_video_mobile_link",
+        use_container_width=True,
+    ):
+        set_route("/public/walkthrough-mobile")
+    if st.button(
+        "Family Hub walkthrough video",
+        key="how_mobile_video_family_link",
+        use_container_width=True,
+    ):
+        set_route("/public/walkthrough-family")
     render_how_it_works_diagram_and_notes()
     render_route_link(
         mobile_back_label,
