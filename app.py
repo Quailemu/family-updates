@@ -2911,8 +2911,8 @@ def render_wrong_variant(
         render_page_header("Wrong app variant", show_menu=False, show_variant_subheading=False)
         st.markdown("This page belongs to a different app.")
         render_route_link(
-            "Back to videos",
-            "/public/walkthrough-overview",
+            "Back to help videos",
+            PUBLIC_HELP_VIDEOS_ROUTE,
             key="public_wrong_back_link",
         )
         if expected_variants:
@@ -2985,7 +2985,7 @@ def wrong_variant_screen(route: str, detail: str | None = None) -> None:
             redirect_to_public_landing()
             return
         else:
-            set_route("/public/walkthrough-overview")
+            set_route(PUBLIC_HELP_VIDEOS_ROUTE)
     st.stop()
 
 
@@ -3047,26 +3047,108 @@ def render_how_it_works_cartoon() -> None:
         st.image(str(cartoon_path), use_column_width=True)
 
 
+def set_help_video_selection(video_id: str) -> None:
+    allowed = {HELP_VIDEO_SYSTEMS, HELP_VIDEO_FAMILY, HELP_VIDEO_MOBILE, HELP_VIDEO_OFFICE}
+    if video_id in allowed:
+        st.session_state["help_videos_selected"] = video_id
+
+
+def get_help_video_entries() -> list[dict[str, str]]:
+    return [
+        {
+            "id": HELP_VIDEO_SYSTEMS,
+            "audience": "Full service",
+            "title": "voicemailcare systems video",
+            "summary": "Overview of how Family Hub, Care Hub - Mobile, and Care Hub - Office fit together.",
+            "env_var": "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL,PUBLIC_SYSTEMS_VIDEO_URL,PUBLIC_OVERVIEW_VIDEO_URL",
+            "local_path": "assets/system-Walkthrough.mp4",
+        },
+        {
+            "id": HELP_VIDEO_MOBILE,
+            "audience": "Mobile",
+            "title": "Care Hub - Mobile walkthrough video",
+            "summary": "Resident playback and recording support workflows for staff.",
+            "env_var": "PUBLIC_MOBILE_RECORD_VIDEO_URL",
+            "local_path": "assets/carehub-mobile-walkthrough.mp4",
+        },
+        {
+            "id": HELP_VIDEO_FAMILY,
+            "audience": "Family",
+            "title": "Family Hub walkthrough video",
+            "summary": "How family messages, playback boundaries, and shared resident updates work.",
+            "env_var": "PUBLIC_FAMILY_RECORD_VIDEO_URL",
+            "local_path": "assets/voice-message-family-walkthrough-v1.mp4",
+        },
+        {
+            "id": HELP_VIDEO_OFFICE,
+            "audience": "Office",
+            "title": "Care Hub - Office walkthrough video",
+            "summary": "Office oversight, one-way updates, and practical structured messaging.",
+            "env_var": "PUBLIC_OFFICE_RECORD_VIDEO_URL",
+            "local_path": "assets/voice-message-office-walkthrough-v1.mp4",
+        },
+    ]
+
+
+def render_public_help_videos() -> None:
+    route_hint = normalize_route(get_route()) or PUBLIC_HELP_VIDEOS_ROUTE
+    runtime_variant = resolve_runtime_variant(route_hint=route_hint)
+    if runtime_variant == VARIANT_MOBILE:
+        render_route_link(
+            "Back to Mobile Hub messages",
+            get_home_route(VARIANT_MOBILE),
+            key="help_videos_back_mobile_messages",
+        )
+    elif runtime_variant == VARIANT_OFFICE:
+        render_route_link(
+            "Back to Care Hub - Office messages",
+            get_home_route(VARIANT_OFFICE),
+            key="help_videos_back_office_messages",
+        )
+    else:
+        render_route_link(
+            "Back to hub selection",
+            PUBLIC_HOME_ROUTE,
+            key="help_videos_back_public",
+        )
+    render_page_header("Help videos", show_variant_subheading=False)
+    st.caption("Watch how it works before login or from inside the app.")
+    entries = get_help_video_entries()
+    selected = str(st.session_state.get("help_videos_selected") or HELP_VIDEO_SYSTEMS).strip().lower()
+    if selected not in {entry["id"] for entry in entries}:
+        selected = HELP_VIDEO_SYSTEMS
+    for entry in entries:
+        button_label = f'{entry["audience"]}: {entry["title"]}'
+        if st.button(button_label, key=f'help_videos_select_{entry["id"]}', use_container_width=True):
+            selected = entry["id"]
+            st.session_state["help_videos_selected"] = selected
+    active = next((entry for entry in entries if entry["id"] == selected), entries[0])
+    st.markdown(f'### {active["title"]}')
+    st.caption(active["summary"])
+    video_source = resolve_public_video_source(active["env_var"], active["local_path"])
+    if video_source:
+        try:
+            st.video(video_source)
+        except Exception:
+            st.warning("Video failed to load. Please check the configured media URL or object path.")
+    else:
+        st.warning(
+            f'Video not found. Set {active["env_var"]} or add {active["local_path"]}.'
+        )
+
+
 def render_how_it_works_video_links(
     specific_label: str,
     specific_route: str,
     key_prefix: str,
     specific_button_label: str | None = None,
 ) -> None:
-    st.markdown("### Watch videos")
-    video_cols = st.columns(2, gap="small")
-    with video_cols[0]:
-        render_route_link(
-            "voicemailcare systems video",
-            "/public/walkthrough-overview",
-            key=f"{key_prefix}_video_overview_link",
-        )
-    with video_cols[1]:
-        render_route_link(
-            specific_button_label or f"{specific_label} Record video",
-            specific_route,
-            key=f"{key_prefix}_video_specific_link",
-        )
+    st.markdown("### Help videos")
+    render_route_link(
+        "View help videos",
+        PUBLIC_HELP_VIDEOS_ROUTE,
+        key=f"{key_prefix}_help_videos_link",
+    )
 
 
 def render_how_it_works_family() -> None:
@@ -3154,25 +3236,12 @@ def render_how_it_works_mobile() -> None:
     ]
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
-    st.markdown("### Watch videos")
-    if st.button(
-        "voicemailcare systems video",
-        key="how_mobile_video_overview_link",
-        use_container_width=True,
-    ):
-        set_route("/public/walkthrough-overview")
-    if st.button(
-        "Care Hub - Mobile Record video",
-        key="how_mobile_video_mobile_link",
-        use_container_width=True,
-    ):
-        set_route("/public/walkthrough-mobile")
-    if st.button(
-        "Family Hub walkthrough video",
-        key="how_mobile_video_family_link",
-        use_container_width=True,
-    ):
-        set_route("/public/walkthrough-family")
+    st.markdown("### Help videos")
+    render_route_link(
+        "View help videos",
+        PUBLIC_HELP_VIDEOS_ROUTE,
+        key="how_mobile_help_videos_link",
+    )
     render_how_it_works_diagram_and_notes()
 
 
@@ -3354,8 +3423,8 @@ def render_care_hub_nav() -> None:
             if st.button("Inbox", key="care_hub_nav_inbox", use_container_width=True):
                 set_route(get_home_route(app_variant))
         with nav_cols[1]:
-            if st.button("Videos", key="care_hub_nav_service_overview", use_container_width=True):
-                set_route("/public/walkthrough-overview")
+            if st.button("Help videos", key="care_hub_nav_service_overview", use_container_width=True):
+                set_route(PUBLIC_HELP_VIDEOS_ROUTE)
         with nav_cols[2]:
             if st.button("Contracts", key="care_hub_nav_contracts", use_container_width=True):
                 set_route("/contracts")
@@ -6308,8 +6377,8 @@ def render_header_menu(menu_key: str) -> None:
                 if st.button("Privacy Notice", key=f"{menu_key}_office_privacy_public"):
                     set_route("/public/privacy-notice")
                     return
-                if st.button("Videos", key=f"{menu_key}_office_service_overview_public"):
-                    set_route("/public/walkthrough-overview")
+                if st.button("Help videos", key=f"{menu_key}_office_service_overview_public"):
+                    set_route(PUBLIC_HELP_VIDEOS_ROUTE)
                     return
                 return
         if app_variant not in (VARIANT_OFFICE, VARIANT_FAMILY, VARIANT_MOBILE) and prev_route and prev_route != current_route:
@@ -6344,7 +6413,7 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", "/care-hub/office/qa")
 
             st.markdown("- Governance -")
-            if st.button("Videos", key=f"{menu_key}_office_service_overview"):
+            if st.button("Help videos", key=f"{menu_key}_office_service_overview"):
                 clicked_action = ("route", "/docs")
             if st.button("Care home responsibilities", key=f"{menu_key}_office_doc_responsibilities"):
                 clicked_action = ("doc", "docs/office/04_care_home_responsibilities.md")
@@ -6447,8 +6516,8 @@ def render_header_menu(menu_key: str) -> None:
                 key=f"{menu_key}_family_how_link",
             )
             render_route_link(
-                "Videos",
-                "/public/walkthrough-family",
+                "Help videos",
+                PUBLIC_HELP_VIDEOS_ROUTE,
                 key=f"{menu_key}_family_service_overview_link",
             )
             render_route_link("Family Q&A", "/family/qa", key=f"{menu_key}_family_qa_link")
@@ -7477,12 +7546,8 @@ def render_home(active: str) -> None:
 
         st.markdown('<div class="public-section public-app-buttons">', unsafe_allow_html=True)
         st.markdown("<h2>Choose your app</h2>", unsafe_allow_html=True)
-        if st.button(
-            "Watch voicemailcare systems video",
-            key="public_watch_overview",
-            use_container_width=True,
-        ):
-            set_route("/public/walkthrough-overview")
+        if st.button("Watch how it works", key="public_watch_help_videos_top", use_container_width=True):
+            set_route(PUBLIC_HELP_VIDEOS_ROUTE)
         app_cols = st.columns(3, gap="small")
         app_entries = [
             (
@@ -7510,17 +7575,9 @@ def render_home(active: str) -> None:
                 "assets/voice-message-office-walkthrough-v1.mp4",
             ),
         ]
-        for idx, (variant, label, summary, walkthrough_route, video_env_var, local_video_path) in enumerate(app_entries):
+        for idx, (variant, label, summary, _walkthrough_route, _video_env_var, _local_video_path) in enumerate(app_entries):
             target_url = get_public_app_url(variant)
-            if variant == VARIANT_FAMILY:
-                watch_label = "Watch Family Hub walkthrough video"
-            elif variant == VARIANT_MOBILE:
-                watch_label = "Watch Care Hub - Mobile Record video"
-            else:
-                watch_label = "Watch Care Hub - Office Walkthrough"
             with app_cols[idx]:
-                if st.button(watch_label, key=f"public_watch_{variant}", use_container_width=True):
-                    set_route(walkthrough_route)
                 if target_url:
                     if hasattr(st, "link_button"):
                         st.link_button(f"Open {label} app", target_url, use_container_width=True)
@@ -7533,6 +7590,8 @@ def render_home(active: str) -> None:
                 st.markdown(f"<h3>{label}</h3>", unsafe_allow_html=True)
                 st.markdown(f"<p>{summary}</p>", unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("View help videos", key="public_watch_help_videos_bottom", use_container_width=True):
+            set_route(PUBLIC_HELP_VIDEOS_ROUTE)
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
@@ -7806,7 +7865,7 @@ def _route_from_request_path(raw_path: str) -> str:
     if mapped:
         return mapped
     if path_lower.startswith("/public"):
-        return "/public/walkthrough-overview"
+        return PUBLIC_HELP_VIDEOS_ROUTE
     return PUBLIC_HOME_ROUTE
 
 
@@ -7832,6 +7891,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
         "/public/walkthrough-mobile": "Care Hub - Mobile Record Video | voicemailcare.com",
         "/public/walkthrough-office": "Care Hub - Office Walkthrough | voicemailcare.com",
         "/public/walkthrough-overview": "voicemailcare systems video | voicemailcare.com",
+        PUBLIC_HELP_VIDEOS_ROUTE: "Help videos | voicemailcare.com",
     }
     route_descriptions: dict[str, str] = {
         "/pr-home": "VoicemailCare helps care homes and families stay connected through simple, non-urgent voice messaging.",
@@ -7848,6 +7908,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
         "/public/walkthrough-mobile": "Walkthrough video for Care Hub - Mobile playback and resident recording workflows.",
         "/public/walkthrough-office": "Walkthrough video for Care Hub - Office oversight and practical structured messaging.",
         "/public/walkthrough-overview": "System diagram walkthrough across Family Hub, Care Hub - Mobile, and Care Hub - Office.",
+        PUBLIC_HELP_VIDEOS_ROUTE: "Watch all voicemailcare instructional videos in one place: systems, mobile, family, and office.",
     }
     if normalized_route == "/public/service-overview":
         normalized_route = "/pr-home"
@@ -8086,6 +8147,11 @@ OFFICE_HOME_ROUTE = "/care-hub/inbox"
 MOBILE_LOGIN_ROUTE = "/care-hub/mobile/login"
 MOBILE_HOME_ROUTE = "/care-hub/mobile/inbox"
 PUBLIC_HOME_ROUTE = "/pr-home"
+PUBLIC_HELP_VIDEOS_ROUTE = "/public/help-videos"
+HELP_VIDEO_SYSTEMS = "systems"
+HELP_VIDEO_FAMILY = "family"
+HELP_VIDEO_MOBILE = "mobile"
+HELP_VIDEO_OFFICE = "office"
 FAMILY_PUBLIC_ROUTES = {
     "/family/login",
 }
@@ -8110,6 +8176,7 @@ OFFICE_PUBLIC_ROUTES = {
     "/public/walkthrough-office",
     "/public/walkthrough-office-flow",
     "/public/walkthrough-overview",
+    PUBLIC_HELP_VIDEOS_ROUTE,
     "/care-hub/mobile/qa",
 }
 MOBILE_PUBLIC_ROUTES = {
@@ -8134,6 +8201,7 @@ MOBILE_PUBLIC_ROUTES = {
     "/public/walkthrough-office",
     "/public/walkthrough-office-flow",
     "/public/walkthrough-overview",
+    PUBLIC_HELP_VIDEOS_ROUTE,
 }
 
 VARIANT_CONFIG = {
@@ -8169,6 +8237,7 @@ VARIANT_CONFIG = {
             "/public/walkthrough-office",
             "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
+            PUBLIC_HELP_VIDEOS_ROUTE,
             "/pr-home",
             "/service-overview",
         },
@@ -8205,6 +8274,7 @@ VARIANT_CONFIG = {
             "/public/walkthrough-office",
             "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
+            PUBLIC_HELP_VIDEOS_ROUTE,
             "/pr-home",
             "/service-overview",
         },
@@ -8246,6 +8316,7 @@ VARIANT_CONFIG = {
             "/public/walkthrough-office",
             "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
+            PUBLIC_HELP_VIDEOS_ROUTE,
             "/pr-home",
             "/service-overview",
         },
@@ -8275,6 +8346,7 @@ VARIANT_CONFIG = {
             "/public/walkthrough-office",
             "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
+            PUBLIC_HELP_VIDEOS_ROUTE,
         },
     },
 }
@@ -10065,38 +10137,15 @@ def render_docs() -> None:
         unsafe_allow_html=True,
     )
     require_care_access()
-    app_variant = resolve_runtime_variant(route_hint=get_route())
     render_page_header("Documents")
-    st.markdown("### How it works")
-    st.caption(
-        "Walkthrough videos for Care Hub - Mobile, Care Hub - Office, and Family Hub, plus the voicemailcare systems video."
-    )
+    st.markdown("### Help videos")
+    st.caption("All instructional videos are available in one place before login.")
     if st.button(
-        "voicemailcare systems walkthrough video",
-        key="docs_walkthrough_overview",
+        "View help videos",
+        key="docs_help_videos_open",
         use_container_width=True,
     ):
-        set_route("/public/walkthrough-overview")
-    if st.button(
-        "Family Hub walkthrough video",
-        key="docs_walkthrough_family_audio",
-        use_container_width=True,
-    ):
-        set_route("/public/walkthrough-family")
-    if app_variant == VARIANT_MOBILE:
-        if st.button(
-            "Care Hub - Mobile walkthrough video",
-            key="docs_walkthrough_mobile_audio",
-            use_container_width=True,
-        ):
-            set_route("/public/walkthrough-mobile")
-    else:
-        if st.button(
-            "Care Hub - Office walkthrough video",
-            key="docs_walkthrough_office_audio",
-            use_container_width=True,
-        ):
-            set_route("/public/walkthrough-office")
+        set_route(PUBLIC_HELP_VIDEOS_ROUTE)
     st.write("")
 
     docs = [
@@ -10333,13 +10382,13 @@ def get_public_document_title(doc_path: str) -> str:
     return "Service overview"
 
 
-def render_public_document(doc_path: str, back_route: str = "/public/walkthrough-overview") -> None:
+def render_public_document(doc_path: str, back_route: str = PUBLIC_HELP_VIDEOS_ROUTE) -> None:
     # Render all public documents in the boxed style for consistency.
     use_boxes = True
     use_qa_search = doc_path.endswith("10_faq.md")
     app_variant = resolve_runtime_variant(route_hint=get_route())
     if app_variant == VARIANT_PUBLIC:
-        st.markdown(f"[Back to videos](?route={back_route})")
+        st.markdown(f"[Back to help videos](?route={back_route})")
         render_page_header(get_public_document_title(doc_path), show_menu=False, show_variant_subheading=False)
         if use_qa_search:
             render_qa_document(doc_path, search_key="public_faq_search")
@@ -10393,7 +10442,7 @@ def render_public_document(doc_path: str, back_route: str = "/public/walkthrough
             render_document_content(doc_path)
         return
     render_route_link(
-        "Back to videos",
+        "Back to help videos",
         back_route,
         key="public_doc_back_service_overview_top",
     )
@@ -10405,7 +10454,7 @@ def render_public_document(doc_path: str, back_route: str = "/public/walkthrough
     else:
         render_document_content(doc_path)
     render_route_link(
-        "Back to videos",
+        "Back to help videos",
         back_route,
         key="public_doc_back_service_overview_bottom",
     )
@@ -10433,27 +10482,19 @@ def render_public_docs() -> None:
 
     if app_variant == VARIANT_FAMILY:
         public_docs = [
-            ("voicemailcare systems video", "/public/walkthrough-overview"),
-            ("Family Hub walkthrough video", "/public/walkthrough-family"),
+            ("Help videos", PUBLIC_HELP_VIDEOS_ROUTE),
         ]
     elif app_variant == VARIANT_MOBILE:
         public_docs = [
-            ("voicemailcare systems video", "/public/walkthrough-overview"),
-            ("Family Hub walkthrough video", "/public/walkthrough-family"),
-            ("Care Hub - Mobile Record video", "/public/walkthrough-mobile"),
+            ("Help videos", PUBLIC_HELP_VIDEOS_ROUTE),
         ]
     elif app_variant == VARIANT_OFFICE:
         public_docs = [
-            ("voicemailcare systems video", "/public/walkthrough-overview"),
-            ("Family Hub walkthrough video", "/public/walkthrough-family"),
-            ("Care Hub - Office Walkthrough", "/public/walkthrough-office"),
+            ("Help videos", PUBLIC_HELP_VIDEOS_ROUTE),
         ]
     else:
         public_docs = [
-            ("voicemailcare systems video", "/public/walkthrough-overview"),
-            ("Family Hub walkthrough video", "/public/walkthrough-family"),
-            ("Care Hub - Mobile Record video", "/public/walkthrough-mobile"),
-            ("Care Hub - Office Walkthrough", "/public/walkthrough-office"),
+            ("Help videos", PUBLIC_HELP_VIDEOS_ROUTE),
         ]
     public_docs.extend(
         [
@@ -13381,7 +13422,7 @@ def main() -> None:
         elif request_path.startswith("/office") or request_path.startswith("/care-hub"):
             pre_auth_route = OFFICE_LOGIN_ROUTE
         elif request_path.startswith("/public"):
-            pre_auth_route = "/public/walkthrough-overview"
+            pre_auth_route = PUBLIC_HELP_VIDEOS_ROUTE
     route_variant = _resolve_variant_from_route(pre_auth_route)
     path_variant = _resolve_variant_from_request_path()
     if not raw_variant and not route_variant and not path_variant:
@@ -13722,7 +13763,8 @@ def main() -> None:
     elif route == "/public/resident-participation":
         set_route("/pr-home")
     elif route == "/public/family-guide":
-        set_route("/public/walkthrough-family")
+        set_help_video_selection(HELP_VIDEO_FAMILY)
+        set_route(PUBLIC_HELP_VIDEOS_ROUTE)
     elif route == "/public/qa":
         render_public_document("docs/public/10_faq.md")
     elif route == "/public/faq":
@@ -13735,72 +13777,29 @@ def main() -> None:
         render_public_document("docs/public/complaints_and_concerns.md")
     elif route == "/public/safeguarding-and-consent":
         render_public_document("docs/public/safeguarding_and_consent.md")
+    elif route == PUBLIC_HELP_VIDEOS_ROUTE:
+        render_public_help_videos()
     elif route == "/public/walkthrough-family":
-        render_public_walkthrough_page(
-            "Family Hub walkthrough video",
-            "PUBLIC_FAMILY_RECORD_VIDEO_URL",
-            "assets/voice-message-family-walkthrough-v1.mp4",
-            [
-                "How a Family Member sends Family -> Resident voice messages.",
-                "How family listens to the resident's current shared message.",
-                "How Office updates and practical structured replies appear in Family.",
-                "Family view does not change Care Hub playback queue order.",
-                "Non-live expectations and calm communication boundaries.",
-            ],
-            fallback_doc_path="docs/public/06_family_guide.md",
-            transcript_doc_path="docs/walkthrough-transcripts/family-hub.md",
-        )
+        set_help_video_selection(HELP_VIDEO_FAMILY)
+        render_public_help_videos()
     elif route == "/public/walkthrough-family-flow":
-        set_route("/public/walkthrough-overview")
+        set_help_video_selection(HELP_VIDEO_FAMILY)
+        set_route(PUBLIC_HELP_VIDEOS_ROUTE)
     elif route == "/public/walkthrough-overview":
-        render_public_walkthrough_page(
-            "voicemailcare systems video",
-            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL,PUBLIC_SYSTEMS_VIDEO_URL,PUBLIC_OVERVIEW_VIDEO_URL",
-            "assets/system-Walkthrough.mp4",
-            [
-                "How the overall service flow works across the three app interfaces.",
-                "Channel boundaries and replacement-only rules.",
-                "Where Office updates and practical structured messages fit.",
-                "Non-live, non-urgent communication boundaries.",
-            ],
-            transcript_doc_path="docs/walkthrough-transcripts/system-diagram.md",
-        )
+        set_help_video_selection(HELP_VIDEO_SYSTEMS)
+        render_public_help_videos()
     elif route == "/public/walkthrough-mobile":
-        render_public_walkthrough_page(
-            "Care Hub - Mobile Record video",
-            "PUBLIC_MOBILE_RECORD_VIDEO_URL",
-            "assets/carehub-mobile-walkthrough.mp4",
-            [
-                "How staff play Family -> Resident messages to the resident.",
-                "Queue order is fixed: unplayed messages are first, in family order.",
-                "After unplayed messages, playback continues in the same fixed family order.",
-                "Order changes only after staff confirm listened and tap 'Mark listened and move to next'.",
-                "How staff support Resident -> Family recording.",
-                "How playback and recording fit around care routines.",
-            ],
-            fallback_doc_path="docs/public/02_how_it_works.md",
-            transcript_doc_path="docs/walkthrough-transcripts/care-hub-mobile.md",
-        )
+        set_help_video_selection(HELP_VIDEO_MOBILE)
+        render_public_help_videos()
     elif route == "/public/walkthrough-mobile-flow":
-        set_route("/public/walkthrough-overview")
+        set_help_video_selection(HELP_VIDEO_MOBILE)
+        set_route(PUBLIC_HELP_VIDEOS_ROUTE)
     elif route == "/public/walkthrough-office":
-        render_public_walkthrough_page(
-            "Care Hub - Office Walkthrough",
-            "PUBLIC_OFFICE_RECORD_VIDEO_URL",
-            "assets/voice-message-office-walkthrough-v1.mp4",
-            [
-                "How Office reviews resident-linked family messages.",
-                "Office playback does not change queue order unless staff explicitly mark listened and move next.",
-                "Office and Mobile can both use listened confirmation when playback was with the resident.",
-                "How Office publishes one-way voice updates to all Family Members.",
-                "How Office sends practical text requests and reviews structured replies.",
-                "How Office oversight supports low-pressure, non-urgent communication.",
-            ],
-            fallback_doc_path="docs/public/02_how_it_works.md",
-            transcript_doc_path="docs/walkthrough-transcripts/care-hub-office.md",
-        )
+        set_help_video_selection(HELP_VIDEO_OFFICE)
+        render_public_help_videos()
     elif route == "/public/walkthrough-office-flow":
-        set_route("/public/walkthrough-overview")
+        set_help_video_selection(HELP_VIDEO_OFFICE)
+        set_route(PUBLIC_HELP_VIDEOS_ROUTE)
     elif route == "/public-privacy":
         set_route("/public/privacy-notice")
     elif route == "/public-complaints":
