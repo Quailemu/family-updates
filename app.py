@@ -13,6 +13,8 @@ import html
 import io
 from pathlib import Path
 from urllib.parse import parse_qsl, quote, urlencode, urlparse, urlunparse, unquote
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -8726,9 +8728,9 @@ def _video_url_variants(url: str) -> list[str]:
             _prepend_unique(preferred_urls)
         if host in media_hosts and ("family" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
             path_candidates = [
-                "/voice-message-family-walkthrough-v1.mp4",
-                "/familyhub-walkthrough.mp4",
                 "/familyhub%20%20walkthrough.mp4",
+                "/familyhub-walkthrough.mp4",
+                "/voice-message-family-walkthrough-v1.mp4",
             ]
             preferred_urls: list[str] = []
             for candidate_path in path_candidates:
@@ -8764,7 +8766,39 @@ if OFFICE_RECORD_VIDEO_OBJECT_PATH:
 
 
 def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
+    def _is_reachable_video_url(url: str) -> bool:
+        if not url:
+            return False
+        parsed = urlparse(url)
+        if parsed.scheme.lower() not in {"http", "https"}:
+            return True
+        cache_key = f"_video_url_reachable::{url}"
+        cached = st.session_state.get(cache_key)
+        if isinstance(cached, bool):
+            return cached
+        try:
+            req = Request(url, method="HEAD")
+            with urlopen(req, timeout=4) as resp:
+                status = int(getattr(resp, "status", 200) or 200)
+                reachable = 200 <= status < 400
+        except HTTPError as exc:
+            if int(getattr(exc, "code", 0) or 0) == 405:
+                try:
+                    req = Request(url, method="GET", headers={"Range": "bytes=0-1"})
+                    with urlopen(req, timeout=4) as resp:
+                        status = int(getattr(resp, "status", 200) or 200)
+                        reachable = 200 <= status < 400
+                except Exception:
+                    reachable = False
+            else:
+                reachable = False
+        except (URLError, TimeoutError, OSError):
+            reachable = False
+        st.session_state[cache_key] = reachable
+        return reachable
+
     candidate_vars = [candidate.strip() for candidate in str(env_var).split(",") if candidate.strip()]
+    candidate_urls: list[str] = []
     for candidate in candidate_vars:
         raw_url = os.getenv(candidate, "")
         for url in _video_url_variants(raw_url):
@@ -8772,13 +8806,18 @@ def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
             host = ((parsed.netloc if parsed else "") or "").lower()
             if url and host.endswith("dropbox.com"):
                 continue
-            if url:
-                return url
+            if url and url not in candidate_urls:
+                candidate_urls.append(url)
     for candidate in candidate_vars:
         fallback_raw = DEFAULT_PUBLIC_VIDEO_URLS.get(candidate, "")
         for fallback_url in _video_url_variants(fallback_raw):
-            if fallback_url:
-                return fallback_url
+            if fallback_url and fallback_url not in candidate_urls:
+                candidate_urls.append(fallback_url)
+    for candidate_url in candidate_urls:
+        if _is_reachable_video_url(candidate_url):
+            return candidate_url
+    if candidate_urls:
+        return candidate_urls[0]
     local_file = Path(local_path)
     if local_file.exists():
         return str(local_file)
