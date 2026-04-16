@@ -12468,9 +12468,6 @@ def render_care_hub() -> None:
                                     latest_recorded_at,
                                     access_token,
                                 )
-                        st.caption(
-                            "Click when the resident has listened and you want to move to the next message."
-                        )
                                 cache_key = f"care_mobile_played_cache_{resident_id}"
                                 cache = st.session_state.get(cache_key)
                                 if not isinstance(cache, dict):
@@ -12508,6 +12505,9 @@ def render_care_hub() -> None:
                                 cache[cache_key] = int(cache.get(cache_key, 0) or 0) + 1
                                 st.session_state["_message_play_count_cache"] = cache
                             st.rerun()
+                        st.caption(
+                            "Click when the resident has listened and you want to move to the next message."
+                        )
                 selected_contact_name = (
                     (selected_contact or {}).get("full_name") or "family contact"
                 )
