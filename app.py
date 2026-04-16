@@ -10622,6 +10622,24 @@ def render_pr_homepage() -> None:
         if st.button("Care Hub - Office", key="pr_entry_office", use_container_width=True):
             set_route(OFFICE_LOGIN_ROUTE)
             st.stop()
+    st.markdown("### Help videos")
+    shortcut_cols = st.columns(4, gap="small")
+    shortcuts = [
+        ("Full service", HELP_VIDEO_SYSTEMS),
+        ("Mobile", HELP_VIDEO_MOBILE),
+        ("Family", HELP_VIDEO_FAMILY),
+        ("Office", HELP_VIDEO_OFFICE),
+    ]
+    for idx, (label, video_id) in enumerate(shortcuts):
+        with shortcut_cols[idx]:
+            if st.button(label, key=f"pr_help_shortcut_{video_id}", use_container_width=True):
+                set_help_video_selection(video_id)
+                set_route(PUBLIC_HELP_VIDEOS_ROUTE)
+                st.stop()
+    st.caption("Available before login")
+    if st.button("View help videos", key="pr_view_help_videos", use_container_width=True):
+        set_route(PUBLIC_HELP_VIDEOS_ROUTE)
+        st.stop()
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
