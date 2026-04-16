@@ -558,7 +558,25 @@ def redirect_to_public_landing() -> None:
     st.stop()
 
 
+def sign_out_and_go_to_public_landing() -> None:
+    active_role = str(st.session_state.get("active_role") or "").strip().lower()
+    if st.session_state.get("auth_uid"):
+        if active_role == "family":
+            sign_out_user("family")
+        elif active_role == "care_hub":
+            sign_out_user("care_hub")
+        else:
+            clear_auth_cookie()
+            clear_session_state()
+    set_route(PUBLIC_HOME_ROUTE)
+    st.stop()
+
+
 def render_public_landing_link(label: str, key: str) -> None:
+    if st.session_state.get("auth_uid"):
+        if st.button(label, key=key, use_container_width=True):
+            sign_out_and_go_to_public_landing()
+        return
     url = get_public_landing_url()
     safe_url = html.escape(url, quote=True)
     safe_label = html.escape(label)
@@ -568,6 +586,10 @@ def render_public_landing_link(label: str, key: str) -> None:
     )
 
 def render_public_landing_button(label: str) -> None:
+    if st.session_state.get("auth_uid"):
+        if st.button(label, key=f"public_landing_button_{label.lower().replace(' ', '_')}"):
+            sign_out_and_go_to_public_landing()
+        return
     url = get_public_landing_url()
     try:
         st.link_button(label, url, use_container_width=True)
