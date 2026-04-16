@@ -3057,15 +3057,15 @@ def get_help_video_entries() -> list[dict[str, str]]:
     return [
         {
             "id": HELP_VIDEO_SYSTEMS,
-            "audience": "Full service",
-            "title": "voicemailcare systems video",
+            "audience": "voicemailcare system",
+            "title": "voicemailcare system",
             "summary": "Overview of how Family Hub, Care Hub - Mobile, and Care Hub - Office fit together.",
             "env_var": "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL,PUBLIC_SYSTEMS_VIDEO_URL,PUBLIC_OVERVIEW_VIDEO_URL",
             "local_path": "assets/system-Walkthrough.mp4",
         },
         {
             "id": HELP_VIDEO_MOBILE,
-            "audience": "Mobile",
+            "audience": "Care Hub - Mobile",
             "title": "Care Hub - Mobile walkthrough video",
             "summary": "Resident playback and recording support workflows for staff.",
             "env_var": "PUBLIC_MOBILE_RECORD_VIDEO_URL",
@@ -3073,7 +3073,7 @@ def get_help_video_entries() -> list[dict[str, str]]:
         },
         {
             "id": HELP_VIDEO_FAMILY,
-            "audience": "Family",
+            "audience": "Family Hub",
             "title": "Family Hub walkthrough video",
             "summary": "How family messages, playback boundaries, and shared resident updates work.",
             "env_var": "PUBLIC_FAMILY_RECORD_VIDEO_URL",
@@ -3081,7 +3081,7 @@ def get_help_video_entries() -> list[dict[str, str]]:
         },
         {
             "id": HELP_VIDEO_OFFICE,
-            "audience": "Office",
+            "audience": "Care Hub - Office",
             "title": "Care Hub - Office walkthrough video",
             "summary": "Office oversight, one-way updates, and practical structured messaging.",
             "env_var": "PUBLIC_OFFICE_RECORD_VIDEO_URL",
@@ -3118,7 +3118,7 @@ def render_public_help_videos() -> None:
     if selected not in {entry["id"] for entry in entries}:
         selected = ""
     for entry in entries:
-        button_label = f'{entry["audience"]}: {entry["title"]}'
+        button_label = entry["audience"]
         if st.button(button_label, key=f'help_videos_select_{entry["id"]}', use_container_width=True):
             selected = entry["id"]
             st.session_state["help_videos_selected"] = selected
@@ -10628,10 +10628,10 @@ def render_pr_homepage() -> None:
     st.markdown("### Help videos")
     shortcut_cols = st.columns(4, gap="small")
     shortcuts = [
-        ("Full service", HELP_VIDEO_SYSTEMS),
-        ("Mobile", HELP_VIDEO_MOBILE),
-        ("Family", HELP_VIDEO_FAMILY),
-        ("Office", HELP_VIDEO_OFFICE),
+        ("voicemailcare system", HELP_VIDEO_SYSTEMS),
+        ("Care Hub - Mobile", HELP_VIDEO_MOBILE),
+        ("Family Hub", HELP_VIDEO_FAMILY),
+        ("Care Hub - Office", HELP_VIDEO_OFFICE),
     ]
     for idx, (label, video_id) in enumerate(shortcuts):
         with shortcut_cols[idx]:
