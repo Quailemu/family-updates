@@ -96,6 +96,11 @@ FAMILY_RECORD_VIDEO_OBJECT_PATH = (
     .strip()
     .lstrip("/")
 )
+MOBILE_RECORD_VIDEO_OBJECT_PATH = (
+    str(os.getenv("MOBILE_RECORD_VIDEO_OBJECT_PATH", "carehub-mobile-walkthrough.mp4") or "")
+    .strip()
+    .lstrip("/")
+)
 OFFICE_RECORD_VIDEO_OBJECT_PATH = (
     str(os.getenv("OFFICE_RECORD_VIDEO_OBJECT_PATH", "officehub-walkthrough.mp4") or "")
     .strip()
@@ -7494,7 +7499,7 @@ def render_home(active: str) -> None:
                 "For care staff to play family messages and support resident recordings.",
                 "/public/walkthrough-mobile",
                 "PUBLIC_MOBILE_RECORD_VIDEO_URL",
-                "assets/voice-message-mobile-walkthrough-v1.mp4",
+                "assets/carehub-mobile-walkthrough.mp4",
             ),
             (
                 VARIANT_OFFICE,
@@ -8770,6 +8775,10 @@ DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL"] = _join_media_ba
 if FAMILY_RECORD_VIDEO_OBJECT_PATH:
     DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_RECORD_VIDEO_URL"] = _join_media_base_url(
         FAMILY_RECORD_VIDEO_OBJECT_PATH
+    )
+if MOBILE_RECORD_VIDEO_OBJECT_PATH:
+    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_MOBILE_RECORD_VIDEO_URL"] = _join_media_base_url(
+        MOBILE_RECORD_VIDEO_OBJECT_PATH
     )
 if OFFICE_RECORD_VIDEO_OBJECT_PATH:
     DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_OFFICE_RECORD_VIDEO_URL"] = _join_media_base_url(
@@ -13760,7 +13769,7 @@ def main() -> None:
         render_public_walkthrough_page(
             "Care Hub - Mobile Record video",
             "PUBLIC_MOBILE_RECORD_VIDEO_URL",
-            "assets/voice-message-mobile-walkthrough-v1.mp4",
+            "assets/carehub-mobile-walkthrough.mp4",
             [
                 "How staff play Family -> Resident messages to the resident.",
                 "Queue order is fixed: unplayed messages are first, in family order.",
