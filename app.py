@@ -8872,6 +8872,24 @@ def render_public_walkthrough_page(
                 effective_back_route = MOBILE_HOME_ROUTE
             elif base_variant == VARIANT_OFFICE:
                 effective_back_route = OFFICE_HOME_ROUTE
+    # Keep authenticated Care Hub walkthrough navigation inside the app context.
+    if (
+        st.session_state.get("auth_uid")
+        and str(st.session_state.get("active_role") or "").strip().lower() == "care_hub"
+        and normalize_route(current_route).startswith("/public/walkthrough")
+        and effective_back_route in {
+            PUBLIC_HOME_ROUTE,
+            "/",
+            "/pr-home",
+            MOBILE_LOGIN_ROUTE,
+            OFFICE_LOGIN_ROUTE,
+        }
+    ):
+        effective_back_route = (
+            "/care-hub-office/how-it-works"
+            if bool(st.session_state.get("office_login_explicit"))
+            else "/care-hub-mobile/how-it-works"
+        )
     has_auth_tokens = bool(
         st.session_state.get("auth_uid")
         and st.session_state.get("access_token")
