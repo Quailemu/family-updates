@@ -7549,6 +7549,9 @@ def render_home(active: str) -> None:
 
         st.markdown('<div class="public-section public-app-buttons">', unsafe_allow_html=True)
         st.markdown("<h2>Choose your app</h2>", unsafe_allow_html=True)
+        st.caption("Available before login")
+        if st.button("View help videos", key="public_watch_help_videos", use_container_width=True):
+            set_route(PUBLIC_HELP_VIDEOS_ROUTE)
         app_cols = st.columns(3, gap="small")
         app_entries = [
             (
@@ -7591,9 +7594,6 @@ def render_home(active: str) -> None:
                 st.markdown(f"<h3>{label}</h3>", unsafe_allow_html=True)
                 st.markdown(f"<p>{summary}</p>", unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
-        st.caption("Available before login")
-        if st.button("View help videos", key="public_watch_help_videos", use_container_width=True):
-            set_route(PUBLIC_HELP_VIDEOS_ROUTE)
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
