@@ -12,6 +12,7 @@ import re
 import html
 import io
 from pathlib import Path
+import urllib.request
 from urllib.parse import parse_qsl, quote, urlencode, urlparse, urlunparse, unquote
 
 import streamlit as st
@@ -8962,8 +8963,37 @@ def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
         for fallback_url in _video_url_variants(fallback_raw):
             if fallback_url and fallback_url not in candidate_urls:
                 candidate_urls.append(fallback_url)
-    if candidate_urls:
-        return candidate_urls[0]
+    for candidate_url in candidate_urls:
+        parsed = urlparse(candidate_url)
+        scheme = str(parsed.scheme or "").lower()
+        if scheme not in {"http", "https"}:
+            return candidate_url
+        try:
+            req = urllib.request.Request(
+                candidate_url,
+                method="HEAD",
+                headers={"User-Agent": "voicemailcare-video-check/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                status = int(getattr(resp, "status", 0) or 0)
+                if 200 <= status < 400:
+                    return candidate_url
+        except Exception:
+            try:
+                req = urllib.request.Request(
+                    candidate_url,
+                    method="GET",
+                    headers={
+                        "User-Agent": "voicemailcare-video-check/1.0",
+                        "Range": "bytes=0-0",
+                    },
+                )
+                with urllib.request.urlopen(req, timeout=4) as resp:
+                    status = int(getattr(resp, "status", 0) or 0)
+                    if 200 <= status < 400:
+                        return candidate_url
+            except Exception:
+                continue
     local_file = Path(local_path)
     if local_file.exists():
         return str(local_file)
