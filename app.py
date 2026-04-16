@@ -144,6 +144,9 @@ OPENAI_TRANSCRIPTION_MAX_BYTES = max(
     int(os.getenv("OPENAI_TRANSCRIPTION_MAX_BYTES", str(25 * 1024 * 1024))),
     1024 * 1024,
 )
+SHOW_FAMILY_HELP_VIDEO = os.getenv("SHOW_FAMILY_HELP_VIDEO", "1").strip().lower() in {"1", "true", "yes", "on"}
+SHOW_MOBILE_HELP_VIDEO = os.getenv("SHOW_MOBILE_HELP_VIDEO", "1").strip().lower() in {"1", "true", "yes", "on"}
+SHOW_OFFICE_HELP_VIDEO = os.getenv("SHOW_OFFICE_HELP_VIDEO", "1").strip().lower() in {"1", "true", "yes", "on"}
 OFFICE_UPDATE_CATEGORIES = (
     "General reassurance",
     "Daily life",
@@ -3054,7 +3057,7 @@ def set_help_video_selection(video_id: str) -> None:
 
 
 def get_help_video_entries() -> list[dict[str, str]]:
-    return [
+    entries: list[dict[str, str]] = [
         {
             "id": HELP_VIDEO_SYSTEMS,
             "audience": "voicemailcare system",
@@ -3063,31 +3066,41 @@ def get_help_video_entries() -> list[dict[str, str]]:
             "env_var": "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL,PUBLIC_SYSTEMS_VIDEO_URL,PUBLIC_OVERVIEW_VIDEO_URL",
             "local_path": "assets/system-Walkthrough.mp4",
         },
-        {
-            "id": HELP_VIDEO_MOBILE,
-            "audience": "Care Hub - Mobile",
-            "title": "Care Hub - Mobile walkthrough video",
-            "summary": "Resident playback and recording support workflows for staff.",
-            "env_var": "PUBLIC_MOBILE_RECORD_VIDEO_URL",
-            "local_path": "assets/carehub-mobile-walkthrough.mp4",
-        },
-        {
-            "id": HELP_VIDEO_FAMILY,
-            "audience": "Family Hub",
-            "title": "Family Hub walkthrough video",
-            "summary": "How family messages, playback boundaries, and shared resident updates work.",
-            "env_var": "PUBLIC_FAMILY_RECORD_VIDEO_URL",
-            "local_path": "assets/voice-message-family-walkthrough-v1.mp4",
-        },
-        {
-            "id": HELP_VIDEO_OFFICE,
-            "audience": "Care Hub - Office",
-            "title": "Care Hub - Office walkthrough video",
-            "summary": "Office oversight, one-way updates, and practical structured messaging.",
-            "env_var": "PUBLIC_OFFICE_RECORD_VIDEO_URL",
-            "local_path": "assets/voice-message-office-walkthrough-v1.mp4",
-        },
     ]
+    if SHOW_MOBILE_HELP_VIDEO:
+        entries.append(
+            {
+                "id": HELP_VIDEO_MOBILE,
+                "audience": "Care Hub - Mobile",
+                "title": "Care Hub - Mobile walkthrough video",
+                "summary": "Resident playback and recording support workflows for staff.",
+                "env_var": "PUBLIC_MOBILE_RECORD_VIDEO_URL",
+                "local_path": "assets/carehub-mobile-walkthrough.mp4",
+            }
+        )
+    if SHOW_FAMILY_HELP_VIDEO:
+        entries.append(
+            {
+                "id": HELP_VIDEO_FAMILY,
+                "audience": "Family Hub",
+                "title": "Family Hub walkthrough video",
+                "summary": "How family messages, playback boundaries, and shared resident updates work.",
+                "env_var": "PUBLIC_FAMILY_RECORD_VIDEO_URL",
+                "local_path": "assets/voice-message-family-walkthrough-v1.mp4",
+            }
+        )
+    if SHOW_OFFICE_HELP_VIDEO:
+        entries.append(
+            {
+                "id": HELP_VIDEO_OFFICE,
+                "audience": "Care Hub - Office",
+                "title": "Care Hub - Office walkthrough video",
+                "summary": "Office oversight, one-way updates, and practical structured messaging.",
+                "env_var": "PUBLIC_OFFICE_RECORD_VIDEO_URL",
+                "local_path": "assets/voice-message-office-walkthrough-v1.mp4",
+            }
+        )
+    return entries
 
 
 def render_public_help_videos() -> None:
