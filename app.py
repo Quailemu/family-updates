@@ -8571,6 +8571,18 @@ def redirect_if_not_authenticated(app_variant: str, current_route: str) -> bool:
             if app_variant == VARIANT_FAMILY
             else is_care_authenticated()
         )
+    if not is_authed and st.session_state.get("refresh_token"):
+        # Token hydration can occasionally fail on rerun even with a valid refresh token.
+        # Try a direct refresh before forcing a login route.
+        refreshed = try_refresh_session_from_state()
+        if refreshed:
+            get_mapping_status()
+            is_authed = bool(st.session_state.get("auth_uid"))
+            is_variant_authed = (
+                is_family_authenticated()
+                if app_variant == VARIANT_FAMILY
+                else is_care_authenticated()
+            )
     login_route = get_login_route(app_variant)
     home_route = get_home_route(app_variant)
     if (
