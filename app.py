@@ -8850,6 +8850,7 @@ def _video_url_variants(url: str) -> list[str]:
             _prepend_unique(preferred_urls)
         if host in media_hosts and ("family" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
             path_candidates = [
+                "/Familyhub-Walkthrough.mp4",
                 "/familyhub-walkthrough.mp4",
                 "/familyhub-walkthrough.MP4",
                 "/family-hub-walkthrough.mp4",
@@ -8914,7 +8915,7 @@ if MEDIA_TEST_VIDEO_OBJECT_PATH:
 DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL"] = _join_media_base_url(
     "system-Walkthrough.mp4"
 )
-_family_record_path = FAMILY_RECORD_VIDEO_OBJECT_PATH or "familyhub-walkthrough.mp4"
+_family_record_path = FAMILY_RECORD_VIDEO_OBJECT_PATH or "Familyhub-Walkthrough.mp4"
 DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_RECORD_VIDEO_URL"] = _join_media_base_url(
     _family_record_path
 )
@@ -8994,6 +8995,10 @@ def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
                         return candidate_url
             except Exception:
                 continue
+    if candidate_urls:
+        # Some hosts may block HEAD/range probes even when normal browser playback works.
+        # Fall back to the first resolved URL so Streamlit can attempt direct playback.
+        return candidate_urls[0]
     local_file = Path(local_path)
     if local_file.exists():
         return str(local_file)
