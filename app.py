@@ -12438,11 +12438,11 @@ def render_care_hub() -> None:
                     listened_confirm_key = f"{listened_prefix}_listened_confirm_{resident_id}"
                     if played_now and latest_message_id:
                         st.checkbox(
-                            "I confirm this message has been listened to with the resident.",
+                            "Tick when the resident has listened to this message.",
                             key=listened_confirm_key,
                         )
                         if st.button(
-                            "Mark listened and move to next",
+                            "Move to next message",
                             key=f"{listened_prefix}_mark_listened_next_{resident_id}",
                             use_container_width=True,
                             disabled=not bool(st.session_state.get(listened_confirm_key, False)),
@@ -12468,6 +12468,9 @@ def render_care_hub() -> None:
                                     latest_recorded_at,
                                     access_token,
                                 )
+                        st.caption(
+                            "Click when the resident has listened and you want to move to the next message."
+                        )
                                 cache_key = f"care_mobile_played_cache_{resident_id}"
                                 cache = st.session_state.get(cache_key)
                                 if not isinstance(cache, dict):
