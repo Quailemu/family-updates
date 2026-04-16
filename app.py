@@ -92,7 +92,7 @@ MEDIA_TEST_VIDEO_OBJECT_PATH = (
     .lstrip("/")
 )
 FAMILY_RECORD_VIDEO_OBJECT_PATH = (
-    str(os.getenv("FAMILY_RECORD_VIDEO_OBJECT_PATH", "voice-message-family-walkthrough-v1.mp4") or "")
+    str(os.getenv("FAMILY_RECORD_VIDEO_OBJECT_PATH", "familyhub-walkthrough.mp4") or "")
     .strip()
     .lstrip("/")
 )
@@ -102,7 +102,7 @@ MOBILE_RECORD_VIDEO_OBJECT_PATH = (
     .lstrip("/")
 )
 OFFICE_RECORD_VIDEO_OBJECT_PATH = (
-    str(os.getenv("OFFICE_RECORD_VIDEO_OBJECT_PATH", "officehub-walkthrough.mp4") or "")
+    str(os.getenv("OFFICE_RECORD_VIDEO_OBJECT_PATH", "Carehub-Office-Walkthrough.mp4") or "")
     .strip()
     .lstrip("/")
 )
@@ -8835,8 +8835,8 @@ def _video_url_variants(url: str) -> list[str]:
             _prepend_unique(preferred_urls)
         if host in media_hosts and ("family" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
             path_candidates = [
-                "/voice-message-family-walkthrough-v1.mp4",
                 "/familyhub-walkthrough.mp4",
+                "/voice-message-family-walkthrough-v1.mp4",
                 "/familyhub%20%20walkthrough.mp4",
             ]
             preferred_urls: list[str] = []
@@ -8849,6 +8849,19 @@ def _video_url_variants(url: str) -> list[str]:
                 "/carehub-mobile-walkthrough.MP4",
                 "/carehub-mobile-walkthrough.mp4",
                 "/voice-message-mobile-walkthrough-v1.mp4",
+            ]
+            preferred_urls: list[str] = []
+            for candidate_path in path_candidates:
+                candidate_url = urlunparse(parsed._replace(path=candidate_path))
+                preferred_urls.append(candidate_url)
+            _prepend_unique(preferred_urls)
+        if host in media_hosts and ("office" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
+            path_candidates = [
+                "/Carehub-Office-Walkthrough.mp4",
+                "/carehub-office-walkthrough.mp4",
+                "/carehub-office%20walkthrough.mp4",
+                "/officehub-walkthrough.mp4",
+                "/voice-message-office-walkthrough-v1.mp4",
             ]
             preferred_urls: list[str] = []
             for candidate_path in path_candidates:
