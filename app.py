@@ -7549,6 +7549,9 @@ def render_home(active: str) -> None:
 
         st.markdown('<div class="public-section public-app-buttons">', unsafe_allow_html=True)
         st.markdown("<h2>Choose your app</h2>", unsafe_allow_html=True)
+        if st.button("View help videos", key="pr_view_help_videos_top", use_container_width=True):
+            set_route(PUBLIC_HELP_VIDEOS_ROUTE)
+            st.stop()
         app_cols = st.columns(3, gap="small")
         app_entries = [
             (
