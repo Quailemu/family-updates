@@ -3112,16 +3112,19 @@ def render_public_help_videos() -> None:
             key="help_videos_back_public",
         )
     render_page_header("Help videos", show_variant_subheading=False)
-    st.caption("Watch how it works before login or from inside the app.")
+    st.caption("View help videos before login or from inside the app.")
     entries = get_help_video_entries()
-    selected = str(st.session_state.get("help_videos_selected") or HELP_VIDEO_SYSTEMS).strip().lower()
+    selected = str(st.session_state.get("help_videos_selected") or "").strip().lower()
     if selected not in {entry["id"] for entry in entries}:
-        selected = HELP_VIDEO_SYSTEMS
+        selected = ""
     for entry in entries:
         button_label = f'{entry["audience"]}: {entry["title"]}'
         if st.button(button_label, key=f'help_videos_select_{entry["id"]}', use_container_width=True):
             selected = entry["id"]
             st.session_state["help_videos_selected"] = selected
+    if not selected:
+        st.info("Select a video to start")
+        return
     active = next((entry for entry in entries if entry["id"] == selected), entries[0])
     st.markdown(f'### {active["title"]}')
     st.caption(active["summary"])
@@ -3423,7 +3426,7 @@ def render_care_hub_nav() -> None:
             if st.button("Inbox", key="care_hub_nav_inbox", use_container_width=True):
                 set_route(get_home_route(app_variant))
         with nav_cols[1]:
-            if st.button("Help videos", key="care_hub_nav_service_overview", use_container_width=True):
+            if st.button("View help videos", key="care_hub_nav_service_overview", use_container_width=True):
                 set_route(PUBLIC_HELP_VIDEOS_ROUTE)
         with nav_cols[2]:
             if st.button("Contracts", key="care_hub_nav_contracts", use_container_width=True):
@@ -6377,7 +6380,7 @@ def render_header_menu(menu_key: str) -> None:
                 if st.button("Privacy Notice", key=f"{menu_key}_office_privacy_public"):
                     set_route("/public/privacy-notice")
                     return
-                if st.button("Help videos", key=f"{menu_key}_office_service_overview_public"):
+                if st.button("View help videos", key=f"{menu_key}_office_service_overview_public"):
                     set_route(PUBLIC_HELP_VIDEOS_ROUTE)
                     return
                 return
@@ -6413,7 +6416,7 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", "/care-hub/office/qa")
 
             st.markdown("- Governance -")
-            if st.button("Help videos", key=f"{menu_key}_office_service_overview"):
+            if st.button("View help videos", key=f"{menu_key}_office_service_overview"):
                 clicked_action = ("route", "/docs")
             if st.button("Care home responsibilities", key=f"{menu_key}_office_doc_responsibilities"):
                 clicked_action = ("doc", "docs/office/04_care_home_responsibilities.md")
@@ -7546,8 +7549,6 @@ def render_home(active: str) -> None:
 
         st.markdown('<div class="public-section public-app-buttons">', unsafe_allow_html=True)
         st.markdown("<h2>Choose your app</h2>", unsafe_allow_html=True)
-        if st.button("Watch how it works", key="public_watch_help_videos_top", use_container_width=True):
-            set_route(PUBLIC_HELP_VIDEOS_ROUTE)
         app_cols = st.columns(3, gap="small")
         app_entries = [
             (
@@ -7590,7 +7591,8 @@ def render_home(active: str) -> None:
                 st.markdown(f"<h3>{label}</h3>", unsafe_allow_html=True)
                 st.markdown(f"<p>{summary}</p>", unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
-        if st.button("View help videos", key="public_watch_help_videos_bottom", use_container_width=True):
+        st.caption("Available before login")
+        if st.button("View help videos", key="public_watch_help_videos", use_container_width=True):
             set_route(PUBLIC_HELP_VIDEOS_ROUTE)
         st.markdown("</div>", unsafe_allow_html=True)
 
