@@ -3081,7 +3081,7 @@ def get_help_video_entries() -> list[dict[str, str]]:
             "audience": "Care Hub - Mobile",
             "title": "Care Hub - Mobile walkthrough video",
             "summary": "Resident playback and recording support workflows for staff.",
-            "env_var": "PUBLIC_MOBILE_RECORD_VIDEO_URL",
+            "env_var": "PUBLIC_MOBILE_RECORD_VIDEO_URL,PUBLIC_MOBILE_WALKTHROUGH_VIDEO_URL,PUBLIC_CAREHUB_MOBILE_WALKTHROUGH_VIDEO_URL",
             "local_path": "assets/carehub-mobile-walkthrough.mp4",
         },
         {
@@ -3089,7 +3089,7 @@ def get_help_video_entries() -> list[dict[str, str]]:
             "audience": "Family Hub",
             "title": "Family Hub walkthrough video",
             "summary": "How family messages, playback boundaries, and shared resident updates work.",
-            "env_var": "PUBLIC_FAMILY_RECORD_VIDEO_URL",
+            "env_var": "PUBLIC_FAMILY_RECORD_VIDEO_URL,PUBLIC_FAMILY_WALKTHROUGH_VIDEO_URL,PUBLIC_FAMILYHUB_WALKTHROUGH_VIDEO_URL",
             "local_path": "assets/voice-message-family-walkthrough-v1.mp4",
         },
         {
@@ -3097,7 +3097,7 @@ def get_help_video_entries() -> list[dict[str, str]]:
             "audience": "Care Hub - Office",
             "title": "Care Hub - Office walkthrough video",
             "summary": "Office oversight, one-way updates, and practical structured messaging.",
-            "env_var": "PUBLIC_OFFICE_RECORD_VIDEO_URL",
+            "env_var": "PUBLIC_OFFICE_RECORD_VIDEO_URL,PUBLIC_OFFICE_WALKTHROUGH_VIDEO_URL,PUBLIC_CAREHUB_OFFICE_WALKTHROUGH_VIDEO_URL",
             "local_path": "assets/voice-message-office-walkthrough-v1.mp4",
         },
     ]
@@ -8850,7 +8850,13 @@ def _video_url_variants(url: str) -> list[str]:
         if host in media_hosts and ("family" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
             path_candidates = [
                 "/familyhub-walkthrough.mp4",
+                "/familyhub-walkthrough.MP4",
+                "/family-hub-walkthrough.mp4",
+                "/family-hub-walkthrough.MP4",
+                "/familyhub-walkthough.mp4",
+                "/familyhub-walkthough.MP4",
                 "/voice-message-family-walkthrough-v1.mp4",
+                "/voice-message-family-walkthrough-v1.MP4",
                 "/familyhub%20%20walkthrough.mp4",
             ]
             preferred_urls: list[str] = []
@@ -8862,7 +8868,14 @@ def _video_url_variants(url: str) -> list[str]:
             path_candidates = [
                 "/carehub-mobile-walkthrough.MP4",
                 "/carehub-mobile-walkthrough.mp4",
+                "/carehub-mobile-walkthough.mp4",
+                "/carehub-mobile-walkthough.MP4",
+                "/carehubmobile-walkthrough.mp4",
+                "/carehubmobile-walkthrough.MP4",
+                "/carehubmobile-walkthough.mp4",
+                "/carehubmobile-walkthough.MP4",
                 "/voice-message-mobile-walkthrough-v1.mp4",
+                "/voice-message-mobile-walkthrough-v1.MP4",
             ]
             preferred_urls: list[str] = []
             for candidate_path in path_candidates:
@@ -8904,12 +8917,30 @@ if FAMILY_RECORD_VIDEO_OBJECT_PATH:
     DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_RECORD_VIDEO_URL"] = _join_media_base_url(
         FAMILY_RECORD_VIDEO_OBJECT_PATH
     )
+    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+        FAMILY_RECORD_VIDEO_OBJECT_PATH
+    )
+    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILYHUB_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+        FAMILY_RECORD_VIDEO_OBJECT_PATH
+    )
 if MOBILE_RECORD_VIDEO_OBJECT_PATH:
     DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_MOBILE_RECORD_VIDEO_URL"] = _join_media_base_url(
         MOBILE_RECORD_VIDEO_OBJECT_PATH
     )
+    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_MOBILE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+        MOBILE_RECORD_VIDEO_OBJECT_PATH
+    )
+    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_CAREHUB_MOBILE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+        MOBILE_RECORD_VIDEO_OBJECT_PATH
+    )
 if OFFICE_RECORD_VIDEO_OBJECT_PATH:
     DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_OFFICE_RECORD_VIDEO_URL"] = _join_media_base_url(
+        OFFICE_RECORD_VIDEO_OBJECT_PATH
+    )
+    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_OFFICE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
+        OFFICE_RECORD_VIDEO_OBJECT_PATH
+    )
+    DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_CAREHUB_OFFICE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
         OFFICE_RECORD_VIDEO_OBJECT_PATH
     )
 
