@@ -3104,17 +3104,24 @@ def render_how_it_works_family() -> None:
 def render_how_it_works_mobile() -> None:
     render_page_header("How it works - Care Hub - Mobile")
     render_how_it_works_cartoon()
-    if get_app_variant() == VARIANT_PUBLIC:
-        mobile_back_label = "Back to hub selection"
-        mobile_back_route = get_home_route(VARIANT_PUBLIC)
-    else:
-        mobile_back_label = "Back to Care Hub - Mobile"
-        mobile_back_route = get_home_route(VARIANT_MOBILE)
-    render_route_link(
-        mobile_back_label,
-        mobile_back_route,
-        key="mobile_how_it_works_back_top_link",
+    runtime_variant = resolve_runtime_variant(route_hint=get_route())
+    mobile_session = bool(
+        st.session_state.get("auth_uid")
+        and str(st.session_state.get("active_role") or "").strip().lower() == "care_hub"
+        and not bool(st.session_state.get("office_login_explicit"))
     )
+    if runtime_variant == VARIANT_MOBILE or mobile_session:
+        render_route_link(
+            "Back to Mobile Hub messages",
+            get_home_route(VARIANT_MOBILE),
+            key="mobile_how_it_works_back_messages_link",
+        )
+    else:
+        render_route_link(
+            "Back to hub selection",
+            get_home_route(VARIANT_PUBLIC),
+            key="mobile_how_it_works_back_hubs_link",
+        )
     st.markdown(
         """
 <style>
@@ -3162,11 +3169,6 @@ def render_how_it_works_mobile() -> None:
     ):
         set_route("/public/walkthrough-family")
     render_how_it_works_diagram_and_notes()
-    render_route_link(
-        mobile_back_label,
-        mobile_back_route,
-        key="mobile_how_it_works_back_bottom_link",
-    )
 
 
 def render_how_it_works_office_overview() -> None:
