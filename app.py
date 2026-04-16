@@ -7770,16 +7770,13 @@ def render_home(active: str) -> None:
             "Each Family Member channel keeps only the latest message. "
             "A new message replaces only the previous message in that channel."
         )
-        st.markdown("### Start here: Service flow overview (90 seconds)")
-        overview_video = resolve_public_video_source(
-            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL",
-            "assets/system-Walkthrough.mp4",
+        st.markdown("### Help videos")
+        render_route_link(
+            "View help videos",
+            PUBLIC_HELP_VIDEOS_ROUTE,
+            key="legacy_public_home_help_videos_link",
         )
-        if overview_video:
-            try:
-                st.video(overview_video)
-            except Exception:
-                pass
+        st.caption("Available before login")
     st.markdown("### Service overview")
     current_variant = resolve_runtime_variant(route_hint=get_route())
     if current_variant == VARIANT_MOBILE:
