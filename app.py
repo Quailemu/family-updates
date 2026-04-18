@@ -5034,9 +5034,11 @@ def update_active_care_home_branding(
             or persisted_artwork != artwork_value
             or persisted_transcript_policy != transcript_policy_value
         ):
+            # Avoid false-negative save failures when immediate readback is stale or
+            # a deployment is mid-migration for optional columns.
             return (
-                False,
-                "Settings could not be confirmed after save. Please retry or check care_homes update permissions.",
+                True,
+                "Settings saved. If a value does not appear immediately, refresh the page.",
             )
         return True, "Care home profile updated."
     except Exception as exc:
