@@ -2380,6 +2380,11 @@ def render_office_family_registration_form(
     if not mapping_resp.data:
         st.error("Your Office account is not mapped to an active care home.")
         return
+    mode_value = get_operating_mode(access_token)
+    organisation_label = location_label(mode_value)
+    subject_singular = subject_label(mode_value)
+    subject_singular_title = subject_label(mode_value, title=True)
+    subject_plural = subject_label(mode_value, plural=True)
 
     office_residents = [
         resident
@@ -2387,7 +2392,7 @@ def render_office_family_registration_form(
         if str(resident.get("care_home_id") or "") == care_home_id
     ]
     if not office_residents:
-        st.info("No active residents are available for family registration.")
+        st.info(f"No active {subject_plural} are available for family registration.")
         return
 
     pending_key = "office_family_registration_pending"
@@ -2406,8 +2411,8 @@ def render_office_family_registration_form(
             if ok:
                 st.session_state.pop(pending_key, None)
                 st.success(
-                    "Family member linked to resident access\n"
-                    f"Care home: {active_care_home_name}\n"
+                    f"Family member linked to {subject_singular} access\n"
+                    f"{organisation_label}: {active_care_home_name}\n"
                     f"Registered by: {registering_staff_name}\n"
                     f"Date: {registration_date}\n"
                     f"Family email: {pending_payload.get('email', 'contact')}"
@@ -2432,12 +2437,12 @@ def render_office_family_registration_form(
     ).strip()
     registration_date = time.strftime("%d %b %Y")
     st.caption(
-        f"{active_care_home_name} is registering a Family Member for this resident. "
-        "The care home makes the access decision and keeps the registration record."
+        f"{active_care_home_name} is registering a Family Member for this {subject_singular}. "
+        f"The {contact_label(mode_value)} makes the access decision and keeps the registration record."
     )
     st.markdown("#### Registration record details")
     st.markdown(
-        f"Care home: **{active_care_home_name}**  \n"
+        f"{organisation_label}: **{active_care_home_name}**  \n"
         f"Registered by: **{registering_staff_name}**  \n"
         f"Date: **{registration_date}**"
     )
@@ -2450,7 +2455,8 @@ def render_office_family_registration_form(
             continue
         label = format_resident_identity_label(
             resident,
-            include_room=True,
+            operating_mode=mode_value,
+            include_room=bool(room_label(mode_value)),
             include_care_home=False,
             separator=" | ",
         )
@@ -2479,25 +2485,25 @@ def render_office_family_registration_form(
         last_name = st.text_input("Last name", key="office_family_last_name")
         email = st.text_input("Email", key="office_family_email")
         relationship = st.text_input(
-            "Relationship to resident (for example: daughter, cousin)",
+            f"Relationship to {subject_singular} (for example: daughter, cousin)",
             key="office_family_relationship",
         )
-        st.markdown("#### Section 2 - Link to Resident")
+        st.markdown(f"#### Section 2 - Link to {subject_singular_title}")
         resident_id = st.selectbox(
-            "Resident",
+            subject_singular_title,
             resident_options,
-            format_func=lambda rid: resident_label_by_id.get(rid, "Resident"),
+            format_func=lambda rid: resident_label_by_id.get(rid, subject_singular_title),
             key="office_family_resident_select",
         )
         st.markdown("#### Section 3 - Confirmation")
         resident_access_confirmed = st.checkbox(
             f"I confirm that {active_care_home_name} has decided this person may be added "
-            "as a Family Member for this resident and is solely responsible "
-            "for determining, granting, and maintaining their access to the resident.",
+            f"as a Family Member for this {subject_singular} and is solely responsible "
+            f"for determining, granting, and maintaining their access to the {subject_singular}.",
             key="office_family_authorisation_confirm",
         )
         st.caption(
-            "voicemailcare.com does not decide who may be added. The care home is responsible for that decision."
+            f"voicemailcare.com does not decide who may be added. The {contact_label(mode_value)} is responsible for that decision."
         )
         st.caption(
             "Security note: after sending an invite, wait for the countdown before retrying."
@@ -2521,12 +2527,12 @@ def render_office_family_registration_form(
         st.error("Enter a valid email address.")
         return
     if not resident_access_confirmed:
-        st.error("Please confirm care home authorisation before sending the invitation.")
+        st.error(f"Please confirm {contact_label(mode_value)} authorisation before sending the invitation.")
         return
 
     resident = resident_by_id.get(resident_id)
     if not resident:
-        st.error("Select a resident.")
+        st.error(f"Select a {subject_singular}.")
         return
 
     try:
@@ -2544,7 +2550,7 @@ def render_office_family_registration_form(
         st.error(str(exc))
         return
     if existing_contact_resp.data:
-        st.error("That email is already registered for this care home.")
+        st.error(f"That email is already registered for this {contact_label(mode_value)}.")
         return
 
     admin_client, admin_error = get_admin_client()
@@ -2596,7 +2602,7 @@ def render_office_family_registration_form(
         st.session_state.pop(pending_key, None)
         st.success(
             "Invitation sent\n"
-            f"Care home: {active_care_home_name}\n"
+            f"{organisation_label}: {active_care_home_name}\n"
             f"Registered by: {registering_staff_name}\n"
             f"Date: {registration_date}\n"
             f"Family email: {normalized_email}\n"
@@ -3331,8 +3337,10 @@ def render_how_it_works_office() -> None:
 
 def render_family_document(title: str, path: str) -> None:
     render_page_header(title)
+    access_token = st.session_state.get("access_token")
+    resolved_path = resolve_mode_doc_path(path, access_token=access_token)
     try:
-        content = Path(path).read_text(encoding="utf-8")
+        content = Path(resolved_path).read_text(encoding="utf-8")
         content = re.sub(r"\A\s*#\s+.+?\n+", "", content, count=1)
     except OSError:
         st.error("Document not found.")
@@ -3379,11 +3387,24 @@ def render_family_terms() -> None:
         "The full Terms of Use below are legally binding and prevail in the event of any inconsistency.</div>",
         unsafe_allow_html=True,
     )
-    render_document_boxes("docs/public/family_terms_summary.md", strip_first_heading=True)
+    access_token = st.session_state.get("access_token")
+    render_document_boxes(
+        resolve_mode_doc_path(
+            "docs/public/family_terms_summary.md",
+            access_token=access_token,
+        ),
+        strip_first_heading=True,
+    )
     st.markdown("---")
     st.markdown('<div id="full-terms-binding"></div>', unsafe_allow_html=True)
     st.markdown("## Full Terms of Use (Binding)")
-    render_document_boxes("docs/public/family_terms_of_use.md", strip_first_heading=True)
+    render_document_boxes(
+        resolve_mode_doc_path(
+            "docs/public/family_terms_of_use.md",
+            access_token=access_token,
+        ),
+        strip_first_heading=True,
+    )
     family_back_route = (
         get_home_route(VARIANT_FAMILY)
         if st.session_state.get("auth_uid")
@@ -3393,7 +3414,10 @@ def render_family_terms() -> None:
 
 
 def render_family_contact() -> None:
-    render_page_header("Contact the care home")
+    access_token = st.session_state.get("access_token")
+    mode_value = get_operating_mode(access_token)
+    contact_party = contact_label(mode_value)
+    render_page_header(f"Contact the {contact_party}")
     st.markdown(
         """
 <style>
@@ -3412,11 +3436,17 @@ def render_family_contact() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="family-contact-box">For access, questions, or support, contact the care home directly.</div>',
+        (
+            f'<div class="family-contact-box">For access, questions, or support, '
+            f'contact the {contact_party} directly.</div>'
+        ),
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="family-contact-box">For safeguarding concerns, contact the care home directly; the platform is not monitored in real time.</div>',
+        (
+            f'<div class="family-contact-box">For safeguarding concerns, contact the '
+            f'{contact_party} directly; the platform is not monitored in real time.</div>'
+        ),
         unsafe_allow_html=True,
     )
     action_cols = st.columns(3, gap="small")
@@ -4801,6 +4831,110 @@ def normalize_operating_mode(mode_value: object) -> str:
     return OPERATING_MODE_CARE_ORGANISATION
 
 
+def get_mode_copy(operating_mode: object) -> dict[str, object]:
+    mode_value = normalize_operating_mode(operating_mode)
+    if mode_value == OPERATING_MODE_PERSONAL_USE:
+        return {
+            "mode": OPERATING_MODE_PERSONAL_USE,
+            "organisation_heading": "Personal setup",
+            "subject_label": "person",
+            "subject_plural_label": "people",
+            "contact_label": "main contact",
+            "location_label": "Home",
+            "room_label": "Room",
+            "room_visible": False,
+            "urgent_contact_copy": (
+                "For urgent or medical matters, use your direct contact routes. "
+                "Messages sent here are not monitored for emergencies."
+            ),
+        }
+    return {
+        "mode": OPERATING_MODE_CARE_ORGANISATION,
+        "organisation_heading": "Care organisation",
+        "subject_label": "resident",
+        "subject_plural_label": "residents",
+        "contact_label": "care home",
+        "location_label": "Care home",
+        "room_label": "Room",
+        "room_visible": True,
+        "urgent_contact_copy": (
+            "For urgent or medical matters, families should call the care home directly. "
+            "Messages sent here are not monitored for emergencies."
+        ),
+    }
+
+
+def subject_label(operating_mode: object, *, plural: bool = False, title: bool = False) -> str:
+    mode_copy = get_mode_copy(operating_mode)
+    label = str(
+        mode_copy.get("subject_plural_label" if plural else "subject_label") or "resident"
+    )
+    return label.title() if title else label
+
+
+def location_label(operating_mode: object, *, title: bool = False) -> str:
+    label = str(get_mode_copy(operating_mode).get("location_label") or "Care home")
+    return label.title() if title else label
+
+
+def contact_label(operating_mode: object, *, title: bool = False) -> str:
+    label = str(get_mode_copy(operating_mode).get("contact_label") or "care home")
+    return label.title() if title else label
+
+
+def organisation_heading(operating_mode: object) -> str:
+    return str(get_mode_copy(operating_mode).get("organisation_heading") or "Care organisation")
+
+
+def room_label(operating_mode: object, *, title: bool = False) -> str:
+    if not bool(get_mode_copy(operating_mode).get("room_visible")):
+        return ""
+    label = str(get_mode_copy(operating_mode).get("room_label") or "Room")
+    return label.title() if title else label
+
+
+def urgent_contact_copy(operating_mode: object) -> str:
+    return str(
+        get_mode_copy(operating_mode).get("urgent_contact_copy")
+        or "For urgent or medical matters, use direct contact routes."
+    )
+
+
+MODE_DOC_OVERRIDES: dict[str, dict[str, str]] = {
+    OPERATING_MODE_PERSONAL_USE: {
+        "docs/office/04_care_home_responsibilities.md": "docs/circle/04_circle_responsibilities.md",
+        "docs/office/05_care_home_guide.md": "docs/circle/05_circle_guide.md",
+        "docs/office/09_safeguarding_consent.md": "docs/circle/09_circle_safeguarding_consent.md",
+        "docs/office/10_registering_family_member.md": "docs/circle/10_registering_circle_contacts.md",
+        "docs/office/care_home_onboarding_script.md": "docs/circle/circle_onboarding_script.md",
+        "docs/office/care_home_handover_checklist.md": "docs/circle/circle_handover_checklist.md",
+        "docs/office/common_questions_qa.md": "docs/circle/common_questions_qa.md",
+        "docs/public/family_terms_summary.md": "docs/circle/family_terms_summary.md",
+        "docs/public/family_terms_of_use.md": "docs/circle/family_terms_of_use.md",
+    }
+}
+
+
+def resolve_mode_doc_path(
+    doc_path: str,
+    *,
+    access_token: str | None = None,
+    operating_mode: object | None = None,
+) -> str:
+    normalized = str(doc_path or "").strip()
+    if not normalized:
+        return normalized
+    mode_value = (
+        normalize_operating_mode(operating_mode)
+        if operating_mode is not None
+        else get_operating_mode(access_token)
+    )
+    target = MODE_DOC_OVERRIDES.get(mode_value, {}).get(normalized, normalized)
+    if target != normalized and not Path(target).exists():
+        return normalized
+    return target
+
+
 def get_transcript_policy_mode(access_token: str | None) -> str:
     profile = fetch_active_care_home_profile(access_token)
     return normalize_transcript_policy_mode(profile.get("transcript_policy_mode"))
@@ -5054,11 +5188,7 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
     care_home_profile = fetch_active_care_home_profile(access_token)
     care_home_name = str(care_home_profile.get("name") or "").strip()
     operating_mode = normalize_operating_mode(care_home_profile.get("operating_mode"))
-    identity_label = (
-        "Care organisation"
-        if operating_mode == OPERATING_MODE_CARE_ORGANISATION
-        else "Personal setup"
-    )
+    identity_label = organisation_heading(operating_mode)
     if care_home_name:
         safe_name = html.escape(care_home_name)
         st.markdown(
@@ -5092,11 +5222,7 @@ def render_active_care_home_name_caption() -> None:
     care_home_profile = fetch_active_care_home_profile(access_token)
     care_home_name = str(care_home_profile.get("name") or "").strip()
     operating_mode = normalize_operating_mode(care_home_profile.get("operating_mode"))
-    identity_label = (
-        "Care organisation"
-        if operating_mode == OPERATING_MODE_CARE_ORGANISATION
-        else "Personal setup"
-    )
+    identity_label = organisation_heading(operating_mode)
     if care_home_name:
         st.markdown(
             (
@@ -5150,25 +5276,28 @@ def render_active_care_home_custom_banner(care_home_profile: dict) -> bool:
     return True
 
 
-def get_resident_full_name(resident: dict) -> str:
+def get_resident_full_name(resident: dict, *, operating_mode: object | None = None) -> str:
     preferred_name = str(resident.get("preferred_name") or "").strip()
     surname = str(resident.get("surname") or "").strip()
     full_name = " ".join(part for part in (preferred_name, surname) if part).strip()
-    return full_name or "Resident"
+    fallback_label = subject_label(operating_mode or OPERATING_MODE_CARE_ORGANISATION, title=True)
+    return full_name or fallback_label
 
 
 def format_resident_identity_label(
     resident: dict,
     *,
+    operating_mode: object | None = None,
     include_room: bool = True,
     include_care_home: bool = True,
     separator: str = " | ",
 ) -> str:
-    parts = [get_resident_full_name(resident)]
-    if include_room:
+    mode_value = normalize_operating_mode(operating_mode or OPERATING_MODE_CARE_ORGANISATION)
+    parts = [get_resident_full_name(resident, operating_mode=mode_value)]
+    if include_room and room_label(mode_value):
         room = str(resident.get("room") or "").strip()
         if room:
-            parts.append(f"Room {room}")
+            parts.append(f"{room_label(mode_value, title=True)} {room}")
     if include_care_home:
         care_home_name = str(resident.get("care_home") or "").strip()
         if care_home_name:
@@ -6742,6 +6871,9 @@ def render_header_menu(menu_key: str) -> None:
             return
         if app_variant == VARIANT_OFFICE:
             st.markdown("**Care Hub - Office**")
+            access_token = st.session_state.get("access_token")
+            mode_value = get_operating_mode(access_token)
+            personal_mode = mode_value == OPERATING_MODE_PERSONAL_USE
             clicked_action = None
             if st.button("Back to Office messages", key=f"{menu_key}_inbox"):
                 clicked_action = ("route", get_home_route(app_variant))
@@ -6757,7 +6889,8 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", "/billing")
 
             st.markdown("- Daily Use -")
-            if st.button("Care Hub handbook", key=f"{menu_key}_office_doc_handbook"):
+            handbook_label = "Circle guide" if personal_mode else "Care Hub handbook"
+            if st.button(handbook_label, key=f"{menu_key}_office_doc_handbook"):
                 clicked_action = ("doc", "docs/office/05_care_home_guide.md")
             if st.button("Registering a contact", key=f"{menu_key}_office_doc_register_family"):
                 clicked_action = ("doc", "docs/office/10_registering_family_member.md")
@@ -6769,7 +6902,10 @@ def render_header_menu(menu_key: str) -> None:
             st.markdown("- Governance -")
             if st.button("View help videos", key=f"{menu_key}_office_service_overview"):
                 clicked_action = ("route", "/docs")
-            if st.button("Care home responsibilities", key=f"{menu_key}_office_doc_responsibilities"):
+            responsibilities_label = (
+                "Circle responsibilities" if personal_mode else "Care home responsibilities"
+            )
+            if st.button(responsibilities_label, key=f"{menu_key}_office_doc_responsibilities"):
                 clicked_action = ("doc", "docs/office/04_care_home_responsibilities.md")
             if st.button("Safeguarding & consent", key=f"{menu_key}_office_doc_safeguarding"):
                 clicked_action = ("doc", "docs/office/09_safeguarding_consent.md")
@@ -6789,7 +6925,11 @@ def render_header_menu(menu_key: str) -> None:
                 if action_type == "route":
                     set_route(payload)
                 elif action_type == "doc":
-                    st.session_state["docs_active"] = payload
+                    access_token = st.session_state.get("access_token")
+                    st.session_state["docs_active"] = resolve_mode_doc_path(
+                        str(payload or ""),
+                        access_token=access_token,
+                    )
                     set_route("/docs")
                 elif action_type == "sign_out":
                     sign_out_user(payload)
@@ -9879,7 +10019,11 @@ def render_family_send() -> None:
 
     access_token = st.session_state.get("access_token")
     transcript_policy_mode = get_transcript_policy_mode(access_token)
-    family_led_mode = is_family_led_mode(access_token)
+    operating_mode = get_operating_mode(access_token)
+    family_led_mode = operating_mode == OPERATING_MODE_PERSONAL_USE
+    subject_singular = subject_label(operating_mode)
+    subject_singular_title = subject_label(operating_mode, title=True)
+    subject_plural = subject_label(operating_mode, plural=True)
     main_contact_name = get_main_contact_name(access_token)
     care_home_name = fetch_active_care_home_name(access_token)
     family_user_record = get_family_user_for_session(access_token)
@@ -9890,23 +10034,23 @@ def render_family_send() -> None:
     )
 
     if not residents:
-        st.info("No residents are currently linked to your Family Member account.")
+        st.info(f"No {subject_plural} are currently linked to your Family Member account.")
         return
 
     resident_access_names = [
         f"{resident['preferred_name']} {resident['surname']}" for resident in residents
     ]
     if len(resident_access_names) > 1:
-        st.caption("Residents you can access: " + ", ".join(resident_access_names))
+        st.caption(f"{subject_plural.title()} you can access: " + ", ".join(resident_access_names))
         resident_option_ids = [resident["id"] for resident in residents]
         resident_label_by_id = {
             resident["id"]: f"{resident['preferred_name']} {resident['surname']}"
             for resident in residents
         }
         selected_resident_id = st.selectbox(
-            "Select resident",
+            f"Select {subject_singular}",
             resident_option_ids,
-            format_func=lambda resident_id: resident_label_by_id.get(resident_id, "Resident"),
+            format_func=lambda resident_id: resident_label_by_id.get(resident_id, subject_singular_title),
             key="family_selected_resident_id",
         )
         residents = [
@@ -10019,25 +10163,29 @@ def render_family_send() -> None:
             },
         )
         full_name = f"{resident['preferred_name']} {resident['surname']}"
-        room_label = f"Room {resident['room']}" if resident.get("room") else ""
+        room_caption = (
+            f"{room_label(operating_mode, title=True)} {resident['room']}"
+            if resident.get("room") and room_label(operating_mode)
+            else ""
+        )
         family_display_name = str(st.session_state.get("family_display_name") or "Family member").strip()
 
         with st.container(border=True):
             render_family_flow_title(
-                f"Resident ({full_name})",
+                f"{subject_singular_title} ({full_name})",
                 "resident",
             )
             st.markdown(f"**{full_name}**")
             if care_home_name:
                 st.markdown(
-                    f"{'Care organisation' if not family_led_mode else 'Personal setup'}: {care_home_name}"
+                    f"{organisation_heading(operating_mode)}: {care_home_name}"
                 )
-            if room_label:
-                st.markdown(room_label)
+            if room_caption:
+                st.markdown(room_caption)
 
         with st.container(border=True):
             render_family_flow_title(
-                f"Latest message from resident ({full_name}) to family",
+                f"Latest message from {subject_singular} ({full_name}) to family",
                 "inbound",
             )
             latest = fetch_latest_message(
@@ -10674,6 +10822,9 @@ def render_docs() -> None:
         unsafe_allow_html=True,
     )
     require_care_access()
+    access_token = st.session_state.get("access_token")
+    mode_value = get_operating_mode(access_token)
+    personal_mode = mode_value == OPERATING_MODE_PERSONAL_USE
     render_page_header("Documents")
     st.markdown("### Help videos")
     st.caption("All instructional videos are available in one place before login.")
@@ -10687,14 +10838,22 @@ def render_docs() -> None:
 
     docs = [
         {
-            "title": "Care home responsibilities",
+            "title": "Circle responsibilities" if personal_mode else "Care home responsibilities",
             "path": "docs/office/04_care_home_responsibilities.md",
-            "summary": "Care home responsibilities and boundaries.",
+            "summary": (
+                "Circle responsibilities and boundaries."
+                if personal_mode
+                else "Care home responsibilities and boundaries."
+            ),
         },
         {
-            "title": "Care home guide",
+            "title": "Circle guide" if personal_mode else "Care home guide",
             "path": "docs/office/05_care_home_guide.md",
-            "summary": "Day-to-day Care Hub use (Office and Mobile).",
+            "summary": (
+                "Day-to-day Circle use (Office and Mobile)."
+                if personal_mode
+                else "Day-to-day Care Hub use (Office and Mobile)."
+            ),
         },
         {
             "title": "Registering a contact",
@@ -10707,15 +10866,33 @@ def render_docs() -> None:
             "summary": "Consent, authority, and safeguarding guidance.",
         },
         {
-            "title": "Care home onboarding script",
+            "title": "Circle onboarding script" if personal_mode else "Care home onboarding script",
             "path": "docs/office/care_home_onboarding_script.md",
-            "summary": "Onboarding script for staff and families.",
+            "summary": (
+                "Onboarding script for your Circle."
+                if personal_mode
+                else "Onboarding script for staff and families."
+            ),
         },
         {
             "title": "Handover checklist",
             "path": "docs/office/care_home_handover_checklist.md",
-            "summary": "Handover checklist for the care home.",
+            "summary": (
+                "Handover checklist for your Circle."
+                if personal_mode
+                else "Handover checklist for the care home."
+            ),
         },
+    ]
+    docs = [
+        {
+            **doc,
+            "path": resolve_mode_doc_path(
+                str(doc.get("path") or ""),
+                operating_mode=mode_value,
+            ),
+        }
+        for doc in docs
     ]
 
     if "docs_active" not in st.session_state:
@@ -10723,6 +10900,11 @@ def render_docs() -> None:
 
     active_path = st.session_state.get("docs_active")
     if active_path:
+        active_path = resolve_mode_doc_path(
+            str(active_path or ""),
+            operating_mode=mode_value,
+        )
+        st.session_state["docs_active"] = active_path
         active_doc = next((doc for doc in docs if doc["path"] == active_path), None)
         st.markdown(f"## {(active_doc['title'] if active_doc else 'Document')}")
         if active_path.endswith("common_questions_qa.md"):
@@ -10924,72 +11106,80 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HELP_VIDEOS_R
     use_boxes = True
     use_qa_search = doc_path.endswith("10_faq.md")
     app_variant = resolve_runtime_variant(route_hint=get_route())
+    access_token = st.session_state.get("access_token")
+    mode_value = get_operating_mode(access_token) if access_token else OPERATING_MODE_CARE_ORGANISATION
+    resolved_doc_path = (
+        doc_path
+        if app_variant == VARIANT_PUBLIC
+        else resolve_mode_doc_path(doc_path, operating_mode=mode_value)
+    )
+    page_title = get_public_document_title(doc_path)
     if app_variant == VARIANT_PUBLIC:
         st.markdown(f"[Back to help videos](?route={back_route})")
-        render_page_header(get_public_document_title(doc_path), show_menu=False, show_variant_subheading=False)
+        render_page_header(page_title, show_menu=False, show_variant_subheading=False)
         if use_qa_search:
-            render_qa_document(doc_path, search_key="public_faq_search")
+            render_qa_document(resolved_doc_path, search_key="public_faq_search")
         elif use_boxes:
-            render_document_boxes(doc_path, strip_first_heading=True)
+            render_document_boxes(resolved_doc_path, strip_first_heading=True)
         else:
-            render_document_content(doc_path)
+            render_document_content(resolved_doc_path)
         return
     if app_variant == VARIANT_FAMILY:
-        render_page_header(get_public_document_title(doc_path), show_variant_subheading=False)
+        render_page_header(page_title, show_variant_subheading=False)
         render_route_link(
             "Back to Family Hub login",
             get_login_route(VARIANT_FAMILY),
             key="public_doc_back_family_login_link",
         )
         if use_qa_search:
-            render_qa_document(doc_path, search_key="family_faq_search")
+            render_qa_document(resolved_doc_path, search_key="family_faq_search")
         elif use_boxes:
-            render_document_boxes(doc_path, strip_first_heading=True)
+            render_document_boxes(resolved_doc_path, strip_first_heading=True)
         else:
-            render_document_content(doc_path, include_logo=False, strip_first_heading=True)
+            render_document_content(resolved_doc_path, include_logo=False, strip_first_heading=True)
         return
     if app_variant == VARIANT_OFFICE:
         is_authed = bool(st.session_state.get("auth_uid"))
         office_home_route = get_office_home_route(is_authed)
-        render_page_header(get_public_document_title(doc_path), show_variant_subheading=False)
+        render_page_header(page_title, show_variant_subheading=False)
         render_route_link(
             "Back to dashboard",
             office_home_route,
             key="public_doc_back_office_dashboard_link",
         )
         if use_qa_search:
-            render_qa_document(doc_path, search_key="office_faq_search")
+            render_qa_document(resolved_doc_path, search_key="office_faq_search")
         elif use_boxes:
-            render_document_boxes(doc_path, strip_first_heading=True)
+            render_document_boxes(resolved_doc_path, strip_first_heading=True)
         else:
-            render_document_content(doc_path, include_logo=False)
+            render_document_content(resolved_doc_path, include_logo=False)
         return
     if app_variant == VARIANT_MOBILE:
-        render_page_header(get_public_document_title(doc_path))
+        render_page_header(page_title)
         render_route_link(
             "Back",
             get_home_route(app_variant),
             key="public_doc_back_mobile_link",
         )
         if use_qa_search:
-            render_qa_document(doc_path, search_key="mobile_faq_search")
+            render_qa_document(resolved_doc_path, search_key="mobile_faq_search")
         elif use_boxes:
-            render_document_boxes(doc_path, strip_first_heading=True)
+            render_document_boxes(resolved_doc_path, strip_first_heading=True)
         else:
-            render_document_content(doc_path)
+            render_document_content(resolved_doc_path)
         return
     render_route_link(
         "Back to help videos",
         back_route,
         key="public_doc_back_service_overview_top",
     )
-    render_page_header(get_public_document_title(doc_path), show_menu=False, show_variant_subheading=False)
+    render_page_header(page_title, show_menu=False, show_variant_subheading=False)
     if use_qa_search:
-        render_qa_document(doc_path, search_key="fallback_faq_search")
+        render_qa_document(resolved_doc_path, search_key="fallback_faq_search")
     elif use_boxes:
-        render_document_boxes(doc_path, strip_first_heading=True)
+        render_document_boxes(resolved_doc_path, strip_first_heading=True)
     else:
-        render_document_content(doc_path)
+        render_document_content(resolved_doc_path)
     render_route_link(
         "Back to help videos",
         back_route,
@@ -12177,8 +12367,13 @@ def render_care_hub() -> None:
 
     access_token = st.session_state.get("access_token")
     transcript_policy_mode = get_transcript_policy_mode(access_token)
-    family_led_mode = is_family_led_mode(access_token)
+    operating_mode = get_operating_mode(access_token)
+    family_led_mode = operating_mode == OPERATING_MODE_PERSONAL_USE
     main_contact_name = get_main_contact_name(access_token)
+    subject_singular = subject_label(operating_mode)
+    subject_singular_title = subject_label(operating_mode, title=True)
+    subject_plural = subject_label(operating_mode, plural=True)
+    subject_plural_title = subject_label(operating_mode, plural=True, title=True)
     render_care_home_identity_banner(access_token)
     if runtime_variant == VARIANT_OFFICE and family_led_mode and main_contact_name:
         st.caption(f"Main contact: {main_contact_name}")
@@ -12194,12 +12389,12 @@ def render_care_hub() -> None:
     resident_search_container = st.container(border=True)
     with resident_search_container:
         if runtime_variant == VARIANT_MOBILE:
-            render_care_flow_title("Search residents", "resident")
+            render_care_flow_title(f"Search {subject_plural}", "resident")
         search_value = st.text_input(
-            "Search residents",
+            f"Search {subject_plural}",
             key="care_resident_search",
             label_visibility="collapsed",
-            placeholder="Search residents",
+            placeholder=f"Search {subject_plural}",
         )
     if search_value:
         search_lower = search_value.strip().lower()
@@ -12226,7 +12421,7 @@ def render_care_hub() -> None:
 
     if not residents:
         if search_value:
-            st.info("No residents match that search.")
+            st.info(f"No {subject_plural} match that search.")
         return
 
     if is_care_queue_variant_screen:
@@ -12235,7 +12430,8 @@ def render_care_hub() -> None:
         for resident in residents:
             resident_label_by_id[resident["id"]] = format_resident_identity_label(
                 resident,
-                include_room=True,
+                operating_mode=operating_mode,
+                include_room=bool(room_label(operating_mode)),
                 include_care_home=include_care_home_in_resident_labels,
                 separator=" | ",
             )
@@ -12243,17 +12439,23 @@ def render_care_hub() -> None:
         with resident_search_container:
             if len(resident_option_ids) == 1:
                 selected_resident_id = resident_option_ids[0]
-                selected_resident_label = resident_label_by_id.get(selected_resident_id, "Resident")
+                selected_resident_label = resident_label_by_id.get(
+                    selected_resident_id, subject_singular_title
+                )
             else:
                 selected_resident_id = st.selectbox(
-                    "Select resident",
+                    f"Select {subject_singular}",
                     resident_option_ids,
-                    format_func=lambda resident_id: resident_label_by_id.get(resident_id, "Resident"),
+                    format_func=lambda resident_id: resident_label_by_id.get(
+                        resident_id, subject_singular_title
+                    ),
                     key="care_selected_resident_id",
                 )
-                selected_resident_label = resident_label_by_id.get(selected_resident_id, "Resident")
+                selected_resident_label = resident_label_by_id.get(
+                    selected_resident_id, subject_singular_title
+                )
             if runtime_variant == VARIANT_MOBILE:
-                st.caption("Resident selected: " + selected_resident_label)
+                st.caption(f"{subject_singular_title} selected: " + selected_resident_label)
         residents = [
             resident for resident in residents if resident["id"] == selected_resident_id
         ]
@@ -12337,17 +12539,17 @@ def render_care_hub() -> None:
                 "office_update_category": OFFICE_UPDATE_CATEGORIES[0],
             },
         )
-        full_name = get_resident_full_name(resident)
+        full_name = get_resident_full_name(resident, operating_mode=operating_mode)
         if runtime_variant != VARIANT_MOBILE:
             with st.container(border=True):
-                render_care_flow_title(f"Resident ({full_name})", "resident")
+                render_care_flow_title(f"{subject_singular_title} ({full_name})", "resident")
                 st.markdown(f"**{full_name}**")
                 care_home_name = str(resident.get("care_home") or "").strip()
                 if care_home_name:
-                    st.markdown(f"Care home: {care_home_name}")
-                room_label = str(resident.get("room") or "").strip()
-                if room_label:
-                    st.markdown(f"Room {room_label}")
+                    st.markdown(f"{location_label(operating_mode, title=True)}: {care_home_name}")
+                room_value = str(resident.get("room") or "").strip()
+                if room_value and room_label(operating_mode):
+                    st.markdown(f"{room_label(operating_mode, title=True)} {room_value}")
 
         contacts = contacts_by_resident.get(resident_id)
         if contacts is None:
@@ -12356,7 +12558,7 @@ def render_care_hub() -> None:
         if not contacts:
             if runtime_variant == VARIANT_OFFICE:
                 st.warning(
-                    "No Family Members are linked to this resident yet. "
+                    f"No Family Members are linked to this {subject_singular} yet. "
                     "Register a contact in Care Hub - Office before sending messages."
                 )
                 if st.button(
@@ -12368,7 +12570,7 @@ def render_care_hub() -> None:
                     st.rerun()
             else:
                 st.warning(
-                    "No Family Members are linked to this resident yet. "
+                    f"No Family Members are linked to this {subject_singular} yet. "
                     "Ask Office staff to register a contact."
                 )
             st.markdown("</div>", unsafe_allow_html=True)
@@ -13358,19 +13560,32 @@ def render_care_hub() -> None:
                     clear_transcript_preview_state(state)
     
                 sent_now = False
-                room_display = f"Room {resident.get('room')}" if resident.get("room") else "Room not set"
+                room_display = (
+                    f"{room_label(operating_mode, title=True)} {resident.get('room')}"
+                    if resident.get("room") and room_label(operating_mode)
+                    else ""
+                )
                 if is_office_variant:
+                    identity_suffix = (
+                        f" - {room_display}" if room_display else ""
+                    )
                     confirmation_line = (
                         "Sending on behalf of:<br/>"
-                        f"{full_name} - {room_display} -> all Family Members"
+                        f"{full_name}{identity_suffix} -> all Family Members"
                     )
                 else:
                     care_home_display = (
-                        str(resident.get("care_home") or "").strip() or "Care home not set"
+                        str(resident.get("care_home") or "").strip()
+                        or f"{location_label(operating_mode, title=True)} not set"
                     )
+                    identity_parts = [full_name]
+                    if room_display:
+                        identity_parts.append(room_display)
+                    if care_home_display:
+                        identity_parts.append(care_home_display)
                     confirmation_line = (
                         "Sending on behalf of:<br/>"
-                        f"{full_name} - {room_display} - {care_home_display} -> all Family Members"
+                        f"{' - '.join(identity_parts)} -> all Family Members"
                     )
                 st.markdown(
                     f'<div class="vm-muted-line">{confirmation_line}</div>',
@@ -13829,20 +14044,14 @@ def render_care_hub() -> None:
             if runtime_variant == VARIANT_OFFICE:
                 with st.container(border=True):
                     render_care_flow_title(
-                        f"Office practical message to resident ({full_name})",
+                        f"Office practical message to {subject_singular} ({full_name})",
                         "practical",
                     )
                     st.markdown("**Office practical message (structured family reply)**")
                     st.caption(
                         "Use this for low-risk practical communication only (for example visits, events, reminders, attendance, or item requests)."
                     )
-                    st.caption(
-                        (
-                            "For urgent or medical matters, use direct contact routes. Messages sent here are not monitored for emergencies."
-                            if family_led_mode
-                            else "For urgent or medical matters, families should call the care home directly. Messages sent here are not monitored for emergencies."
-                        )
-                    )
+                    st.caption(urgent_contact_copy(operating_mode))
                     practical_title = st.text_input(
                         "Practical message title",
                         key=f"office_practical_title_{resident_id}",
@@ -14382,13 +14591,20 @@ def main() -> None:
         render_care_hub_security()
     elif route == "/care-hub/office/qa":
         render_page_header("Office Q&A", show_variant_subheading=False)
-        render_care_home_identity_banner(st.session_state.get("access_token"))
+        access_token = st.session_state.get("access_token")
+        render_care_home_identity_banner(access_token)
         render_route_link(
             "Back to dashboard",
             get_office_home_route(bool(st.session_state.get("auth_uid"))),
             key="office_qa_back_dashboard_link",
         )
-        render_qa_document("docs/office/common_questions_qa.md", search_key="office_qa_search")
+        render_qa_document(
+            resolve_mode_doc_path(
+                "docs/office/common_questions_qa.md",
+                access_token=access_token,
+            ),
+            search_key="office_qa_search",
+        )
     elif route == "/care-hub/mobile/qa":
         render_page_header("Mobile Q&A", show_variant_subheading=False)
         render_care_home_identity_banner(st.session_state.get("access_token"))
