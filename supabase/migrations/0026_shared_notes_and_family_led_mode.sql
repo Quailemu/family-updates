@@ -57,26 +57,61 @@ using (
 );
 
 drop policy if exists "shared_notes_select_family_linked" on public.shared_notes;
-create policy "shared_notes_select_family_linked"
-on public.shared_notes
-for select
-using (
-  exists (
-    select 1
-    from public.family_user fu
-    join public.resident_access ra
-      on ra.family_user_id = fu.id
-    join public.residents r
-      on r.id = ra.resident_id
-    where fu.auth_user_id = auth.uid()
-      and fu.active = true
-      and ra.active = true
-      and r.active = true
-      and ra.resident_id = shared_notes.resident_id
-      and fu.care_home_id = shared_notes.care_home_id
-      and r.care_home_id = shared_notes.care_home_id
-  )
-);
+do $$
+declare
+  family_table text;
+  access_table text;
+  access_family_col text;
+begin
+  family_table := case
+    when exists (
+      select 1
+      from information_schema.tables
+      where table_schema = 'public' and table_name = 'family_user'
+    ) then 'family_user'
+    else 'family_contacts'
+  end;
+  access_table := case
+    when exists (
+      select 1
+      from information_schema.tables
+      where table_schema = 'public' and table_name = 'resident_access'
+    ) then 'resident_access'
+    else 'family_contact_access'
+  end;
+  access_family_col := case
+    when access_table = 'resident_access' then 'family_user_id'
+    else 'family_contact_id'
+  end;
+
+  execute format(
+    $sql$
+    create policy "shared_notes_select_family_linked"
+    on public.shared_notes
+    for select
+    using (
+      exists (
+        select 1
+        from public.%I fu
+        join public.%I ra
+          on ra.%I = fu.id
+        join public.residents r
+          on r.id = ra.resident_id
+        where fu.auth_user_id = auth.uid()
+          and fu.active = true
+          and ra.active = true
+          and r.active = true
+          and ra.resident_id = shared_notes.resident_id
+          and fu.care_home_id = shared_notes.care_home_id
+          and r.care_home_id = shared_notes.care_home_id
+      )
+    )
+    $sql$,
+    family_table,
+    access_table,
+    access_family_col
+  );
+end $$;
 
 drop policy if exists "shared_notes_insert_care_home" on public.shared_notes;
 create policy "shared_notes_insert_care_home"
@@ -94,59 +129,129 @@ with check (
 );
 
 drop policy if exists "shared_notes_insert_family_linked" on public.shared_notes;
-create policy "shared_notes_insert_family_linked"
-on public.shared_notes
-for insert
-with check (
-  author_user_id = auth.uid()
-  and exists (
-    select 1
-    from public.family_user fu
-    join public.resident_access ra
-      on ra.family_user_id = fu.id
-    join public.residents r
-      on r.id = ra.resident_id
-    where fu.auth_user_id = auth.uid()
-      and fu.active = true
-      and ra.active = true
-      and r.active = true
-      and ra.resident_id = shared_notes.resident_id
-      and fu.care_home_id = shared_notes.care_home_id
-      and r.care_home_id = shared_notes.care_home_id
-  )
-);
+do $$
+declare
+  family_table text;
+  access_table text;
+  access_family_col text;
+begin
+  family_table := case
+    when exists (
+      select 1
+      from information_schema.tables
+      where table_schema = 'public' and table_name = 'family_user'
+    ) then 'family_user'
+    else 'family_contacts'
+  end;
+  access_table := case
+    when exists (
+      select 1
+      from information_schema.tables
+      where table_schema = 'public' and table_name = 'resident_access'
+    ) then 'resident_access'
+    else 'family_contact_access'
+  end;
+  access_family_col := case
+    when access_table = 'resident_access' then 'family_user_id'
+    else 'family_contact_id'
+  end;
+
+  execute format(
+    $sql$
+    create policy "shared_notes_insert_family_linked"
+    on public.shared_notes
+    for insert
+    with check (
+      author_user_id = auth.uid()
+      and exists (
+        select 1
+        from public.%I fu
+        join public.%I ra
+          on ra.%I = fu.id
+        join public.residents r
+          on r.id = ra.resident_id
+        where fu.auth_user_id = auth.uid()
+          and fu.active = true
+          and ra.active = true
+          and r.active = true
+          and ra.resident_id = shared_notes.resident_id
+          and fu.care_home_id = shared_notes.care_home_id
+          and r.care_home_id = shared_notes.care_home_id
+      )
+    )
+    $sql$,
+    family_table,
+    access_table,
+    access_family_col
+  );
+end $$;
 
 drop policy if exists "shared_notes_update_own" on public.shared_notes;
-create policy "shared_notes_update_own"
-on public.shared_notes
-for update
-using (
-  author_user_id = auth.uid()
-  and (
-    exists (
+do $$
+declare
+  family_table text;
+  access_table text;
+  access_family_col text;
+begin
+  family_table := case
+    when exists (
       select 1
-      from public.care_home_users chu
-      where chu.care_home_id = shared_notes.care_home_id
-        and chu.auth_user_id = auth.uid()
-        and chu.active = true
-    )
-    or exists (
+      from information_schema.tables
+      where table_schema = 'public' and table_name = 'family_user'
+    ) then 'family_user'
+    else 'family_contacts'
+  end;
+  access_table := case
+    when exists (
       select 1
-      from public.family_user fu
-      join public.resident_access ra
-        on ra.family_user_id = fu.id
-      join public.residents r
-        on r.id = ra.resident_id
-      where fu.auth_user_id = auth.uid()
-        and fu.active = true
-        and ra.active = true
-        and r.active = true
-        and ra.resident_id = shared_notes.resident_id
-        and fu.care_home_id = shared_notes.care_home_id
-        and r.care_home_id = shared_notes.care_home_id
+      from information_schema.tables
+      where table_schema = 'public' and table_name = 'resident_access'
+    ) then 'resident_access'
+    else 'family_contact_access'
+  end;
+  access_family_col := case
+    when access_table = 'resident_access' then 'family_user_id'
+    else 'family_contact_id'
+  end;
+
+  execute format(
+    $sql$
+    create policy "shared_notes_update_own"
+    on public.shared_notes
+    for update
+    using (
+      author_user_id = auth.uid()
+      and (
+        exists (
+          select 1
+          from public.care_home_users chu
+          where chu.care_home_id = shared_notes.care_home_id
+            and chu.auth_user_id = auth.uid()
+            and chu.active = true
+        )
+        or exists (
+          select 1
+          from public.%I fu
+          join public.%I ra
+            on ra.%I = fu.id
+          join public.residents r
+            on r.id = ra.resident_id
+          where fu.auth_user_id = auth.uid()
+            and fu.active = true
+            and ra.active = true
+            and r.active = true
+            and ra.resident_id = shared_notes.resident_id
+            and fu.care_home_id = shared_notes.care_home_id
+            and r.care_home_id = shared_notes.care_home_id
+        )
+      )
     )
-  )
-)
-with check (
-  author_user_id = auth.uid()
-);
+    with check (
+      author_user_id = auth.uid()
+    )
+    $sql$,
+    family_table,
+    access_table,
+    access_family_col
+  );
+end $$;
