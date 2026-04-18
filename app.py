@@ -177,6 +177,12 @@ OFFICE_PRACTICAL_CHECKBOX_OPTIONS = (
 )
 OFFICE_PRACTICAL_CONTEXT_GENERAL = "general"
 OFFICE_PRACTICAL_CONTEXT_VISIT = "visit"
+OPERATING_MODE_CARE_HOME = "care_home"
+OPERATING_MODE_FAMILY_LED = "family_led"
+DEFAULT_OPERATING_MODE = str(
+    os.getenv("DEFAULT_OPERATING_MODE", OPERATING_MODE_CARE_HOME) or OPERATING_MODE_CARE_HOME
+).strip().lower()
+DEFAULT_MAIN_CONTACT_NAME = str(os.getenv("DEFAULT_MAIN_CONTACT_NAME", "") or "").strip()
 SEND_ACTION_GUARD_SECONDS = max(
     int(os.getenv("SEND_ACTION_GUARD_SECONDS", "5")),
     3,
@@ -4778,6 +4784,16 @@ def normalize_transcript_policy_mode(policy_value: object) -> str:
     return "assist"
 
 
+def normalize_operating_mode(mode_value: object) -> str:
+    candidate = str(mode_value or "").strip().lower()
+    if candidate in {OPERATING_MODE_CARE_HOME, OPERATING_MODE_FAMILY_LED}:
+        return candidate
+    fallback = str(DEFAULT_OPERATING_MODE or OPERATING_MODE_CARE_HOME).strip().lower()
+    if fallback in {OPERATING_MODE_CARE_HOME, OPERATING_MODE_FAMILY_LED}:
+        return fallback
+    return OPERATING_MODE_CARE_HOME
+
+
 def get_transcript_policy_mode(access_token: str | None) -> str:
     profile = fetch_active_care_home_profile(access_token)
     return normalize_transcript_policy_mode(profile.get("transcript_policy_mode"))
@@ -4787,6 +4803,23 @@ def get_care_hub_idle_timeout_seconds(access_token: str | None) -> int:
     profile = fetch_active_care_home_profile(access_token)
     timeout_value = profile.get("care_hub_idle_timeout_seconds")
     return normalize_care_hub_idle_timeout_seconds(timeout_value)
+
+
+def get_operating_mode(access_token: str | None) -> str:
+    profile = fetch_active_care_home_profile(access_token)
+    return normalize_operating_mode(profile.get("operating_mode"))
+
+
+def get_main_contact_name(access_token: str | None) -> str:
+    profile = fetch_active_care_home_profile(access_token)
+    configured = str(profile.get("main_contact_name") or "").strip()
+    if configured:
+        return configured
+    return str(DEFAULT_MAIN_CONTACT_NAME or "").strip()
+
+
+def is_family_led_mode(access_token: str | None) -> bool:
+    return get_operating_mode(access_token) == OPERATING_MODE_FAMILY_LED
 
 
 def _is_missing_column_error(exc: Exception, column_name: str) -> bool:
@@ -4817,7 +4850,8 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
         return {}
     select_fields = (
         "name, branding_banner_title, branding_banner_text, "
-        "branding_banner_artwork_url, care_hub_idle_timeout_seconds, transcript_policy_mode"
+        "branding_banner_artwork_url, care_hub_idle_timeout_seconds, transcript_policy_mode, "
+        "operating_mode, main_contact_name"
     )
     fallback_select_fields = (
         "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url"
@@ -4836,6 +4870,8 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
             if not (
                 _is_missing_column_error(exc, "care_hub_idle_timeout_seconds")
                 or _is_missing_column_error(exc, "transcript_policy_mode")
+                or _is_missing_column_error(exc, "operating_mode")
+                or _is_missing_column_error(exc, "main_contact_name")
             ):
                 raise
             resp = (
@@ -4862,6 +4898,8 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
                 if not (
                     _is_missing_column_error(exc, "care_hub_idle_timeout_seconds")
                     or _is_missing_column_error(exc, "transcript_policy_mode")
+                    or _is_missing_column_error(exc, "operating_mode")
+                    or _is_missing_column_error(exc, "main_contact_name")
                 ):
                     raise
                 fallback_resp = (
@@ -4885,6 +4923,8 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
             "transcript_policy_mode": normalize_transcript_policy_mode(
                 row.get("transcript_policy_mode")
             ),
+            "operating_mode": normalize_operating_mode(row.get("operating_mode")),
+            "main_contact_name": str(row.get("main_contact_name") or "").strip(),
         }
         if profile["name"]:
             st.session_state[cache_key] = profile
@@ -5457,6 +5497,270 @@ def get_family_user_for_session(access_token: str | None) -> dict | None:
         return resp.data[0] if resp.data else None
     except Exception:
         return None
+
+
+def get_notes_author_name(access_token: str | None) -> str:
+    if st.session_state.get("active_role") == "family":
+        family_user = get_family_user_for_session(access_token)
+        family_name = str((family_user or {}).get("display_name") or "").strip()
+        if family_name:
+            return family_name
+    auth_email = str(st.session_state.get("auth_email") or "").strip()
+    if auth_email:
+        return auth_email
+    role = str(st.session_state.get("active_role") or "").strip().lower()
+    if role == "care_hub":
+        return "Care Hub"
+    if role == "family":
+        return "Family member"
+    return "User"
+
+
+def fetch_notes_timeline(
+    resident_id: str,
+    access_token: str | None,
+    *,
+    limit: int = 80,
+) -> list[dict]:
+    if not resident_id:
+        return []
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return []
+    capped_limit = max(1, min(int(limit or 80), 200))
+    try:
+        resp = (
+            supabase.table("shared_notes")
+            .select(
+                "id, care_home_id, resident_id, author_user_id, author_name, note_body, "
+                "created_at, updated_at, edited_at"
+            )
+            .eq("resident_id", resident_id)
+            .order("created_at", desc=True)
+            .limit(capped_limit)
+            .execute()
+        )
+        return resp.data or []
+    except Exception:
+        return []
+
+
+def create_shared_note(
+    resident_id: str,
+    care_home_id: str,
+    note_body: str,
+    access_token: str | None,
+) -> tuple[bool, str]:
+    note_text = str(note_body or "").strip()
+    if not resident_id or not care_home_id:
+        return False, "Resident context is missing."
+    if not note_text:
+        return False, "Please write a note first."
+    if len(note_text) > 4000:
+        return False, "Notes must be 4000 characters or fewer."
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, error
+    author_user_id = str(st.session_state.get("auth_uid") or "").strip()
+    if not author_user_id:
+        return False, "Session missing user identity. Please sign in again."
+    payload = {
+        "care_home_id": care_home_id,
+        "resident_id": resident_id,
+        "author_user_id": author_user_id,
+        "author_name": get_notes_author_name(access_token),
+        "note_body": note_text,
+    }
+    try:
+        supabase.table("shared_notes").insert(payload).execute()
+        return True, "Note added."
+    except Exception as exc:
+        return False, str(exc)
+
+
+def update_shared_note(
+    note_id: str,
+    note_body: str,
+    access_token: str | None,
+) -> tuple[bool, str]:
+    note_key = str(note_id or "").strip()
+    note_text = str(note_body or "").strip()
+    if not note_key:
+        return False, "Note id is missing."
+    if not note_text:
+        return False, "Please write a note first."
+    if len(note_text) > 4000:
+        return False, "Notes must be 4000 characters or fewer."
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, error
+    actor_uid = str(st.session_state.get("auth_uid") or "").strip()
+    if not actor_uid:
+        return False, "Session missing user identity. Please sign in again."
+    try:
+        (
+            supabase.table("shared_notes")
+            .update(
+                {
+                    "note_body": note_text,
+                    "edited_at": __import__("datetime").datetime.utcnow().isoformat(),
+                    "updated_at": __import__("datetime").datetime.utcnow().isoformat(),
+                    "author_name": get_notes_author_name(access_token),
+                }
+            )
+            .eq("id", note_key)
+            .eq("author_user_id", actor_uid)
+            .execute()
+        )
+        return True, "Note updated."
+    except Exception as exc:
+        return False, str(exc)
+
+
+def format_note_datetime(value: object) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    try:
+        dt_mod = __import__("datetime")
+        parsed = dt_mod.datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=dt_mod.timezone.utc)
+        local_dt = parsed.astimezone()
+        return local_dt.strftime("%d %b %Y, %H:%M")
+    except Exception:
+        return raw
+
+
+def build_notes_export_text(
+    resident_display_name: str,
+    notes_rows: list[dict],
+) -> str:
+    lines = [
+        "VoicemailCare Notes",
+        f"Resident: {resident_display_name}",
+        "",
+        "Convenience export only. This is not an official record.",
+        "",
+    ]
+    if not notes_rows:
+        lines.append("No notes yet.")
+        return "\n".join(lines)
+    for row in notes_rows:
+        author = str(row.get("author_name") or "Unknown").strip() or "Unknown"
+        created_label = format_note_datetime(row.get("created_at")) or "Unknown time"
+        edited_label = format_note_datetime(row.get("edited_at"))
+        header = f"- {created_label} | {author}"
+        if edited_label:
+            header = f"{header} (edited {edited_label})"
+        lines.append(header)
+        lines.append(str(row.get("note_body") or "").strip())
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_notes_timeline_section(
+    *,
+    resident_id: str,
+    resident_display_name: str,
+    care_home_id: str,
+    access_token: str | None,
+    allow_write: bool,
+    section_key: str,
+    show_main_contact_caption: bool = False,
+    main_contact_name: str = "",
+) -> None:
+    st.markdown("### Notes")
+    st.caption("Optional shared notes. Add a note only if helpful.")
+    if show_main_contact_caption and main_contact_name:
+        st.caption(f"Main contact: {main_contact_name}")
+    notes_rows = fetch_notes_timeline(resident_id, access_token)
+    export_text = build_notes_export_text(resident_display_name, notes_rows)
+    export_state_key = f"{section_key}_notes_export_payload"
+    st.session_state[export_state_key] = {
+        "resident_id": resident_id,
+        "resident_display_name": resident_display_name,
+        "text": export_text,
+    }
+    if st.button("Open printable notes view", key=f"{section_key}_notes_export_open"):
+        st.session_state["notes_export_payload"] = st.session_state.get(export_state_key)
+        st.session_state["notes_export_back_route"] = normalize_route(get_route()) or "/"
+        set_route("/notes-export")
+        st.stop()
+    if allow_write:
+        input_key = f"{section_key}_notes_input"
+        note_text = st.text_area(
+            "Write a note if helpful...",
+            key=input_key,
+            placeholder="Add a note...",
+            label_visibility="collapsed",
+            height=86,
+        )
+        if st.button("Add note", key=f"{section_key}_notes_add", use_container_width=False):
+            ok, message = create_shared_note(resident_id, care_home_id, note_text, access_token)
+            if ok:
+                st.session_state[input_key] = ""
+                st.success(message)
+                st.rerun()
+            else:
+                st.error(message)
+    actor_uid = str(st.session_state.get("auth_uid") or "").strip()
+    if not notes_rows:
+        st.caption("No notes yet.")
+        return
+    for row in notes_rows:
+        note_id = str(row.get("id") or "").strip()
+        if not note_id:
+            continue
+        author_name = str(row.get("author_name") or "Unknown").strip() or "Unknown"
+        created_label = format_note_datetime(row.get("created_at")) or "Unknown time"
+        edited_label = format_note_datetime(row.get("edited_at"))
+        note_body = str(row.get("note_body") or "").strip()
+        is_own = actor_uid and actor_uid == str(row.get("author_user_id") or "").strip()
+        st.markdown(f"**{author_name}** · {created_label}")
+        if edited_label:
+            st.caption(f"Edited: {edited_label}")
+        editing_key = f"{section_key}_note_editing_{note_id}"
+        if is_own and st.session_state.get(editing_key):
+            edit_text_key = f"{section_key}_note_edit_text_{note_id}"
+            if edit_text_key not in st.session_state:
+                st.session_state[edit_text_key] = note_body
+            st.text_area(
+                "Edit note",
+                key=edit_text_key,
+                label_visibility="collapsed",
+                height=110,
+            )
+            action_cols = st.columns(2, gap="small")
+            with action_cols[0]:
+                if st.button("Save note", key=f"{section_key}_note_save_{note_id}", use_container_width=True):
+                    ok, message = update_shared_note(
+                        note_id,
+                        st.session_state.get(edit_text_key, ""),
+                        access_token,
+                    )
+                    if ok:
+                        st.session_state[editing_key] = False
+                        st.success(message)
+                        st.rerun()
+                    else:
+                        st.error(message)
+            with action_cols[1]:
+                if st.button("Cancel", key=f"{section_key}_note_cancel_{note_id}", use_container_width=True):
+                    st.session_state[editing_key] = False
+                    st.rerun()
+        else:
+            body_word_count = len(note_body.split())
+            body_long = len(note_body) > 280 or body_word_count > 50
+            if body_long:
+                with st.expander("View note"):
+                    st.markdown(note_body)
+            else:
+                st.markdown(note_body or "_(empty note)_")
+            if is_own and st.button("Edit", key=f"{section_key}_note_edit_{note_id}"):
+                st.session_state[editing_key] = True
+                st.rerun()
+        st.markdown("---")
 
 
 def fetch_latest_open_office_practical_message(
@@ -7922,6 +8226,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
         "/public/walkthrough-office": "Care Hub - Office Walkthrough | voicemailcare.com",
         "/public/walkthrough-overview": "voicemailcare systems video | voicemailcare.com",
         PUBLIC_HELP_VIDEOS_ROUTE: "Help videos | voicemailcare.com",
+        "/notes-export": "Notes export | voicemailcare.com",
     }
     route_descriptions: dict[str, str] = {
         "/pr-home": "VoicemailCare helps care homes and families stay connected through simple, non-urgent voice messaging.",
@@ -7939,6 +8244,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
         "/public/walkthrough-office": "Walkthrough video for Care Hub - Office oversight and practical structured messaging.",
         "/public/walkthrough-overview": "System diagram walkthrough across Family Hub, Care Hub - Mobile, and Care Hub - Office.",
         PUBLIC_HELP_VIDEOS_ROUTE: "Watch all voicemailcare instructional videos in one place: systems, mobile, family, and office.",
+        "/notes-export": "Printable Notes export view for shared resident updates.",
     }
     if normalized_route == "/public/service-overview":
         normalized_route = "/pr-home"
@@ -8268,6 +8574,7 @@ VARIANT_CONFIG = {
             "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
             PUBLIC_HELP_VIDEOS_ROUTE,
+            "/notes-export",
             "/pr-home",
             "/service-overview",
         },
@@ -8305,6 +8612,7 @@ VARIANT_CONFIG = {
             "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
             PUBLIC_HELP_VIDEOS_ROUTE,
+            "/notes-export",
             "/pr-home",
             "/service-overview",
         },
@@ -8347,6 +8655,7 @@ VARIANT_CONFIG = {
             "/public/walkthrough-office-flow",
             "/public/walkthrough-overview",
             PUBLIC_HELP_VIDEOS_ROUTE,
+            "/notes-export",
             "/pr-home",
             "/service-overview",
         },
@@ -9537,6 +9846,8 @@ def render_family_send() -> None:
 
     access_token = st.session_state.get("access_token")
     transcript_policy_mode = get_transcript_policy_mode(access_token)
+    family_led_mode = is_family_led_mode(access_token)
+    main_contact_name = get_main_contact_name(access_token)
     care_home_name = fetch_active_care_home_name(access_token)
     family_user_record = get_family_user_for_session(access_token)
     family_user_id = str((family_user_record or {}).get("id") or "").strip()
@@ -9724,11 +10035,19 @@ def render_family_send() -> None:
         outbound_section_slot = st.container()
 
         with st.container(border=True):
+            office_update_title = "Care Hub update to Family (Office informational message)"
+            if family_led_mode:
+                if main_contact_name:
+                    office_update_title = f"Update from {main_contact_name}"
+                else:
+                    office_update_title = "Main contact update"
             render_family_flow_title(
-                "Care Hub update to Family (Office informational message)",
+                office_update_title,
                 "office",
             )
-            st.caption("Latest office update for this resident. Office updates are informational only.")
+            if family_led_mode and main_contact_name:
+                st.caption(f"Main contact: {main_contact_name}")
+            st.caption("Latest update for this resident. Updates are informational only.")
             latest_office_update = fetch_latest_message(
                 resident_id,
                 "office_to_family",
@@ -9753,7 +10072,7 @@ def render_family_send() -> None:
                     st.caption(office_soft_label)
             else:
                 st.markdown(
-                    '<div class="vm-muted-line">No care hub updates.</div>',
+                    '<div class="vm-muted-line">No updates yet.</div>',
                     unsafe_allow_html=True,
                 )
             if latest_office_update:
@@ -9903,6 +10222,18 @@ def render_family_send() -> None:
                     st.caption("No shared responses yet.")
             else:
                 st.caption("No open practical office messages for this resident.")
+
+        with st.container(border=True):
+            render_notes_timeline_section(
+                resident_id=resident_id,
+                resident_display_name=full_name,
+                care_home_id=str(resident.get("care_home_id") or ""),
+                access_token=access_token,
+                allow_write=True,
+                section_key=f"family_notes_{resident_id}",
+                show_main_contact_caption=family_led_mode,
+                main_contact_name=main_contact_name,
+            )
 
         with outbound_section_slot.container(border=True):
             render_family_flow_title(
@@ -10229,6 +10560,55 @@ def render_family_sent() -> None:
     with action_cols[2]:
         if st.button("Sign out", key="family_sent_sign_out"):
             sign_out_user("family")
+
+
+def render_notes_export_page() -> None:
+    route_hint = normalize_route(get_route())
+    runtime_variant = resolve_runtime_variant(route_hint=route_hint)
+    payload = st.session_state.get("notes_export_payload")
+    resident_name = ""
+    export_text = ""
+    if isinstance(payload, dict):
+        resident_name = str(payload.get("resident_display_name") or "").strip()
+        export_text = str(payload.get("text") or "")
+    if not export_text:
+        export_text = "No notes export is available yet."
+    render_page_header("Notes export", show_variant_subheading=False)
+    if runtime_variant == VARIANT_OFFICE:
+        render_route_link(
+            "Back to Care Hub - Office",
+            get_home_route(VARIANT_OFFICE),
+            key="notes_export_back_office",
+        )
+    elif runtime_variant == VARIANT_MOBILE:
+        render_route_link(
+            "Back to Care Hub - Mobile",
+            get_home_route(VARIANT_MOBILE),
+            key="notes_export_back_mobile",
+        )
+    elif runtime_variant == VARIANT_FAMILY:
+        render_route_link(
+            "Back to Family Hub",
+            get_home_route(VARIANT_FAMILY),
+            key="notes_export_back_family",
+        )
+    else:
+        back_route = normalize_route(st.session_state.get("notes_export_back_route") or "") or PUBLIC_HOME_ROUTE
+        render_route_link(
+            "Back",
+            back_route,
+            key="notes_export_back_generic",
+        )
+    if resident_name:
+        st.caption(f"Resident: {resident_name}")
+    st.caption("Convenience export only. This is not an official record.")
+    st.info("Use your browser Print option to save as PDF.")
+    st.text_area(
+        "Export text",
+        value=export_text,
+        height=460,
+        key="notes_export_text_view",
+    )
 
 
 def render_docs() -> None:
@@ -11720,7 +12100,15 @@ def render_care_hub() -> None:
 
     access_token = st.session_state.get("access_token")
     transcript_policy_mode = get_transcript_policy_mode(access_token)
+    family_led_mode = is_family_led_mode(access_token)
+    main_contact_name = get_main_contact_name(access_token)
     render_care_home_identity_banner(access_token)
+    if runtime_variant == VARIANT_OFFICE and family_led_mode and main_contact_name:
+        st.caption(f"Main contact: {main_contact_name}")
+        st.caption(
+            "If you hold LPA or similar authority, you may be able to act depending on your arrangement. "
+            "It is worth checking your documents."
+        )
     residents = fetch_care_home_residents(access_token)
     is_care_queue_variant_screen = runtime_variant in {VARIANT_MOBILE, VARIANT_OFFICE}
     include_care_home_in_resident_labels = runtime_variant == VARIANT_MOBILE
@@ -13039,11 +13427,19 @@ def render_care_hub() -> None:
 
         if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
             with st.container(border=True):
+                office_update_title = "Care Hub update to Family (Office informational message)"
+                if family_led_mode:
+                    if main_contact_name:
+                        office_update_title = f"Update from {main_contact_name}"
+                    else:
+                        office_update_title = "Main contact update"
                 render_care_flow_title(
-                    "Care Hub update to Family (Office informational message)",
+                    office_update_title,
                     "office",
                 )
-                st.caption("Latest office update for this resident. Office updates are informational only.")
+                if family_led_mode and main_contact_name:
+                    st.caption(f"Main contact: {main_contact_name}")
+                st.caption("Latest update for this resident. Updates are informational only.")
                 latest_office_update = fetch_latest_message(
                     resident_id,
                     "office_to_family",
@@ -13076,7 +13472,7 @@ def render_care_hub() -> None:
                             st.caption(soft_label)
                 else:
                     st.markdown(
-                        '<div class="vm-muted-line">No care hub updates.</div>',
+                        '<div class="vm-muted-line">No updates yet.</div>',
                         unsafe_allow_html=True,
                     )
                 render_transcript_assist(
@@ -13085,10 +13481,17 @@ def render_care_hub() -> None:
                     care_home_id=resident["care_home_id"],
                     resident_id=resident_id,
                 )
+                office_update_phrase = "care hub update"
+                if family_led_mode:
+                    office_update_phrase = (
+                        f"update from {main_contact_name}"
+                        if main_contact_name
+                        else "main contact update"
+                    )
     
                 if runtime_variant == VARIANT_OFFICE and hasattr(st, "audio_input"):
                     recorded_office = st.audio_input(
-                        "Record care hub update",
+                        f"Record {office_update_phrase}",
                         key=f"care_office_audio_input_{resident_id}_{state.get('office_recording_input_nonce', 0)}",
                     )
                     render_slow_speech_hint()
@@ -13102,7 +13505,7 @@ def render_care_hub() -> None:
                             )
                             if not office_bytes:
                                 st.warning(
-                                    "That care hub update recording could not be captured correctly. Please record again."
+                                    f"That {office_update_phrase} recording could not be captured correctly. Please record again."
                                 )
                             now_ts = time.time()
                             # Prevent stale recorder replay after a send from re-populating the form.
@@ -13143,14 +13546,14 @@ def render_care_hub() -> None:
                     st.warning("Native microphone recording is unavailable in this environment.")
     
                 if runtime_variant == VARIANT_OFFICE and state.get("office_recording_bytes"):
-                    st.caption("Captured care hub update preview:")
+                    st.caption(f"Captured {office_update_phrase} preview:")
                     render_audio_safe(
                         state["office_recording_bytes"],
                         audio_format=state.get("office_recording_mime_type") or "audio/wav",
-                        unavailable_message="Care hub update preview could not be played.",
+                        unavailable_message=f"{office_update_phrase.capitalize()} preview could not be played.",
                     )
                     state["office_preview_confirmed"] = st.checkbox(
-                        "I have listened to this care hub update.",
+                        f"I have listened to this {office_update_phrase}.",
                         value=state.get("office_preview_confirmed", False),
                         key=f"care_office_listened_{resident_id}",
                     )
@@ -13163,7 +13566,7 @@ def render_care_hub() -> None:
                         prefix="office_",
                     )
                     if st.button(
-                        "Reset care hub recorder",
+                        f"Reset {office_update_phrase} recorder",
                         key=f"care_office_reset_recorder_{resident_id}",
                         use_container_width=True,
                     ):
@@ -13184,7 +13587,7 @@ def render_care_hub() -> None:
                     clear_transcript_preview_state(state, prefix="office_")
     
                 if runtime_variant == VARIANT_OFFICE:
-                    st.markdown("**Office update**")
+                    st.markdown(f"**{office_update_phrase.capitalize()}**")
                     st.caption(
                         "This update will be sent to all Family Members for this resident and will appear in Care Hub Mobile."
                     )
@@ -13215,12 +13618,12 @@ def render_care_hub() -> None:
                     state.get("office_recording_bytes") and state.get("office_preview_confirmed")
                 )
                 if runtime_variant == VARIANT_OFFICE and st.button(
-                    f"Send care hub update for {full_name}",
+                    f"Send {office_update_phrase} for {full_name}",
                     key=f"care_send_office_update_{resident_id}",
                     disabled=not office_can_send,
                 ):
                     if not office_can_send:
-                        st.info("Please record and listen before sending the care hub update.")
+                        st.info(f"Please record and listen before sending the {office_update_phrase}.")
                     else:
                         supabase, error = get_authed_supabase(access_token)
                         if error:
@@ -13318,10 +13721,18 @@ def render_care_hub() -> None:
                                     state.get("office_update_category")
                                     or OFFICE_UPDATE_CATEGORIES[0]
                                 )
+                                if family_led_mode:
+                                    label_prefix = (
+                                        f"{category_label} update from {main_contact_name}"
+                                        if main_contact_name
+                                        else f"{category_label} main contact update"
+                                    )
+                                else:
+                                    label_prefix = f"{category_label} update sent to all Family Members"
                                 state["office_last_sent_label"] = (
-                                    f"{category_label} update sent to all Family Members. {soft_sent_label}"
+                                    f"{label_prefix}. {soft_sent_label}"
                                     if soft_sent_label
-                                    else f"{category_label} update sent to all Family Members."
+                                    else f"{label_prefix}."
                                 )
                                 state["office_last_sent_fingerprint"] = sent_office_fp
                                 activate_send_guard(send_guard_scope)
@@ -13497,6 +13908,19 @@ def render_care_hub() -> None:
                                 st.rerun()
                             else:
                                 st.error(close_message)
+
+            if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
+                with st.container(border=True):
+                    render_notes_timeline_section(
+                        resident_id=resident_id,
+                        resident_display_name=full_name,
+                        care_home_id=str(resident.get("care_home_id") or ""),
+                        access_token=access_token,
+                        allow_write=runtime_variant == VARIANT_OFFICE,
+                        section_key=f"{runtime_variant}_notes_{resident_id}",
+                        show_main_contact_caption=family_led_mode,
+                        main_contact_name=main_contact_name,
+                    )
 
 
     # Navigation rendered at the top of the page.
@@ -13889,6 +14313,8 @@ def main() -> None:
         render_care_home_identity_banner(st.session_state.get("access_token"))
         render_route_link("Back", get_home_route(VARIANT_FAMILY), key="family_qa_back_link")
         render_qa_document("docs/public/11_family_qa.md", search_key="family_qa_search")
+    elif route == "/notes-export":
+        render_notes_export_page()
     elif route == "/docs":
         render_docs()
     elif route == "/public-docs":
