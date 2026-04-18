@@ -177,10 +177,13 @@ OFFICE_PRACTICAL_CHECKBOX_OPTIONS = (
 )
 OFFICE_PRACTICAL_CONTEXT_GENERAL = "general"
 OFFICE_PRACTICAL_CONTEXT_VISIT = "visit"
-OPERATING_MODE_CARE_HOME = "care_home"
-OPERATING_MODE_FAMILY_LED = "family_led"
+OPERATING_MODE_CARE_ORGANISATION = "care_organisation"
+OPERATING_MODE_PERSONAL_USE = "personal_use"
+LEGACY_OPERATING_MODE_CARE_HOME = "care_home"
+LEGACY_OPERATING_MODE_FAMILY_LED = "family_led"
 DEFAULT_OPERATING_MODE = str(
-    os.getenv("DEFAULT_OPERATING_MODE", OPERATING_MODE_CARE_HOME) or OPERATING_MODE_CARE_HOME
+    os.getenv("DEFAULT_OPERATING_MODE", OPERATING_MODE_CARE_ORGANISATION)
+    or OPERATING_MODE_CARE_ORGANISATION
 ).strip().lower()
 DEFAULT_MAIN_CONTACT_NAME = str(os.getenv("DEFAULT_MAIN_CONTACT_NAME", "") or "").strip()
 SEND_ACTION_GUARD_SECONDS = max(
@@ -4786,12 +4789,16 @@ def normalize_transcript_policy_mode(policy_value: object) -> str:
 
 def normalize_operating_mode(mode_value: object) -> str:
     candidate = str(mode_value or "").strip().lower()
-    if candidate in {OPERATING_MODE_CARE_HOME, OPERATING_MODE_FAMILY_LED}:
+    if candidate == LEGACY_OPERATING_MODE_CARE_HOME:
+        return OPERATING_MODE_CARE_ORGANISATION
+    if candidate == LEGACY_OPERATING_MODE_FAMILY_LED:
+        return OPERATING_MODE_PERSONAL_USE
+    if candidate in {OPERATING_MODE_CARE_ORGANISATION, OPERATING_MODE_PERSONAL_USE}:
         return candidate
-    fallback = str(DEFAULT_OPERATING_MODE or OPERATING_MODE_CARE_HOME).strip().lower()
-    if fallback in {OPERATING_MODE_CARE_HOME, OPERATING_MODE_FAMILY_LED}:
+    fallback = str(DEFAULT_OPERATING_MODE or OPERATING_MODE_CARE_ORGANISATION).strip().lower()
+    if fallback in {OPERATING_MODE_CARE_ORGANISATION, OPERATING_MODE_PERSONAL_USE}:
         return fallback
-    return OPERATING_MODE_CARE_HOME
+    return OPERATING_MODE_CARE_ORGANISATION
 
 
 def get_transcript_policy_mode(access_token: str | None) -> str:
@@ -4819,7 +4826,7 @@ def get_main_contact_name(access_token: str | None) -> str:
 
 
 def is_family_led_mode(access_token: str | None) -> bool:
-    return get_operating_mode(access_token) == OPERATING_MODE_FAMILY_LED
+    return get_operating_mode(access_token) == OPERATING_MODE_PERSONAL_USE
 
 
 def _is_missing_column_error(exc: Exception, column_name: str) -> bool:
@@ -4937,6 +4944,8 @@ def update_active_care_home_branding(
     access_token: str | None,
     *,
     care_home_name: str,
+    operating_mode: str,
+    main_contact_name: str,
     banner_title: str,
     banner_text: str,
     banner_artwork_url: str,
@@ -4951,6 +4960,8 @@ def update_active_care_home_branding(
     name_value = str(care_home_name or "").strip()
     title_value = str(banner_title or "").strip()
     text_value = str(banner_text or "").strip()
+    mode_value = normalize_operating_mode(operating_mode)
+    main_contact_value = str(main_contact_name or "").strip()
     artwork_value = normalize_banner_artwork_url(banner_artwork_url)
     timeout_value = normalize_care_hub_idle_timeout_seconds(care_hub_idle_timeout_seconds)
     transcript_policy_value = normalize_transcript_policy_mode(transcript_policy_mode)
@@ -4960,6 +4971,8 @@ def update_active_care_home_branding(
         return False, "Care home name must be 160 characters or fewer."
     if len(title_value) > 120:
         return False, "Banner title must be 120 characters or fewer."
+    if len(main_contact_value) > 120:
+        return False, "Main contact name must be 120 characters or fewer."
     if len(text_value) > 800:
         return False, "Banner text must be 800 characters or fewer."
     if len(artwork_value) > 1000:
@@ -4969,6 +4982,8 @@ def update_active_care_home_branding(
         return False, error
     update_payload = {
         "name": name_value,
+        "operating_mode": mode_value,
+        "main_contact_name": main_contact_value or None,
         "branding_banner_title": title_value or None,
         "branding_banner_text": text_value or None,
         "branding_banner_artwork_url": artwork_value or None,
@@ -5002,6 +5017,8 @@ def update_active_care_home_branding(
         persisted_name = str((persisted_profile or {}).get("name") or "").strip()
         persisted_title = str((persisted_profile or {}).get("branding_banner_title") or "").strip()
         persisted_text = str((persisted_profile or {}).get("branding_banner_text") or "").strip()
+        persisted_mode = normalize_operating_mode((persisted_profile or {}).get("operating_mode"))
+        persisted_main_contact_name = str((persisted_profile or {}).get("main_contact_name") or "").strip()
         persisted_artwork = normalize_banner_artwork_url(
             (persisted_profile or {}).get("branding_banner_artwork_url")
         )
@@ -5010,6 +5027,8 @@ def update_active_care_home_branding(
         )
         if (
             persisted_name != name_value
+            or persisted_mode != mode_value
+            or persisted_main_contact_name != main_contact_value
             or persisted_title != title_value
             or persisted_text != text_value
             or persisted_artwork != artwork_value
@@ -5032,6 +5051,12 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
         return
     care_home_profile = fetch_active_care_home_profile(access_token)
     care_home_name = str(care_home_profile.get("name") or "").strip()
+    operating_mode = normalize_operating_mode(care_home_profile.get("operating_mode"))
+    identity_label = (
+        "Care organisation"
+        if operating_mode == OPERATING_MODE_CARE_ORGANISATION
+        else "Personal setup"
+    )
     if care_home_name:
         safe_name = html.escape(care_home_name)
         st.markdown(
@@ -5039,7 +5064,7 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
                 '<div style="margin:6px 0 12px 0;padding:8px 10px;'
                 'border:1px solid rgba(31,31,31,0.12);border-radius:10px;'
                 'background:rgba(153,255,255,0.18);font-size:0.92rem;">'
-                f"<strong>Care home:</strong> {safe_name}"
+                f"<strong>{identity_label}:</strong> {safe_name}"
                 "</div>"
             ),
             unsafe_allow_html=True,
@@ -5064,11 +5089,17 @@ def render_active_care_home_name_caption() -> None:
         return
     care_home_profile = fetch_active_care_home_profile(access_token)
     care_home_name = str(care_home_profile.get("name") or "").strip()
+    operating_mode = normalize_operating_mode(care_home_profile.get("operating_mode"))
+    identity_label = (
+        "Care organisation"
+        if operating_mode == OPERATING_MODE_CARE_ORGANISATION
+        else "Personal setup"
+    )
     if care_home_name:
         st.markdown(
             (
                 '<div class="vm-care-home-banner">'
-                f"<strong>Care home:</strong> {care_home_name}"
+                f"<strong>{identity_label}:</strong> {care_home_name}"
                 "</div>"
             ),
             unsafe_allow_html=True,
@@ -9996,7 +10027,9 @@ def render_family_send() -> None:
             )
             st.markdown(f"**{full_name}**")
             if care_home_name:
-                st.markdown(f"Care home: {care_home_name}")
+                st.markdown(
+                    f"{'Care organisation' if not family_led_mode else 'Personal setup'}: {care_home_name}"
+                )
             if room_label:
                 st.markdown(room_label)
 
@@ -10107,7 +10140,10 @@ def render_family_send() -> None:
                         st.caption(f"Requested date: {requested_date}")
                     if requested_time:
                         st.caption(f"Requested time window: {requested_time}")
-                st.caption("For urgent or medical matters, please call the care home directly.")
+                if family_led_mode:
+                    st.caption("For urgent or medical matters, use your normal direct contact route.")
+                else:
+                    st.caption("For urgent or medical matters, please call the care home directly.")
                 st.caption("Messages sent here are not monitored for emergencies.")
                 response_options = fetch_office_practical_message_options(
                     practical_message_id, access_token
@@ -11131,7 +11167,9 @@ def render_care_hub_banner_settings() -> None:
         st.success(save_notice)
     st.markdown("### Operational setup variables")
     st.markdown(
+        "- Who is this for? (Care organisation or Personal use)\n"
         "- Care home name\n"
+        "- Main contact name (for Personal use context)\n"
         "- Business banner heading (optional)\n"
         "- Business banner message (optional)\n"
         "- Business banner image URL (optional)\n"
@@ -11273,12 +11311,47 @@ def render_care_hub_banner_settings() -> None:
         "precheck": "Precheck (review transcript before playback)",
     }
     transcript_policy_index = transcript_policy_options.index(current_transcript_policy)
+    current_operating_mode = normalize_operating_mode(
+        care_home_profile.get("operating_mode")
+    )
+    context_options = [
+        ("Care organisation", OPERATING_MODE_CARE_ORGANISATION),
+        ("Personal use", OPERATING_MODE_PERSONAL_USE),
+    ]
+    context_values = [value for _label, value in context_options]
+    context_index = (
+        context_values.index(current_operating_mode)
+        if current_operating_mode in context_values
+        else 0
+    )
     with st.form("office_care_home_banner_page_form"):
+        selected_context_label = st.radio(
+            "Who is this for?",
+            options=[label for label, _value in context_options],
+            index=context_index,
+            horizontal=True,
+            key="office_operating_context_mode",
+        )
+        selected_operating_mode = dict(context_options).get(
+            selected_context_label,
+            OPERATING_MODE_CARE_ORGANISATION,
+        )
+        name_field_label = (
+            "Care organisation name"
+            if selected_operating_mode == OPERATING_MODE_CARE_ORGANISATION
+            else "Shared setup name"
+        )
         care_home_name_value = st.text_input(
-            "Care home name",
+            name_field_label,
             value=str(care_home_profile.get("name") or ""),
             max_chars=160,
             key="office_care_home_name_page",
+        )
+        main_contact_name_value = st.text_input(
+            "Main contact name (optional)",
+            value=str(care_home_profile.get("main_contact_name") or ""),
+            max_chars=120,
+            key="office_main_contact_name_page",
         )
         banner_title_value = st.text_input(
             "Banner heading (optional)",
@@ -11329,6 +11402,8 @@ def render_care_hub_banner_settings() -> None:
         saved, message = update_active_care_home_branding(
             access_token,
             care_home_name=care_home_name_value,
+            operating_mode=selected_operating_mode,
+            main_contact_name=main_contact_name_value,
             banner_title=banner_title_value,
             banner_text=banner_text_value,
             banner_artwork_url=banner_artwork_value,
@@ -13591,9 +13666,14 @@ def render_care_hub() -> None:
                     st.caption(
                         "This update will be sent to all Family Members for this resident and will appear in Care Hub Mobile."
                     )
-                    st.caption(
-                        "Office updates are non-urgent, one-way updates from the care team (no replies). For any queries, please contact the care home directly."
-                    )
+                    if family_led_mode:
+                        st.caption(
+                            "Updates are non-urgent, one-way updates (no replies). For urgent or clinical matters, use your normal direct contact route."
+                        )
+                    else:
+                        st.caption(
+                            "Office updates are non-urgent, one-way updates from the care team (no replies). For any queries, please contact the care home directly."
+                        )
                     st.caption(
                         "After pressing Send, wait for the sent confirmation before playing another message."
                     )
@@ -13755,7 +13835,11 @@ def render_care_hub() -> None:
                         "Use this for low-risk practical communication only (for example visits, events, reminders, attendance, or item requests)."
                     )
                     st.caption(
-                        "For urgent or medical matters, families should call the care home directly. Messages sent here are not monitored for emergencies."
+                        (
+                            "For urgent or medical matters, use direct contact routes. Messages sent here are not monitored for emergencies."
+                            if family_led_mode
+                            else "For urgent or medical matters, families should call the care home directly. Messages sent here are not monitored for emergencies."
+                        )
                     )
                     practical_title = st.text_input(
                         "Practical message title",
