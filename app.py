@@ -12800,7 +12800,7 @@ def render_care_hub() -> None:
         elif is_office_variant:
             st.caption(
                 "Office review playback follows the same fixed contact order "
-                "(does not change resident queue order)."
+                f"(does not change {subject_singular} queue order)."
             )
             if st.button(
                 "Play next unread family message (Office review)",
@@ -13516,7 +13516,7 @@ def render_care_hub() -> None:
                 st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
         with st.container(border=True):
             render_care_flow_title(
-                f"Latest message from resident ({full_name}) to family",
+                f"Latest message from {subject_singular} ({full_name}) to family",
                 "outbound",
             )
             if is_mobile_variant or is_office_variant:
@@ -13546,7 +13546,9 @@ def render_care_hub() -> None:
                     else:
                         st.audio(latest_sent_audio)
                 else:
-                    st.success("Latest Resident -> Family message is saved.")
+                    st.success(
+                        f"Latest {subject_singular_title} -> Family message is saved."
+                    )
                 latest_sent_at = latest_sent.get("recorded_at")
                 if latest_sent_at:
                     latest_sent_label = format_soft_message_period_label(latest_sent_at)
@@ -14025,9 +14027,14 @@ def render_care_hub() -> None:
                         key=f"care_office_update_category_{resident_id}",
                     )
                     state["office_update_category"] = selected_office_category
-                    st.caption(
-                        "Use these categories for general reassurance only. Personal clinical or urgent matters must use normal care-home channels."
-                    )
+                    if family_led_mode:
+                        st.caption(
+                            "Use these categories for general reassurance only. Personal clinical or urgent matters must use your normal direct contact route."
+                        )
+                    else:
+                        st.caption(
+                            "Use these categories for general reassurance only. Personal clinical or urgent matters must use normal care-home channels."
+                        )
     
                 office_can_send = bool(
                     state.get("office_recording_bytes") and state.get("office_preview_confirmed")
