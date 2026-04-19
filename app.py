@@ -4912,6 +4912,22 @@ def urgent_contact_copy(operating_mode: object) -> str:
     )
 
 
+def validate_personal_mode_runtime(operating_mode: object) -> tuple[bool, list[str]]:
+    mode_value = normalize_operating_mode(operating_mode)
+    if mode_value != OPERATING_MODE_PERSONAL_USE:
+        return True, []
+    failures: list[str] = []
+    if subject_label(mode_value) != "person":
+        failures.append("subject label is not 'person'")
+    if subject_label(mode_value, plural=True) != "people":
+        failures.append("subject plural label is not 'people'")
+    if location_label(mode_value).lower() == "care home":
+        failures.append("location label still resolves to 'care home'")
+    if room_label(mode_value):
+        failures.append("room label should be hidden in personal mode")
+    return not failures, failures
+
+
 def _derive_circle_title(context_phrase: str, person_name: str = "") -> str:
     person = str(person_name or "").strip()
     phrase = str(context_phrase or "").strip()
@@ -5275,6 +5291,13 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
             )
     else:
         st.caption("You are signed in.")
+    if get_app_variant() == VARIANT_OFFICE:
+        mode_text = (
+            "Personal use"
+            if operating_mode == OPERATING_MODE_PERSONAL_USE
+            else "Care organisation"
+        )
+        st.caption(f"Mode: {mode_text}")
     if not bool(st.session_state.get("_care_home_custom_banner_rendered")):
         rendered = render_active_care_home_custom_banner(care_home_profile)
         st.session_state["_care_home_custom_banner_rendered"] = bool(rendered)
@@ -10115,6 +10138,13 @@ def render_family_send() -> None:
     subject_singular = subject_label(operating_mode)
     subject_singular_title = subject_label(operating_mode, title=True)
     subject_plural = subject_label(operating_mode, plural=True)
+    personal_mode_ok, personal_mode_failures = validate_personal_mode_runtime(operating_mode)
+    if family_led_mode and not personal_mode_ok:
+        st.error(
+            "Personal mode copy guard failed. Please ask Office to check Operational Variables."
+        )
+        st.caption("Guard details: " + "; ".join(personal_mode_failures))
+        return
     main_contact_name = get_main_contact_name(access_token)
     care_home_name = fetch_active_care_home_name(access_token)
     family_user_record = get_family_user_for_session(access_token)
@@ -11535,7 +11565,7 @@ def render_care_hub_banner_settings() -> None:
                     or ""
                 ).strip()
                 if not selected_reset_resident_id or not selected_reset_care_home_id:
-                    st.error("Could not determine resident/care home context for reset.")
+                    st.error("Could not determine person/group context for reset.")
                 else:
                     cleared = clear_resident_contact_playback_state(
                         selected_reset_resident_id,
@@ -11561,17 +11591,17 @@ def render_care_hub_banner_settings() -> None:
                         None,
                     )
                     if cleared:
-                        st.success("Selected resident message list reset.")
+                        st.success(f"Selected {subject_singular} message list reset.")
                     else:
                         st.warning(
                             "Reset request completed with no DB rows changed for played/unread state."
                         )
                     st.rerun()
     else:
-        st.caption("No residents available for message list reset.")
+        st.caption(f"No {subject_plural_title.lower()} available for message list reset.")
     st.markdown("**Issues**")
     st.checkbox("Log / escalate incidents", key="office_checks_issues_log_escalate")
-    st.markdown("### Office care home banner")
+    st.markdown("### Office shared banner")
     st.caption("Add your logo or your own banner design for Care Hub - Office and Family views.")
     st.markdown("### Operational settings")
     st.caption(
@@ -11584,7 +11614,7 @@ def render_care_hub_banner_settings() -> None:
     care_home_profile = fetch_active_care_home_profile(access_token)
     if not isinstance(care_home_profile, dict) or not str(care_home_profile.get("name") or "").strip():
         st.error(
-            "Could not load the current care home settings. Save is disabled to avoid overwriting existing banner values."
+            "Could not load the current setup settings. Save is disabled to avoid overwriting existing banner values."
         )
         st.info("Refresh the page and try again. If this persists, check that recent database migrations are applied.")
         return
@@ -11612,6 +11642,16 @@ def render_care_hub_banner_settings() -> None:
     current_operating_mode = normalize_operating_mode(
         care_home_profile.get("operating_mode")
     )
+    active_care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
+    with st.expander("Mode diagnostics", expanded=False):
+        st.markdown(f"- Active care home id: `{active_care_home_id or 'missing'}`")
+        st.markdown(f"- Profile mode (raw): `{str(care_home_profile.get('operating_mode') or '') or 'missing'}`")
+        st.markdown(f"- Profile mode (normalized): `{current_operating_mode}`")
+        st.markdown(f"- Runtime mode (resolved): `{mode_value}`")
+        if current_operating_mode != mode_value:
+            st.warning("Profile mode and runtime mode differ. Refresh and check save/update permissions.")
+        if mode_value == OPERATING_MODE_PERSONAL_USE:
+            st.markdown("- Personal mode checks: subject=`person`, plural=`people`, room field hidden.")
     context_options = [
         ("Care organisation", OPERATING_MODE_CARE_ORGANISATION),
         ("Personal use", OPERATING_MODE_PERSONAL_USE),
@@ -12480,6 +12520,13 @@ def render_care_hub() -> None:
     subject_singular_title = subject_label(operating_mode, title=True)
     subject_plural = subject_label(operating_mode, plural=True)
     subject_plural_title = subject_label(operating_mode, plural=True, title=True)
+    personal_mode_ok, personal_mode_failures = validate_personal_mode_runtime(operating_mode)
+    if family_led_mode and not personal_mode_ok:
+        st.error(
+            "Personal mode copy guard failed. Please open Operational Variables and confirm mode settings."
+        )
+        st.caption("Guard details: " + "; ".join(personal_mode_failures))
+        return
     residents = fetch_care_home_residents(access_token)
     if family_led_mode:
         person_display_name = _resolve_person_display_name_from_residents(
