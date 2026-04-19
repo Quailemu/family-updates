@@ -5248,10 +5248,22 @@ def update_active_care_home_branding(
             (persisted_profile or {}).get("transcript_policy_mode")
         )
         if persisted_mode != mode_value:
-            return (
-                False,
-                "Mode change could not be confirmed after save. Please retry or check care_homes update permissions.",
+            # Fallback: retry mode update explicitly, then re-check.
+            (
+                supabase.table("care_homes")
+                .update({"operating_mode": mode_value})
+                .eq("id", care_home_id)
+                .execute()
             )
+            st.session_state.pop(f"care_home_profile_{care_home_id}", None)
+            st.session_state.pop(f"care_home_profile_{care_home_id}_ts", None)
+            persisted_profile = fetch_active_care_home_profile(access_token)
+            persisted_mode = normalize_operating_mode((persisted_profile or {}).get("operating_mode"))
+            if persisted_mode != mode_value:
+                return (
+                    False,
+                    "Mode change could not be confirmed after save. Please retry or check care_homes update permissions.",
+                )
         if (
             persisted_name != name_value
             or persisted_main_contact_name != main_contact_value
