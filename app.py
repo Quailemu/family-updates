@@ -5237,9 +5237,13 @@ def update_active_care_home_branding(
         persisted_transcript_policy = normalize_transcript_policy_mode(
             (persisted_profile or {}).get("transcript_policy_mode")
         )
+        if persisted_mode != mode_value:
+            return (
+                False,
+                "Mode change could not be confirmed after save. Please retry or check care_homes update permissions.",
+            )
         if (
             persisted_name != name_value
-            or persisted_mode != mode_value
             or persisted_main_contact_name != main_contact_value
             or persisted_title != title_value
             or persisted_text != text_value
