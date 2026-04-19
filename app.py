@@ -4922,6 +4922,18 @@ def practical_checkbox_options(operating_mode: object) -> tuple[str, ...]:
     return tuple(options)
 
 
+def normalize_practical_option_label_for_mode(
+    option_label: str, operating_mode: object
+) -> str:
+    label = str(option_label or "").strip()
+    if (
+        normalize_operating_mode(operating_mode) == OPERATING_MODE_PERSONAL_USE
+        and label == "I will call the care home"
+    ):
+        return "I will call home"
+    return label
+
+
 def validate_personal_mode_runtime(operating_mode: object) -> tuple[bool, list[str]]:
     mode_value = normalize_operating_mode(operating_mode)
     if mode_value != OPERATING_MODE_PERSONAL_USE:
@@ -10499,7 +10511,10 @@ def render_family_send() -> None:
                 )
                 for option in response_options:
                     option_id = str(option.get("id") or "").strip()
-                    option_label = str(option.get("option_label") or "").strip()
+                    option_label = normalize_practical_option_label_for_mode(
+                        str(option.get("option_label") or "").strip(),
+                        operating_mode,
+                    )
                     if not option_id or not option_label:
                         continue
                     checked = st.checkbox(
@@ -14388,7 +14403,10 @@ def render_care_hub() -> None:
                         if option_rows:
                             st.caption("Enabled tick-box options:")
                             for option_row in option_rows:
-                                label = str(option_row.get("option_label") or "").strip()
+                                label = normalize_practical_option_label_for_mode(
+                                    str(option_row.get("option_label") or "").strip(),
+                                    operating_mode,
+                                )
                                 if label:
                                     st.markdown(f"- {label}")
                         summary = fetch_office_practical_response_summary(
@@ -14405,7 +14423,11 @@ def render_care_hub() -> None:
                         if option_counts:
                             st.caption("Tick-box selections:")
                             for option_label, option_count in option_counts.items():
-                                st.markdown(f"- {option_label}: {option_count}")
+                                display_label = normalize_practical_option_label_for_mode(
+                                    str(option_label or "").strip(),
+                                    operating_mode,
+                                )
+                                st.markdown(f"- {display_label}: {option_count}")
                         responses = summary.get("responses") or []
                         if responses:
                             st.caption("Family responses:")
@@ -14415,7 +14437,14 @@ def render_care_hub() -> None:
                                 st.markdown(f"- {contact_name}: {choice_label}")
                                 selected_labels = response.get("selected_labels") or []
                                 if selected_labels:
-                                    st.caption("Selections: " + ", ".join(selected_labels))
+                                    display_selected_labels = [
+                                        normalize_practical_option_label_for_mode(
+                                            str(label or "").strip(),
+                                            operating_mode,
+                                        )
+                                        for label in selected_labels
+                                    ]
+                                    st.caption("Selections: " + ", ".join(display_selected_labels))
                                 planned_visit = str(response.get("planned_visit_time") or "").strip()
                                 if planned_visit:
                                     st.caption(f"Planned visit: {planned_visit}")
