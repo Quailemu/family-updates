@@ -13889,7 +13889,15 @@ def render_care_hub() -> None:
                 elif last_sent and last_sent.get("resident_id") == resident_id:
                     st.success(last_sent.get("message", "Message sent."))
 
-        if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
+        allow_mobile_extended_actions = family_led_mode
+        show_update_box = runtime_variant == VARIANT_OFFICE or (
+            runtime_variant == VARIANT_MOBILE and allow_mobile_extended_actions
+        )
+        show_practical_box = runtime_variant == VARIANT_OFFICE or (
+            runtime_variant == VARIANT_MOBILE and allow_mobile_extended_actions
+        )
+
+        if show_update_box:
             with st.container(border=True):
                 office_update_title = "Care Hub update to Family (Office informational message)"
                 if family_led_mode:
@@ -13953,7 +13961,7 @@ def render_care_hub() -> None:
                         else "main contact update"
                     )
     
-                if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE} and hasattr(st, "audio_input"):
+                if show_update_box and hasattr(st, "audio_input"):
                     recorded_office = st.audio_input(
                         f"Record {office_update_phrase}",
                         key=f"care_office_audio_input_{resident_id}_{state.get('office_recording_input_nonce', 0)}",
@@ -14006,10 +14014,10 @@ def render_care_hub() -> None:
                             st.warning(
                                 "Office recorder could not process that audio capture. Please record again."
                             )
-                elif runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
+                elif show_update_box:
                     st.warning("Native microphone recording is unavailable in this environment.")
     
-                if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE} and state.get("office_recording_bytes"):
+                if show_update_box and state.get("office_recording_bytes"):
                     st.caption(f"Captured {office_update_phrase} preview:")
                     render_audio_safe(
                         state["office_recording_bytes"],
@@ -14045,12 +14053,12 @@ def render_care_hub() -> None:
                             state.get("office_recording_input_nonce", 0)
                         ) + 1
                         st.rerun()
-                elif runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
+                elif show_update_box:
                     state["office_preview_confirmed"] = False
                     state["office_transcribe_requested"] = False
                     clear_transcript_preview_state(state, prefix="office_")
     
-                if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
+                if show_update_box:
                     st.markdown(f"**{office_update_phrase.capitalize()}**")
                     st.caption(
                         f"This update will be sent to all Family Members for this {subject_singular}."
@@ -14091,7 +14099,7 @@ def render_care_hub() -> None:
                 office_can_send = bool(
                     state.get("office_recording_bytes") and state.get("office_preview_confirmed")
                 )
-                if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE} and st.button(
+                if show_update_box and st.button(
                     f"Send {office_update_phrase} for {full_name}",
                     key=f"care_send_office_update_{resident_id}",
                     disabled=not office_can_send,
@@ -14212,13 +14220,13 @@ def render_care_hub() -> None:
                                 activate_send_guard(send_guard_scope)
                                 st.rerun()
                 if (
-                    runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}
+                    show_update_box
                     and state.get("office_last_sent_label")
                     and not state.get("office_recording_bytes")
                 ):
                     st.success(state.get("office_last_sent_label"))
 
-            if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
+            if show_practical_box:
                 with st.container(border=True):
                     render_care_flow_title(
                         f"Practical message to {subject_singular} ({full_name})",
