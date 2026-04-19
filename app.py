@@ -5082,7 +5082,8 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
         "operating_mode, main_contact_name"
     )
     fallback_select_fields = (
-        "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url"
+        "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, "
+        "operating_mode, main_contact_name"
     )
     try:
         try:
