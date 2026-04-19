@@ -5061,8 +5061,17 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
     if not care_home_id or not access_token:
         return {}
     cache_key = f"care_home_profile_{care_home_id}"
+    cache_ts_key = f"{cache_key}_ts"
     cached_profile = st.session_state.get(cache_key)
-    if isinstance(cached_profile, dict) and str(cached_profile.get("name") or "").strip():
+    cached_profile_ts = float(st.session_state.get(cache_ts_key) or 0.0)
+    cache_age_seconds = max(time.time() - cached_profile_ts, 0.0)
+    # Keep cache short-lived so external DB updates (for example manual SQL fixes)
+    # are reflected quickly without requiring a full app/session reset.
+    if (
+        isinstance(cached_profile, dict)
+        and str(cached_profile.get("name") or "").strip()
+        and cache_age_seconds < 20.0
+    ):
         return cached_profile
     supabase, error = get_authed_supabase(access_token)
     if error:
@@ -5147,6 +5156,7 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
         }
         if profile["name"]:
             st.session_state[cache_key] = profile
+            st.session_state[cache_ts_key] = time.time()
         return profile
     except Exception:
         return {}
