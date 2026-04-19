@@ -5291,7 +5291,7 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
             )
     else:
         st.caption("You are signed in.")
-    if get_app_variant() == VARIANT_OFFICE:
+    if get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE}:
         mode_text = (
             "Personal use"
             if operating_mode == OPERATING_MODE_PERSONAL_USE
