@@ -13953,7 +13953,7 @@ def render_care_hub() -> None:
                         else "main contact update"
                     )
     
-                if runtime_variant == VARIANT_OFFICE and hasattr(st, "audio_input"):
+                if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE} and hasattr(st, "audio_input"):
                     recorded_office = st.audio_input(
                         f"Record {office_update_phrase}",
                         key=f"care_office_audio_input_{resident_id}_{state.get('office_recording_input_nonce', 0)}",
@@ -14006,10 +14006,10 @@ def render_care_hub() -> None:
                             st.warning(
                                 "Office recorder could not process that audio capture. Please record again."
                             )
-                elif runtime_variant == VARIANT_OFFICE:
+                elif runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
                     st.warning("Native microphone recording is unavailable in this environment.")
     
-                if runtime_variant == VARIANT_OFFICE and state.get("office_recording_bytes"):
+                if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE} and state.get("office_recording_bytes"):
                     st.caption(f"Captured {office_update_phrase} preview:")
                     render_audio_safe(
                         state["office_recording_bytes"],
@@ -14045,15 +14045,15 @@ def render_care_hub() -> None:
                             state.get("office_recording_input_nonce", 0)
                         ) + 1
                         st.rerun()
-                elif runtime_variant == VARIANT_OFFICE:
+                elif runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
                     state["office_preview_confirmed"] = False
                     state["office_transcribe_requested"] = False
                     clear_transcript_preview_state(state, prefix="office_")
     
-                if runtime_variant == VARIANT_OFFICE:
+                if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
                     st.markdown(f"**{office_update_phrase.capitalize()}**")
                     st.caption(
-                        f"This update will be sent to all Family Members for this {subject_singular} and will appear in Care Hub Mobile."
+                        f"This update will be sent to all Family Members for this {subject_singular}."
                     )
                     if family_led_mode:
                         st.caption(
@@ -14091,7 +14091,7 @@ def render_care_hub() -> None:
                 office_can_send = bool(
                     state.get("office_recording_bytes") and state.get("office_preview_confirmed")
                 )
-                if runtime_variant == VARIANT_OFFICE and st.button(
+                if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE} and st.button(
                     f"Send {office_update_phrase} for {full_name}",
                     key=f"care_send_office_update_{resident_id}",
                     disabled=not office_can_send,
@@ -14212,19 +14212,19 @@ def render_care_hub() -> None:
                                 activate_send_guard(send_guard_scope)
                                 st.rerun()
                 if (
-                    runtime_variant == VARIANT_OFFICE
+                    runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}
                     and state.get("office_last_sent_label")
                     and not state.get("office_recording_bytes")
                 ):
                     st.success(state.get("office_last_sent_label"))
 
-            if runtime_variant == VARIANT_OFFICE:
+            if runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE}:
                 with st.container(border=True):
                     render_care_flow_title(
-                        f"Office practical message to {subject_singular} ({full_name})",
+                        f"Practical message to {subject_singular} ({full_name})",
                         "practical",
                     )
-                    st.markdown("**Office practical message (structured family reply)**")
+                    st.markdown("**Practical message (structured family reply)**")
                     st.caption(
                         "Use this for low-risk practical communication only (for example visits, events, reminders, attendance, or item requests)."
                     )
@@ -14388,7 +14388,7 @@ def render_care_hub() -> None:
                         resident_display_name=full_name,
                         care_home_id=str(resident.get("care_home_id") or ""),
                         access_token=access_token,
-                        allow_write=runtime_variant == VARIANT_OFFICE,
+                        allow_write=runtime_variant in {VARIANT_OFFICE, VARIANT_MOBILE},
                         section_key=f"{runtime_variant}_notes_{resident_id}",
                         show_main_contact_caption=family_led_mode,
                         main_contact_name=main_contact_name,
