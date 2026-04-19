@@ -1,0 +1,16 @@
+# Circle FAQ
+
+Q: Is this for urgent messages?  
+A: No. This service is for non-urgent social communication only.
+
+Q: Is this a live service?  
+A: No. Messages are not monitored in real time.
+
+Q: Who manages access?  
+A: Your Circle manages who is invited and linked.
+
+Q: Are Notes mandatory?  
+A: No. Notes are optional and intended for practical coordination.
+
+Q: Where should urgent or medical issues go?  
+A: Use your direct contact routes immediately.

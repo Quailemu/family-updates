@@ -4943,6 +4943,12 @@ MODE_DOC_OVERRIDES: dict[str, dict[str, str]] = {
         "docs/office/care_home_onboarding_script.md": "docs/circle/circle_onboarding_script.md",
         "docs/office/care_home_handover_checklist.md": "docs/circle/circle_handover_checklist.md",
         "docs/office/common_questions_qa.md": "docs/circle/common_questions_qa.md",
+        "docs/public/10_faq.md": "docs/circle/10_faq.md",
+        "docs/public/11_family_qa.md": "docs/circle/11_family_qa.md",
+        "docs/public/12_mobile_qa.md": "docs/circle/12_mobile_qa.md",
+        "docs/public/privacy_policy.md": "docs/circle/privacy_policy.md",
+        "docs/public/complaints_and_concerns.md": "docs/circle/complaints_and_concerns.md",
+        "docs/public/safeguarding_and_consent.md": "docs/circle/safeguarding_and_consent.md",
         "docs/public/family_terms_summary.md": "docs/circle/family_terms_summary.md",
         "docs/public/family_terms_of_use.md": "docs/circle/family_terms_of_use.md",
     }
@@ -14719,14 +14725,22 @@ def main() -> None:
         )
     elif route == "/care-hub/mobile/qa":
         render_page_header("Mobile Q&A", show_variant_subheading=False)
-        render_care_home_identity_banner(st.session_state.get("access_token"))
+        access_token = st.session_state.get("access_token")
+        render_care_home_identity_banner(access_token)
         render_route_link("Back", get_home_route(VARIANT_MOBILE), key="mobile_qa_back_link")
-        render_qa_document("docs/public/12_mobile_qa.md", search_key="mobile_qa_search")
+        render_qa_document(
+            resolve_mode_doc_path("docs/public/12_mobile_qa.md", access_token=access_token),
+            search_key="mobile_qa_search",
+        )
     elif route == "/family/qa":
         render_page_header("Family Q&A", show_variant_subheading=False)
-        render_care_home_identity_banner(st.session_state.get("access_token"))
+        access_token = st.session_state.get("access_token")
+        render_care_home_identity_banner(access_token)
         render_route_link("Back", get_home_route(VARIANT_FAMILY), key="family_qa_back_link")
-        render_qa_document("docs/public/11_family_qa.md", search_key="family_qa_search")
+        render_qa_document(
+            resolve_mode_doc_path("docs/public/11_family_qa.md", access_token=access_token),
+            search_key="family_qa_search",
+        )
     elif route == "/notes-export":
         render_notes_export_page()
     elif route == "/docs":
