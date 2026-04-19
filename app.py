@@ -14229,7 +14229,7 @@ def render_care_hub() -> None:
             if show_practical_box:
                 with st.container(border=True):
                     render_care_flow_title(
-                        f"Practical message to {subject_singular} ({full_name})",
+                        f"Practical message to family ({full_name})",
                         "practical",
                     )
                     st.markdown("**Practical message (structured family reply)**")
