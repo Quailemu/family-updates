@@ -4912,6 +4912,16 @@ def urgent_contact_copy(operating_mode: object) -> str:
     )
 
 
+def practical_checkbox_options(operating_mode: object) -> tuple[str, ...]:
+    options = list(OFFICE_PRACTICAL_CHECKBOX_OPTIONS)
+    if normalize_operating_mode(operating_mode) == OPERATING_MODE_PERSONAL_USE:
+        options = [
+            "I will call directly" if opt == "I will call the care home" else opt
+            for opt in options
+        ]
+    return tuple(options)
+
+
 def validate_personal_mode_runtime(operating_mode: object) -> tuple[bool, list[str]]:
     mode_value = normalize_operating_mode(operating_mode)
     if mode_value != OPERATING_MODE_PERSONAL_USE:
@@ -14292,8 +14302,8 @@ def render_care_hub() -> None:
                         )
                     practical_checkboxes = st.multiselect(
                         "Optional tick-box responses",
-                        options=list(OFFICE_PRACTICAL_CHECKBOX_OPTIONS),
-                        default=list(OFFICE_PRACTICAL_CHECKBOX_OPTIONS),
+                        options=list(practical_checkbox_options(operating_mode)),
+                        default=list(practical_checkbox_options(operating_mode)),
                         key=f"office_practical_options_{resident_id}",
                     )
                     if st.button(
