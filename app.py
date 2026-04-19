@@ -12545,19 +12545,28 @@ def render_care_hub() -> None:
             "It is worth checking your documents."
         )
     is_care_queue_variant_screen = runtime_variant in {VARIANT_MOBILE, VARIANT_OFFICE}
-    include_care_home_in_resident_labels = runtime_variant == VARIANT_MOBILE
+    include_care_home_in_resident_labels = (
+        runtime_variant == VARIANT_MOBILE and not family_led_mode
+    )
     contacts_by_resident: dict[str, list[dict]] = {}
 
     resident_search_container = st.container(border=True)
-    with resident_search_container:
-        if runtime_variant == VARIANT_MOBILE:
-            render_care_flow_title(f"Search {subject_plural}", "resident")
-        search_value = st.text_input(
-            f"Search {subject_plural}",
-            key="care_resident_search",
-            label_visibility="collapsed",
-            placeholder=f"Search {subject_plural}",
-        )
+    search_value = ""
+    if not family_led_mode:
+        with resident_search_container:
+            if runtime_variant == VARIANT_MOBILE:
+                render_care_flow_title(f"Search {subject_plural}", "resident")
+            search_value = st.text_input(
+                f"Search {subject_plural}",
+                key="care_resident_search",
+                label_visibility="collapsed",
+                placeholder=f"Search {subject_plural}",
+            )
+    else:
+        with resident_search_container:
+            if runtime_variant == VARIANT_MOBILE:
+                render_care_flow_title(subject_plural_title, "resident")
+
     if search_value:
         search_lower = search_value.strip().lower()
         search_tokens = [token for token in search_lower.split() if token]
@@ -12605,18 +12614,28 @@ def render_care_hub() -> None:
                     selected_resident_id, subject_singular_title
                 )
             else:
-                selected_resident_id = st.selectbox(
-                    f"Select {subject_singular}",
-                    resident_option_ids,
-                    format_func=lambda resident_id: resident_label_by_id.get(
-                        resident_id, subject_singular_title
-                    ),
-                    key="care_selected_resident_id",
-                )
+                if family_led_mode:
+                    selected_resident_id = st.radio(
+                        subject_plural_title,
+                        resident_option_ids,
+                        format_func=lambda resident_id: resident_label_by_id.get(
+                            resident_id, subject_singular_title
+                        ),
+                        key="care_selected_resident_id",
+                    )
+                else:
+                    selected_resident_id = st.selectbox(
+                        f"Select {subject_singular}",
+                        resident_option_ids,
+                        format_func=lambda resident_id: resident_label_by_id.get(
+                            resident_id, subject_singular_title
+                        ),
+                        key="care_selected_resident_id",
+                    )
                 selected_resident_label = resident_label_by_id.get(
                     selected_resident_id, subject_singular_title
                 )
-            if runtime_variant == VARIANT_MOBILE:
+            if runtime_variant == VARIANT_MOBILE and not family_led_mode:
                 st.caption(f"{subject_singular_title} selected: " + selected_resident_label)
         residents = [
             resident for resident in residents if resident["id"] == selected_resident_id
