@@ -16,8 +16,7 @@
 1) Ensure the Supabase CLI is installed and linked to your project.
 2) Set function secrets in Supabase (Project Settings → Functions):
    - `VM_SUPABASE_URL`
-   - `VM_SUPABASE_ANON_KEY`
-   - `VM_SUPABASE_SERVICE_ROLE_KEY`
+   - `VM_SUPABASE_SECRET_KEY`
 3) Deploy the function:
    - `supabase functions deploy get_audio_signed_url`
 4) This function disables gateway JWT verification (see `supabase/config.toml`) and validates JWTs inside the function.

@@ -75,6 +75,94 @@ The care home may also publish an Office practical message that allows each regi
 
 The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
 
+Data boundary (hard):
+- The platform is for non-urgent communication and coordination only.
+- The platform does not store or manage sensitive records or document repositories.
+- Users must handle sensitive matters outside the platform using their own external arrangements.
+- The platform may provide minimal planning guidance only and does not provide legal, medical, financial, or safeguarding advice.
+
+Short in-app data boundary copy:
+Keep sensitive records outside the app. Use this only for simple communication and coordination.
+
+Must not store in-platform:
+- Legal authority documents (including LPA/LPOA forms and extracts).
+- Clinical records, medication/treatment records, or formal care records.
+- Financial account, investment, tax, pension, or transaction records.
+- Identity documents or identity numbers.
+- Safeguarding investigation files/evidence.
+- Carer Pack files/documents.
+- Authentication secrets (passwords, PINs, recovery codes, private keys).
+
+Essential platform data only:
+- Account, role, and access mapping data.
+- Resident/contact linkage needed for routing.
+- Latest-message channel state required for "one message in, one message out."
+- Minimal operational metadata and security/audit logs needed to run the service.
+
+Lifecycle model:
+The app uses five lifecycle stages to control which tools are available. Stage policy controls capabilities; it must not assign fixed role ownership.
+The user should choose the lifecycle stage, not a separate organisation mode. The lifecycle stage gates tools. Stage 4 must keep the shared Office communication controls available.
+
+- Stage 1 - Planning & Organisation: Office off; Mobile off; Family messaging off; Requests off; simple external notes guidance available.
+- Stage 2 - Maintaining Independence at Home: Office on; Mobile on; Family Hub on; Family messaging on for a simple optional message loop; Requests off; shared update/request coordination off; communication remains optional and quiet. Mobile may act as the person's own simple channel.
+- Stage 3 - Family-Supported Coordination at Home: one Office; Mobile on; Family messaging on; Requests on. Mobile may act as the person's own simple channel while Office supports shared family coordination.
+- Stage 4 - Carer + Family at Home: one shared Office; Mobile on; Family messaging on; Requests on. Mobile may show shared coordination tools so users do not have to switch interfaces for routine at-home coordination. Do not create a second office in Stage 4.
+- Stage 5 - Care Home + Family Coordination: split Family Coordinator Office / Care Home Office model planned separately. Stage 5 is the first stage where a second office may exist. The two offices must be separate and must not connect.
+
+Stage 5 separation rule:
+The Care Home Office and Family Coordinator Office are separate workspaces. They may relate to the same real-life person, but they do not connect inside the app.
+
+This means:
+- No shared inbox between the two offices.
+- No shared requests.
+- No shared updates.
+- No shared admin tools.
+- No cross-access.
+- No care-home data visible in the Family Coordinator Office.
+- No Family Coordinator Office data visible in the Care Home Office.
+- No handover workflow or internal linking between them.
+
+The Care Home Office belongs to the care organisation and its operational responsibilities. The Family Coordinator Office belongs to family-side coordination only.
+
+Mobile channel principle:
+Mobile is not the carer app. Mobile is the simple in-the-moment channel. In at-home stages it may be used by the person, a family member, a supporter, or a carer depending on how the household works.
+
+At-home setup model:
+For Stage 2, Stage 3, and Stage 4, the visible setup should be a home/person setup, not a care-home setup. Reuse existing backend tables where practical, but label the UI as Setup name, Person 1, Person 2 optional, and Main supporter / coordinator.
+
+Stage 2/3/4 wording:
+When Stage 2, Stage 3, or Stage 4 is active, avoid visible "Care organisation", "Care Home", and "Resident" framing where the context is at-home coordination. Prefer "shared at-home coordination" and "person/people" wording while keeping the existing backend routing intact.
+When Stage 3 or Stage 4 is active, prefer "shared update", "shared request", and "shared coordination" wording over care-home office wording where the user is doing routine at-home coordination.
+
+Office model shorthand:
+Single -> Shared -> Split.
+
+Life File Guide (in-app help):
+The Life File Guide explains a simple optional notes approach. It may suggest what users may want to keep outside the app, using paper and pen or digital if they prefer.
+
+Canonical Life File Guide copy:
+If helpful, keep simple notes outside the app, using paper and pen or digital if you prefer. The app is only a lightweight coordination layer.
+
+The app does not store the contents of notebooks, documents, medical records, financial records, legal documents, care logs, passwords, or private long-form notes.
+
+Use gentle optional wording:
+- "you may want to"
+- "suggested items"
+- "useful additions"
+- "when needed"
+
+Avoid:
+- "required"
+- "mandatory"
+- "must complete"
+
+Life File Guide stages:
+- Stage 1 - Planning & Organisation: simple notes outside the app; basic contact list; GP / doctor details; pharmacy details; family contact numbers; current medication list; important appointments; where key documents are kept.
+- Stage 2 - Maintaining Independence at Home: daily notes / activity log; changes in health or mood; missed medication or concerns; appointment notes; delivery / shopping arrangements; household routines; emergency contacts; key instructions for someone stepping in.
+- Stage 3 - Family-Supported Coordination at Home: who is helping with what; family contact list; key decisions made; actions agreed; hospital / clinic contacts; financial admin contacts; LPA / legal contact details; notes of important conversations.
+- Stage 4 - Carer + Family at Home: carer instructions; daily routine; medication schedule; allergies; mobility / falls risk notes; food and drink preferences; personal care preferences; house access instructions; emergency procedure; what to do if something changes.
+- Stage 5 - Care Home + Family Coordination: care home contact details; family coordinator contact; key medical information; preferences and routines; financial / admin contacts; visiting arrangements; important family updates; notes of care home meetings; questions for care home staff.
+
 Video naming and env key spec (locked):
 - Core labels everywhere: `Record video` and `Diagram video`.
 - Only two video types are allowed: `Record` and `Diagram`.
@@ -448,6 +536,8 @@ The platform may process:
 Only the most recent message from each sender is retained.
 The platform is not designed to store long-term communication histories.
 
+The platform is not intended to process or store legal authority documents, clinical records, finance/investment records, identity document data, safeguarding case files, or Carer Pack documents.
+
 ## 3) Where Data Is Stored
 Data is stored within secure UK-based cloud infrastructure operated by voicemailcare.com.
 Logical separation is maintained between participating care homes.
@@ -515,6 +605,9 @@ It must not be used for:
 • Safeguarding reports  
 • Complaints about care  
 • Emergency communication  
+• Legal authority document handling  
+• Financial account or investment management  
+• Storage or management of Carer Pack documents  
 
 For urgent matters, contact the care home directly.
 
@@ -605,3 +698,4 @@ Version 1.0
 6) Clear Role Boundaries — care home responsible for safeguarding, consent, content management, staff supervision, regulatory compliance; platform does not monitor/moderate.
 
 Core principle: presence without performance pressure.
+

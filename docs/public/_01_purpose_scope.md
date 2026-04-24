@@ -22,6 +22,14 @@ Office staff use Care Hub – Office only.
 
 This service is not for care updates, health information, safeguarding alerts, monitoring, or assessment. It should not be used for emergency, urgent, or time-sensitive communication.
 
+## Data boundary (hard)
+
+The platform is for non-urgent communication and coordination only.
+
+The platform does not store or manage legal authority documents, clinical records, finance/investment records, identity document data, safeguarding case files, or Carer Pack files.
+
+Sensitive records must be handled outside the platform under user-managed external arrangements.
+
 ## Message scope
 
 Core messaging is audio-only and social in nature. Each channel keeps only the latest message; new messages replace previous ones in that channel.

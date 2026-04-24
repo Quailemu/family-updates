@@ -34,11 +34,13 @@ def get_supabase_config() -> tuple[str, str]:
                 return value
         return ""
 
-    url = _first_env("SUPABASE_URL", "supabase_url")
-    anon_key = _first_env(
+    url = _first_env("NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_URL", "supabase_url")
+    publishable_key = _first_env(
+        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_PUBLISHABLE_KEY",
         "SUPABASE_ANON_KEY",
         "supabase_anon_key",
         "SUPABASE_ANONKEY",
         "supabase_anonkey",
     )
-    return url, anon_key
+    return url, publishable_key

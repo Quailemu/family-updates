@@ -1,9 +1,8 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("VM_SUPABASE_URL") ?? "";
-const SUPABASE_ANON_KEY = Deno.env.get("VM_SUPABASE_ANON_KEY") ?? "";
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("VM_SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SUPABASE_SECRET_KEY = Deno.env.get("VM_SUPABASE_SECRET_KEY") ?? "";
 const BUCKET_ID = "voice_messages";
 const SIGNED_URL_TTL_SECONDS = 60;
 
@@ -43,7 +42,7 @@ serve(async (req) => {
     return jsonResponse(405, { error: "method_not_allowed" });
   }
 
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+  if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
     return jsonResponse(500, { error: "missing_env" });
   }
 
@@ -63,7 +62,7 @@ serve(async (req) => {
     return jsonResponse(400, { error: "missing_message_id" });
   }
 
-  const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const serviceClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
   const { data: userData, error: userError } = await serviceClient.auth
     .getUser(token);

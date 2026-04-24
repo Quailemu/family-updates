@@ -57,6 +57,38 @@ Ports:
 - Care Hub – Mobile: http://localhost:8502
 - Care Hub – Office: http://localhost:8503
 
+## Local backend development without login
+
+For local backend work only, set the service-role key in the same terminal, then
+use a dev launcher.
+
+PowerShell:
+
+```powershell
+$env:SUPABASE_URL="https://your-project.supabase.co"
+$env:SUPABASE_SECRET_KEY="your_secret_key"
+.\run_dev_care_hub_office.cmd
+```
+
+Command Prompt:
+
+```bat
+set SUPABASE_URL=https://your-project.supabase.co
+set SUPABASE_SECRET_KEY=your_secret_key
+.\run_dev_care_hub_office.cmd
+```
+
+Optional selectors:
+
+```powershell
+$env:DEV_AUTH_BYPASS_CARE_HOME_ID="care_home_uuid"
+$env:DEV_AUTH_BYPASS_AUTH_UID="auth_user_uuid"
+```
+
+The shortcut only activates on localhost/127.0.0.1/::1, keeps the selected
+Family/Mobile/Office variant locked, and uses the first active mapping row when
+no selector is provided.
+
 ## Supabase auth setup (role-based)
 
 - Family: email magic-link auth (email only). Set `FAMILY_MAGIC_LINK_REDIRECT_URL`.
