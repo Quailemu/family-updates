@@ -8,6 +8,17 @@ The product now has four active lifecycle stages plus preparation guidance. The 
 
 For Stage 1, Stage 2, and Stage 3.
 
+This should be a smaller at-home help set, not the full care-home Office pack with changed nouns. Many original Office documents are not relevant to a person at home, family-supported coordination, or family plus carer at home.
+
+At-home documents should cover only what the household needs:
+
+- how the simple message channels work
+- how family/contact access works
+- how Mobile can be used as an in-the-moment channel
+- how shared updates and requests work where enabled
+- Life File Guide and external notes/files guidance
+- non-urgent boundaries and normal direct contact routes
+
 Use this wording:
 
 - person / people
@@ -46,6 +57,8 @@ High-priority rewrite targets:
 ### 2. Stage 4 Care Home Office guidance
 
 For the care-home workspace only.
+
+The original care-home documentation remains the Stage 4 Care Home documentation set. Preserve the care-home governance language and use these documents for the care-home side of Stage 4. Do not rewrite them into at-home wording or remove care-home responsibility language from this set.
 
 Use this wording:
 

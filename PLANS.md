@@ -186,6 +186,11 @@ voicemailcare.com - for non-urgent social voice messages between the person and 
 
 Family -> Person uses separate per-family-member channels. Person -> Family keeps the latest shared message for all Family Members. No threads.
 
+Documentation boundary:
+The original care-home documentation remains the Stage 4 Care Home documentation set. Do not dilute it into at-home wording. Stage 4 Care Home Office/Mobile/Family should continue to use the full care-home governance, resident, room/reference, staff, safeguarding, consent, and responsibility wording.
+
+Stage 1, Stage 2, and Stage 3 need a smaller separate at-home help set. Do not show the full care-home Office documentation pack in at-home stages unless a page has been rewritten for at-home use. At-home guidance should focus on simple messages, shared coordination, registering family/contact access, Life File Guide, and practical requests where enabled.
+
 Office model shorthand:
 Single -> Shared -> Split.
 
