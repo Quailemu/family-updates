@@ -35,15 +35,21 @@ Resident -> Family channel keeps the latest resident message shared to all Famil
 
 Purpose
 
-Care Hub staff can invite and register a Family Member for a resident. This registration is a care-home action between the named care home and the named Family Member.
+Care Hub - Office can invite and register a Family Member for the selected person/resident.
+
+In Stages 1-3, this is an at-home coordination action. The coordinator / family decides who should be added.
+
+In Stage 4, this is a Care Home Office action between the named care home and the named Family Member.
 
 Steps
 
 1. Open Care Hub – Office.
 2. Go to "Register a Family Member".
 3. Enter contact details.
-4. Select resident.
-5. Confirm the person is being registered by the care home.
+4. Select the person/resident.
+5. Confirm the appropriate access decision:
+   - Stages 1-3: the coordinator / family has decided the person may be added.
+   - Stage 4: the care home has decided the person may be added.
 6. Click "Send invitation".
 
 What Happens Next
@@ -52,13 +58,13 @@ The Family Member receives a secure email login link.
 They click the link from their inbox to sign in.
 No password is required.
 They log into the Family Hub.
-Access is restricted to the selected resident.
-The registration record should include: care home name, Family Member name/email, office staff name, and date.
+Access is restricted to the selected person/resident.
+The registration record should include the setup or care home name, Family Member name/email, Office account, and date.
 
 Important Notes
 
 This service is for non-urgent social communication only.
-Only individuals designated by the care home should be registered.
+Only appropriate Family Members should be registered.
 voicemailcare.com provides technical infrastructure only. It does not decide, verify, or manage authorisation decisions.
 Duplicate registrations are prevented automatically.
 

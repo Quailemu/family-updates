@@ -24,12 +24,13 @@ This guide is for office and admin staff using Care Hub - Office.
 
 1. Open Register a Family Member.
 2. Enter first name, last name, and email.
-3. Select the resident.
-4. Confirm the person is being registered by the care home.
-5. Confirm this registration is between the named care home and the named Family Member.
-6. Confirm record details are captured: care home name, Family Member name/email, office staff name, and date.
-7. Confirm that voicemailcare.com provides technical infrastructure only and does not decide or manage authorisation.
-8. Send invitation.
+3. Select the person/resident.
+4. Confirm the appropriate access decision:
+   - Stages 1-3: the coordinator / family has decided the person may be added.
+   - Stage 4: the care home has decided the person may be added.
+5. Confirm record details are captured: setup or care home name, Family Member name/email, Office account, and date.
+6. Confirm that voicemailcare.com provides technical infrastructure only and does not decide or manage authorisation.
+7. Send invitation.
 
 ## Message flow and control
 

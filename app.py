@@ -185,77 +185,70 @@ OFFICE_PRACTICAL_CONTEXT_VISIT = "visit"
 SENSITIVE_DATA_BOUNDARY_WARNING = (
     "Keep sensitive records outside the app. Use this only for simple communication and coordination."
 )
-LIFE_FILE_GUIDE_STAGES = (
+LIFE_FILE_GUIDE_SECTIONS = (
     (
-        1,
-        "Stage 1 - Planning & Organisation",
-        "Examples",
+        "prep",
+        "Suggested external file names",
+        "Suggested file names",
         (
-            "simple notes outside the app",
-            "basic contact list",
-            "GP / doctor details",
-            "pharmacy details",
-            "family contact numbers",
-            "current medication list",
-            "important appointments",
-            "where key documents are kept",
+            "[Person's name] - Life Log",
+            "[Person's name] - Private Finance and Admin",
+            "[Person's name] - Carer and Housekeeping Notes",
         ),
     ),
     (
-        2,
-        "Stage 2 - Maintaining Independence at Home",
-        "Examples",
+        "life_log",
+        "Life Log",
+        "What this is for",
         (
-            "daily notes / activity log",
+            "day-to-day notes and observations",
             "changes in health or mood",
             "missed medication or concerns",
             "appointment notes",
-            "delivery / shopping arrangements",
-            "household routines",
+            "things to remember",
+            "questions for family, GP, or carer",
             "emergency contacts",
-            "key instructions for someone stepping in",
         ),
     ),
     (
-        3,
-        "Stage 3 - Family-Supported Coordination at Home",
-        "Examples",
+        "finance_admin",
+        "Private Finance and Admin",
+        "What this is for",
         (
-            "who is helping with what",
-            "family contact list",
-            "key decisions made",
-            "actions agreed",
-            "hospital / clinic contacts",
+            "bills and utilities",
+            "pensions and benefits",
+            "insurance",
             "financial admin contacts",
-            "LPA / legal contact details",
-            "notes of important conversations",
+            "bank contact details, but not passwords",
+            "solicitor / LPA contact details",
+            "where important documents are kept",
+            "subscriptions and direct debits",
         ),
     ),
     (
-        4,
-        "Stage 4 - Carer + Family at Home",
-        "Examples",
+        "carer_housekeeping",
+        "Carer and Housekeeping Notes",
+        "What this is for",
         (
-            "carer instructions",
-            "daily routine",
-            "medication schedule",
+            "first page: important information for helpers",
+            "emergency contacts",
+            "house access instructions",
             "allergies",
+            "medication schedule summary",
+            "daily routine",
             "mobility / falls risk notes",
             "food and drink preferences",
-            "personal care preferences",
-            "house access instructions",
-            "emergency procedure",
+            "housekeeping notes, deliveries, bins, pets, or keys",
             "what to do if something changes",
         ),
     ),
     (
-        5,
-        "Stage 5 - Care Home + Family Coordination",
-        "Examples",
+        "care_home",
+        "If a care home becomes involved",
+        "What this is for",
         (
             "care home contact details",
             "family coordinator contact",
-            "key medical information",
             "preferences and routines",
             "financial / admin contacts",
             "visiting arrangements",
@@ -276,7 +269,7 @@ DEFAULT_OPERATING_MODE = str(
 DEFAULT_MAIN_CONTACT_NAME = str(os.getenv("DEFAULT_MAIN_CONTACT_NAME", "") or "").strip()
 DEFAULT_LIFECYCLE_STAGE = max(
     1,
-    min(int(os.getenv("DEFAULT_LIFECYCLE_STAGE", "4")), 5),
+    min(int(os.getenv("DEFAULT_LIFECYCLE_STAGE", "3")), 4),
 )
 SEND_ACTION_GUARD_SECONDS = max(
     int(os.getenv("SEND_ACTION_GUARD_SECONDS", "5")),
@@ -2547,10 +2540,17 @@ def render_office_family_registration_form(
         st.error("Your Office account is not mapped to an active care home.")
         return
     mode_value = get_operating_mode(access_token)
-    organisation_label = location_label(mode_value)
-    subject_singular = subject_label(mode_value)
-    subject_singular_title = subject_label(mode_value, title=True)
-    subject_plural = subject_label(mode_value, plural=True)
+    lifecycle_stage_number = normalize_lifecycle_stage(get_lifecycle_stage(access_token))
+    at_home_lifecycle_stage = lifecycle_stage_number in {1, 2, 3}
+    organisation_label = "Setup" if at_home_lifecycle_stage else location_label(mode_value)
+    subject_singular = "person" if at_home_lifecycle_stage else subject_label(mode_value)
+    subject_singular_title = "Person" if at_home_lifecycle_stage else subject_label(mode_value, title=True)
+    subject_plural = "people" if at_home_lifecycle_stage else subject_label(mode_value, plural=True)
+    decision_owner_label = (
+        "coordinator / family"
+        if at_home_lifecycle_stage
+        else contact_label(mode_value)
+    )
 
     office_residents = [
         resident
@@ -2560,6 +2560,22 @@ def render_office_family_registration_form(
     if not office_residents:
         st.info(f"No active {subject_plural} are available for family registration.")
         return
+
+    active_care_home_name = str(
+        st.session_state.get("active_care_home_name")
+        or st.session_state.get("care_home_name")
+        or "this care home"
+    ).strip()
+    if active_care_home_name.lower() == "this care home":
+        resolved_care_home_name = fetch_active_care_home_name(access_token)
+        if resolved_care_home_name:
+            active_care_home_name = resolved_care_home_name
+    registering_staff_name = str(
+        st.session_state.get("auth_email")
+        or st.session_state.get("auth_uid")
+        or "Office staff"
+    ).strip()
+    registration_date = time.strftime("%d %b %Y")
 
     pending_key = "office_family_registration_pending"
     pending_payload = st.session_state.get(pending_key)
@@ -2587,25 +2603,16 @@ def render_office_family_registration_form(
             else:
                 st.error(mapping_error or "Retry failed. Please try again.")
 
-    active_care_home_name = str(
-        st.session_state.get("active_care_home_name")
-        or st.session_state.get("care_home_name")
-        or "this care home"
-    ).strip()
-    if active_care_home_name.lower() == "this care home":
-        resolved_care_home_name = fetch_active_care_home_name(access_token)
-        if resolved_care_home_name:
-            active_care_home_name = resolved_care_home_name
-    registering_staff_name = str(
-        st.session_state.get("auth_email")
-        or st.session_state.get("auth_uid")
-        or "Office staff"
-    ).strip()
-    registration_date = time.strftime("%d %b %Y")
-    st.caption(
-        f"{active_care_home_name} is registering a Family Member for this {subject_singular}. "
-        f"The {contact_label(mode_value)} makes the access decision and keeps the registration record."
-    )
+    if at_home_lifecycle_stage:
+        st.caption(
+            f"Register a Family Member for this {subject_singular}. "
+            "The coordinator / family makes the access decision and keeps any registration record outside the app if needed."
+        )
+    else:
+        st.caption(
+            f"{active_care_home_name} is registering a Family Member for this {subject_singular}. "
+            f"The {decision_owner_label} makes the access decision and keeps the registration record."
+        )
     st.markdown("#### Registration record details")
     st.markdown(
         f"{organisation_label}: **{active_care_home_name}**  \n"
@@ -2622,7 +2629,7 @@ def render_office_family_registration_form(
         label = format_resident_identity_label(
             resident,
             operating_mode=mode_value,
-            include_room=bool(room_label(mode_value)),
+            include_room=bool(room_label(mode_value)) and not at_home_lifecycle_stage,
             include_care_home=False,
             separator=" | ",
         )
@@ -2630,7 +2637,7 @@ def render_office_family_registration_form(
         resident_by_id[resident_id] = resident
         resident_label_by_id[resident_id] = label
     if not resident_options:
-        st.info("No valid residents are available for family registration.")
+        st.info(f"No valid {subject_plural} are available for family registration.")
         return
 
     invite_cooldown_key = "office_register_invite_cooldown_until"
@@ -2662,14 +2669,23 @@ def render_office_family_registration_form(
             key="office_family_resident_select",
         )
         st.markdown("#### Section 3 - Confirmation")
+        confirmation_copy = (
+            f"I confirm that the coordinator / family has decided this person may be added "
+            f"as a Family Member for this {subject_singular} and is responsible for determining, "
+            f"granting, and maintaining their access to the {subject_singular}."
+            if at_home_lifecycle_stage
+            else (
+                f"I confirm that {active_care_home_name} has decided this person may be added "
+                f"as a Family Member for this {subject_singular} and is solely responsible "
+                f"for determining, granting, and maintaining their access to the {subject_singular}."
+            )
+        )
         resident_access_confirmed = st.checkbox(
-            f"I confirm that {active_care_home_name} has decided this person may be added "
-            f"as a Family Member for this {subject_singular} and is solely responsible "
-            f"for determining, granting, and maintaining their access to the {subject_singular}.",
+            confirmation_copy,
             key="office_family_authorisation_confirm",
         )
         st.caption(
-            f"voicemailcare.com does not decide who may be added. The {contact_label(mode_value)} is responsible for that decision."
+            f"voicemailcare.com does not decide who may be added. The {decision_owner_label} is responsible for that decision."
         )
         st.caption(
             "Security note: after sending an invite, wait for the countdown before retrying."
@@ -2693,7 +2709,7 @@ def render_office_family_registration_form(
         st.error("Enter a valid email address.")
         return
     if not resident_access_confirmed:
-        st.error(f"Please confirm {contact_label(mode_value)} authorisation before sending the invitation.")
+        st.error(f"Please confirm {decision_owner_label} authorisation before sending the invitation.")
         return
 
     resident = resident_by_id.get(resident_id)
@@ -2716,7 +2732,7 @@ def render_office_family_registration_form(
         st.error(str(exc))
         return
     if existing_contact_resp.data:
-        st.error(f"That email is already registered for this {contact_label(mode_value)}.")
+        st.error(f"That email is already registered for this {decision_owner_label}.")
         return
 
     admin_client, admin_error = get_admin_client()
@@ -5050,17 +5066,16 @@ def normalize_lifecycle_stage(stage_value: object) -> int:
         parsed = int(stage_value)
     except Exception:
         parsed = int(DEFAULT_LIFECYCLE_STAGE)
-    return max(1, min(parsed, 5))
+    return max(1, min(parsed, 4))
 
 
 def get_lifecycle_stage_label(stage_value: object) -> str:
     stage = normalize_lifecycle_stage(stage_value)
     labels = {
-        1: "Stage 1 - Planning & Organisation",
-        2: "Stage 2 - Maintaining Independence at Home",
-        3: "Stage 3 - Family-Supported Coordination at Home",
-        4: "Stage 4 - Carer + Family at Home",
-        5: "Stage 5 - Care Home + Family Coordination",
+        1: "Stage 1 - Maintaining Independence at Home",
+        2: "Stage 2 - Family-Supported Coordination at Home",
+        3: "Stage 3 - Carer + Family at Home",
+        4: "Stage 4 - Care Home + Family Coordination",
     }
     return labels.get(stage, f"Stage {stage}")
 
@@ -5068,11 +5083,10 @@ def get_lifecycle_stage_label(stage_value: object) -> str:
 def get_lifecycle_stage_setup_note(stage_value: object) -> str:
     stage = normalize_lifecycle_stage(stage_value)
     notes = {
-        1: "Stage 1: planning stage. Office, Mobile, Family messaging, and Requests stay inactive.",
-        2: "Stage 2: quiet independence stage. Office, Mobile, and Family Hub are available for simple messages. Mobile can be the person's own simple channel. Requests stay inactive.",
-        3: "Stage 3: family-supported stage. One Office, Mobile, Family messaging, and Requests are available. Mobile can keep the person on their own simple channel.",
-        4: "Stage 4: carer and family at home. This still uses one shared Office, not two offices.",
-        5: "Stage 5: care home coordination. The split Family Office / Care Home Office model is planned separately and is not built here yet.",
+        1: "Stage 1: quiet independence stage. Office, Mobile, and Family Hub are available for simple messages. Mobile can be the person's own simple channel. Requests stay inactive.",
+        2: "Stage 2: family-supported stage. One Office, Mobile, Family messaging, and Requests are available. Mobile can keep the person on their own simple channel.",
+        3: "Stage 3: carer and family at home. This still uses one shared Office, not two offices.",
+        4: "Stage 4: care home coordination. The split Family Coordinator Office / Care Home Office model is planned separately and the two offices must not connect.",
     }
     return notes.get(stage, "")
 
@@ -5093,9 +5107,9 @@ def get_lifecycle_policy(
         1: {
             "enable_notepad": False,
             "enable_life_management_file": False,
-            "enable_office_channel": False,
-            "enable_mobile_channel": False,
-            "enable_family_messaging": False,
+            "enable_office_channel": True,
+            "enable_mobile_channel": True,
+            "enable_family_messaging": True,
             "enable_requests": False,
             "enable_family_coordination": False,
             "enable_second_office": False,
@@ -5108,8 +5122,8 @@ def get_lifecycle_policy(
             "enable_office_channel": True,
             "enable_mobile_channel": True,
             "enable_family_messaging": True,
-            "enable_requests": False,
-            "enable_family_coordination": False,
+            "enable_requests": True,
+            "enable_family_coordination": True,
             "enable_second_office": False,
             "show_external_notepad_guidance": True,
             "show_life_file_guide": True,
@@ -5134,18 +5148,6 @@ def get_lifecycle_policy(
             "enable_family_messaging": True,
             "enable_requests": True,
             "enable_family_coordination": True,
-            "enable_second_office": False,
-            "show_external_notepad_guidance": True,
-            "show_life_file_guide": True,
-        },
-        5: {
-            "enable_notepad": False,
-            "enable_life_management_file": False,
-            "enable_office_channel": True,
-            "enable_mobile_channel": True,
-            "enable_family_messaging": True,
-            "enable_requests": True,
-            "enable_family_coordination": True,
             "enable_second_office": True,
             "show_external_notepad_guidance": True,
             "show_life_file_guide": True,
@@ -5155,7 +5157,7 @@ def get_lifecycle_policy(
         "lifecycle_stage": stage,
         "lifecycle_stage_label": get_lifecycle_stage_label(stage),
         "operating_mode": mode_value,
-        **base_policy.get(stage, base_policy[4]),
+        **base_policy.get(stage, base_policy[3]),
     }
 
 
@@ -5239,14 +5241,17 @@ def practical_checkbox_options(operating_mode: object) -> tuple[str, ...]:
 
 
 def normalize_practical_option_label_for_mode(
-    option_label: str, operating_mode: object
+    option_label: str, operating_mode: object, *, person_first_name: str = ""
 ) -> str:
     label = str(option_label or "").strip()
+    first_name = str(person_first_name or "").strip()
+    if label == "I will book and take them" and first_name:
+        return f"I will take {first_name}"
     if (
         normalize_operating_mode(operating_mode) == OPERATING_MODE_PERSONAL_USE
         and label == "I will call the care home"
     ):
-        return "I will call home"
+        return "I will call directly"
     return label
 
 
@@ -5705,7 +5710,7 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
     care_home_name = str(care_home_profile.get("name") or "").strip()
     operating_mode = normalize_operating_mode(care_home_profile.get("operating_mode"))
     lifecycle_stage = normalize_lifecycle_stage(care_home_profile.get("lifecycle_stage"))
-    home_coordination_stage = lifecycle_stage in {2, 3, 4}
+    home_coordination_stage = lifecycle_stage in {1, 2, 3}
     if care_home_name:
         safe_name = html.escape(care_home_name)
         if operating_mode == OPERATING_MODE_PERSONAL_USE or home_coordination_stage:
@@ -5725,7 +5730,11 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
                 unsafe_allow_html=True,
             )
         else:
-            identity_label = organisation_heading(operating_mode)
+            identity_label = (
+                "Care home"
+                if lifecycle_stage == 4
+                else organisation_heading(operating_mode)
+            )
             st.markdown(
                 (
                     '<div style="margin:6px 0 12px 0;padding:8px 10px;'
@@ -5740,9 +5749,13 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
         st.caption("You are signed in.")
     if get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE, VARIANT_FAMILY}:
         mode_text = "Shared at-home coordination" if home_coordination_stage else (
-            "Personal use"
-            if operating_mode == OPERATING_MODE_PERSONAL_USE
-            else "Care organisation"
+            "Care home coordination"
+            if lifecycle_stage == 4
+            else (
+                "Personal use"
+                if operating_mode == OPERATING_MODE_PERSONAL_USE
+                else "Care organisation"
+            )
         )
         st.caption(f"Mode: {mode_text}")
     if not bool(st.session_state.get("_care_home_custom_banner_rendered")):
@@ -5765,7 +5778,7 @@ def render_active_care_home_name_caption() -> None:
     care_home_name = str(care_home_profile.get("name") or "").strip()
     operating_mode = normalize_operating_mode(care_home_profile.get("operating_mode"))
     lifecycle_stage = normalize_lifecycle_stage(care_home_profile.get("lifecycle_stage"))
-    home_coordination_stage = lifecycle_stage in {2, 3, 4}
+    home_coordination_stage = lifecycle_stage in {1, 2, 3}
     if care_home_name:
         if operating_mode == OPERATING_MODE_PERSONAL_USE or home_coordination_stage:
             person_display = str(st.session_state.get("circle_person_display_name") or "").strip()
@@ -5779,7 +5792,11 @@ def render_active_care_home_name_caption() -> None:
                 unsafe_allow_html=True,
             )
         else:
-            identity_label = organisation_heading(operating_mode)
+            identity_label = (
+                "Care home"
+                if lifecycle_stage == 4
+                else organisation_heading(operating_mode)
+            )
             st.markdown(
                 (
                     '<div class="vm-care-home-banner">'
@@ -7152,27 +7169,32 @@ def render_life_file_guide() -> None:
     )
     render_route_link("Back", back_route, key="life_file_guide_back")
     st.markdown(
-        "This guide is for simple notes kept outside the app, using paper and pen or digital if you prefer. "
-        "Use it only if helpful."
+        "Use this guide to organise important information outside the app. "
+        "Paper, computer files, and phone notes are all fine."
     )
     st.caption(
-        "The app does not store these records. Avoid putting medical records, financial records, "
-        "legal documents, passwords, care logs, or private long-form notes into VoicemailCare."
+        "VoicemailCare does not store these records. Keep private information separate from "
+        "practical information that a carer, helper, or family member may need."
     )
-    for stage, title, list_heading, items in LIFE_FILE_GUIDE_STAGES:
-        with st.expander(title, expanded=(stage == DEFAULT_LIFECYCLE_STAGE)):
-            st.markdown(f"**{list_heading} you may want to keep outside the app:**")
+    st.caption(
+        "Do not put medical records, financial records, legal documents, passwords, care logs, "
+        "or private long-form notes into VoicemailCare."
+    )
+    for section_id, title, list_heading, items in LIFE_FILE_GUIDE_SECTIONS:
+        with st.expander(title, expanded=(section_id == "prep")):
+            st.markdown(f"**{list_heading}:**")
             for item in items:
                 st.markdown(f"- {item}")
-    st.markdown("### Notepad")
+    st.markdown("### Naming files")
     st.markdown(
-        "Paper and pen can be useful for daily notes, practical observations, "
-        "things to remember, and contact numbers. Digital notes are fine if preferred. Keep them outside the app."
+        "Use plain names that can be found quickly on a computer or phone. For example: "
+        "`Margaret Hill - Life Log`, `Margaret Hill - Private Finance and Admin`, "
+        "and `Margaret Hill - Carer and Housekeeping Notes`."
     )
-    st.markdown("### Life Management File")
+    st.markdown("### Sharing")
     st.markdown(
-        "If more organisation is needed later, the notebook can point to where key information is kept. "
-        "These examples are optional and can be added when needed."
+        "Share only what is needed. A carer may need practical housekeeping notes. They should not "
+        "normally need private finance and admin information."
     )
 
 
@@ -10390,8 +10412,8 @@ def render_family_send() -> None:
     lifecycle_stage_number = normalize_lifecycle_stage(lifecycle_stage)
     lifecycle_policy = get_lifecycle_policy(lifecycle_stage, operating_mode)
     lifecycle_stage_label = str(lifecycle_policy.get("lifecycle_stage_label") or "")
-    at_home_lifecycle_stage = lifecycle_stage_number in {2, 3, 4}
-    shared_coordination_stage = lifecycle_stage_number in {3, 4}
+    at_home_lifecycle_stage = lifecycle_stage_number in {1, 2, 3}
+    shared_coordination_stage = lifecycle_stage_number in {2, 3}
     family_messaging_enabled = bool(lifecycle_policy.get("enable_family_messaging"))
     requests_enabled = bool(lifecycle_policy.get("enable_requests"))
     office_channel_enabled = bool(lifecycle_policy.get("enable_office_channel"))
@@ -10563,6 +10585,7 @@ def render_family_send() -> None:
             },
         )
         full_name = get_resident_full_name(resident, operating_mode=operating_mode)
+        person_first_name = full_name.split()[0] if full_name.split() else full_name
         room_caption = (
             f"{room_label(operating_mode, title=True)} {resident['room']}"
             if resident.get("room") and room_label(operating_mode) and not at_home_lifecycle_stage
@@ -10716,7 +10739,7 @@ def render_family_send() -> None:
                             st.caption(f"Requested date: {requested_date}")
                         if requested_time:
                             st.caption(f"Requested time window: {requested_time}")
-                    if family_led_mode:
+                    if family_led_mode or at_home_lifecycle_stage:
                         st.caption("For urgent or medical matters, use your normal direct contact route.")
                     else:
                         st.caption("For urgent or medical matters, please call the care home directly.")
@@ -10755,7 +10778,12 @@ def render_family_send() -> None:
                         option_id = str(option.get("id") or "").strip()
                         option_label = normalize_practical_option_label_for_mode(
                             str(option.get("option_label") or "").strip(),
-                            operating_mode,
+                            (
+                                OPERATING_MODE_PERSONAL_USE
+                                if at_home_lifecycle_stage
+                                else operating_mode
+                            ),
+                            person_first_name=person_first_name,
                         )
                         if not option_id or not option_label:
                             continue
@@ -11720,7 +11748,7 @@ def render_care_hub_banner_settings() -> None:
     mode_value = get_operating_mode(access_token)
     lifecycle_stage = get_lifecycle_stage(access_token)
     lifecycle_stage_number = normalize_lifecycle_stage(lifecycle_stage)
-    at_home_lifecycle_stage = lifecycle_stage_number in {2, 3, 4}
+    at_home_lifecycle_stage = lifecycle_stage_number in {1, 2, 3}
     if at_home_lifecycle_stage:
         subject_singular = "person"
         subject_singular_title = "Person"
@@ -11855,7 +11883,7 @@ def render_care_hub_banner_settings() -> None:
     st.caption(
         "Lifecycle stage controls which tools are available. It does not assign fixed roles to people."
     )
-    st.caption("Stages control tool availability. Stage 4 remains one shared Office.")
+    st.caption("Stages control tool availability. Stage 3 remains one shared Office.")
     if st.session_state.get("_care_homes_missing_lifecycle_stage"):
         st.warning(
             "Lifecycle stage changes cannot be saved until migration "
@@ -11913,12 +11941,12 @@ def render_care_hub_banner_settings() -> None:
             f"`second_office={bool(stage_policy.get('enable_second_office'))}`"
         )
         if bool(stage_policy.get("enable_second_office")):
-            st.caption("Second office is a planning flag. Separate Stage 5 office screens are not implemented yet.")
+            st.caption("Second office is a planning flag. Separate Stage 4 office screens are not implemented yet.")
         if current_operating_mode != mode_value:
             st.warning("Profile mode and runtime mode differ. Refresh and check save/update permissions.")
         if mode_value == OPERATING_MODE_PERSONAL_USE:
             st.markdown("- Personal mode checks: subject=`person`, plural=`people`, room field hidden.")
-    lifecycle_stage_options = [1, 2, 3, 4, 5]
+    lifecycle_stage_options = [1, 2, 3, 4]
     lifecycle_stage_labels = {
         stage: get_lifecycle_stage_label(stage) for stage in lifecycle_stage_options
     }
@@ -11937,7 +11965,7 @@ def render_care_hub_banner_settings() -> None:
     selected_lifecycle_note = get_lifecycle_stage_setup_note(selected_lifecycle_stage)
     if selected_lifecycle_note:
         st.caption(selected_lifecycle_note)
-    selected_at_home_stage = normalize_lifecycle_stage(selected_lifecycle_stage) in {2, 3, 4}
+    selected_at_home_stage = normalize_lifecycle_stage(selected_lifecycle_stage) in {1, 2, 3}
     selected_operating_mode = get_operating_mode_for_lifecycle_stage(
         selected_lifecycle_stage,
         current_operating_mode,
@@ -11946,12 +11974,20 @@ def render_care_hub_banner_settings() -> None:
         "at-home setup"
         if selected_at_home_stage
         else (
-            "care organisation"
+            "care home"
+            if normalize_lifecycle_stage(selected_lifecycle_stage) == 4
+            else "care organisation"
             if selected_operating_mode == OPERATING_MODE_CARE_ORGANISATION
             else "home / personal use"
         )
     )
     st.caption(f"Setup context: {setup_context_label}.")
+    if normalize_lifecycle_stage(selected_lifecycle_stage) == 4:
+        st.caption(
+            "This page configures the Care Home Office. Use the actual care home name here. "
+            "The separate Family Coordinator Office will have its own coordinator/family workspace name "
+            "and will not connect to this workspace."
+        )
     setup_people = fetch_care_home_residents(access_token or "")
     setup_people = [
         person
@@ -11961,7 +11997,9 @@ def render_care_hub_banner_settings() -> None:
 
     with st.form("office_care_home_banner_page_form"):
         name_field_label = (
-            "Care organisation name"
+            "Care home name"
+            if normalize_lifecycle_stage(selected_lifecycle_stage) == 4
+            else "Care organisation name"
             if selected_operating_mode == OPERATING_MODE_CARE_ORGANISATION and not selected_at_home_stage
             else "Setup name"
         )
@@ -11990,6 +12028,8 @@ def render_care_hub_banner_settings() -> None:
             (
                 "Main supporter / coordinator (optional)"
                 if selected_at_home_stage
+                else "Care home contact / coordinator (optional)"
+                if normalize_lifecycle_stage(selected_lifecycle_stage) == 4
                 else "Main contact name (optional)"
             ),
             value=str(care_home_profile.get("main_contact_name") or ""),
@@ -12839,8 +12879,8 @@ def render_care_hub() -> None:
     lifecycle_stage_number = normalize_lifecycle_stage(lifecycle_stage)
     lifecycle_policy = get_lifecycle_policy(lifecycle_stage, operating_mode)
     lifecycle_stage_label = str(lifecycle_policy.get("lifecycle_stage_label") or "")
-    at_home_lifecycle_stage = lifecycle_stage_number in {2, 3, 4}
-    shared_coordination_stage = lifecycle_stage_number in {3, 4}
+    at_home_lifecycle_stage = lifecycle_stage_number in {1, 2, 3}
+    shared_coordination_stage = lifecycle_stage_number in {2, 3}
     family_messaging_enabled = bool(lifecycle_policy.get("enable_family_messaging"))
     requests_enabled = bool(lifecycle_policy.get("enable_requests"))
     office_channel_enabled = bool(lifecycle_policy.get("enable_office_channel"))
@@ -12900,7 +12940,7 @@ def render_care_hub() -> None:
     )
     contacts_by_resident: dict[str, list[dict]] = {}
 
-    show_person_search = lifecycle_stage_number == 5 and not family_led_mode
+    show_person_search = lifecycle_stage_number == 4 and not family_led_mode
     resident_search_container = st.container(border=True)
     search_value = ""
     if show_person_search:
@@ -14321,7 +14361,7 @@ def render_care_hub() -> None:
         )
         show_update_box = (
             runtime_variant == VARIANT_OFFICE
-            and (shared_coordination_stage or normalize_lifecycle_stage(lifecycle_stage) == 5)
+            and (shared_coordination_stage or normalize_lifecycle_stage(lifecycle_stage) == 4)
         ) or (
             runtime_variant == VARIANT_MOBILE and allow_mobile_extended_actions
         )
@@ -14685,7 +14725,11 @@ def render_care_hub() -> None:
                     st.caption(
                         "Use this for non-urgent coordination only (for example visits, events, reminders, attendance, or item requests)."
                     )
-                    st.caption(urgent_contact_copy(operating_mode))
+                    st.caption(
+                        "For urgent or medical matters, use your normal direct contact route."
+                        if at_home_lifecycle_stage
+                        else urgent_contact_copy(operating_mode)
+                    )
                     practical_title = st.text_input(
                         "Request title",
                         key=f"office_practical_title_{resident_id}",
@@ -14722,8 +14766,38 @@ def render_care_hub() -> None:
                         )
                     practical_checkboxes = st.multiselect(
                         "Optional tick-box responses",
-                        options=list(practical_checkbox_options(operating_mode)),
-                        default=list(practical_checkbox_options(operating_mode)),
+                        options=[
+                            normalize_practical_option_label_for_mode(
+                                option,
+                                (
+                                    OPERATING_MODE_PERSONAL_USE
+                                    if at_home_lifecycle_stage
+                                    else operating_mode
+                                ),
+                                person_first_name=person_first_name,
+                            )
+                            for option in practical_checkbox_options(
+                                OPERATING_MODE_PERSONAL_USE
+                                if at_home_lifecycle_stage
+                                else operating_mode
+                            )
+                        ],
+                        default=[
+                            normalize_practical_option_label_for_mode(
+                                option,
+                                (
+                                    OPERATING_MODE_PERSONAL_USE
+                                    if at_home_lifecycle_stage
+                                    else operating_mode
+                                ),
+                                person_first_name=person_first_name,
+                            )
+                            for option in practical_checkbox_options(
+                                OPERATING_MODE_PERSONAL_USE
+                                if at_home_lifecycle_stage
+                                else operating_mode
+                            )
+                        ],
                         key=f"office_practical_options_{resident_id}",
                     )
                     if st.button(
@@ -14784,6 +14858,7 @@ def render_care_hub() -> None:
                                 label = normalize_practical_option_label_for_mode(
                                     str(option_row.get("option_label") or "").strip(),
                                     operating_mode,
+                                    person_first_name=person_first_name,
                                 )
                                 if label:
                                     st.markdown(f"- {label}")
@@ -14804,6 +14879,7 @@ def render_care_hub() -> None:
                                 display_label = normalize_practical_option_label_for_mode(
                                     str(option_label or "").strip(),
                                     operating_mode,
+                                    person_first_name=person_first_name,
                                 )
                                 st.markdown(f"- {display_label}: {option_count}")
                         responses = summary.get("responses") or []
@@ -14819,6 +14895,7 @@ def render_care_hub() -> None:
                                         normalize_practical_option_label_for_mode(
                                             str(label or "").strip(),
                                             operating_mode,
+                                            person_first_name=person_first_name,
                                         )
                                         for label in selected_labels
                                     ]

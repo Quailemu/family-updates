@@ -98,21 +98,27 @@ These admin tasks are handled in Care Hub – Office, not on Care Hub – Mobile
 ### Registering a Family Member
 
 **Purpose**  
-Care Hub staff can invite and register Family Members in the service. Registration is a care-home action between the named care home and the named Family Member.
+Care Hub - Office can invite and register Family Members in the service.
+
+In Stages 1-3, registration is an at-home coordination action. The coordinator / family decides who should be added.
+
+In Stage 4, registration is a Care Home Office action between the named care home and the named Family Member.
 
 **Steps**  
 1. Open Care Hub – Office.  
 2. Go to "Register a Family Member".  
 3. Enter first name, last name, and email.  
-4. Select resident.  
-5. Confirm the person is being registered by the care home.  
+4. Select the person/resident.  
+5. Confirm the appropriate access decision:
+   - Stages 1-3: the coordinator / family has decided the person may be added.
+   - Stage 4: the care home has decided the person may be added.  
 6. Click "Send invitation".
 
 **What happens next**  
-The family contact receives an email invitation. They click a secure email login link to sign in. No password is required. They log into the Family Hub. Access is restricted to the selected resident. The registration record should include care home name, Family Member name/email, office staff name, and date.
+The family contact receives an email invitation. They click a secure email login link to sign in. No password is required. They log into the Family Hub. Access is restricted to the selected person/resident. The registration record should include the setup or care home name, Family Member name/email, Office account, and date.
 
 **Important notes**  
-This service is for non-urgent social communication only. Only individuals designated by the care home should be registered. Duplicate registrations are prevented automatically.
+This service is for non-urgent social communication only. Only appropriate Family Members should be registered. Duplicate registrations are prevented automatically.
 
 ### Resident list and communication areas (Care Hub)
 

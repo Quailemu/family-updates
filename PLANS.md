@@ -100,16 +100,17 @@ Essential platform data only:
 - Minimal operational metadata and security/audit logs needed to run the service.
 
 Lifecycle model:
-The app uses five lifecycle stages to control which tools are available. Stage policy controls capabilities; it must not assign fixed role ownership.
-The user should choose the lifecycle stage, not a separate organisation mode. The lifecycle stage gates tools. Stage 4 must keep the shared Office communication controls available.
+The app uses four active lifecycle stages to control which tools are available. Stage policy controls capabilities; it must not assign fixed role ownership.
+The user should choose the lifecycle stage, not a separate organisation mode. The lifecycle stage gates tools. Stage 3 must keep the shared Office communication controls available.
 
-- Stage 1 - Planning & Organisation: Office off; Mobile off; Family messaging off; Requests off; simple external notes guidance available.
-- Stage 2 - Maintaining Independence at Home: Office on; Mobile on; Family Hub on; Family messaging on for a simple optional message loop; Requests off; shared update/request coordination off; communication remains optional and quiet. Mobile may act as the person's own simple channel.
-- Stage 3 - Family-Supported Coordination at Home: one Office; Mobile on; Family messaging on; Requests on. Mobile may act as the person's own simple channel while Office supports shared family coordination.
-- Stage 4 - Carer + Family at Home: one shared Office; Mobile on; Family messaging on; Requests on. Mobile may show shared coordination tools so users do not have to switch interfaces for routine at-home coordination. Do not create a second office in Stage 4.
-- Stage 5 - Care Home + Family Coordination: split Family Coordinator Office / Care Home Office model planned separately. Stage 5 is the first stage where a second office may exist. The two offices must be separate and must not connect.
+Preparation is not an app stage. Planning & Organisation guidance belongs in the Life File Guide and other help areas only.
 
-Stage 5 separation rule:
+- Stage 1 - Maintaining Independence at Home: Office on; Mobile on; Family Hub on; Family messaging on for a simple optional message loop; Requests off; shared update/request coordination off; communication remains optional and quiet. Mobile may act as the person's own simple channel.
+- Stage 2 - Family-Supported Coordination at Home: one Office; Mobile on; Family messaging on; Requests on. Mobile may act as the person's own simple channel while Office supports shared family coordination.
+- Stage 3 - Carer + Family at Home: one shared Office; Mobile on; Family messaging on; Requests on. Mobile may show shared coordination tools so users do not have to switch interfaces for routine at-home coordination. Do not create a second office in Stage 3.
+- Stage 4 - Care Home + Family Coordination: split Family Coordinator Office / Care Home Office model planned separately. Stage 4 is the first stage where a second office may exist. The two offices must be separate and must not connect.
+
+Stage 4 separation rule:
 The Care Home Office and Family Coordinator Office are separate workspaces. They may relate to the same real-life person, but they do not connect inside the app.
 
 This means:
@@ -124,26 +125,55 @@ This means:
 
 The Care Home Office belongs to the care organisation and its operational responsibilities. The Family Coordinator Office belongs to family-side coordination only.
 
+Stage 4 Care Home Office wording:
+The Care Home Office should use care-home wording and the actual care home name. Do not label the care home workspace as the person's home.
+
+The Family Coordinator Office should use its own separate coordinator/family workspace name, for example "Hill family coordination" or "David's family coordination". It should not use the care home name, and it should not use the person's home name. It is for the coordinator and family, not for the care home, and it must not connect to the Care Home Office.
+
+Stage 4 mobile separation:
+- Care Home Mobile stays operational. It supports care-home/resident voice workflows and does not create structured requests.
+- Family Coordinator Mobile may exist later. It belongs to the family-side workspace, not the care-home workspace.
+- Family Coordinator Mobile may support quick family updates, visit updates, and simple family coordination requests.
+- Family Coordinator Mobile must not connect to Care Home Mobile, Care Home Office, or care-home operational data.
+- Care-home tools and family-coordinator tools may use similar UI patterns, but they are separate products/workspaces in Stage 4.
+
+Stage 4 family-side purpose:
+The Family Coordinator Office and future Family Coordinator Mobile exist to help the wider family help out. They should make it easy to share one update with everyone, coordinate visits or practical help, and reduce pressure on one overloaded coordinator. They must not duplicate care-home operations.
+
 Mobile channel principle:
 Mobile is not the carer app. Mobile is the simple in-the-moment channel. In at-home stages it may be used by the person, a family member, a supporter, or a carer depending on how the household works.
 
 At-home setup model:
-For Stage 2, Stage 3, and Stage 4, the visible setup should be a home/person setup, not a care-home setup. Reuse existing backend tables where practical, but label the UI as Setup name, Person 1, Person 2 optional, and Main supporter / coordinator.
+For Stage 1, Stage 2, and Stage 3, the visible setup should be a home/person setup, not a care-home setup. Reuse existing backend tables where practical, but label the UI as Setup name, Person 1, Person 2 optional, and Main supporter / coordinator.
 
-Stage 2/3/4 wording:
-When Stage 2, Stage 3, or Stage 4 is active, avoid visible "Care organisation", "Care Home", and "Resident" framing where the context is at-home coordination. Prefer "shared at-home coordination" and "person/people" wording while keeping the existing backend routing intact.
-When Stage 3 or Stage 4 is active, prefer "shared update", "shared request", and "shared coordination" wording over care-home office wording where the user is doing routine at-home coordination.
+Stage 1/2/3 wording:
+When Stage 1, Stage 2, or Stage 3 is active, avoid visible "Care organisation", "Care Home", and "Resident" framing where the context is at-home coordination. Prefer "shared at-home coordination" and "person/people" wording while keeping the existing backend routing intact.
+When Stage 2 or Stage 3 is active, prefer "shared update", "shared request", and "shared coordination" wording over care-home office wording where the user is doing routine at-home coordination.
 
 Office model shorthand:
 Single -> Shared -> Split.
 
 Life File Guide (in-app help):
-The Life File Guide explains a simple optional notes approach. It may suggest what users may want to keep outside the app, using paper and pen or digital if they prefer.
+The Life File Guide explains a simple external notes/files approach. It should help users organise important information outside the app, using paper, computer files, or phone notes.
 
 Canonical Life File Guide copy:
-If helpful, keep simple notes outside the app, using paper and pen or digital if you prefer. The app is only a lightweight coordination layer.
+Use this guide to organise important information outside the app. Paper, computer files, and phone notes are all fine.
 
-The app does not store the contents of notebooks, documents, medical records, financial records, legal documents, care logs, passwords, or private long-form notes.
+VoicemailCare does not store the contents of notebooks, documents, medical records, financial records, legal documents, care logs, passwords, or private long-form notes.
+
+Keep private information separate from practical information that a carer, helper, or family member may need.
+
+Do not put medical records, financial records, legal documents, passwords, care logs, or private long-form notes into VoicemailCare.
+
+Suggested external file names:
+- [Person's name] - Life Log
+- [Person's name] - Private Finance and Admin
+- [Person's name] - Carer and Housekeeping Notes
+
+Use plain names that explain who the file is about and what it contains, so the right file can be found quickly on a computer or phone.
+
+Sharing principle:
+Share only what is needed. A carer may need practical housekeeping notes. They should not normally need private finance and admin information.
 
 Use gentle optional wording:
 - "you may want to"
@@ -156,12 +186,11 @@ Avoid:
 - "mandatory"
 - "must complete"
 
-Life File Guide stages:
-- Stage 1 - Planning & Organisation: simple notes outside the app; basic contact list; GP / doctor details; pharmacy details; family contact numbers; current medication list; important appointments; where key documents are kept.
-- Stage 2 - Maintaining Independence at Home: daily notes / activity log; changes in health or mood; missed medication or concerns; appointment notes; delivery / shopping arrangements; household routines; emergency contacts; key instructions for someone stepping in.
-- Stage 3 - Family-Supported Coordination at Home: who is helping with what; family contact list; key decisions made; actions agreed; hospital / clinic contacts; financial admin contacts; LPA / legal contact details; notes of important conversations.
-- Stage 4 - Carer + Family at Home: carer instructions; daily routine; medication schedule; allergies; mobility / falls risk notes; food and drink preferences; personal care preferences; house access instructions; emergency procedure; what to do if something changes.
-- Stage 5 - Care Home + Family Coordination: care home contact details; family coordinator contact; key medical information; preferences and routines; financial / admin contacts; visiting arrangements; important family updates; notes of care home meetings; questions for care home staff.
+Life File Guide sections:
+- Life Log: day-to-day notes and observations; changes in health or mood; missed medication or concerns; appointment notes; things to remember; questions for family, GP, or carer; emergency contacts.
+- Private Finance and Admin: bills and utilities; pensions and benefits; insurance; financial admin contacts; bank contact details, but not passwords; solicitor / LPA contact details; where important documents are kept; subscriptions and direct debits.
+- Carer and Housekeeping Notes: first page with important information for helpers; emergency contacts; house access instructions; allergies; medication schedule summary; daily routine; mobility / falls risk notes; food and drink preferences; housekeeping notes, deliveries, bins, pets, or keys; what to do if something changes.
+- If a care home becomes involved: care home contact details; family coordinator contact; preferences and routines; financial / admin contacts; visiting arrangements; important family updates; notes of care home meetings; questions for care home staff.
 
 Video naming and env key spec (locked):
 - Core labels everywhere: `Record video` and `Diagram video`.
