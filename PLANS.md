@@ -140,6 +140,37 @@ Stage 4 mobile separation:
 Stage 4 family-side purpose:
 The Family Coordinator Office and future Family Coordinator Mobile exist to help the wider family help out. They should make it easy to share one update with everyone, coordinate visits or practical help, and reduce pressure on one overloaded coordinator. They must not duplicate care-home operations.
 
+Stage 4 Family Coordinator workspace planned architecture:
+This is planned separately and should not be built by extending the Care Home Office tables/workflow unless there is a deliberate separation layer.
+
+Purpose:
+The Family Coordinator workspace helps the family coordinate around someone now living in a care home. It is not a care-home tool and is not connected to the Care Home Office.
+
+Planned interfaces:
+- Family Coordinator Office: used by the main coordinator or family admin person. It may send family updates, create simple family coordination requests, review structured replies, and manage family-side contacts.
+- Family Coordinator Mobile: may exist later for quick family-side updates during visits, errands, or conversations. It may help a visiting family member record an update or help the person record a family-side message.
+- Family Hub: family members receive/listen/respond using the same calm, non-live, latest-message-only model.
+
+Possible family-side channels:
+- Coordinator/family update to all family.
+- Visiting family/mobile update to all family.
+- Person/family-side voice message to all family.
+- Simple family coordination request.
+- Structured replies visible to the coordinator/family workspace.
+
+Hard boundaries:
+- No care-home resident list.
+- No room numbers.
+- No care-home admin tools.
+- No care-home staff workflow.
+- No Care Home Office inbox.
+- No Care Home Mobile connection.
+- No handover workflow.
+- No shared requests, updates, or messages with the Care Home Office.
+
+Preferred data direction:
+Use separate family workspace tables where practical, for example family_workspaces, family_workspace_members, family_workspace_people, family_workspace_messages, family_workspace_requests, and family_workspace_request_responses. Avoid reusing care-home operational tables for family-side Stage 4 coordination unless a clear separation layer prevents cross-access and conceptual confusion.
+
 Mobile channel principle:
 Mobile is not the carer app. Mobile is the simple in-the-moment channel. In at-home stages it may be used by the person, a family member, a supporter, or a carer depending on how the household works.
 
