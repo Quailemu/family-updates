@@ -181,6 +181,11 @@ Stage 1/2/3 wording:
 When Stage 1, Stage 2, or Stage 3 is active, avoid visible "Care organisation", "Care Home", and "Resident" framing where the context is at-home coordination. Prefer "shared at-home coordination" and "person/people" wording while keeping the existing backend routing intact.
 When Stage 2 or Stage 3 is active, prefer "shared update", "shared request", and "shared coordination" wording over care-home office wording where the user is doing routine at-home coordination.
 
+At-home How it works copy:
+voicemailcare.com - for non-urgent social voice messages between the person and Family Members.
+
+Family -> Person uses separate per-family-member channels. Person -> Family keeps the latest shared message for all Family Members. No threads.
+
 Office model shorthand:
 Single -> Shared -> Split.
 

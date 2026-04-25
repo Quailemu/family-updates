@@ -3237,14 +3237,30 @@ def render_safeguarding_block() -> None:
     )
 
 
+def is_current_at_home_lifecycle_stage(access_token: str | None = None) -> bool:
+    token = access_token if access_token is not None else st.session_state.get("access_token")
+    if not token or not str(st.session_state.get("active_care_home_id") or "").strip():
+        return False
+    return normalize_lifecycle_stage(get_lifecycle_stage(token)) in {1, 2, 3}
+
+
 def render_how_it_works_diagram_and_notes() -> None:
-    st.markdown(
-        "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub - Mobile, and Care Hub - Office.\n"
-        "- Each Family Member has their own individual communication channel to the resident.\n"
-        "- Requests collect quick structured family responses to support efficient, inclusive decision-making.\n"
-        "- The care home reviews responses and makes the final operational decision.\n"
-        "- Each channel keeps only the latest message, and a new message replaces the previous one in that channel."
-    )
+    if is_current_at_home_lifecycle_stage():
+        st.markdown(
+            "- The diagram shows three service access paths: Family Hub, Care Hub - Mobile, and Care Hub - Office.\n"
+            "- Each Family Member has their own individual communication channel to the person.\n"
+            "- Requests collect quick structured family responses to support simple coordination.\n"
+            "- The person, coordinator, or family can use the replies to make the decision.\n"
+            "- Each channel keeps only the latest message, and a new message replaces the previous one in that channel."
+        )
+    else:
+        st.markdown(
+            "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub - Mobile, and Care Hub - Office.\n"
+            "- Each Family Member has their own individual communication channel to the resident.\n"
+            "- Requests collect quick structured family responses to support efficient, inclusive decision-making.\n"
+            "- The care home reviews responses and makes the final operational decision.\n"
+            "- Each channel keeps only the latest message, and a new message replaces the previous one in that channel."
+        )
 
 
 def resolve_cartoon_asset() -> Path | None:
@@ -3389,6 +3405,18 @@ def render_how_it_works_video_links(
     )
 
 
+def get_how_it_works_channel_copy(access_token: str | None) -> tuple[str, str]:
+    if is_current_at_home_lifecycle_stage(access_token):
+        return (
+            "voicemailcare.com - for non-urgent social voice messages between the person and Family Members.",
+            "Family -> Person uses separate per-family-member channels. Person -> Family keeps the latest shared message for all Family Members. No threads.",
+        )
+    return (
+        "voicemailcare.com - for non-urgent social voice messages between residents and Family Members.",
+        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
+    )
+
+
 def render_how_it_works_family() -> None:
     render_page_header("How it works - Family Hub")
     render_how_it_works_cartoon()
@@ -3409,9 +3437,10 @@ def render_how_it_works_family() -> None:
 """,
         unsafe_allow_html=True,
     )
+    overview_copy, channel_copy = get_how_it_works_channel_copy(st.session_state.get("access_token"))
     info_boxes = [
-        "voicemailcare.com - for non-urgent social voice messages between residents and Family Members.",
-        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
+        overview_copy,
+        channel_copy,
         "Family access uses secure email login links. No SMS and no phone-number login.",
     ]
     for box in info_boxes:
@@ -3464,9 +3493,10 @@ def render_how_it_works_mobile() -> None:
 """,
         unsafe_allow_html=True,
     )
+    overview_copy, channel_copy = get_how_it_works_channel_copy(st.session_state.get("access_token"))
     info_boxes = [
-        "voicemailcare.com - for non-urgent social voice messages between residents and Family Members.",
-        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
+        overview_copy,
+        channel_copy,
         "Care Hub - Mobile uses individual staff PIN access for day-to-day use.",
         "Secure email link is used only for first sign-in or expired-session recovery.",
         "Care Hub - Office is a separate staff/admin access path.",
@@ -3514,9 +3544,10 @@ def render_how_it_works_office_overview() -> None:
 """,
         unsafe_allow_html=True,
     )
+    overview_copy, channel_copy = get_how_it_works_channel_copy(st.session_state.get("access_token"))
     info_boxes = [
-        "voicemailcare.com - for non-urgent social voice messages between residents and Family Members.",
-        "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
+        overview_copy,
+        channel_copy,
         "Care Hub - Office is a separate staff/admin access path.",
         "Office authentication is distinct from Family email links and Mobile staff PIN access.",
         "If Office 2FA is enabled, users complete Office verification after login.",
@@ -3622,7 +3653,9 @@ def render_family_terms() -> None:
 def render_family_contact() -> None:
     access_token = st.session_state.get("access_token")
     mode_value = get_operating_mode(access_token)
-    contact_party = contact_label(mode_value)
+    contact_party = (
+        "coordinator" if is_current_at_home_lifecycle_stage(access_token) else contact_label(mode_value)
+    )
     render_page_header(f"Contact the {contact_party}")
     st.markdown(
         """
@@ -7389,7 +7422,11 @@ def render_header_menu(menu_key: str) -> None:
                 key=f"{menu_key}_family_terms_link",
             )
             render_route_link(
-                "Contact the care home",
+                (
+                    "Contact the coordinator"
+                    if is_current_at_home_lifecycle_stage(st.session_state.get("access_token"))
+                    else "Contact the care home"
+                ),
                 "/family/contact",
                 key=f"{menu_key}_family_contact_link",
             )
