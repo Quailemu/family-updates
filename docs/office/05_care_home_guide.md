@@ -39,7 +39,7 @@ Messages within a Family Member channel can only be played by users of that spec
 
 Care-home staff using Care Hub – Mobile or Care Hub – Office may also play messages when required for operational support.
 
-Messages are controlled by the group that created them. One group cannot directly replace another group's message.
+Messages stay in the channel where they were created. A Family Member can replace their own latest Family -> Resident message, Mobile can replace the latest Resident -> Family message, and Office can replace the latest Office update. One channel cannot directly replace another channel's message.
 
 Playback status is tracked separately for each resident and each Family Member channel.
 When a new family message arrives, only that Family Member channel is marked as unplayed.

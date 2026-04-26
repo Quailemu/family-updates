@@ -11,7 +11,8 @@ It is not a live chat service and is not for urgent or medical matters."
 
 - Only the latest message is kept per direction/channel.
 - Messages are not monitored in real time.
-- Notes are optional and for practical memory sharing.
+- Keep notes and files outside the app, using paper, computer files, or phone notes if helpful.
+- Use the Life File Guide for suggested file names and headings.
 - Use direct contact routes for urgent or medical matters.
 
 ## Setup reminders

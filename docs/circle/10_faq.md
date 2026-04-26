@@ -14,8 +14,8 @@ A: No. Messages are not monitored in real time.
 Q: Who manages access?  
 A: Your Circle manages who is invited and linked.
 
-Q: Are Notes mandatory?  
-A: No. Notes are optional and intended for practical coordination.
+Q: Does VoicemailCare store notes or files?  
+A: No. Keep your own notes and files outside the app, using paper, computer files, or phone notes if helpful. The Life File Guide gives suggested file names and headings.
 
 Q: Where should urgent or medical issues go?  
 A: Use your direct contact routes immediately.

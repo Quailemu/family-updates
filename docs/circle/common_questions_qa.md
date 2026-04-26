@@ -12,8 +12,8 @@ A: No. It is not real time and messages are not monitored in real time.
 Q: Who decides who can be added?  
 A: Your Circle does. The platform does not decide access.
 
-Q: Are Notes mandatory?  
-A: No. Notes are optional and intended for practical memory sharing.
+Q: Does VoicemailCare store notes or files?  
+A: No. Keep your own notes and files outside the app, using paper, computer files, or phone notes if helpful. The Life File Guide gives suggested file names and headings.
 
 Q: Can one contact be linked to more than one person?  
 A: If your setup supports it, yes. Access still needs local approval for each link.

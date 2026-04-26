@@ -5,6 +5,6 @@
 - Confirm who needs viewing vs active coordination access.
 - Confirm any practical pending updates.
 - Confirm urgent/medical direct contact routes are known.
-- Confirm Notes expectations: optional, short, practical.
+- Confirm any external notes/files are kept outside the app and shared only when appropriate.
 
 Use this as a convenience handover aid only.

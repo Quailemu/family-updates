@@ -17,5 +17,6 @@ This guide is for personal-use setups where a Circle coordinates support.
 ## Practical use
 
 - Keep messages short and clear.
-- Use Notes when helpful; Notes are optional.
+- Keep your own notes and files outside the app, using paper, computer files, or phone notes if helpful.
+- Use the Life File Guide for suggested file names and headings.
 - For urgent or medical matters, use your direct contact routes.
