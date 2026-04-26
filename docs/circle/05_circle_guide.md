@@ -11,8 +11,8 @@ This guide is for personal-use setups where a Circle coordinates support.
 ## Interfaces
 
 - Family Hub: send and receive non-urgent messages.
-- Care Hub - Mobile: playback and recording support in day-to-day situations.
-- Care Hub - Office: oversight, updates, contact registration, and settings.
+- Mobile: playback and recording support in day-to-day situations.
+- Household voicemail: updates, contact registration, and settings.
 
 ## Practical use
 

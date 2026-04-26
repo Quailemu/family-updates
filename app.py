@@ -3244,10 +3244,39 @@ def is_current_at_home_lifecycle_stage(access_token: str | None = None) -> bool:
     return normalize_lifecycle_stage(get_lifecycle_stage(token)) in {1, 2, 3}
 
 
+def _surname_from_display_name(display_name: object) -> str:
+    cleaned = re.sub(r"\s+", " ", str(display_name or "").strip())
+    if not cleaned:
+        return ""
+    cleaned = re.sub(r"'s\s+home\Z", "", cleaned, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(r"\s+home\Z", "", cleaned, flags=re.IGNORECASE).strip()
+    parts = [part.strip(" ,.;:()[]{}") for part in cleaned.split(" ") if part.strip()]
+    if len(parts) >= 2:
+        return parts[-1]
+    return ""
+
+
+def get_at_home_voicemail_label(access_token: str | None = None) -> str:
+    token = access_token if access_token is not None else st.session_state.get("access_token")
+    if not is_current_at_home_lifecycle_stage(token):
+        return "Care Hub - Office"
+    known_person_name = str(st.session_state.get("circle_person_display_name") or "").strip()
+    surname = _surname_from_display_name(known_person_name)
+    if not surname and token:
+        for person in fetch_care_home_residents(token):
+            surname = _surname_from_display_name(get_resident_full_name(person))
+            if surname:
+                break
+    if surname:
+        return f"{surname} voicemail"
+    return "Home voicemail"
+
+
 def render_how_it_works_diagram_and_notes() -> None:
     if is_current_at_home_lifecycle_stage():
+        voicemail_label = get_at_home_voicemail_label()
         st.markdown(
-            "- The diagram shows three service access paths: Family Hub, Care Hub - Mobile, and Care Hub - Office.\n"
+            f"- The diagram shows the main parts of the setup: Family Hub, Mobile, and {voicemail_label}.\n"
             "- Each Family Member has their own individual communication channel to the person.\n"
             "- Requests collect quick structured family responses to support simple coordination.\n"
             "- The person, coordinator, or family can use the replies to make the decision.\n"
@@ -3405,16 +3434,46 @@ def render_how_it_works_video_links(
     )
 
 
-def get_how_it_works_channel_copy(access_token: str | None) -> tuple[str, str]:
+def get_how_it_works_channel_copy(access_token: str | None) -> list[str]:
     if is_current_at_home_lifecycle_stage(access_token):
-        return (
-            "voicemailcare.com - for non-urgent social voice messages between the person and Family Members.",
-            "Family -> Person uses separate per-family-member channels. Person -> Family keeps the latest shared message for all Family Members. No threads.",
-        )
-    return (
+        return [
+            "voicemailcare.com supports simple, non-urgent voice messages for a person who may need some support from family.",
+            "The person can send one voice message to all registered Family Members, and each Family Member can send their own message back.",
+            "Messages can be played when convenient, helping family communication stay calm and manageable.",
+            "Only the latest message is kept in each channel. A new message replaces the previous one. No threads.",
+        ]
+    return [
         "voicemailcare.com - for non-urgent social voice messages between residents and Family Members.",
         "Family -> Resident uses separate per-family-member channels. Resident -> Family channel keeps the latest shared resident message for all Family Members. No threads.",
-    )
+    ]
+
+
+def get_how_it_works_access_copy(access_token: str | None, variant: str) -> list[str]:
+    if is_current_at_home_lifecycle_stage(access_token):
+        voicemail_label = get_at_home_voicemail_label(access_token)
+        if normalize_lifecycle_stage(get_lifecycle_stage(access_token)) == 1:
+            return [
+                "At this stage, the app may be used by a couple at home, where one person is supporting the other.",
+                f"{voicemail_label} and Mobile are simple views of the same household setup, so there is no need to switch accounts between them.",
+                "Requests and active coordination are not used at this stage.",
+            ]
+        return [
+            f"{voicemail_label} and Mobile are used by the trusted at-home setup. Family Hub is for registered Family Members.",
+        ]
+    if variant == VARIANT_FAMILY:
+        return ["Family access uses secure email login links. No SMS and no phone-number login."]
+    if variant == VARIANT_MOBILE:
+        return [
+            "Care Hub - Mobile uses individual staff PIN access for day-to-day use.",
+            "Secure email link is used only for first sign-in or expired-session recovery.",
+            "Care Hub - Office is a separate staff/admin access path.",
+            "Office authentication is distinct from Family email links and Mobile staff PIN access.",
+        ]
+    return [
+        "Care Hub - Office is a separate staff/admin access path.",
+        "Office authentication is distinct from Family email links and Mobile staff PIN access.",
+        "If Office 2FA is enabled, users complete Office verification after login.",
+    ]
 
 
 def render_how_it_works_family() -> None:
@@ -3437,12 +3496,10 @@ def render_how_it_works_family() -> None:
 """,
         unsafe_allow_html=True,
     )
-    overview_copy, channel_copy = get_how_it_works_channel_copy(st.session_state.get("access_token"))
-    info_boxes = [
-        overview_copy,
-        channel_copy,
-        "Family access uses secure email login links. No SMS and no phone-number login.",
-    ]
+    access_token = st.session_state.get("access_token")
+    info_boxes = get_how_it_works_channel_copy(access_token) + get_how_it_works_access_copy(
+        access_token, VARIANT_FAMILY
+    )
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     render_how_it_works_video_links("Family Hub", "/public/walkthrough-family", "how_family")
@@ -3493,15 +3550,10 @@ def render_how_it_works_mobile() -> None:
 """,
         unsafe_allow_html=True,
     )
-    overview_copy, channel_copy = get_how_it_works_channel_copy(st.session_state.get("access_token"))
-    info_boxes = [
-        overview_copy,
-        channel_copy,
-        "Care Hub - Mobile uses individual staff PIN access for day-to-day use.",
-        "Secure email link is used only for first sign-in or expired-session recovery.",
-        "Care Hub - Office is a separate staff/admin access path.",
-        "Office authentication is distinct from Family email links and Mobile staff PIN access.",
-    ]
+    access_token = st.session_state.get("access_token")
+    info_boxes = get_how_it_works_channel_copy(access_token) + get_how_it_works_access_copy(
+        access_token, VARIANT_MOBILE
+    )
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     st.markdown("### Help videos")
@@ -3514,13 +3566,15 @@ def render_how_it_works_mobile() -> None:
 
 
 def render_how_it_works_office_overview() -> None:
-    render_page_header("How it works - Care Hub - Office")
+    access_token = st.session_state.get("access_token")
+    office_label = get_at_home_voicemail_label(access_token)
+    render_page_header(f"How it works - {office_label}")
     render_how_it_works_cartoon()
     if get_app_variant() == VARIANT_PUBLIC:
         office_back_label = "Back to hub selection"
         office_back_route = get_home_route(VARIANT_PUBLIC)
     else:
-        office_back_label = "Back to Care Hub - Office"
+        office_back_label = f"Back to {office_label}"
         office_back_route = get_home_route(VARIANT_OFFICE)
     render_route_link(
         office_back_label,
@@ -3544,21 +3598,16 @@ def render_how_it_works_office_overview() -> None:
 """,
         unsafe_allow_html=True,
     )
-    overview_copy, channel_copy = get_how_it_works_channel_copy(st.session_state.get("access_token"))
-    info_boxes = [
-        overview_copy,
-        channel_copy,
-        "Care Hub - Office is a separate staff/admin access path.",
-        "Office authentication is distinct from Family email links and Mobile staff PIN access.",
-        "If Office 2FA is enabled, users complete Office verification after login.",
-    ]
+    info_boxes = get_how_it_works_channel_copy(access_token) + get_how_it_works_access_copy(
+        access_token, VARIANT_OFFICE
+    )
     for box in info_boxes:
         st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     render_how_it_works_video_links(
-        "Care Hub - Office",
+        office_label,
         "/public/walkthrough-office",
         "how_office",
-        specific_button_label="Care Hub - Office Walkthrough",
+        specific_button_label=f"{office_label} Walkthrough",
     )
     render_how_it_works_diagram_and_notes()
     render_route_link(
@@ -5116,9 +5165,9 @@ def get_lifecycle_stage_label(stage_value: object) -> str:
 def get_lifecycle_stage_setup_note(stage_value: object) -> str:
     stage = normalize_lifecycle_stage(stage_value)
     notes = {
-        1: "Stage 1: quiet independence stage. Office, Mobile, and Family Hub are available for simple messages. Mobile can be the person's own simple channel. Requests stay inactive.",
-        2: "Stage 2: family-supported stage. One Office, Mobile, Family messaging, and Requests are available. Mobile can keep the person on their own simple channel.",
-        3: "Stage 3: carer and family at home. This still uses one shared Office, not two offices.",
+        1: "Stage 1: couple at home stage. Household voicemail and Mobile are available for simple messages. Requests stay inactive.",
+        2: "Stage 2: family-supported stage. Household voicemail, Mobile, Family messaging, and Requests are available.",
+        3: "Stage 3: carer and family at home. This still uses one shared household voicemail area, not a care-home Office.",
         4: "Stage 4: care home coordination. The split Family Coordinator Office / Care Home Office model is planned separately and the two offices must not connect.",
     }
     return notes.get(stage, "")
@@ -5364,10 +5413,23 @@ def resolve_mode_doc_path(
     *,
     access_token: str | None = None,
     operating_mode: object | None = None,
+    lifecycle_stage: object | None = None,
 ) -> str:
     normalized = str(doc_path or "").strip()
     if not normalized:
         return normalized
+    stage_value = (
+        normalize_lifecycle_stage(lifecycle_stage)
+        if lifecycle_stage is not None
+        else (get_lifecycle_stage(access_token) if access_token else None)
+    )
+    if stage_value in {1, 2, 3}:
+        target = MODE_DOC_OVERRIDES.get(OPERATING_MODE_PERSONAL_USE, {}).get(
+            normalized, normalized
+        )
+        if target != normalized and not Path(target).exists():
+            return normalized
+        return target
     mode_value = (
         normalize_operating_mode(operating_mode)
         if operating_mode is not None
@@ -7261,12 +7323,17 @@ def render_header_menu(menu_key: str) -> None:
         if show_back_only and app_variant not in (VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE):
             return
         if app_variant == VARIANT_OFFICE:
-            st.markdown("**Care Hub - Office**")
             access_token = st.session_state.get("access_token")
-            mode_value = get_operating_mode(access_token)
-            personal_mode = mode_value == OPERATING_MODE_PERSONAL_USE
+            at_home_lifecycle_stage = is_current_at_home_lifecycle_stage(access_token)
+            office_label = get_at_home_voicemail_label(access_token)
+            st.markdown(f"**{office_label}**")
             clicked_action = None
-            if st.button("Back to Office messages", key=f"{menu_key}_inbox"):
+            inbox_label = (
+                "Back to voicemail messages"
+                if at_home_lifecycle_stage
+                else "Back to Office messages"
+            )
+            if st.button(inbox_label, key=f"{menu_key}_inbox"):
                 clicked_action = ("route", get_home_route(app_variant))
             if st.button("How it works", key=f"{menu_key}_office_how_it_works"):
                 clicked_action = ("route", "/care-hub-office/how-it-works")
@@ -7280,23 +7347,26 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", "/billing")
 
             st.markdown("- Daily Use -")
-            handbook_label = "Circle guide" if personal_mode else "Care Hub handbook"
+            handbook_label = "At-home guide" if at_home_lifecycle_stage else "Care Hub handbook"
             if st.button(handbook_label, key=f"{menu_key}_office_doc_handbook"):
                 clicked_action = ("doc", "docs/office/05_care_home_guide.md")
             if st.button("Registering a contact", key=f"{menu_key}_office_doc_register_family"):
                 clicked_action = ("doc", "docs/office/10_registering_family_member.md")
-            if st.button("Handover checklist", key=f"{menu_key}_office_doc_handover"):
+            if not at_home_lifecycle_stage and st.button(
+                "Handover checklist", key=f"{menu_key}_office_doc_handover"
+            ):
                 clicked_action = ("doc", "docs/office/care_home_handover_checklist.md")
             if st.button("Life File Guide", key=f"{menu_key}_office_life_file_guide"):
                 clicked_action = ("route", LIFE_FILE_GUIDE_ROUTE)
-            if st.button("Office Q&A", key=f"{menu_key}_office_doc_qa"):
+            qa_label = "Voicemail Q&A" if at_home_lifecycle_stage else "Office Q&A"
+            if st.button(qa_label, key=f"{menu_key}_office_doc_qa"):
                 clicked_action = ("route", "/care-hub/office/qa")
 
-            st.markdown("- Governance -")
-            if st.button("View help videos", key=f"{menu_key}_office_service_overview"):
+            st.markdown("- Boundaries -" if at_home_lifecycle_stage else "- Governance -")
+            if st.button("Documents", key=f"{menu_key}_office_service_overview"):
                 clicked_action = ("route", "/docs")
             responsibilities_label = (
-                "Circle responsibilities" if personal_mode else "Care home responsibilities"
+                "At-home responsibilities" if at_home_lifecycle_stage else "Care home responsibilities"
             )
             if st.button(responsibilities_label, key=f"{menu_key}_office_doc_responsibilities"):
                 clicked_action = ("doc", "docs/office/04_care_home_responsibilities.md")
@@ -7308,7 +7378,9 @@ def render_header_menu(menu_key: str) -> None:
             st.markdown("- Formal -")
             if st.button("Complaints & concerns", key=f"{menu_key}_office_complaints"):
                 clicked_action = ("route", "/public/complaints-and-concerns")
-            if st.button("Contracts & templates", key=f"{menu_key}_contracts"):
+            if not at_home_lifecycle_stage and st.button(
+                "Contracts & templates", key=f"{menu_key}_contracts"
+            ):
                 clicked_action = ("route", "/contracts")
             st.markdown("---")
             if st.button("Log out (return to login)", key=f"{menu_key}_office_sign_out"):
@@ -10112,12 +10184,12 @@ def get_care_hub_label() -> str:
     if runtime_variant == VARIANT_MOBILE:
         return "Care Hub - Mobile"
     if runtime_variant == VARIANT_OFFICE:
-        return "Care Hub - Office"
+        return get_at_home_voicemail_label(st.session_state.get("access_token"))
     app_variant = get_app_variant()
     if app_variant == VARIANT_MOBILE:
         return "Care Hub - Mobile"
     if app_variant == VARIANT_OFFICE:
-        return "Care Hub - Office"
+        return get_at_home_voicemail_label(st.session_state.get("access_token"))
     return "Care Hub"
 
 
@@ -11263,7 +11335,8 @@ def render_docs() -> None:
     require_care_access()
     access_token = st.session_state.get("access_token")
     mode_value = get_operating_mode(access_token)
-    personal_mode = mode_value == OPERATING_MODE_PERSONAL_USE
+    lifecycle_stage = get_lifecycle_stage(access_token)
+    at_home_lifecycle_stage = normalize_lifecycle_stage(lifecycle_stage) in {1, 2, 3}
     render_page_header("Documents")
     st.markdown("### Help videos")
     st.caption("All instructional videos are available in one place before login.")
@@ -11275,60 +11348,74 @@ def render_docs() -> None:
         set_route(PUBLIC_HELP_VIDEOS_ROUTE)
     st.write("")
 
-    docs = [
-        {
-            "title": "Circle responsibilities" if personal_mode else "Care home responsibilities",
-            "path": "docs/office/04_care_home_responsibilities.md",
-            "summary": (
-                "Circle responsibilities and boundaries."
-                if personal_mode
-                else "Care home responsibilities and boundaries."
-            ),
-        },
-        {
-            "title": "Circle guide" if personal_mode else "Care home guide",
-            "path": "docs/office/05_care_home_guide.md",
-            "summary": (
-                "Day-to-day Circle use (Office and Mobile)."
-                if personal_mode
-                else "Day-to-day Care Hub use (Office and Mobile)."
-            ),
-        },
-        {
-            "title": "Registering a contact",
-            "path": "docs/office/10_registering_family_member.md",
-            "summary": "How to invite and register a Family Member.",
-        },
-        {
-            "title": "Safeguarding and consent",
-            "path": "docs/office/09_safeguarding_consent.md",
-            "summary": "Consent, authority, and safeguarding guidance.",
-        },
-        {
-            "title": "Circle onboarding script" if personal_mode else "Care home onboarding script",
-            "path": "docs/office/care_home_onboarding_script.md",
-            "summary": (
-                "Onboarding script for your Circle."
-                if personal_mode
-                else "Onboarding script for staff and families."
-            ),
-        },
-        {
-            "title": "Handover checklist",
-            "path": "docs/office/care_home_handover_checklist.md",
-            "summary": (
-                "Handover checklist for your Circle."
-                if personal_mode
-                else "Handover checklist for the care home."
-            ),
-        },
-    ]
+    if at_home_lifecycle_stage:
+        docs = [
+            {
+                "title": "At-home guide",
+                "path": "docs/office/05_care_home_guide.md",
+                "summary": "Simple message and coordination guidance for at-home stages.",
+            },
+            {
+                "title": "Registering a contact",
+                "path": "docs/office/10_registering_family_member.md",
+                "summary": "How to invite and register a family contact.",
+            },
+            {
+                "title": "At-home responsibilities",
+                "path": "docs/office/04_care_home_responsibilities.md",
+                "summary": "Responsibilities and boundaries for at-home use.",
+            },
+            {
+                "title": "Safeguarding and consent",
+                "path": "docs/office/09_safeguarding_consent.md",
+                "summary": "Consent, authority, and safeguarding boundaries.",
+            },
+            {
+                "title": "Voicemail Q&A",
+                "path": "docs/office/common_questions_qa.md",
+                "summary": "Common questions for at-home coordination.",
+            },
+        ]
+    else:
+        docs = [
+            {
+                "title": "Care home responsibilities",
+                "path": "docs/office/04_care_home_responsibilities.md",
+                "summary": "Care home responsibilities and boundaries.",
+            },
+            {
+                "title": "Care home guide",
+                "path": "docs/office/05_care_home_guide.md",
+                "summary": "Day-to-day Care Hub use (Office and Mobile).",
+            },
+            {
+                "title": "Registering a contact",
+                "path": "docs/office/10_registering_family_member.md",
+                "summary": "How to invite and register a Family Member.",
+            },
+            {
+                "title": "Safeguarding and consent",
+                "path": "docs/office/09_safeguarding_consent.md",
+                "summary": "Consent, authority, and safeguarding guidance.",
+            },
+            {
+                "title": "Care home onboarding script",
+                "path": "docs/office/care_home_onboarding_script.md",
+                "summary": "Onboarding script for staff and families.",
+            },
+            {
+                "title": "Handover checklist",
+                "path": "docs/office/care_home_handover_checklist.md",
+                "summary": "Handover checklist for the care home.",
+            },
+        ]
     docs = [
         {
             **doc,
             "path": resolve_mode_doc_path(
                 str(doc.get("path") or ""),
                 operating_mode=mode_value,
+                lifecycle_stage=lifecycle_stage,
             ),
         }
         for doc in docs
@@ -11342,6 +11429,7 @@ def render_docs() -> None:
         active_path = resolve_mode_doc_path(
             str(active_path or ""),
             operating_mode=mode_value,
+            lifecycle_stage=lifecycle_stage,
         )
         st.session_state["docs_active"] = active_path
         active_doc = next((doc for doc in docs if doc["path"] == active_path), None)
@@ -11363,7 +11451,7 @@ def render_docs() -> None:
             st.write("")
 
     render_route_link(
-        "Back to Care Hub - Office",
+        f"Back to {get_at_home_voicemail_label(access_token)}",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="docs_home_link",
     )
@@ -11547,7 +11635,11 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HELP_VIDEOS_R
     app_variant = resolve_runtime_variant(route_hint=get_route())
     access_token = st.session_state.get("access_token")
     mode_value = get_operating_mode(access_token) if access_token else OPERATING_MODE_CARE_ORGANISATION
-    resolved_doc_path = resolve_mode_doc_path(doc_path, operating_mode=mode_value)
+    resolved_doc_path = resolve_mode_doc_path(
+        doc_path,
+        access_token=access_token,
+        operating_mode=mode_value,
+    )
     page_title = get_public_document_title(doc_path)
     if app_variant == VARIANT_PUBLIC:
         st.markdown(f"[Back to help videos](?route={back_route})")
@@ -12895,7 +12987,8 @@ def render_care_hub() -> None:
             f"<div class='care-flow-title {safe_tone}'>{safe_text}</div>",
             unsafe_allow_html=True,
         )
-    page_title = "Care Hub Mobile" if runtime_variant == VARIANT_MOBILE else "Care Hub Office"
+    access_token = st.session_state.get("access_token")
+    page_title = "Care Hub Mobile" if runtime_variant == VARIANT_MOBILE else get_at_home_voicemail_label(access_token)
     render_page_header(page_title)
     if runtime_variant == VARIANT_MOBILE:
         render_public_landing_button("Back to hub selection")
@@ -12909,7 +13002,6 @@ def render_care_hub() -> None:
     # Top action buttons removed; navigation is handled through the header menu.
     # Action row already rendered at the top of the page.
 
-    access_token = st.session_state.get("access_token")
     transcript_policy_mode = get_transcript_policy_mode(access_token)
     operating_mode = get_operating_mode(access_token)
     lifecycle_stage = get_lifecycle_stage(access_token)
@@ -14973,17 +15065,17 @@ def render_care_hub_register_family() -> None:
     require_care_access()
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
         render_wrong_variant(
-            "Contact registration is only available in Care Hub - Office."
+            "Contact registration is only available in the main voicemail area."
         )
         return
     back_route = OFFICE_HOME_ROUTE
     render_page_header("Register a Contact", show_menu=False)
+    access_token = st.session_state.get("access_token")
     render_route_link(
-        "Back to Office messages",
+        f"Back to {get_at_home_voicemail_label(access_token)}",
         back_route,
         key="office_register_family_back_dashboard_link",
     )
-    access_token = st.session_state.get("access_token")
     render_care_home_identity_banner(access_token)
     residents = fetch_care_home_residents(access_token)
     render_office_family_registration_form(access_token, residents)
@@ -15348,8 +15440,13 @@ def main() -> None:
     elif route == "/care-hub/security":
         render_care_hub_security()
     elif route == "/care-hub/office/qa":
-        render_page_header("Office Q&A", show_variant_subheading=False)
         access_token = st.session_state.get("access_token")
+        qa_title = (
+            "Voicemail Q&A"
+            if is_current_at_home_lifecycle_stage(access_token)
+            else "Office Q&A"
+        )
+        render_page_header(qa_title, show_variant_subheading=False)
         render_care_home_identity_banner(access_token)
         render_route_link(
             "Back to dashboard",

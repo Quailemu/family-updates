@@ -1,5 +1,10 @@
 # Circle FAQ
 
+Communication participants: a household/couple at home, registered Family Members, and any family coordinator or supporter when the stage uses one.
+
+Q: What is voicemailcare.com for?  
+A: It supports simple, non-urgent voice messages for a household at home. The household can share one latest voice update with registered Family Members, and each Family Member can send their own latest message back.
+
 Q: Is this for urgent messages?  
 A: No. This service is for non-urgent social communication only.
 

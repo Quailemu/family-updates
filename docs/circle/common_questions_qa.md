@@ -1,5 +1,8 @@
 # Circle common questions (Q&A)
 
+Q: What is voicemailcare.com for?  
+A: It supports simple, non-urgent voice messages for a household at home. The household can share one latest voice update with registered Family Members, and each Family Member can send their own latest message back.
+
 Q: Is this for urgent messages?  
 A: No. This is for non-urgent social communication. Use your direct contact routes for urgent or medical matters.
 

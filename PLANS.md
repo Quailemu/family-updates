@@ -182,9 +182,25 @@ When Stage 1, Stage 2, or Stage 3 is active, avoid visible "Care organisation", 
 When Stage 2 or Stage 3 is active, prefer "shared update", "shared request", and "shared coordination" wording over care-home office wording where the user is doing routine at-home coordination.
 
 At-home How it works copy:
-voicemailcare.com - for non-urgent social voice messages between the person and Family Members.
+voicemailcare.com supports simple, non-urgent voice messages for a person who may need some support from family.
 
-Family -> Person uses separate per-family-member channels. Person -> Family keeps the latest shared message for all Family Members. No threads.
+The person can send one voice message to all registered Family Members, and each Family Member can send their own message back.
+
+Messages can be played when convenient, helping family communication stay calm and manageable.
+
+Only the latest message is kept in each channel. A new message replaces the previous one. No threads.
+
+Stage 1 access copy:
+At this stage, the app may be used by a couple at home, where one person is supporting the other.
+
+Use "[Surname] voicemail" for the main at-home message area when a surname is available, for example "Hill voicemail". Use "Home voicemail" as the fallback. Only use "Office" for the Stage 4 care-home workspace.
+
+[Surname] voicemail and Mobile are simple views of the same household setup, so there is no need to switch accounts between them.
+
+Requests and active coordination are not used at this stage.
+
+Stage 2/3 access copy:
+[Surname] voicemail and Mobile are used by the trusted at-home setup. Family Hub is for registered Family Members.
 
 Documentation boundary:
 The original care-home documentation remains the Stage 4 Care Home documentation set. Do not dilute it into at-home wording. Stage 4 Care Home Office/Mobile/Family should continue to use the full care-home governance, resident, room/reference, staff, safeguarding, consent, and responsibility wording.
