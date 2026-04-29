@@ -101,44 +101,7 @@ Essential platform data only:
 
 ## How VoicemailCare Works
 
-VoicemailCare uses voice messages for personal connection and simple text updates or structured requests for coordination.
-
-Core rules:
-- Personal messages can be voice messages, with transcription available where enabled.
-- Coordination updates and practical requests can be simple text.
-- Each new item replaces the previous one in that channel.
-- There is always one current item at a time.
-- No threads.
-- No live chat.
-- No ongoing conversations.
-- Updates are shared with all relevant Family Members.
-- Requests use fixed structured replies only.
-
-This keeps communication calm, current, and easy to manage. People can use as much or as little of the system as they choose.
-
-Whole-system definition:
 VoicemailCare helps families share calm updates, reduce repeated calls, and coordinate practical support without live chat or message history.
-
-## Transparency
-
-VoicemailCare is designed to support clear and shared understanding between family members.
-
-Where responsibilities are shared - especially care, communication, practical help, or finances - arrangements should be as transparent as possible.
-
-This is particularly important where one family member is managing money or making financial arrangements on behalf of someone else.
-
-Where appropriate, relevant family members should be able to see financial statements or summaries, so that responsibility does not sit invisibly with one person.
-
-Families may also consider using a suitable professional to manage investments or provide independent financial oversight.
-
-VoicemailCare does not define legal authority or decide who should manage finances. It helps make responsibilities visible and supports families in agreeing transparent arrangements.
-
-## Stages of Use
-
-Stage 0 preparation:
-The external filing system should be organised first, before starting updates. VoicemailCare does not store those files.
-
-## Outcomes for Users
 
 VoicemailCare can be used in levels, so you do not have to use the whole system at once. You can use the full system, or start with simple updates and add more when needed.
 
@@ -157,13 +120,13 @@ The table below gives a quick overview of what becomes available at each stage. 
 * **Stage 1: Person/Couple** — An individual person or a couple living at home and managing their own day-to-day communication.
 * **Stage 2: + Family coordinator** — The person/couple plus a family coordinator. A family coordinator is a family member who helps organise communication and practical requests.
 * **Stage 3: + Carer** — The person/couple plus a family coordinator and a paid carer.
-* **Stage 4: Care home + Family coordinator** — The person/couple moves into a care home. The care home has its own system, and the family coordinator has a separate family coordinator system.
+* **Stage 4: Care home + Family coordinator** — The person/couple moves into a care home. The care home has its own internal VoicemailCare system for levels 1-4. The family coordinator, and maybe one of the couple if still at home and able to use it, has a totally separate VoicemailCare system comprising Family Office, Family Hub, and Mobile where useful.
 
 ### Notes
 
 *Additional mobile channel: a separate mobile channel that can send a single voice message to the family group, receive family voice messages, and send requests with structured replies.*
 
-**Family coordinator system: used separately from the care home system. It allows the family coordinator to send a single voice message to the family group, receive individual family voice messages to the office, and use requests with structured replies.**
+**Level 5: Care home plus a separate Family coordinator system: used separately from the care home system. It allows the family coordinator to send a single voice message to the family group, receive individual family voice messages to the office, and use requests with structured replies.**
 
 ## How the levels work
 
@@ -171,13 +134,15 @@ Each level includes everything from the previous levels, with additional feature
 
 You can start at Level 1 and move up through the levels as more support is needed.
 
-Important:
+## Starting simply
 
-* Keep this section in Markdown.
-* Do not use an image for the table.
-* Do not change the wording inside the table unless specifically requested.
-* Keep the table as a quick overview.
-* Keep detail in the stage explanations and notes.
+The external filing system should be organised first, before starting updates, using your own external file management and storage system for data security. The information should be organised, separated, and accessible to the right person when needed. The six files we recommend that you prepare are:
+
+Once the external filing system is in place, start small: one calm update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.
+
+Then add only the communication tools that are useful: family voice messages, text updates, practical requests, and structured replies. One item replaces the last item in that channel.
+
+The life stage describes who is involved. The communication level describes how much of the system is switched on.
 
 Targeted request boundary:
 Requests and structured replies are for non-urgent, non-essential coordination only. Family requests remain visible to all linked Family Members and may name an intended responder, such as Sarah, Tom, or Coordinator. Office-to-Mobile/carer requests are a separate working channel where enabled. Replies use fixed structured choices, optional fixed tick-boxes, and an optional short context note only: no private chat, no threads, and no back-and-forth conversation. Essential, urgent, sensitive, or time-critical matters should use normal direct communication outside VoicemailCare, such as phone, text, WhatsApp, email, or existing care-home channels.

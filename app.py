@@ -5279,46 +5279,62 @@ def render_stage_level_capability_tables(access_token: str | None = None) -> Non
 
     st.markdown(
         """
-### Outcomes for Users
-
-VoicemailCare can be used in levels, so you do not have to use the whole system at once. You can use the full system, or start with simple updates and add more when needed.
-
-The table below gives a quick overview of what becomes available at each stage. It is not a full description of every detail.
+familyupdates.care helps people remain independent for longer by sending simple updates to family, helping family members keep in touch, and reducing the number of calls through practical requests with structured responses.
 
 | Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family coordinator | Stage 3: + Carer | Stage 4: Care home + Family coordinator |
 | ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
-| 1     | Single update to family group                            | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
-| 2     | Individual voice messages from family members            | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
-| 3     | Voice message request (+ structured replies from family) | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
-| 4     | Option: Mobile additional channel*                       | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
-| 5     | Family coordinator system**                              | —                      | —                             | —                | ✓                                       |
+| 1     | Single update to family group                            | Yes                    | Yes                           | Yes              | Yes - care home system                  |
+| 2     | Individual voice messages from family members            | Yes                    | Yes                           | Yes              | Yes - care home system                  |
+| 3     | Voice message request (+ structured replies from family) | Yes                    | Yes                           | Yes              | Yes - care home system                  |
+| 4     | Option: Mobile additional channel                        | Yes                    | Yes                           | Yes              | Yes - care home system                  |
+| 5     | Care home plus separate family coordinator system        | -                      | -                             | -                | Yes                                     |
 
-#### Stage explanations
+The life stage describes who is involved. The communication level describes how much of the system is switched on.
 
-* **Stage 1: Person/Couple** — An individual person or a couple living at home and managing their own day-to-day communication.
-* **Stage 2: + Family coordinator** — The person/couple plus a family coordinator. A family coordinator is a family member who helps organise communication and practical requests.
-* **Stage 3: + Carer** — The person/couple plus a family coordinator and a paid carer.
-* **Stage 4: Care home + Family coordinator** — The person/couple moves into a care home. The care home has its own system, and the family coordinator has a separate family coordinator system.
+One message replaces the last in each channel.
 
-#### Notes
+Transcripts of voice messages are available.
 
-*Additional mobile channel: a separate mobile channel that can send a single voice message to the family group, receive family voice messages, and send requests with structured replies.*
+Text is available for short care updates with no replies. One text replaces the last in that channel, so messages stay fresh and relevant.
 
-**Family coordinator system: used separately from the care home system. It allows the family coordinator to send a single voice message to the family group, receive individual family voice messages to the office, and use requests with structured replies.**
+#### Stages
 
-#### How the levels work
+**Stage 1: Person/Couple** - An individual person or a couple living at home and managing their own day-to-day communication.
 
-Each level includes everything from the previous levels, with additional features added.
+**Stage 2: + Family coordinator** - The person/couple plus a family coordinator. A family coordinator is a family member who helps organise communication and practical requests.
 
-You can start at Level 1 and move up through the levels as more support is needed.
+**Stage 3: + Carer** - The person/couple plus a family coordinator and a paid carer.
 
-Important:
+**Stage 4: Care home + Family coordinator** - The person/couple moves into a care home. The care home has its own internal familyupdates.care system for levels 1-4. The family coordinator, and maybe one of the couple if still at home and able to use it, has a totally separate familyupdates.care system comprising Family Office, Family Hub, and Mobile where useful.
 
-* Keep this section in Markdown.
-* Do not use an image for the table.
-* Do not change the wording inside the table unless specifically requested.
-* Keep the table as a quick overview.
-* Keep detail in the stage explanations and notes.
+#### Not for urgent matters
+
+familyupdates.care is non-urgent and not live. Requests and structured replies are for non-urgent, non-essential coordination only.
+
+Family requests remain visible to all linked Family Members and may specify that a message is relevant to a named person - but is viewable by all. All linked Family Members can see the request and any structured responses.
+
+Family members may send individual voice messages and also may reply to requests using fixed structured choices, optional fixed tick-boxes, and an optional short context note. There are no private chats, threads, or back-and-forth conversations.
+
+For essential, urgent, sensitive, medical, safeguarding, privacy-related, legal, financial, time-critical, or emergency matters, use normal direct communication outside familyupdates.care, such as phone, text, WhatsApp, email, or existing care-home channels. Seek appropriate professional advice where needed.
+
+#### Starting simply
+
+##### Getting organised
+
+The external filing system should be organised first, before starting updates, using your own external file management and storage system for data security. The information should be organised, separated, and accessible to the right person when needed. The six files we recommend that you prepare are:
+
+- Life Log
+- Contacts
+- Admin and Key Documents
+- Private Finance
+- Private Health Notes
+- Carer and Housekeeping Notes
+
+You may also want to consider Lasting Powers of Attorney for property and financial affairs, and for health and welfare. Where finances, investments, or legal authority are involved, consider suitable legal or financial advice.
+
+Once the external filing system is in place, start small: one calm update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.
+
+Then add only the communication tools that are useful: family voice messages, text updates, practical requests, and structured replies.
 """
     )
 
@@ -9046,6 +9062,11 @@ def render_home(active: str) -> None:
         st.markdown(
             "Each channel keeps only the latest message. A new message replaces the previous message in that channel."
         )
+        render_route_link(
+            "Read how VoicemailCare works",
+            "/public/how-it-works",
+            key="public_home_how_it_works_link",
+        )
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-grid public-grid-3">', unsafe_allow_html=True)
@@ -9300,7 +9321,8 @@ def _get_canonical_hosts() -> set[str]:
 def _build_seo_metadata(route: str) -> dict[str, str]:
     normalized_route = normalize_route(route) or PUBLIC_HOME_ROUTE
     route_titles: dict[str, str] = {
-        "/pr-home": "VoicemailCare – Simple communication for care homes and families",
+        "/pr-home": "familyupdates.care - Simple updates and practical requests for families",
+        "/public/how-it-works": "How familyupdates.care works",
         "/family/login": "Family Hub | voicemailcare.com",
         "/care-hub/mobile/login": "Care Hub - Mobile | voicemailcare.com",
         "/care-hub/login": "Care Hub - Office | voicemailcare.com",
@@ -9318,7 +9340,8 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
         LIFE_FILE_GUIDE_ROUTE: "Life File Guide | voicemailcare.com",
     }
     route_descriptions: dict[str, str] = {
-        "/pr-home": "VoicemailCare helps care homes and families stay connected through simple, non-urgent voice messaging.",
+        "/pr-home": "familyupdates.care helps families share calm updates, voice messages, and practical requests without live chat or message history.",
+        "/public/how-it-works": "How familyupdates.care works across stages, communication levels, updates, voice messages, and practical requests.",
         "/family/login": "Family Hub access for non-urgent social voice messages. Not a live service.",
         "/care-hub/mobile/login": "Care Hub - Mobile access for staff playback and resident recordings within care routines.",
         "/care-hub/login": "Care Hub - Office access for oversight, family registration, and operational communication.",
@@ -9337,10 +9360,10 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
     }
     if normalized_route == "/public/service-overview":
         normalized_route = "/pr-home"
-    title = route_titles.get(normalized_route, "voicemailcare.com")
+    title = route_titles.get(normalized_route, "familyupdates.care")
     description = route_descriptions.get(
         normalized_route,
-        "voicemailcare.com for non-urgent social voice messages between residents and family members.",
+        "familyupdates.care for calm family updates, voice messages, and practical requests.",
     )
     return {"route": normalized_route, "title": title, "description": description}
 
@@ -9410,7 +9433,7 @@ def apply_seo_head_tags(route: str, app_variant: str) -> None:
     }}
     upsertMeta('name', 'description', seo.description);
     upsertMeta('name', 'robots', seo.robots);
-    upsertMeta('property', 'og:site_name', 'voicemailcare.com');
+    upsertMeta('property', 'og:site_name', 'familyupdates.care');
     upsertMeta('property', 'og:type', 'website');
     upsertMeta('property', 'og:title', seo.title);
     upsertMeta('property', 'og:description', seo.description);
@@ -9755,7 +9778,7 @@ VARIANT_CONFIG = {
     VARIANT_PUBLIC: {
         "label": "Public",
         "default_route": PUBLIC_HOME_ROUTE,
-        "how_it_works_route": PUBLIC_HOME_ROUTE,
+        "how_it_works_route": "/public/how-it-works",
         "allowed_routes": {
             "/pr-home",
             PUBLIC_HOME_ROUTE,
@@ -11289,11 +11312,11 @@ def render_family_send() -> None:
                             resident_id, access_token
                         )
                         st.caption(
-                            f"Directed to: {office_practical_target_label(practical_message, request_contacts)}. All linked Family Members can see the request and any structured responses, unless there is a safeguarding or privacy reason not to."
+                            f"Directed to: {office_practical_target_label(practical_message, request_contacts)}. All linked Family Members can see the request and any structured responses."
                         )
                     else:
                         st.caption(
-                            "All linked Family Members can see the request and any structured responses, unless there is a safeguarding or privacy reason not to."
+                            "All linked Family Members can see the request and any structured responses."
                         )
                     if practical_context_type == OFFICE_PRACTICAL_CONTEXT_VISIT:
                         requested_date = str(practical_message.get("requested_date") or "").strip()
@@ -12071,7 +12094,7 @@ def get_public_document_title(doc_path: str) -> str:
 
 def render_public_document(doc_path: str, back_route: str = PUBLIC_HELP_VIDEOS_ROUTE) -> None:
     # Render all public documents in the boxed style for consistency.
-    use_boxes = True
+    use_boxes = not doc_path.endswith("02_how_it_works.md")
     use_qa_search = doc_path.endswith("10_faq.md")
     app_variant = resolve_runtime_variant(route_hint=get_route())
     access_token = st.session_state.get("access_token")
@@ -12237,7 +12260,7 @@ def render_pr_homepage() -> None:
 
     st.markdown('<div class="vm-home-shell">', unsafe_allow_html=True)
     st.markdown('<div class="vm-home-card">', unsafe_allow_html=True)
-    st.markdown('<p class="vm-home-brand">voicemailcare.com</p>', unsafe_allow_html=True)
+    st.markdown('<p class="vm-home-brand">familyupdates.care</p>', unsafe_allow_html=True)
     cartoon_path = resolve_cartoon_asset()
     if cartoon_path is not None:
         st.image(cartoon_path.read_bytes(), use_container_width=True)
@@ -12249,6 +12272,10 @@ def render_pr_homepage() -> None:
         '<p class="vm-home-caption">Choose an interface to continue.</p>',
         unsafe_allow_html=True,
     )
+
+    if st.button("How it works", key="pr_entry_how_it_works", use_container_width=True):
+        set_route("/public/how-it-works")
+        st.stop()
 
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
@@ -13993,8 +14020,7 @@ def render_care_hub() -> None:
                     )
                     st.caption(
                         "Playback does not change order by itself. "
-                        "Order changes only after listened confirmation and "
-                        "'Mark listened and move to next'."
+                        'The order only changes when you confirm the message has been listened to and select "Mark listened and move to next".'
                     )
                     st.caption(f"Unread family messages: {queue_unread_count}")
                     if effective_queue_next_contact:
@@ -14098,8 +14124,7 @@ def render_care_hub() -> None:
                 st.caption(f"Unread family messages: {queue_unread_count}")
                 st.caption(
                     "Playback does not change order by itself. "
-                    "Order changes only after listened confirmation and "
-                    "'Mark listened and move to next'."
+                    'The order only changes when you confirm the message has been listened to and select "Mark listened and move to next".'
                 )
                 if effective_queue_next_contact:
                     next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
@@ -14429,12 +14454,12 @@ def render_care_hub() -> None:
                         if is_mobile_variant:
                             st.caption(
                                 "Playback alone does not change order. "
-                                "Use listened confirmation and 'Mark listened and move to next'."
+                                'The order only changes when you confirm the message has been listened to and select "Mark listened and move to next".'
                             )
                         else:
                             st.caption(
                                 "Playback alone does not change order. "
-                                "Use listened confirmation and 'Mark listened and move to next'."
+                                'The order only changes when you confirm the message has been listened to and select "Mark listened and move to next".'
                             )
                     else:
                         st.caption("Playback locked until transcript review is complete.")
@@ -15702,7 +15727,7 @@ def render_care_hub() -> None:
                     )
                     if selected_target_type == OFFICE_PRACTICAL_TARGET_DIRECTED_FAMILY:
                         st.caption(
-                            "This names the intended responder. All linked Family Members can see the request and any structured responses, unless there is a safeguarding or privacy reason not to."
+                            "This names the intended responder. All linked Family Members can see the request and any structured responses."
                         )
                     elif selected_target_type == OFFICE_PRACTICAL_TARGET_MOBILE:
                         st.caption(
@@ -16091,7 +16116,6 @@ def main() -> None:
         "/service-overview": "/pr-home",
         "/public-docs": "/pr-home",
         "/public/service-overview": "/pr-home",
-        "/public/how-it-works": "/pr-home",
         "/public/resident-participation": "/pr-home",
     }
     early_public_target = early_public_route_redirects.get(route)
@@ -16407,7 +16431,7 @@ def main() -> None:
     elif route == "/public/service-overview":
         set_route("/pr-home")
     elif route == "/public/how-it-works":
-        set_route("/pr-home")
+        render_public_document("docs/public/02_how_it_works.md", back_route="/pr-home")
     elif route == "/public/resident-participation":
         set_route("/pr-home")
     elif route == "/public/family-guide":
