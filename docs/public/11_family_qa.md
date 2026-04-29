@@ -2,8 +2,6 @@
 
 # Family Q&A
 
-![Voice message flow diagram](../../assets/system-diagram.png)
-
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
 Q: Is this a live messaging service?  
@@ -31,7 +29,7 @@ Q: What is an Office practical message?
 A: A practical Office request linked to a resident (for example visits, attendance, reminders, or item requests) that allows a structured family reply.
 
 Q: How do I reply to an Office practical message?  
-A: Choose Yes/No/Maybe, then optionally tick options and add a short note.
+A: Choose Yes/No/Maybe, then optionally tick fixed options and add a short context note where offered.
 
 Q: Is this practical reply a chat conversation?  
 A: No. It is a structured response to a specific Office message.

@@ -1,73 +1,135 @@
 ![logo](../../assets/logo.png)
 
-# Voice messages - how it works
+# How VoicemailCare works
 
-![Voicemail Care cartoon overview](../../assets/cartoon-voicemailcare.png)
+VoicemailCare helps families share calm updates, reduce repeated calls, and coordinate practical support without live chat or message history.
 
-![Voice message flow diagram](../../assets/system-diagram.png)
+## 1. How VoicemailCare Works
 
-Communication participants: residents, Family Members, and Care Hub channels (Office and Mobile).
+VoicemailCare uses voice messages for personal connection and simple text updates or structured requests for coordination.
 
-Start with the diagram. It shows the communication channels and message directions.
+Core rules:
 
-## The three service access paths
+- Personal messages can be voice messages, with transcription available where enabled.
+- Coordination updates and practical requests can be simple text.
+- Each new item replaces the previous one in that channel.
+- There is always one current item at a time.
+- No threads.
+- No live chat.
+- No ongoing conversations.
+- Updates are shared with all relevant Family Members.
+- Requests use structured replies: fixed choices, optional fixed tick-boxes, and an optional short context note.
 
-- Family Hub (Multi-Channel)
-- Care Hub - Mobile
-- Care Hub - Office
+## 2. Transparency
 
-Each interface is role-based and separate.
+VoicemailCare is designed to support clear and shared understanding between family members.
 
-## Message directions
+Where responsibilities are shared - especially care, communication, practical help, or finances - arrangements should be as transparent as possible.
 
-### 1) Family -> Resident
+This is particularly important where one family member is managing money or making financial arrangements on behalf of someone else.
 
-Each Family Member channel keeps only the latest Family -> Resident message.  
-Care Hub - Mobile plays family messages one-at-a-time in a fair rotating order, with unplayed messages first.
+Where appropriate, relevant family members should be able to see financial statements or summaries, so that responsibility does not sit invisibly with one person.
 
-### 2) Resident -> Family
+Families may also consider using a suitable professional to manage investments or provide independent financial oversight.
 
-Resident -> Family channel keeps only the latest resident message shared to all Family Members.
+VoicemailCare does not define legal authority or decide who should manage finances. It helps make responsibilities visible and supports families in agreeing transparent arrangements.
 
-### 3) Office -> Family (general update)
+## 3. Stages of Use
 
-Office can send one-way general updates to all Family Members.
+The system adapts as support changes:
 
-### 4) Office practical message (structured reply)
+- Stage 1: Independent at home
+- Stage 2: Family coordinator
+- Stage 3: Carer + family at home
+- Stage 4: Care home + family coordination
 
-Office can send a practical non-urgent message for a resident.  
-Each Family Member can submit a structured reply:
+### Start with Stage 0
 
-- Yes / No / Maybe
-- Optional tick-boxes
-- Optional short note
+The external filing system should be organised first, before starting updates. VoicemailCare does not store those files.
 
-## Replacement rule
+Once the external filing system is in place, start small with one calm voice update to registered Family Members.
 
-Each channel keeps only the latest message.  
-A new message replaces the previous message in that channel.
+There are no replies in that update channel, no thread, and the next update replaces the previous one.
 
-## Transcript assist (optional)
+## Outcomes for Users
 
-- Families and care-home staff can request a transcript when recording a message.
-- When available, transcript text appears under "Transcript assist" for the current message.
-- Transcript text may contain errors; voice remains the source of truth.
-- If transcript is unavailable or not requested, message playback still works.
+VoicemailCare can be used in levels, so you do not have to use the whole system at once. You can use the full system, or start with simple updates and add more when needed.
 
-## Not live messaging
+The table below gives a quick overview of what becomes available at each stage. It is not a full description of every detail.
 
-- Not a live service. Messages are played when staff are available.
-- No typing indicators
-- No live status
-- No read receipts
-- No delivery confirmations
-- No response-time expectation
-- Message date is shown in Family Hub and Care Hub - Mobile (date only, no time).
+| Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family coordinator | Stage 3: + Carer | Stage 4: Care home + Family coordinator |
+| ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
+| 1     | Single update to family group                            | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
+| 2     | Individual voice messages from family members            | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
+| 3     | Voice message request (+ structured replies from family) | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
+| 4     | Option: Mobile additional channel*                       | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
+| 5     | Family coordinator system**                              | —                      | —                             | —                | ✓                                       |
 
-Messages are handled within normal care routines.
+### Stage explanations
 
-## Safety boundary
+* **Stage 1: Person/Couple** — An individual person or a couple living at home and managing their own day-to-day communication.
+* **Stage 2: + Family coordinator** — The person/couple plus a family coordinator. A family coordinator is a family member who helps organise communication and practical requests.
+* **Stage 3: + Carer** — The person/couple plus a family coordinator and a paid carer.
+* **Stage 4: Care home + Family coordinator** — The person/couple moves into a care home. The care home has its own system, and the family coordinator has a separate family coordinator system.
 
-This service is non-urgent and non-clinical.  
-For urgent, medical, safeguarding, or emergency matters, contact the care home directly.
+### Notes
 
+*Additional mobile channel: a separate mobile channel that can send a single voice message to the family group, receive family voice messages, and send requests with structured replies.*
+
+**Family coordinator system: used separately from the care home system. It allows the family coordinator to send a single voice message to the family group, receive individual family voice messages to the office, and use requests with structured replies.**
+
+### How the levels work
+
+Each level includes everything from the previous levels, with additional features added.
+
+You can start at Level 1 and move up through the levels as more support is needed.
+
+Important:
+
+* Keep this section in Markdown.
+* Do not use an image for the table.
+* Do not change the wording inside the table unless specifically requested.
+* Keep the table as a quick overview.
+* Keep detail in the stage explanations and notes.
+
+### Stage details
+
+#### Stage 0 - Preparation of Documents
+
+This is not an active app communication stage. It is the external filing system step: Life Log, Contacts, Admin and Key Documents, Private Finance, Private Health Notes, and Carer and Housekeeping Notes. The files remain outside VoicemailCare.
+
+#### Stage 1 - Individual or Couple at Home
+
+This stage is for an individual or couple still mainly managing at home. Family contact may be increasing, and repeated calls or scattered messages can become tiring. VoicemailCare helps them share one calm family voice update and receive family messages when useful, without creating a live chat or long message thread.
+
+#### Stage 2 - Support from a Family Member
+
+This stage is for when one family member starts helping organise things. The family member may help share updates, ask practical questions, and reduce repeated conversations across the family. Mobile gives the person or couple and the family member separate ways to send messages. The aim is to make the coordination role manageable without taking over the person's life.
+
+#### Stage 3 - Family Support plus Carer
+
+This stage is for when support from a family member continues and a carer, supporter, or regular helper is involved at home. The same shared system helps the person or couple, family member, and helper keep practical communication clear. It avoids creating separate message streams for everyone.
+
+Stage 1 uses Family Office, Mobile, and Family Hub. Mobile lets the person or couple hear family voice messages and send one shared voice message to family. From Stage 2, Mobile also gives the person or couple and the family member separate ways to send messages and keep independence. In Stage 3, Mobile helps a carer or supporter work separately from the family member.
+
+#### Stage 4 - Care Home plus Separate Family Support
+
+This stage is for when the person is living in a care home, with external and separate support from a family member. The care home uses its own separate workspace for updates, family messages, and practical requests.
+
+The care home may coordinate with family by using the in-house care home system, where updates, voice messages, or structured requests are enabled.
+
+A family coordinator may continue separately using their own home-side VoicemailCare system for family communication, such as updates, requests, and structured responses. That separate family workspace does not connect to the care-home workspace.
+
+## Private notes and records
+
+Private notes and records stay outside VoicemailCare, in the person's or family coordinator's own filing system.
+
+## Not for urgent matters
+
+VoicemailCare is non-urgent and not live. Requests and structured replies are for non-urgent, non-essential coordination only.
+
+Family requests remain visible to all linked Family Members and may name an intended responder. All linked Family Members can see the request and any structured responses, unless there is a safeguarding or privacy reason not to.
+
+Replies use fixed structured choices, optional fixed tick-boxes, and an optional short context note only. There are no private chats, threads, or back-and-forth conversations.
+
+For essential, urgent, sensitive, medical, safeguarding, or time-critical matters, use normal direct communication outside VoicemailCare, such as phone, text, WhatsApp, email, or existing care-home channels.

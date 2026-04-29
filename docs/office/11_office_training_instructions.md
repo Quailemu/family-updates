@@ -2,11 +2,9 @@
 
 # Care Hub - Office training and instructions
 
-![Voice message flow diagram](../../assets/system-diagram.png)
-
 Example: Jane
 
-This diagram shows how voice messages and updates are organised for a single resident, using Jane as the example. Each Family Member has their own channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
+Each Family Member has their own channel for Family/Friend -> Resident messages. Care Hub - Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
 Resident -> Family channel keeps the latest resident message shared to all Family Members. The care home can also send a one-way Office update to all Family Members. Each Family Member channel keeps only the latest Family/Friend -> Resident message. A new message replaces only the previous message in that channel.
 

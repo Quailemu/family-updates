@@ -1,6 +1,6 @@
-# Safeguarding and consent (Circle)
+# Safeguarding and consent
 
-In personal-use mode, the Circle remains responsible for safeguarding, consent, authority, and local escalation.
+In at-home use, the person, family coordinator, and any supporters involved remain responsible for safeguarding, consent, authority, and local escalation.
 
 - Check consent/capacity and local suitability before participation.
 - Keep boundaries clear about what this service is for.

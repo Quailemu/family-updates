@@ -1,6 +1,6 @@
-# Circle guide
+# At-home guide
 
-This guide is for personal-use setups where a Circle coordinates support.
+This guide is for at-home setups where a person, couple, family coordinator, carer, or supporter uses VoicemailCare for simple family communication.
 
 ## Core model
 

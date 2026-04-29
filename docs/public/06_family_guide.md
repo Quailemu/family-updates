@@ -2,10 +2,6 @@
 
 # Family and friends guide
 
-![Voicemail Care cartoon overview](../../assets/cartoon-voicemailcare.png)
-
-![Voice message flow diagram](../../assets/system-diagram.png)
-
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
 ## What Family Hub is for
@@ -43,7 +39,7 @@ You can reply with:
 
 - Yes / No / Maybe
 - Optional tick-box selections
-- Optional short note
+- Optional short context note
 
 ## Service style
 

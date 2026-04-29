@@ -1,6 +1,6 @@
 # Registering a contact
 
-Use this flow to invite a Family Member/contact into the Circle.
+Use this flow to invite a Family Member/contact into the at-home setup.
 
 ## Steps
 
@@ -12,6 +12,6 @@ Use this flow to invite a Family Member/contact into the Circle.
 
 ## Notes
 
-- Invite sends access only after local authorisation by your Circle.
+- Invite sends access only after local authorisation by the person or family coordinator.
 - Keep relationship labels clear so others understand who is linked.
-- Main contact can be set/updated by the Circle when needed.
+- Main contact can be set/updated when needed.

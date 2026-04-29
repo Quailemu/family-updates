@@ -1,6 +1,6 @@
-# Circle onboarding script
+# At-home onboarding script
 
-This script helps introduce voicemailcare.com in personal-use Circle setups.
+This script helps introduce voicemailcare.com in at-home setups.
 
 ## Short introduction
 

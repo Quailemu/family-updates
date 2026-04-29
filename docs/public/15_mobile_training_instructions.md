@@ -2,11 +2,9 @@
 
 # Care Hub - Mobile training and instructions
 
-![Voice message flow diagram](../../assets/system-diagram.png)
-
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
-This diagram shows how voice messages and updates are organised across channels. Each Family Member has their own channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
+Each Family Member has their own channel for Family/Friend -> Resident messages. Care Hub - Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
 Resident -> Family channel keeps only the latest resident message shared to all Family Members. The care home can also send a one-way Office update to all Family Members. Each Family Member channel keeps only the latest Family -> Resident message. A new message replaces the previous message in that channel.
 

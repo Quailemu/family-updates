@@ -1,6 +1,6 @@
-# Circle terms of use
+# At-home terms of use
 
-These terms apply when voicemailcare.com is used in personal-use Circle mode.
+These terms apply when voicemailcare.com is used in an at-home setup.
 
 ## Purpose
 
@@ -9,7 +9,7 @@ It is not emergency communication, not a live chat service, and not a medical re
 
 ## Access and participation
 
-Your Circle decides who is invited, linked, and active.
+The person or family coordinator decides who is invited, linked, and active.
 The platform does not verify local authority or entitlement.
 
 ## Messaging model

@@ -1,6 +1,6 @@
-# Complaints and concerns (Circle)
+# Complaints and concerns
 
-If your concern is about local support arrangements, participation, or safeguarding, raise it through your Circle’s direct contacts first.
+If your concern is about local support arrangements, participation, or safeguarding, raise it through your direct family or support contacts first.
 
 The platform provides communication infrastructure and is not monitored in real time.
 

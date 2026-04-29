@@ -1,7 +1,5 @@
 ![logo](../../assets/logo.png)
 
-![Voice message flow diagram](../../assets/system-diagram.png)
-
 # Public walkthrough recording script (60-90 seconds)
 
 voicemailcare.com. One message in. One message out.

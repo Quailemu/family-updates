@@ -5,7 +5,7 @@
 ## Purpose
 
 This guide is for care home managers and staff.
-It explains how the Care Hub is used day to day across the Care Hub – Mobile and Care Hub – Office, in line with the agreed scope for non-urgent, social voice messages, and not for safeguarding matters.
+It explains how Voicemail Care is used day to day across Care Hub - Mobile and Care Hub - Office, and how those care-home tools connect to Family Hub, in line with the agreed scope for non-urgent, social voice messages, and not for safeguarding matters.
 
 ## System structure
 
@@ -47,13 +47,11 @@ If all other current family messages have already been played, that new message 
 
 ## Voice Message Flow Example
 
-![Voice message flow diagram](../../assets/system-diagram.png)
-
 Example resident flow
 
-This diagram shows how voice messages and updates are organised for a single resident. Each Family Member has their own channel for Family/Friend -> Resident messages. Care Hub – Mobile plays these family messages in a fair rotating order, with unplayed messages first.
+Each Family Member has their own channel for Family/Friend -> Resident messages. Care Hub - Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-Resident -> Family channel keeps the latest resident message shared to all Family Members. The care home can also send a one-way Office update to all Family Members. Office can additionally send a practical text message to gather structured family responses (for example yes/no/maybe, tick-box options, and an optional short note). Each Family Member channel keeps only the latest Family/Friend -> Resident message. A new message replaces only the previous message in that channel.
+Resident -> Family channel keeps the latest resident message shared to all Family Members. The care home can also send a one-way Office update to all Family Members. Office can additionally send a practical text message to gather structured family responses (for example yes/no/maybe, fixed tick-box options, and an optional short context note). Each Family Member channel keeps only the latest Family/Friend -> Resident message. A new message replaces only the previous message in that channel.
 
 ## Family member channel structure
 
@@ -75,7 +73,7 @@ Office practical text messages are separate from voice channels and support stru
 - Reducing repeated non-urgent inbound enquiries to office staff.
 - Keeping message handling simple by retaining only the latest message in each channel.
 - Giving Family Members clear one-way office information without response workflows.
-- Sending practical Office text messages when a quick structured family response is needed (for example Yes/No/Maybe, tick-box options, and an optional short note).
+- Sending practical Office text messages when a quick structured family response is needed (for example Yes/No/Maybe, fixed tick-box options, and an optional short context note).
 - Reviewing structured family replies in Office to support practical planning and follow-up.
 
 ### Access model
@@ -84,7 +82,7 @@ Family users sign in with secure email links (email only).
 
 Care Hub – Mobile is intended for individual staff access with an individual Mobile PIN per staff member.
 
-Care Hub – Office is a separate staff/admin login path using two-factor authentication.
+Care Hub – Office is a separate care home staff/admin login path using two-factor authentication.
 
 Carers use Care Hub – Mobile only.  
 Office staff use Care Hub – Office only.

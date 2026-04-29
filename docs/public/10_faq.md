@@ -2,8 +2,6 @@
 
 # Public Q&A
 
-![Voice message flow diagram](../../assets/system-diagram.png)
-
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
 ## What is voicemailcare.com for?
@@ -24,7 +22,7 @@ A one-way Office message broadcast to all Family Members for non-urgent general 
 
 ## Can family reply to Office messages?
 
-Family can reply to an Office practical message using a structured response form (Yes / No / Maybe, optional tick-boxes, optional short note).
+Family can reply to an Office practical message using a structured response form (Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
 
 ## Is an Office practical message a chat thread?
 

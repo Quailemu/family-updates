@@ -2,11 +2,9 @@
 
 # Service overview
 
-![Voice message flow diagram](../../assets/system-diagram.png)
-
 Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
 
-Use the diagram above as the primary reference for message directions, replacement rules, and playback order.
+VoicemailCare helps families share calm voice updates, reduce repeated calls, and coordinate practical support without live chat or message history.
 
 ## Purpose
 
@@ -53,7 +51,7 @@ Each Family Member can submit:
 
 - Yes / No / Maybe
 - Optional tick-box selections
-- Optional short note
+- Optional short context note
 
 This is not a live conversation and is not monitored for emergencies.
 

@@ -1,4 +1,4 @@
-# Mobile Q&A (Circle)
+# Mobile Q&A
 
 Q: Is Mobile for urgent communication?  
 A: No. Mobile supports non-urgent playback and recording only.

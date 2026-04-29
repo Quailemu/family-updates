@@ -17,7 +17,7 @@ This guide is for Family Hub users (Family Members granted by the care home), in
 - Family -> Resident: your latest message replaces your previous one.
 - Resident -> Family: the latest resident-to-family message replaces the previous one.
 - Office general update -> Family: one-way non-urgent informational update.
-- Office practical message -> Family: structured non-urgent response (Yes/No/Maybe, optional tick-boxes, optional short note).
+- Office practical message -> Family: structured non-urgent response (Yes/No/Maybe, optional fixed tick-boxes, and an optional short context note).
 - There is no thread and no message history.
 
 ## Transcript assist (optional)

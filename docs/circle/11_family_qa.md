@@ -1,4 +1,4 @@
-# Family Q&A (Circle)
+# Family Q&A
 
 Communication participants: a household/couple at home, registered Family Members, and any family coordinator or supporter when the stage uses one.
 
@@ -12,7 +12,7 @@ Q: Is someone watching messages live?
 A: No. The platform is not monitored in real time.
 
 Q: Who decides who is invited?  
-A: Your Circle does.
+A: The person or family coordinator does.
 
 Q: Can I see older message history?  
 A: No. Only the latest message per direction/channel is kept.

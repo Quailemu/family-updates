@@ -37,7 +37,7 @@ Core messaging is audio-only and social in nature. Each channel keeps only the l
 Optional transcript assist may be requested when recording. When available, transcript text is shown for the current message.
 Transcript text may contain errors, and voice remains the source of truth.
 
-In addition, Office may publish a practical non-urgent message that supports structured family replies (Yes/No/Maybe, optional tick-boxes, optional short note). This is not live chat.
+In addition, Office may publish a practical non-urgent message that supports structured family replies (Yes/No/Maybe, optional fixed tick-boxes, and an optional short context note). This is not live chat.
 
 ## Roles and responsibility
 

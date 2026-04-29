@@ -15,8 +15,8 @@ Homepage buttons (only):
 Canonical interface sentence:
 The platform has three app interfaces: Family Hub, Care Hub – Mobile, and Care Hub – Office.
 
-How-it-works diagram note (public-facing):
-The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub – Mobile, and Care Hub – Office.
+User-facing help rule:
+Use short, plain-language, outcome-led explanations. Do not show system diagrams, walkthrough videos, or screen recordings in the app. Diagrams and recordings may be kept as internal product/design references only.
 
 Homepage public info copy (before feedback section):
 ## Familiar voices
@@ -62,7 +62,7 @@ All current messages for that resident may be played by users designated by the 
 Office update statement:
 General updates are sent from the care home to keep families informed about day-to-day events. General updates are one-way and are for non-urgent, non-medical information only.
 
-Office practical messages are optional structured requests linked to a specific resident (for example visits, attendance, reminders, or item requests). Family members, friends, or other individuals designated by the care home can reply with a minimal structured response (Yes / No / Maybe), optional tick-box options, and an optional short note. This is still non-urgent and not live messaging.
+Office practical messages are optional structured requests linked to a specific resident (for example visits, attendance, reminders, or item requests). Family members, friends, or other individuals designated by the care home can reply with a minimal structured response (Yes / No / Maybe), optional fixed tick-box options, and an optional short context note. This is still non-urgent and not live messaging.
 
 For urgent, medical, safeguarding, or other time-sensitive matters, families must contact the care home directly through normal channels.
 
@@ -71,7 +71,7 @@ voicemailcare.com is a simple tool for exchanging non-urgent social voice messag
 
 Office general updates are one-way informational messages.
 
-The care home may also publish an Office practical message that allows each registered Family Member to send a structured non-urgent reply (Yes / No / Maybe, optional tick-boxes, optional short note).
+The care home may also publish an Office practical message that allows each registered Family Member to send a structured non-urgent reply (Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
 
 The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
 
@@ -99,16 +99,101 @@ Essential platform data only:
 - Latest-message channel state required for "one message in, one message out."
 - Minimal operational metadata and security/audit logs needed to run the service.
 
+## How VoicemailCare Works
+
+VoicemailCare uses voice messages for personal connection and simple text updates or structured requests for coordination.
+
+Core rules:
+- Personal messages can be voice messages, with transcription available where enabled.
+- Coordination updates and practical requests can be simple text.
+- Each new item replaces the previous one in that channel.
+- There is always one current item at a time.
+- No threads.
+- No live chat.
+- No ongoing conversations.
+- Updates are shared with all relevant Family Members.
+- Requests use fixed structured replies only.
+
+This keeps communication calm, current, and easy to manage. People can use as much or as little of the system as they choose.
+
+Whole-system definition:
+VoicemailCare helps families share calm updates, reduce repeated calls, and coordinate practical support without live chat or message history.
+
+## Transparency
+
+VoicemailCare is designed to support clear and shared understanding between family members.
+
+Where responsibilities are shared - especially care, communication, practical help, or finances - arrangements should be as transparent as possible.
+
+This is particularly important where one family member is managing money or making financial arrangements on behalf of someone else.
+
+Where appropriate, relevant family members should be able to see financial statements or summaries, so that responsibility does not sit invisibly with one person.
+
+Families may also consider using a suitable professional to manage investments or provide independent financial oversight.
+
+VoicemailCare does not define legal authority or decide who should manage finances. It helps make responsibilities visible and supports families in agreeing transparent arrangements.
+
+## Stages of Use
+
+Stage 0 preparation:
+The external filing system should be organised first, before starting updates. VoicemailCare does not store those files.
+
+## Outcomes for Users
+
+VoicemailCare can be used in levels, so you do not have to use the whole system at once. You can use the full system, or start with simple updates and add more when needed.
+
+The table below gives a quick overview of what becomes available at each stage. It is not a full description of every detail.
+
+| Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family coordinator | Stage 3: + Carer | Stage 4: Care home + Family coordinator |
+| ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
+| 1     | Single update to family group                            | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
+| 2     | Individual voice messages from family members            | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
+| 3     | Voice message request (+ structured replies from family) | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
+| 4     | Option: Mobile additional channel*                       | ✓                      | ✓                             | ✓                | ✓ Care home system                      |
+| 5     | Family coordinator system**                              | —                      | —                             | —                | ✓                                       |
+
+### Stage explanations
+
+* **Stage 1: Person/Couple** — An individual person or a couple living at home and managing their own day-to-day communication.
+* **Stage 2: + Family coordinator** — The person/couple plus a family coordinator. A family coordinator is a family member who helps organise communication and practical requests.
+* **Stage 3: + Carer** — The person/couple plus a family coordinator and a paid carer.
+* **Stage 4: Care home + Family coordinator** — The person/couple moves into a care home. The care home has its own system, and the family coordinator has a separate family coordinator system.
+
+### Notes
+
+*Additional mobile channel: a separate mobile channel that can send a single voice message to the family group, receive family voice messages, and send requests with structured replies.*
+
+**Family coordinator system: used separately from the care home system. It allows the family coordinator to send a single voice message to the family group, receive individual family voice messages to the office, and use requests with structured replies.**
+
+## How the levels work
+
+Each level includes everything from the previous levels, with additional features added.
+
+You can start at Level 1 and move up through the levels as more support is needed.
+
+Important:
+
+* Keep this section in Markdown.
+* Do not use an image for the table.
+* Do not change the wording inside the table unless specifically requested.
+* Keep the table as a quick overview.
+* Keep detail in the stage explanations and notes.
+
+Targeted request boundary:
+Requests and structured replies are for non-urgent, non-essential coordination only. Family requests remain visible to all linked Family Members and may name an intended responder, such as Sarah, Tom, or Coordinator. Office-to-Mobile/carer requests are a separate working channel where enabled. Replies use fixed structured choices, optional fixed tick-boxes, and an optional short context note only: no private chat, no threads, and no back-and-forth conversation. Essential, urgent, sensitive, or time-critical matters should use normal direct communication outside VoicemailCare, such as phone, text, WhatsApp, email, or existing care-home channels.
+
 Lifecycle model:
-The app uses four active lifecycle stages to control which tools are available. Stage policy controls capabilities; it must not assign fixed role ownership.
-The user should choose the lifecycle stage, not a separate organisation mode. The lifecycle stage gates tools. Stage 3 must keep the shared Office communication controls available.
+The app uses four active lifecycle stages to describe the real-life situation. Stage policy controls capabilities; it must not assign fixed role ownership.
+The user should choose the lifecycle stage, not a separate organisation mode. Stage 0 is preparation of documents and information outside the app. It is not an active app communication stage. Planning & Organisation guidance belongs in the Life File Guide and other help areas only.
 
-Preparation is not an app stage. Planning & Organisation guidance belongs in the Life File Guide and other help areas only.
+- Stage 0 - Preparation of documents: this is not an active app communication stage. It is the external filing system step: Life Log, Contacts, Admin and Key Documents, Private Finance, Private Health Notes, and Carer and Housekeeping Notes. The files remain outside VoicemailCare.
 
-- Stage 1 - Maintaining Independence at Home: Office on; Mobile on; Family Hub on; Family messaging on for a simple optional message loop; Requests off; shared update/request coordination off; communication remains optional and quiet. Mobile may act as the person's own simple channel.
-- Stage 2 - Family-Supported Coordination at Home: one Office; Mobile on; Family messaging on; Requests on. Mobile may act as the person's own simple channel while Office supports shared family coordination.
-- Stage 3 - Carer + Family at Home: one shared Office; Mobile on; Family messaging on; Requests on. Mobile may show shared coordination tools so users do not have to switch interfaces for routine at-home coordination. Do not create a second office in Stage 3.
-- Stage 4 - Care Home + Family Coordination: split Family Coordinator Office / Care Home Office model planned separately. Stage 4 is the first stage where a second office may exist. The two offices must be separate and must not connect.
+Stages 1-3 use the same at-home principles: one current message, no threads, no live chat, and practical structured replies where helpful. Stage 1 uses [Surname] Family Office, Mobile, and Family Hub. Mobile lets the person or couple hear family voice messages and send one shared voice message to family. From Stage 2, Mobile also gives the person or couple and the family member separate ways to send messages and keep independence. In Stage 3, Mobile helps a carer or supporter work separately from the family member.
+
+- Stage 1 - Individual or Couple at Home: this stage is for an individual or couple still mainly managing at home. Family contact may be increasing, and repeated calls or scattered messages can become tiring. VoicemailCare helps them share one calm family voice update and receive family messages when useful, without creating a live chat or long message thread.
+- Stage 2 - Support from a Family Member: this stage is for when one family member starts helping organise things. The family member may help share updates, ask practical questions, and reduce repeated conversations across the family. Mobile gives the person or couple and the family member separate ways to send messages. The aim is to make the coordination role manageable without taking over the person's life.
+- Stage 3 - Family Support plus Carer: this stage is for when support from a family member continues and a carer, supporter, or regular helper is involved at home. The same shared system helps the person or couple, family member, and helper keep practical communication clear. It avoids creating separate message streams for everyone.
+- Stage 4 - Care Home plus Separate Family Support: this stage is for when the person is living in a care home, with external and separate support from a family member. The care home uses its own separate workspace for updates, family messages, and practical requests. Family support may still happen, but it must stay separate from the care home's responsibilities and systems.
 
 Stage 4 separation rule:
 The Care Home Office and Family Coordinator Office are separate workspaces. They may relate to the same real-life person, but they do not connect inside the app.
@@ -172,35 +257,31 @@ Preferred data direction:
 Use separate family workspace tables where practical, for example family_workspaces, family_workspace_members, family_workspace_people, family_workspace_messages, family_workspace_requests, and family_workspace_request_responses. Avoid reusing care-home operational tables for family-side Stage 4 coordination unless a clear separation layer prevents cross-access and conceptual confusion.
 
 Mobile channel principle:
-Mobile is not the carer app. Mobile is the simple in-the-moment channel. In at-home stages it may be used by the person, a family member, a supporter, or a carer depending on how the household works.
+Mobile is not the carer app. Mobile is the simple in-the-moment channel. In Stage 1, Mobile lets the person or couple hear family voice messages and send one shared voice message to family. In Stages 2-3, Mobile may be used by the person, a family member, a supporter, or a carer depending on how the household works.
+In Stages 2-3, Mobile may send shared updates and structured practical requests where enabled. This is useful when the person present in the home can ask the wider family for practical help without routing every request through the coordinator.
+In Stage 4 care-home mode, Care Home Mobile remains voice playback/recording only. Structured requests stay with Care Home Office.
 
 At-home setup model:
 For Stage 1, Stage 2, and Stage 3, the visible setup should be a home/person setup, not a care-home setup. Reuse existing backend tables where practical, but label the UI as Setup name, Person 1, Person 2 optional, and Main supporter / coordinator.
 
 Stage 1/2/3 wording:
 When Stage 1, Stage 2, or Stage 3 is active, avoid visible "Care organisation", "Care Home", and "Resident" framing where the context is at-home coordination. Prefer "shared at-home coordination" and "person/people" wording while keeping the existing backend routing intact.
-When Stage 2 or Stage 3 is active, prefer "shared update", "shared request", and "shared coordination" wording over care-home office wording where the user is doing routine at-home coordination.
+Prefer "shared update", "shared request", "shared coordination", and "[Surname] Family Office" wording over care-home Office wording where the user is doing routine at-home coordination.
 
 At-home How it works copy:
-voicemailcare.com supports simple, non-urgent voice messages for a person who may need some support from family.
+VoicemailCare helps families share calm updates, reduce repeated calls, and coordinate practical support without live chat or message history.
 
-The person can send one voice message to all registered Family Members, and each Family Member can send their own message back.
+The external filing system should be organised first, before starting updates. VoicemailCare does not store those files.
 
-Messages can be played when convenient, helping family communication stay calm and manageable.
+Once the external filing system is in place, users can start with one calm voice update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.
 
-Only the latest message is kept in each channel. A new message replaces the previous one. No threads.
+Add only the communication tools that are useful: family voice messages, practical requests, and structured replies. Mobile is added only where useful from Stage 2 onward. One voice message replaces the last voice message in that channel.
 
-Stage 1 access copy:
-At this stage, the app may be used by a couple at home, where one person is supporting the other.
+Stage 1 uses [Surname] Family Office, Mobile, and Family Hub. Mobile lets the person or couple hear family voice messages and send one shared voice message to family. From Stage 2, Mobile also gives the person or couple and the family member separate ways to send messages and keep independence. In Stage 3, Mobile helps a carer or supporter work separately from the family member. What changes is who is involved, not a new technical system.
 
-Use "[Surname] voicemail" for the main at-home message area when a surname is available, for example "Hill voicemail". Use "Home voicemail" as the fallback. Only use "Office" for the Stage 4 care-home workspace.
+Private notes and records stay outside VoicemailCare, in the person's or family coordinator's own filing system.
 
-[Surname] voicemail and Mobile are simple views of the same household setup, so there is no need to switch accounts between them.
-
-Requests and active coordination are not used at this stage.
-
-Stage 2/3 access copy:
-[Surname] voicemail and Mobile are used by the trusted at-home setup. Family Hub is for registered Family Members.
+Use "[Surname] Family Office" for the main at-home message area when a surname is available, for example "Hill Family Office". Use "Family Office" as the fallback. Use "Care Hub - Office" for the Stage 4 care-home workspace.
 
 Documentation boundary:
 The original care-home documentation remains the Stage 4 Care Home documentation set. Do not dilute it into at-home wording. Stage 4 Care Home Office/Mobile/Family should continue to use the full care-home governance, resident, room/reference, staff, safeguarding, consent, and responsibility wording.
@@ -216,6 +297,12 @@ The Life File Guide explains a simple external notes/files approach. It should h
 Canonical Life File Guide copy:
 Use this guide to organise important information outside the app. Paper, computer files, and phone notes are all fine.
 
+The important point is that information is organised, accessible to the right person when needed, and separated so private information is not shared by accident.
+
+This is Stage 0: preparation before family coordination becomes difficult. This external filing system helps the person stay independent for longer, reduces family friction, and avoids important information being sorted out in a rush.
+
+The app may suggest the file structure, but the files themselves remain in the person's or family coordinator's own external system.
+
 VoicemailCare does not store the contents of notebooks, documents, medical records, financial records, legal documents, care logs, passwords, or private long-form notes.
 
 Keep private information separate from practical information that a carer, helper, or family member may need.
@@ -223,14 +310,20 @@ Keep private information separate from practical information that a carer, helpe
 Do not put medical records, financial records, legal documents, passwords, care logs, or private long-form notes into VoicemailCare.
 
 Suggested external file names:
-- [Person's name] - Life Log
-- [Person's name] - Private Finance and Admin
-- [Person's name] - Carer and Housekeeping Notes
+- 1. [Person's name] - Life Log
+- 2. [Person's name] - Contacts
+- 3. [Person's name] - Admin and Key Documents
+- 4. [Person's name] - Private Finance
+- 5. [Person's name] - Private Health Notes
+- 6. [Person's name] - Carer and Housekeeping Notes
 
 Use plain names that explain who the file is about and what it contains, so the right file can be found quickly on a computer or phone.
 
 Sharing principle:
-Share only what is needed. A carer may need practical housekeeping notes. They should not normally need private finance and admin information.
+Share only what is needed. A carer may need practical housekeeping notes. They should not normally need private finance, private health, or key document information.
+
+Legal / professional advice boundary:
+VoicemailCare may suggest that users organise authority contact details and consider whether formal authority, such as financial or health/welfare LPA, LPOA, or similar arrangements, is relevant. It must not give legal or financial advice. Use wording such as "you may want to", "where relevant", and "seek professional advice where needed." Do not say the app requires any authority document.
 
 Use gentle optional wording:
 - "you may want to"
@@ -245,32 +338,16 @@ Avoid:
 
 Life File Guide sections:
 - Life Log: day-to-day notes and observations; changes in health or mood; missed medication or concerns; appointment notes; things to remember; questions for family, GP, or carer; emergency contacts.
-- Private Finance and Admin: bills and utilities; pensions and benefits; insurance; financial admin contacts; bank contact details, but not passwords; solicitor / LPA contact details; where important documents are kept; subscriptions and direct debits.
+- Contacts: family and close contacts; GP / doctor; pharmacy; dentist, optician, audiology, or other regular services; carer, cleaner, gardener, or trusted helper; emergency contacts; solicitor, accountant, financial adviser, or other professional contacts.
+- Admin and Key Documents: where important documents are kept; property, tenancy, insurance, pension, benefit, and utility references; solicitor / LPA or LPOA contact details; who is authorised to help with admin; renewal dates, reference numbers, and useful instructions; do not include passwords or full identity document copies.
+- Private Finance: bank, pension, investment, and benefit overview; bills, subscriptions, direct debits, and regular payments; insurance and tax information; financial adviser and bank contact details; who has financial LPA/LPOA or similar authority, where relevant; keep detailed statements, account numbers, passwords, and access codes secure and separate.
+- Private Health Notes: health summary and key conditions; current medication list; allergies and important risks; appointments, questions, and observations; GP, pharmacy, hospital, and clinic contacts; who has health and welfare LPA/LPOA or similar authority, where relevant; keep formal medical records outside VoicemailCare.
 - Carer and Housekeeping Notes: first page with important information for helpers; emergency contacts; house access instructions; allergies; medication schedule summary; daily routine; mobility / falls risk notes; food and drink preferences; housekeeping notes, deliveries, bins, pets, or keys; what to do if something changes.
+- Authority and professional advice: you may want to consider whether formal authority, such as financial or health/welfare LPA, LPOA, or similar arrangements, is relevant; people coordinating care or paid support may need to know who has authority to make decisions or arrange costs; keep authority documents outside VoicemailCare and share only with people who need them; this is not legal or financial advice; seek professional advice where needed.
 - If a care home becomes involved: care home contact details; family coordinator contact; preferences and routines; financial / admin contacts; visiting arrangements; important family updates; notes of care home meetings; questions for care home staff.
 
-Video naming and env key spec (locked):
-- Core labels everywhere: `Record video` and `Diagram video`.
-- Only two video types are allowed: `Record` and `Diagram`.
-- Do not use: `walkthrough`, `explainer`, or `flow video` in UI naming.
-- Optional helper text only when needed:
-- `Record video` -> `Send a voice message`
-- `Diagram video` -> `How the system works`
-- If `Diagram video` is unclear in a specific UI context, use `How it works`.
-
-Env key format (locked):
-- `PUBLIC_<AUDIENCE>_<TYPE>_VIDEO_URL`
-- `<AUDIENCE>` = `MOBILE | FAMILY | OFFICE | UNIVERSAL`
-- `<TYPE>` = `RECORD | DIAGRAM`
-
-Final public video env keys:
-- `PUBLIC_MOBILE_RECORD_VIDEO_URL`
-- `PUBLIC_FAMILY_RECORD_VIDEO_URL`
-- `PUBLIC_OFFICE_RECORD_VIDEO_URL`
-- `PUBLIC_MOBILE_DIAGRAM_VIDEO_URL`
-- `PUBLIC_FAMILY_DIAGRAM_VIDEO_URL`
-- `PUBLIC_OFFICE_DIAGRAM_VIDEO_URL`
-- `PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL`
+Internal diagram/video reference rule:
+System diagrams and recordings are internal product/design references only. Keep reference assets in `assets/` when useful for coding and product thinking, but do not expose them in normal user-facing app help.
 
 ---
 
