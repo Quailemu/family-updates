@@ -1,23 +1,25 @@
 ![logo](../../assets/logo.png)
 
-![Voicemail Care cartoon overview](../../assets/cartoon-voicemailcare.png)
+![familyupdates.care cartoon overview](../../assets/cartoon-familyupdates.png)
 
 ## Purpose
 
 This guide is for care home managers and staff.
-It explains how Voicemail Care is used day to day across Care Hub - Mobile and Care Hub - Office, and how those care-home tools connect to Family Hub, in line with the agreed scope for non-urgent, social voice messages, and not for safeguarding matters.
+It explains how familyupdates.care is used day to day across Care Home Mobile and Care Home Office, and how those care-home tools connect to Care Home Family Hub, in line with the agreed scope for non-urgent communication, and not for safeguarding matters.
 
 ## System structure
 
-The service provides three app interfaces connected to a resident's care circle:
+The Care Home system provides three app interfaces connected to a resident's care-home communication setup:
 
-- Care Hub – Mobile: the operational interface used by carers to support the resident and manage voice messaging
-- Care Hub – Office: the office/administration interface used by care-home staff
-- Family Hub: used by Family Members registered by the care home
+- Care Home Mobile: the operational interface used by carers to support the resident and manage voice messaging
+- Care Home Office: the office/administration interface used by care-home staff
+- Care Home Family Hub: used by Family Members registered by the care home
 
 Each interface has its own controls for creating and managing the messages it sends.
 
 In this guide, **Family Member** means a person the care home has decided may access a resident in the service.
+
+The Care Home system is separate from any Family system used by a Family Organiser. The two systems may relate to the same real-life person, but they do not connect inside familyupdates.care.
 
 The messaging system uses four channel types linked to each resident:
 
@@ -37,7 +39,7 @@ Transcript text may contain errors; voice remains the source of truth.
 
 Messages within a Family Member channel can only be played by users of that specific channel. Other Family Members cannot access those messages.
 
-Care-home staff using Care Hub – Mobile or Care Hub – Office may also play messages when required for operational support.
+Care-home staff using Care Home Mobile or Care Home Office may also play messages when required for operational support.
 
 Messages stay in the channel where they were created. A Family Member can replace their own latest Family -> Resident message, Mobile can replace the latest Resident -> Family message, and Office can replace the latest Office update. One channel cannot directly replace another channel's message.
 
@@ -49,7 +51,7 @@ If all other current family messages have already been played, that new message 
 
 Example resident flow
 
-Each Family Member has their own channel for Family/Friend -> Resident messages. Care Hub - Mobile plays these family messages in a fair rotating order, with unplayed messages first.
+Each Family Member has their own channel for Family/Friend -> Resident messages. Care Home Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
 Resident -> Family channel keeps the latest resident message shared to all Family Members. The care home can also send a one-way Office update to all Family Members. Office can additionally send a practical text message to gather structured family responses (for example yes/no/maybe, fixed tick-box options, and an optional short context note). Each Family Member channel keeps only the latest Family/Friend -> Resident message. A new message replaces only the previous message in that channel.
 
@@ -80,47 +82,47 @@ Office practical text messages are separate from voice channels and support stru
 
 Family users sign in with secure email links (email only).
 
-Care Hub – Mobile is intended for individual staff access with an individual Mobile PIN per staff member.
+Care Home Mobile is intended for individual staff access with an individual Mobile PIN per staff member.
 
-Care Hub – Office is a separate care home staff/admin login path using two-factor authentication.
+Care Home Office is a separate care home staff/admin login path using two-factor authentication.
 
-Carers use Care Hub – Mobile only.  
-Office staff use Care Hub – Office only.
+Carers use Care Home Mobile only.
+Office staff use Care Home Office only.
 
 ### Setting up residents and contacts
 
 Managers and staff may add residents and Family Members to the service. The care home decides how residents are identified and who is added.
 
-These admin tasks are handled in Care Hub – Office, not on Care Hub – Mobile.
+These admin tasks are handled in Care Home Office, not on Care Home Mobile.
 
 ### Registering a Family Member
 
-**Purpose**  
-Care Hub - Office can invite and register Family Members in the service.
+**Purpose**
+Care Home Office can invite and register Family Members in the service.
 
-In Stages 1-3, registration is an at-home coordination action. The coordinator / family decides who should be added.
+In Stages 1-3, registration is an at-home coordination action. The organiser / family decides who should be added.
 
 In Stage 4, registration is a Care Home Office action between the named care home and the named Family Member.
 
-**Steps**  
-1. Open Care Hub – Office.  
-2. Go to "Register a Family Member".  
-3. Enter first name, last name, and email.  
-4. Select the person/resident.  
+**Steps**
+1. Open Care Home Office.
+2. Go to "Register a Family Member".
+3. Enter first name, last name, and email.
+4. Select the person/resident.
 5. Confirm the appropriate access decision:
-   - Stages 1-3: the coordinator / family has decided the person may be added.
-   - Stage 4: the care home has decided the person may be added.  
+   - Stages 1-3: the organiser / family has decided the person may be added.
+   - Stage 4: the care home has decided the person may be added.
 6. Click "Send invitation".
 
-**What happens next**  
+**What happens next**
 The family contact receives an email invitation. They click a secure email login link to sign in. No password is required. They log into the Family Hub. Access is restricted to the selected person/resident. The registration record should include the setup or care home name, Family Member name/email, Office account, and date.
 
-**Important notes**  
+**Important notes**
 This service is for non-urgent social communication only. Only appropriate Family Members should be registered. Duplicate registrations are prevented automatically.
 
-### Resident list and communication areas (Care Hub)
+### Resident list and communication areas (Care Home system)
 
-Care Hub users see a scrollable list of residents. In both Care Hub – Office and Care Hub – Mobile, each resident has one communication area showing the latest message in each channel.
+In Care Home Office and Care Home Mobile, each resident has one communication area showing the latest message in each channel.
 
 ### Mobile send section
 
@@ -144,34 +146,34 @@ Recording and playback are done when staff are available, to fit normal care rou
 
 ### Managing access
 
-The care home controls who is registered and allowed to participate for each resident. Only Care Hub – Office staff may add, maintain, or remove Family Members in line with the care home's usual processes.
-voicemailcare.com provides technical infrastructure only. It does not decide, verify, or validate identity, authority, entitlement, or appropriateness for registration decisions.
+The care home controls who is registered and allowed to participate for each resident. Only Care Home Office staff may add, maintain, or remove Family Members in line with the care home's usual processes.
+familyupdates.care provides technical infrastructure only. It does not decide, verify, or validate identity, authority, entitlement, or appropriateness for registration decisions.
 
 ### Managing devices
 
-Homes typically use a desk device for admin tasks (Care Hub – Office). Care Hub – Mobile is used on the dedicated voicemailcare.com mobile device supplied for this service, with lanyard, for recording and listening.
+Homes typically use a desk device for Care Home Office admin tasks. Care Home Mobile is used on the dedicated mobile device supplied for this service, with lanyard, for recording and listening.
 
-The care home decides how the supplied Care Hub – Mobile device is supervised and used during normal care routines.
+The care home decides how the supplied Care Home Mobile device is supervised and used during normal care routines.
 
-### Care Hub – Mobile and Care Hub – Office devices
+### Care Home Mobile and Care Home Office devices
 
-Care Hub – Office is typically used for admin tasks on a fixed device. Care Hub – Mobile is typically used on shared devices for recording and listening around the home.
+Care Home Office is typically used for admin tasks on a fixed device. Care Home Mobile is typically used on shared devices for recording and listening around the home.
 
-Care Hub – Mobile devices typically use an inactivity warning and lock after a short period. Care Hub – Office devices typically remain signed in, with a clear way to lock the session when leaving the desk.
+Care Home Mobile devices typically use an inactivity warning and lock after a short period. Care Home Office devices typically remain signed in, with a clear way to lock the session when leaving the desk.
 
 ### Locking sessions and device security
 
-Care Hub sessions must not be left open on unattended devices.
+Care Home system sessions must not be left open on unattended devices.
 
-Care Hub – Mobile uses individual staff access. Each staff member has their own Mobile PIN. Shared Mobile PINs should not be used.
+Care Home Mobile uses individual staff access. Each staff member has their own Mobile PIN. Shared Mobile PINs should not be used.
 
-If a staff member forgets their Mobile PIN, an authorised Office user can reset it in Care Hub – Office under Security (staff account emails). The staff member then sets a new PIN at next Mobile sign-in.
+If a staff member forgets their Mobile PIN, an authorised Office user can reset it in Care Home Office under Security. The staff member then sets a new PIN at next Mobile sign-in.
 
 When stepping away, staff should lock the device screen (or sign out) in line with the care home's normal security procedures.
 
-Care Hub – Mobile is used on the dedicated voicemailcare.com mobile device supplied for this service, with lanyard. That device should stay under staff supervision during use and be stored securely when not in use.
+Care Home Mobile is used on the dedicated mobile device supplied for this service, with lanyard. That device should stay under staff supervision during use and be stored securely when not in use.
 
-Care Hub – Office is used on office-managed devices. Access should be limited to designated office staff, with desk sessions locked when unattended.
+Care Home Office is used on office-managed devices. Access should be limited to designated office staff, with desk sessions locked when unattended.
 
 If a device is lost, misplaced, or access is suspected to be compromised, staff should follow the care home's incident process immediately and reset affected access.
 
@@ -198,4 +200,3 @@ For consent, authority, and safeguarding governance, refer to the Safeguarding a
 ## Time display
 
 Where timing labels are shown in care communication views, the app uses date-only labels. Exact clock times and AM/PM markers are not shown.
-

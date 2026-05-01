@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This document explains how consent, authority, and safeguarding relate to voicemailcare.com. It is intended for care managers, inspectors, and legal review, and aims to be clear and practical.
+This document explains how consent, authority, and safeguarding relate to familyupdates.care. It is intended for care managers, inspectors, and legal review, and aims to be clear and practical.
 
 ## Consent and authority
 

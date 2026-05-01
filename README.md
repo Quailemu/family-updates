@@ -105,14 +105,7 @@ no selector is provided.
 
 ## Cloudflare media (R2)
 
-- Media base URL: `https://media.voicemailcare.com`
+- Media base URL: `https://media.familyupdates.care`
 - Media bucket name (ops reference): `voicemailcare-media`
-- App uses `MEDIA_BASE_URL` to construct object URLs when a media value is provided as a path.
-- Preferred walkthrough video env keys:
-  - `PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL`
-  - `PUBLIC_FAMILY_RECORD_VIDEO_URL`
-  - `PUBLIC_MOBILE_RECORD_VIDEO_URL`
-  - `PUBLIC_OFFICE_RECORD_VIDEO_URL`
-- Public walkthrough video env vars may be either:
-  - full URL (for example `https://media.voicemailcare.com/video-walkthrough.mp4`)
-  - object path (for example `video-walkthrough.mp4`)
+- App uses Supabase Storage for message audio playback.
+- Keep public walkthrough videos out of the app.

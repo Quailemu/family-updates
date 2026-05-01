@@ -1,12 +1,12 @@
-![logo](../../assets/logo.png)
+﻿![logo](../../assets/logo.png)
 
 # Family and friends guide
 
-Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
+Communication participants: residents, Family Members, and Care Home system (Care Home Office and Care Home Mobile).
 
 ## What Family Hub is for
 
-Family Hub is for Family Members granted by the care home.  
+Family Hub is for Family Members granted by the care home.
 It supports:
 - Family -> Resident social voice messages
 - Playing the resident's current shared reply
@@ -29,12 +29,12 @@ It supports:
 
 ### Office general update
 
-One-way update from Office to all Family Members.  
+One-way update from Office to all Family Members.
 Used for non-urgent general information and reassurance.
 
 ### Office practical message
 
-A practical non-urgent Office request linked to a resident (for example visits, attendance, reminders, item requests).  
+A practical non-urgent Office request linked to a resident (for example visits, attendance, reminders, item requests).
 You can reply with:
 
 - Yes / No / Maybe
@@ -45,10 +45,9 @@ You can reply with:
 
 - Not a live service. Messages are played when staff are available.
 - No read receipts, no delivery confirmations, no typing indicators.
-- Message date is shown in Family Hub and Care Hub - Mobile (date only, no time).
+- Message date is shown in Family Hub and Care Home Mobile (date only, no time).
 
 ## Boundaries
 
-Do not use this service for urgent, medical, safeguarding, or emergency communication.  
+Do not use this service for urgent, medical, safeguarding, or emergency communication.
 For those matters, contact the care home directly.
-

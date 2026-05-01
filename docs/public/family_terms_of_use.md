@@ -1,4 +1,4 @@
-![logo](../../assets/logo.png)
+﻿![logo](../../assets/logo.png)
 
 # Family Terms of Use
 
@@ -20,7 +20,7 @@ Not a live service. Messages are played when staff are available.
 
 There are no push alerts, delivery confirmations, read receipts, typing indicators, or instant response expectations.
 
-Message date is shown in Family Hub interface and Care Hub - Mobile (date only, no time).
+Message date is shown in Family Hub interface and Care Home Mobile (date only, no time).
 
 The service is provided using reasonable skill and care, but uninterrupted or error-free operation is not guaranteed.
 
@@ -30,7 +30,7 @@ Technical faults, delays, outages, transmission failures, or security incidents 
 
 Family users use the Family Hub interface only.
 
-Family users do not access Care Hub – Mobile or Care Hub – Office.
+Family users do not access Care Home Mobile or Care Home Office.
 
 ## Message model
 
@@ -46,9 +46,9 @@ Transcript text may contain errors, and voice remains the source of truth.
 ## Access and oversight
 
 The care home controls who can be registered and participate, and how the service is used in practice.
-voicemailcare.com does not verify or validate the identity, authority, or entitlement of individuals registered by the care home and relies on the care home's instructions.
+familyupdates.care does not verify or validate the identity, authority, or entitlement of individuals registered by the care home and relies on the care home's instructions.
 
-voicemailcare.com provides technical infrastructure only.
+familyupdates.care provides technical infrastructure only.
 
 ## Privacy in care settings
 

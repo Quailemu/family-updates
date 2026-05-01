@@ -18,17 +18,11 @@ Frequency: once per week (and again after any production deployment).
   - Unexpected spikes after deploys.
 - Record findings in a dated note.
 
-## 2) Cloudflare media audit (walkthrough videos)
+## 2) Media audit
 
-- Verify all public walkthrough video URLs load directly in browser.
-- Confirm these app walkthrough env vars point to `media.voicemailcare.com`:
-  - `PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL`
-  - `PUBLIC_FAMILY_RECORD_VIDEO_URL`
-  - `PUBLIC_MOBILE_RECORD_VIDEO_URL`
-  - `PUBLIC_OFFICE_RECORD_VIDEO_URL`
-- Quick test URL: `https://media.voicemailcare.com/video-walkthrough.mp4`
-- Confirm service-flow walkthrough URLs are still correct and working.
-- Remove duplicate or obsolete large video uploads when safe.
+- Confirm message audio record/playback still works in each active workspace.
+- Confirm no public walkthrough video routes are linked from the app.
+- Remove duplicate or obsolete large media uploads when safe.
 
 ## 3) Render audit (runtime + config)
 
@@ -60,7 +54,7 @@ Frequency: once per week (and again after any production deployment).
   - practical message send + responses view works
 - Public front page:
   - main public page loads and shows the three access buttons (Family, Care Hub – Mobile, Care Hub – Office).
-  - walkthrough pages load for Family/Mobile/Office without placeholder errors.
+  - How it works loads without video placeholders.
 
 ## 5) GitHub/source-control audit
 
@@ -82,7 +76,7 @@ Frequency: once per week (and again after any production deployment).
 - Egress rises sharply without matching user activity.
 - Messages fail to send or playback fails in any variant.
 - Auth/login loops or repeated temporary unavailable states.
-- Walkthrough/document routes regress to wrong variant pages.
+- Public document routes regress to wrong variant pages.
 
 ## Quick weekly record template
 

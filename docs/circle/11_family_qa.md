@@ -1,6 +1,6 @@
 # Family Q&A
 
-Communication participants: a household/couple at home, registered Family Members, and any family coordinator or supporter when the stage uses one.
+Communication participants: a household/couple at home, registered Family Members, and any Family Organiser or supporter when the stage uses one.
 
 Q: What is this service for?  
 A: It supports simple, non-urgent voice messages for a household at home. The household can share one latest voice update with registered Family Members, and each Family Member can send their own latest message back.
@@ -12,7 +12,7 @@ Q: Is someone watching messages live?
 A: No. The platform is not monitored in real time.
 
 Q: Who decides who is invited?  
-A: The person or family coordinator does.
+A: The person or Family Organiser does.
 
 Q: Can I see older message history?  
 A: No. Only the latest message per direction/channel is kept.

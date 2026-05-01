@@ -94,26 +94,6 @@ SUPABASE_AUDIO_BUCKET = os.getenv("SUPABASE_AUDIO_BUCKET", "voice-messages").str
 MEDIA_BASE_URL = (
     str(os.getenv("MEDIA_BASE_URL", "https://media.voicemailcare.com") or "").strip().rstrip("/")
 )
-MEDIA_TEST_VIDEO_OBJECT_PATH = (
-    str(os.getenv("MEDIA_TEST_VIDEO_OBJECT_PATH", "video-walkthrough.mp4") or "")
-    .strip()
-    .lstrip("/")
-)
-FAMILY_RECORD_VIDEO_OBJECT_PATH = (
-    str(os.getenv("FAMILY_RECORD_VIDEO_OBJECT_PATH", "familyhub-walkthrough.mp4") or "")
-    .strip()
-    .lstrip("/")
-)
-MOBILE_RECORD_VIDEO_OBJECT_PATH = (
-    str(os.getenv("MOBILE_RECORD_VIDEO_OBJECT_PATH", "carehub-mobile-walkthrough.mp4") or "")
-    .strip()
-    .lstrip("/")
-)
-OFFICE_RECORD_VIDEO_OBJECT_PATH = (
-    str(os.getenv("OFFICE_RECORD_VIDEO_OBJECT_PATH", "Carehub-Office-Walkthrough.mp4") or "")
-    .strip()
-    .lstrip("/")
-)
 CARE_HOME_BANNER_OBJECT_PATH = (
     str(os.getenv("CARE_HOME_BANNER_OBJECT_PATH", "banners/office/care-home-banner.png") or "")
     .strip()
@@ -152,10 +132,6 @@ OPENAI_TRANSCRIPTION_MAX_BYTES = max(
     int(os.getenv("OPENAI_TRANSCRIPTION_MAX_BYTES", str(25 * 1024 * 1024))),
     1024 * 1024,
 )
-SHOW_FAMILY_HELP_VIDEO = os.getenv("SHOW_FAMILY_HELP_VIDEO", "1").strip().lower() in {"1", "true", "yes", "on"}
-SHOW_MOBILE_HELP_VIDEO = os.getenv("SHOW_MOBILE_HELP_VIDEO", "1").strip().lower() in {"1", "true", "yes", "on"}
-SHOW_OFFICE_HELP_VIDEO = os.getenv("SHOW_OFFICE_HELP_VIDEO", "1").strip().lower() in {"1", "true", "yes", "on"}
-HELP_VIDEOS_ENABLED = os.getenv("HELP_VIDEOS_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
 OFFICE_UPDATE_CATEGORIES = (
     "General reassurance",
     "Daily life",
@@ -267,7 +243,7 @@ LIFE_FILE_GUIDE_SECTIONS = (
             "appointments, questions, and observations",
             "GP, pharmacy, hospital, and clinic contacts",
             "who has health and welfare LPA/LPOA or similar authority, where relevant",
-            "keep formal medical records outside VoicemailCare",
+            "keep formal medical records outside familyupdates.care",
         ),
     ),
     (
@@ -294,7 +270,7 @@ LIFE_FILE_GUIDE_SECTIONS = (
         (
             "you may want to consider whether formal authority, such as financial or health/welfare LPA, LPOA, or similar arrangements, is relevant",
             "people coordinating care or paid support may need to know who has authority to make decisions or arrange costs",
-            "keep authority documents outside VoicemailCare and share only with people who need them",
+            "keep authority documents outside familyupdates.care and share only with people who need them",
             "this is not legal or financial advice; seek professional advice where needed",
         ),
     ),
@@ -304,7 +280,7 @@ LIFE_FILE_GUIDE_SECTIONS = (
         "What this is for",
         (
             "care home contact details",
-            "family coordinator contact",
+            "Family Organiser contact",
             "preferences and routines",
             "financial / admin contacts",
             "visiting arrangements",
@@ -640,6 +616,13 @@ def set_route(route: str) -> None:
     if route_changed:
         st.session_state.pop("_route_transition_until", None)
         st.rerun()
+
+
+def set_public_document_route(route: str) -> None:
+    current_route = normalize_route(st.session_state.get("current_page") or get_route())
+    if current_route and not current_route.startswith("/public"):
+        st.session_state["public_doc_return_route"] = current_route
+    set_route(route)
 
 
 def get_public_landing_url() -> str:
@@ -2631,14 +2614,15 @@ def render_office_family_registration_form(
     mode_value = get_operating_mode(access_token)
     lifecycle_stage_number = normalize_lifecycle_stage(get_lifecycle_stage(access_token))
     at_home_lifecycle_stage = lifecycle_stage_number in {1, 2, 3}
-    organisation_label = "Setup" if at_home_lifecycle_stage else location_label(mode_value)
-    subject_singular = "person" if at_home_lifecycle_stage else subject_label(mode_value)
-    subject_singular_title = "Person" if at_home_lifecycle_stage else subject_label(mode_value, title=True)
-    subject_plural = "people" if at_home_lifecycle_stage else subject_label(mode_value, plural=True)
+    workspace_labels = get_workspace_labels_for_lifecycle_stage(lifecycle_stage_number)
+    organisation_label = str(workspace_labels.get("setup_label") or "Setup")
+    subject_singular = str(workspace_labels.get("subject_singular") or "person")
+    subject_singular_title = str(workspace_labels.get("subject_singular_title") or "Person")
+    subject_plural = str(workspace_labels.get("subject_plural") or "people")
     decision_owner_label = (
-        "coordinator / family"
+        "organiser / family"
         if at_home_lifecycle_stage
-        else contact_label(mode_value)
+        else str(workspace_labels.get("coordinator_label") or contact_label(mode_value))
     )
 
     office_residents = [
@@ -2653,9 +2637,9 @@ def render_office_family_registration_form(
     active_care_home_name = str(
         st.session_state.get("active_care_home_name")
         or st.session_state.get("care_home_name")
-        or "this care home"
+        or ("this setup" if at_home_lifecycle_stage else "this care home")
     ).strip()
-    if active_care_home_name.lower() == "this care home":
+    if active_care_home_name.lower() in {"this care home", "this setup"}:
         resolved_care_home_name = fetch_active_care_home_name(access_token)
         if resolved_care_home_name:
             active_care_home_name = resolved_care_home_name
@@ -2695,7 +2679,7 @@ def render_office_family_registration_form(
     if at_home_lifecycle_stage:
         st.caption(
             f"Register a Family Member for this {subject_singular}. "
-            "The coordinator / family makes the access decision and keeps any registration record outside the app if needed."
+            "The organiser / family makes the access decision and keeps any registration record outside the app if needed."
         )
     else:
         st.caption(
@@ -2718,7 +2702,7 @@ def render_office_family_registration_form(
         label = format_resident_identity_label(
             resident,
             operating_mode=mode_value,
-            include_room=bool(room_label(mode_value)) and not at_home_lifecycle_stage,
+            include_room=bool(workspace_labels.get("show_room")),
             include_care_home=False,
             separator=" | ",
         )
@@ -2759,7 +2743,7 @@ def render_office_family_registration_form(
         )
         st.markdown("#### Section 3 - Confirmation")
         confirmation_copy = (
-            f"I confirm that the coordinator / family has decided this person may be added "
+            f"I confirm that the organiser / family has decided this person may be added "
             f"as a Family Member for this {subject_singular} and is responsible for determining, "
             f"granting, and maintaining their access to the {subject_singular}."
             if at_home_lifecycle_stage
@@ -2774,7 +2758,7 @@ def render_office_family_registration_form(
             key="office_family_authorisation_confirm",
         )
         st.caption(
-            f"voicemailcare.com does not decide who may be added. The {decision_owner_label} is responsible for that decision."
+            f"familyupdates.care does not decide who may be added. The {decision_owner_label} is responsible for that decision."
         )
         st.caption(
             "Security note: after sending an invite, wait for the countdown before retrying."
@@ -3347,25 +3331,26 @@ def _surname_from_display_name(display_name: object) -> str:
 
 def get_at_home_voicemail_label(access_token: str | None = None) -> str:
     token = access_token if access_token is not None else st.session_state.get("access_token")
-    if not is_current_at_home_lifecycle_stage(token):
-        return "Care Hub - Office"
     known_person_name = str(st.session_state.get("circle_person_display_name") or "").strip()
     surname = _surname_from_display_name(known_person_name)
-    if not surname and token:
+    if is_current_at_home_lifecycle_stage(token) and not surname and token:
         for person in fetch_care_home_residents(token):
             surname = _surname_from_display_name(get_resident_full_name(person))
             if surname:
                 break
-    if surname:
-        return f"{surname} Family Office"
-    return "Family Office"
+    workspace_type = (
+        WORKSPACE_TYPE_FAMILY
+        if is_current_at_home_lifecycle_stage(token)
+        else WORKSPACE_TYPE_CARE_HOME
+    )
+    return str(get_workspace_labels(workspace_type, surname=surname).get("office_label") or "")
 
 
 def render_how_it_works_diagram_and_notes() -> None:
     if is_current_at_home_lifecycle_stage():
         voicemail_label = get_at_home_voicemail_label()
         st.markdown(
-            f"- The diagram shows the main parts of the setup: Family Hub, Mobile, and {voicemail_label}.\n"
+            f"- The diagram shows the main parts of the Family system: Family Hub, Family Mobile, and {voicemail_label}.\n"
             "- Each Family Member has their own individual communication channel to the person.\n"
             "- Requests collect quick structured family responses to support simple coordination.\n"
             "- The person, coordinator, or family can use the replies to make the decision.\n"
@@ -3373,7 +3358,7 @@ def render_how_it_works_diagram_and_notes() -> None:
         )
     else:
         st.markdown(
-            "- The diagram shows three service access paths: Family Hub (Multi-Channel), Care Hub - Mobile, and Care Hub - Office.\n"
+            "- The diagram shows the Care Home system: Care Home Family Hub, Care Home Mobile, and Care Home Office.\n"
             "- Each Family Member has their own individual communication channel to the resident.\n"
             "- Requests collect quick structured family responses to support efficient, inclusive decision-making.\n"
             "- The care home reviews responses and makes the final operational decision.\n"
@@ -3383,6 +3368,8 @@ def render_how_it_works_diagram_and_notes() -> None:
 
 def resolve_cartoon_asset() -> Path | None:
     preferred_names = [
+        "familyupdates.png",
+        "cartoon-familyupdates.png",
         "cartoon-voicemailcare.png",
         "cartoon-voicemailcare.png.png",
     ]
@@ -3403,152 +3390,10 @@ def render_how_it_works_cartoon() -> None:
         st.image(str(cartoon_path), use_column_width=True)
 
 
-def set_help_video_selection(video_id: str) -> None:
-    allowed = {HELP_VIDEO_SYSTEMS, HELP_VIDEO_FAMILY, HELP_VIDEO_MOBILE, HELP_VIDEO_OFFICE}
-    if video_id in allowed:
-        st.session_state["help_videos_selected"] = video_id
-
-
-def get_help_video_route(video_id: str) -> str:
-    mapping = {
-        HELP_VIDEO_SYSTEMS: "/public/walkthrough-overview",
-        HELP_VIDEO_MOBILE: "/public/walkthrough-mobile",
-        HELP_VIDEO_FAMILY: "/public/walkthrough-family",
-        HELP_VIDEO_OFFICE: "/public/walkthrough-office",
-    }
-    return mapping.get(video_id, PUBLIC_HELP_VIDEOS_ROUTE)
-
-
-def get_help_video_entries() -> list[dict[str, str]]:
-    return [
-        {
-            "id": HELP_VIDEO_SYSTEMS,
-            "audience": "voicemailcare system",
-            "title": "voicemailcare system",
-            "summary": "Overview of how Family Hub, Care Hub - Mobile, and Care Hub - Office fit together.",
-            "env_var": "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL,PUBLIC_SYSTEMS_VIDEO_URL,PUBLIC_OVERVIEW_VIDEO_URL",
-            "local_path": "assets/system-Walkthrough.mp4",
-        },
-        {
-            "id": HELP_VIDEO_MOBILE,
-            "audience": "Care Hub - Mobile",
-            "title": "Care Hub - Mobile walkthrough video",
-            "summary": "Resident playback and recording support workflows for staff.",
-            "env_var": "PUBLIC_MOBILE_RECORD_VIDEO_URL,PUBLIC_MOBILE_WALKTHROUGH_VIDEO_URL,PUBLIC_CAREHUB_MOBILE_WALKTHROUGH_VIDEO_URL",
-            "local_path": "assets/carehub-mobile-walkthrough.mp4",
-        },
-        {
-            "id": HELP_VIDEO_FAMILY,
-            "audience": "Family Hub",
-            "title": "Family Hub walkthrough video",
-            "summary": "How family messages, playback boundaries, and shared resident updates work.",
-            "env_var": "PUBLIC_FAMILY_RECORD_VIDEO_URL,PUBLIC_FAMILY_WALKTHROUGH_VIDEO_URL,PUBLIC_FAMILYHUB_WALKTHROUGH_VIDEO_URL",
-            "local_path": "assets/voice-message-family-walkthrough-v1.mp4",
-        },
-        {
-            "id": HELP_VIDEO_OFFICE,
-            "audience": "Care Hub - Office",
-            "title": "Care Hub - Office walkthrough video",
-            "summary": "Office oversight, one-way updates, and practical structured messaging.",
-            "env_var": "PUBLIC_OFFICE_RECORD_VIDEO_URL,PUBLIC_OFFICE_WALKTHROUGH_VIDEO_URL,PUBLIC_CAREHUB_OFFICE_WALKTHROUGH_VIDEO_URL",
-            "local_path": "assets/voice-message-office-walkthrough-v1.mp4",
-        },
-    ]
-
-
-def render_public_help_videos() -> None:
-    route_hint = normalize_route(get_route()) or PUBLIC_HELP_VIDEOS_ROUTE
-    runtime_variant = resolve_runtime_variant(route_hint=route_hint)
-    if runtime_variant == VARIANT_MOBILE:
-        render_route_link(
-            "Back to Mobile Hub messages",
-            get_home_route(VARIANT_MOBILE),
-            key="help_videos_back_mobile_messages",
-        )
-    elif runtime_variant == VARIANT_OFFICE:
-        render_route_link(
-            "Back to Care Hub - Office messages",
-            get_home_route(VARIANT_OFFICE),
-            key="help_videos_back_office_messages",
-        )
-    else:
-        render_route_link(
-            "Back to hub selection",
-            PUBLIC_HOME_ROUTE,
-            key="help_videos_back_public",
-        )
-    render_page_header("Help videos", show_variant_subheading=False)
-    if not HELP_VIDEOS_ENABLED:
-        st.warning("Help videos are temporarily unavailable during development.")
-        return
-    st.caption("View help videos before login or from inside the app.")
-    entries = get_help_video_entries()
-    selected = str(st.session_state.get("help_videos_selected") or "").strip().lower()
-    if selected not in {entry["id"] for entry in entries}:
-        selected = ""
-    for entry in entries:
-        button_label = entry["audience"]
-        if st.button(button_label, key=f'help_videos_select_{entry["id"]}', use_container_width=True):
-            selected = entry["id"]
-            st.session_state["help_videos_selected"] = selected
-    if not selected:
-        st.info("Select a video to start")
-        return
-    active = next((entry for entry in entries if entry["id"] == selected), entries[0])
-    st.markdown(f'### {active["title"]}')
-    st.caption(active["summary"])
-    video_source = resolve_public_video_source(active["env_var"], active["local_path"])
-    if video_source:
-        try:
-            st.video(video_source)
-        except Exception:
-            st.warning("Video failed to load. Please check the configured media URL or object path.")
-    else:
-        st.warning(
-            f'Video not found. Set {active["env_var"]} or add {active["local_path"]}.'
-        )
-
-
-def render_how_it_works_video_links(
-    specific_label: str,
-    specific_route: str,
-    key_prefix: str,
-    specific_button_label: str | None = None,
-) -> None:
-    st.markdown("### Help videos")
-    render_route_link(
-        "View help videos",
-        PUBLIC_HELP_VIDEOS_ROUTE,
-        key=f"{key_prefix}_help_videos_link",
-    )
-
-
-def get_how_it_works_channel_copy(access_token: str | None) -> list[str]:
-    if is_current_at_home_lifecycle_stage(access_token):
-        voicemail_label = get_at_home_voicemail_label(access_token)
-        return [
-            "VoicemailCare helps families share calm updates, reduce repeated calls, and coordinate practical support without live chat or message history.",
-            "The external filing system should be organised first, before starting updates. VoicemailCare does not store those files.",
-            "Once the external filing system is in place, start small: one calm update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.",
-            "Then add only the communication tools that are useful: family voice messages, text updates, practical requests, and structured replies. One item replaces the last item in that channel.",
-            "The life stage describes who is involved. The communication level describes how much of the system is switched on.",
-            f"Stage 1 uses {voicemail_label}, Mobile, and Family Hub. Mobile lets the person or couple hear family voice messages and send one shared voice message to family. From Stage 2, Mobile also gives the person or couple and the family member separate ways to send messages and keep independence. In Stage 3, Mobile helps a carer or supporter work separately from the family member.",
-            "Private notes and records stay outside VoicemailCare, in the person's or family coordinator's own filing system.",
-        ]
-    return [
-        "VoicemailCare helps care homes and families share calm updates, reduce repeated calls, and coordinate practical support without live chat or message history.",
-        "The care home operates its own system for text updates, voice messages, and structured requests.",
-        "A care home can start with updates only, then add family voice messages and structured requests if that fits its routines.",
-        "Care Home Mobile supports voice playback and resident voice recording. Structured requests stay with Care Home Office.",
-        "The care home may coordinate with family by using the in-house care home system, where updates, voice messages, or structured requests are enabled.",
-        "A family coordinator may continue separately using their own home-side VoicemailCare system for family communication, such as updates, requests, and structured responses. That separate family workspace does not connect to the care-home workspace.",
-    ]
-
-
 def get_how_it_works_access_copy(access_token: str | None, variant: str) -> list[str]:
     if is_current_at_home_lifecycle_stage(access_token):
         return [
-            "Stage 1 - Individual or Couple at Home: an individual or couple is still mainly managing at home. Family contact may be increasing, and repeated calls or scattered messages can become tiring. VoicemailCare helps them share one calm family voice update and receive family messages when useful, without creating a live chat or long message thread.",
+            "Stage 1 - Individual or Couple at Home: an individual or couple is still mainly managing at home. Family contact may be increasing, and repeated calls or scattered messages can become tiring. familyupdates.care helps them share one calm family voice update and receive family messages when useful, without creating a live chat or long message thread.",
             "Stage 2 - Support from a Family Member: one family member starts helping organise things. The family member may help share updates, ask practical questions, and reduce repeated conversations across the family. Mobile gives the person or couple and the family member separate ways to send messages. The aim is to make the coordination role manageable without taking over the person's life.",
             "Stage 3 - Family Support plus Carer: support from a family member continues and a carer, supporter, or regular helper is involved at home. The same shared system helps the person or couple, family member, and helper keep practical communication clear. It avoids creating separate message streams for everyone.",
         ]
@@ -3556,13 +3401,13 @@ def get_how_it_works_access_copy(access_token: str | None, variant: str) -> list
         return ["Family access uses secure email login links. No SMS and no phone-number login."]
     if variant == VARIANT_MOBILE:
         return [
-            "Care Hub - Mobile uses individual staff PIN access for day-to-day use.",
+            "Care Home Mobile uses individual staff PIN access for day-to-day use.",
             "Secure email link is used only for first sign-in or expired-session recovery.",
-            "Care Hub - Office is a separate care home staff/admin access path.",
+            "Care Home Office is a separate care home staff/admin access path.",
             "Office authentication is distinct from Family email links and Mobile staff PIN access.",
         ]
     return [
-        "Care Hub - Office is a separate care home staff/admin access path.",
+        "Care Home Office is a separate care home staff/admin access path.",
         "Office authentication is distinct from Family email links and Mobile staff PIN access.",
         "If Office 2FA is enabled, users complete Office verification after login.",
     ]
@@ -3588,12 +3433,12 @@ def render_how_it_works_family() -> None:
         unsafe_allow_html=True,
     )
     access_token = st.session_state.get("access_token")
-    info_boxes = get_how_it_works_channel_copy(access_token) + get_how_it_works_access_copy(
-        access_token, VARIANT_FAMILY
-    )
-    for box in info_boxes:
-        st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     render_stage_level_capability_tables(access_token)
+    access_boxes = get_how_it_works_access_copy(access_token, VARIANT_FAMILY)
+    if access_boxes:
+        st.markdown("### Access")
+        for box in access_boxes:
+            st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     family_back_route = (
         get_home_route(VARIANT_FAMILY)
         if st.session_state.get("auth_uid")
@@ -3603,7 +3448,7 @@ def render_how_it_works_family() -> None:
 
 
 def render_how_it_works_mobile() -> None:
-    render_page_header("How it works - Care Hub - Mobile")
+    render_page_header("How it works - Care Home Mobile")
     runtime_variant = resolve_runtime_variant(route_hint=get_route())
     mobile_session = bool(
         st.session_state.get("auth_uid")
@@ -3640,12 +3485,12 @@ def render_how_it_works_mobile() -> None:
         unsafe_allow_html=True,
     )
     access_token = st.session_state.get("access_token")
-    info_boxes = get_how_it_works_channel_copy(access_token) + get_how_it_works_access_copy(
-        access_token, VARIANT_MOBILE
-    )
-    for box in info_boxes:
-        st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     render_stage_level_capability_tables(access_token)
+    access_boxes = get_how_it_works_access_copy(access_token, VARIANT_MOBILE)
+    if access_boxes:
+        st.markdown("### Access")
+        for box in access_boxes:
+            st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
 
 
 def render_how_it_works_office_overview() -> None:
@@ -3680,12 +3525,12 @@ def render_how_it_works_office_overview() -> None:
 """,
         unsafe_allow_html=True,
     )
-    info_boxes = get_how_it_works_channel_copy(access_token) + get_how_it_works_access_copy(
-        access_token, VARIANT_OFFICE
-    )
-    for box in info_boxes:
-        st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     render_stage_level_capability_tables(access_token)
+    access_boxes = get_how_it_works_access_copy(access_token, VARIANT_OFFICE)
+    if access_boxes:
+        st.markdown("### Access")
+        for box in access_boxes:
+            st.markdown(f'<div class="family-how-box">{box}</div>', unsafe_allow_html=True)
     render_route_link(
         office_back_label,
         office_back_route,
@@ -3778,8 +3623,11 @@ def render_family_terms() -> None:
 def render_family_contact() -> None:
     access_token = st.session_state.get("access_token")
     mode_value = get_operating_mode(access_token)
+    workspace_labels = get_workspace_labels_for_lifecycle_stage(get_lifecycle_stage(access_token))
     contact_party = (
-        "coordinator" if is_current_at_home_lifecycle_stage(access_token) else contact_label(mode_value)
+        "coordinator"
+        if is_current_at_home_lifecycle_stage(access_token)
+        else str(workspace_labels.get("coordinator_label") or contact_label(mode_value))
     )
     render_page_header(f"Contact the {contact_party}")
     st.markdown(
@@ -3874,7 +3722,7 @@ def require_family_access() -> None:
         wrong_variant_screen(get_route(), "Family pages are not available in this app.")
     active_role = st.session_state.get("active_role")
     if st.session_state.get("auth_uid") and active_role and active_role != "family":
-        wrong_variant_screen(get_route(), "This signed-in session belongs to Care Hub.")
+        wrong_variant_screen(get_route(), "This signed-in session belongs to the Care Home system.")
     if not st.session_state.get("auth_uid"):
         render_access_gate("Please sign in to access Family.", get_login_route(VARIANT_FAMILY), "family")
         st.stop()
@@ -3897,7 +3745,7 @@ def require_family_access() -> None:
             st.session_state["active_care_home_id"] = family_record.get("care_home_id")
         return
     if care_found:
-        render_wrong_variant("Your login details are for Care Hub.")
+        render_wrong_variant("Your login details are for the Care Home system.")
         st.stop()
     render_access_gate("Account not set up yet.", get_login_route(VARIANT_FAMILY), "family")
     st.stop()
@@ -3906,7 +3754,7 @@ def require_family_access() -> None:
 def require_care_access() -> None:
     runtime_variant = resolve_runtime_variant(route_hint=get_route())
     if runtime_variant not in {VARIANT_MOBILE, VARIANT_OFFICE}:
-        wrong_variant_screen(get_route(), "Care Hub pages are not available in this app.")
+        wrong_variant_screen(get_route(), "Care Home system pages are not available in this app.")
     if (
         runtime_variant == VARIANT_OFFICE
         and not bool(st.session_state.get("office_login_explicit"))
@@ -5224,13 +5072,101 @@ def normalize_lifecycle_stage(stage_value: object) -> int:
     return max(1, min(parsed, 4))
 
 
+WORKSPACE_TYPE_FAMILY = "family"
+WORKSPACE_TYPE_CARE_HOME = "care_home"
+
+
+def normalize_workspace_type(workspace_type: object) -> str:
+    candidate = str(workspace_type or "").strip().lower()
+    if candidate in {WORKSPACE_TYPE_FAMILY, WORKSPACE_TYPE_CARE_HOME}:
+        return candidate
+    return WORKSPACE_TYPE_CARE_HOME
+
+
+def get_workspace_type_for_lifecycle_stage(stage_value: object) -> str:
+    stage = normalize_lifecycle_stage(stage_value)
+    if stage in {1, 2, 3}:
+        return WORKSPACE_TYPE_FAMILY
+    return WORKSPACE_TYPE_CARE_HOME
+
+
+def get_workspace_labels(
+    workspace_type: object,
+    *,
+    surname: str = "",
+    setup_name: str = "",
+) -> dict[str, object]:
+    normalized_type = normalize_workspace_type(workspace_type)
+    cleaned_surname = str(surname or "").strip()
+    cleaned_setup_name = str(setup_name or "").strip()
+    family_office_label = f"{cleaned_surname} Family Office" if cleaned_surname else "Family Office"
+    family_setup_label = cleaned_setup_name or family_office_label
+    if normalized_type == WORKSPACE_TYPE_FAMILY:
+        return {
+            "workspace_type": WORKSPACE_TYPE_FAMILY,
+            "workspace_type_label": "Family system",
+            "workspace_name": family_setup_label,
+            "setup_label": "Family setup",
+            "setup_context_label": "family setup",
+            "office_label": family_office_label,
+            "mobile_label": "Family Mobile",
+            "hub_label": "Family Hub",
+            "subject_singular": "person",
+            "subject_singular_title": "Person",
+            "subject_plural": "people",
+            "subject_plural_title": "People",
+            "coordinator_label": "Family Organiser",
+            "main_contact_label": "Main supporter / organiser (optional)",
+            "organisation_label": "Family system",
+            "show_room": False,
+            "room_label": "",
+            "governance_label": "Family-managed",
+            "transcript_help_context": "Family system",
+        }
+    care_home_setup_label = cleaned_setup_name or "Care Home system"
+    return {
+        "workspace_type": WORKSPACE_TYPE_CARE_HOME,
+        "workspace_type_label": "Care Home system",
+        "workspace_name": care_home_setup_label,
+        "setup_label": "Care home",
+        "setup_context_label": "care home",
+        "office_label": "Care Home Office",
+        "mobile_label": "Care Home Mobile",
+        "hub_label": "Care Home Family Hub",
+        "subject_singular": "resident",
+        "subject_singular_title": "Resident",
+        "subject_plural": "residents",
+        "subject_plural_title": "Residents",
+        "coordinator_label": "Care home coordinator",
+        "main_contact_label": "Care home contact / coordinator (optional)",
+        "organisation_label": "Care home",
+        "show_room": True,
+        "room_label": "Room",
+        "governance_label": "Care-home-managed",
+        "transcript_help_context": "Care Home system",
+    }
+
+
+def get_workspace_labels_for_lifecycle_stage(
+    stage_value: object,
+    *,
+    surname: str = "",
+    setup_name: str = "",
+) -> dict[str, object]:
+    return get_workspace_labels(
+        get_workspace_type_for_lifecycle_stage(stage_value),
+        surname=surname,
+        setup_name=setup_name,
+    )
+
+
 def get_lifecycle_stage_label(stage_value: object) -> str:
     stage = normalize_lifecycle_stage(stage_value)
     labels = {
         1: "Stage 1 - Individual or Couple at Home",
         2: "Stage 2 - Support from a Family Member",
         3: "Stage 3 - Family Support plus Carer",
-        4: "Stage 4 - Care Home plus Separate Family Support",
+        4: "Stage 4 - Care Home",
     }
     return labels.get(stage, f"Stage {stage}")
 
@@ -5238,10 +5174,10 @@ def get_lifecycle_stage_label(stage_value: object) -> str:
 def get_lifecycle_stage_setup_note(stage_value: object) -> str:
     stage = normalize_lifecycle_stage(stage_value)
     notes = {
-        1: "Stage 1: an individual or couple is at home. VoicemailCare can start with one calm family voice update and add more only when useful.",
+        1: "Stage 1: an individual or couple is at home. familyupdates.care can start with one calm family voice update and add more only when useful.",
         2: "Stage 2: support from a family member begins. The aim is to make the coordination role manageable without taking over the person's life.",
         3: "Stage 3: support from a family member plus a carer, supporter, or regular helper is involved at home. The same shared system keeps practical communication clear.",
-        4: "Stage 4: the person is living in a care home, with external and separate support from a family member. The care home workspace stays separate from any family-side coordination workspace.",
+        4: "Stage 4: the person is living in a care home, with external and separate support from a family member. The Care Home system stays separate from any Family system workspace.",
     }
     return notes.get(stage, "")
 
@@ -5265,6 +5201,21 @@ def render_stage_level_status(
     if context:
         parts.append(context)
     st.info(" | ".join(parts))
+    st.caption(
+        "Life stage describes who is involved. Communication level describes how much of the system is switched on."
+    )
+
+
+def render_dev_stage_level_status(access_token: str | None = None) -> None:
+    token = access_token if access_token is not None else st.session_state.get("access_token")
+    if not token:
+        return
+    lifecycle_policy = get_lifecycle_policy(
+        get_lifecycle_stage(token),
+        get_operating_mode(token),
+        get_communication_level(token),
+    )
+    render_stage_level_status(lifecycle_policy)
 
 
 def render_stage_level_capability_tables(access_token: str | None = None) -> None:
@@ -5274,38 +5225,37 @@ def render_stage_level_capability_tables(access_token: str | None = None) -> Non
         current_policy = get_lifecycle_policy(
             get_lifecycle_stage(token),
             get_operating_mode(token),
+            get_communication_level(token),
         )
         render_stage_level_status(current_policy)
 
     st.markdown(
         """
-familyupdates.care helps people remain independent for longer by sending simple updates to family, helping family members keep in touch, and reducing the number of calls through practical requests with structured responses.
-
-| Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family coordinator | Stage 3: + Carer | Stage 4: Care home + Family coordinator |
+| Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family Organiser | Stage 3: + Carer | Stage 4: Care home + Family Organiser |
 | ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
-| 1     | Single update to family group                            | Yes                    | Yes                           | Yes              | Yes - care home system                  |
-| 2     | Individual voice messages from family members            | Yes                    | Yes                           | Yes              | Yes - care home system                  |
-| 3     | Voice message request (+ structured replies from family) | Yes                    | Yes                           | Yes              | Yes - care home system                  |
-| 4     | Option: Mobile additional channel                        | Yes                    | Yes                           | Yes              | Yes - care home system                  |
-| 5     | Care home plus separate family coordinator system        | -                      | -                             | -                | Yes                                     |
+| 1     | Single update to family group                            | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
+| 2     | Individual voice messages from family members            | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
+| 3     | Voice message request (+ structured replies from family) | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
+| 4     | Option: Mobile additional channel                        | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
+| 5     | Separate Family Organiser system                         | -                      | -                             | -                | Yes                                     |
 
-The life stage describes who is involved. The communication level describes how much of the system is switched on.
+The life stage describes who is involved: from managing independently at Stage 1, to help from a family member (Family Organiser) at Stage 2, to having a paid carer at Stage 3, and finally to a care home plus Family Organiser at Stage 4. The communication level describes how much of the system is switched on.
 
 One message replaces the last in each channel.
 
 Transcripts of voice messages are available.
 
-Text is available for short care updates with no replies. One text replaces the last in that channel, so messages stay fresh and relevant.
+Text is available for short updates with no replies. One text replaces the last in that channel, so messages stay fresh and relevant.
 
 #### Stages
 
 **Stage 1: Person/Couple** - An individual person or a couple living at home and managing their own day-to-day communication.
 
-**Stage 2: + Family coordinator** - The person/couple plus a family coordinator. A family coordinator is a family member who helps organise communication and practical requests.
+**Stage 2: + Family Organiser** - The person/couple plus a Family Organiser. A Family Organiser is a family member who helps organise communication and practical requests.
 
-**Stage 3: + Carer** - The person/couple plus a family coordinator and a paid carer.
+**Stage 3: + Carer** - The person/couple plus a Family Organiser and a paid carer.
 
-**Stage 4: Care home + Family coordinator** - The person/couple moves into a care home. The care home has its own internal familyupdates.care system for levels 1-4. The family coordinator, and maybe one of the couple if still at home and able to use it, has a totally separate familyupdates.care system comprising Family Office, Family Hub, and Mobile where useful.
+**Stage 4: Care home + Family Organiser** - The person/couple moves into a care home. The care home uses the Care Home system: Care Home Office, Care Home Mobile, and Care Home Family Hub. The Family Organiser, and maybe one of the couple if still at home and able to use it, may also use a totally separate Family system: Family Office, Family Mobile, and Family Hub.
 
 #### Not for urgent matters
 
@@ -5340,7 +5290,7 @@ Then add only the communication tools that are useful: family voice messages, te
 
 
 COMMUNICATION_LEVEL_MIN = 1
-COMMUNICATION_LEVEL_MAX = 4
+COMMUNICATION_LEVEL_MAX = 5
 DEFAULT_COMMUNICATION_LEVEL = 4
 
 
@@ -5355,12 +5305,13 @@ def normalize_communication_level(level_value: object) -> int:
 def get_communication_level_label(level_value: object) -> str:
     level = normalize_communication_level(level_value)
     labels = {
-        1: "Updates only",
-        2: "Updates + family voice messages",
-        3: "Updates + practical requests",
-        4: "Full coordination",
+        1: "Level 1 - Single update to family group",
+        2: "Level 2 - Individual voice messages from family members",
+        3: "Level 3 - Voice message request with structured replies",
+        4: "Level 4 - Optional Mobile additional channel",
+        5: "Level 5 - Separate Family Organiser system",
     }
-    return labels.get(level, "Full coordination")
+    return labels.get(level, f"Level {level}")
 
 
 def get_communication_level_policy(level_value: object) -> dict[str, object]:
@@ -5374,6 +5325,7 @@ def get_communication_level_policy(level_value: object) -> dict[str, object]:
         "enable_practical_requests": level >= 3,
         "enable_structured_replies": level >= 3,
         "enable_full_coordination": level >= 4,
+        "enable_family_coordinator_separate_system": level >= 5,
     }
 
 
@@ -5667,8 +5619,13 @@ def get_operating_mode(access_token: str | None) -> str:
 
 
 def get_lifecycle_stage(access_token: str | None) -> int:
-    profile = fetch_active_care_home_profile(access_token)
+    profile = fetch_active_care_home_profile(access_token, force_refresh=True)
     return normalize_lifecycle_stage(profile.get("lifecycle_stage"))
+
+
+def get_communication_level(access_token: str | None) -> int:
+    profile = fetch_active_care_home_profile(access_token, force_refresh=True)
+    return normalize_communication_level(profile.get("communication_level"))
 
 
 def get_main_contact_name(access_token: str | None) -> str:
@@ -5698,7 +5655,7 @@ def _is_missing_column_error(exc: Exception, column_name: str) -> bool:
     )
 
 
-def fetch_active_care_home_profile(access_token: str | None) -> dict:
+def fetch_active_care_home_profile(access_token: str | None, *, force_refresh: bool = False) -> dict:
     care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
     if not care_home_id or not access_token:
         return {}
@@ -5710,8 +5667,11 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
     # Keep cache short-lived so external DB updates (for example manual SQL fixes)
     # are reflected quickly without requiring a full app/session reset.
     if (
+        not force_refresh
+        and
         isinstance(cached_profile, dict)
         and str(cached_profile.get("name") or "").strip()
+        and "communication_level" in cached_profile
         and cache_age_seconds < 20.0
     ):
         return cached_profile
@@ -5721,9 +5681,13 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
     select_fields = (
         "name, branding_banner_title, branding_banner_text, "
         "branding_banner_artwork_url, care_hub_idle_timeout_seconds, transcript_policy_mode, "
-        "operating_mode, main_contact_name, lifecycle_stage"
+        "operating_mode, main_contact_name, lifecycle_stage, communication_level"
     )
     fallback_select_fields = (
+        "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, "
+        "operating_mode, main_contact_name, lifecycle_stage, communication_level"
+    )
+    legacy_fallback_select_fields = (
         "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, "
         "operating_mode, main_contact_name, lifecycle_stage"
     )
@@ -5744,16 +5708,20 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
                 or _is_missing_column_error(exc, "operating_mode")
                 or _is_missing_column_error(exc, "main_contact_name")
                 or _is_missing_column_error(exc, "lifecycle_stage")
+                or _is_missing_column_error(exc, "communication_level")
             ):
                 raise
             if _is_missing_column_error(exc, "lifecycle_stage"):
                 st.session_state["_care_homes_missing_lifecycle_stage"] = True
-            fallback_fields = (
-                "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, "
-                "operating_mode, main_contact_name"
-                if _is_missing_column_error(exc, "lifecycle_stage")
-                else fallback_select_fields
-            )
+            if _is_missing_column_error(exc, "lifecycle_stage"):
+                fallback_fields = (
+                    "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, "
+                    "operating_mode, main_contact_name, communication_level"
+                )
+            elif _is_missing_column_error(exc, "communication_level"):
+                fallback_fields = legacy_fallback_select_fields
+            else:
+                fallback_fields = fallback_select_fields
             resp = (
                 supabase.table("care_homes")
                 .select(fallback_fields)
@@ -5781,16 +5749,20 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
                     or _is_missing_column_error(exc, "operating_mode")
                     or _is_missing_column_error(exc, "main_contact_name")
                     or _is_missing_column_error(exc, "lifecycle_stage")
+                    or _is_missing_column_error(exc, "communication_level")
                 ):
                     raise
                 if _is_missing_column_error(exc, "lifecycle_stage"):
                     st.session_state["_care_homes_missing_lifecycle_stage"] = True
-                fallback_fields = (
-                    "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, "
-                    "operating_mode, main_contact_name"
-                    if _is_missing_column_error(exc, "lifecycle_stage")
-                    else fallback_select_fields
-                )
+                if _is_missing_column_error(exc, "lifecycle_stage"):
+                    fallback_fields = (
+                        "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, "
+                        "operating_mode, main_contact_name, communication_level"
+                    )
+                elif _is_missing_column_error(exc, "communication_level"):
+                    fallback_fields = legacy_fallback_select_fields
+                else:
+                    fallback_fields = fallback_select_fields
                 fallback_resp = (
                     supabase.table("care_homes")
                     .select(fallback_fields)
@@ -5815,6 +5787,7 @@ def fetch_active_care_home_profile(access_token: str | None) -> dict:
             "operating_mode": normalize_operating_mode(row.get("operating_mode")),
             "main_contact_name": str(row.get("main_contact_name") or "").strip(),
             "lifecycle_stage": normalize_lifecycle_stage(row.get("lifecycle_stage")),
+            "communication_level": normalize_communication_level(row.get("communication_level")),
         }
         if profile["name"]:
             st.session_state[cache_key] = profile
@@ -5830,6 +5803,7 @@ def update_active_care_home_branding(
     care_home_name: str,
     operating_mode: str,
     lifecycle_stage: int,
+    communication_level: int,
     main_contact_name: str,
     banner_title: str,
     banner_text: str,
@@ -5847,6 +5821,7 @@ def update_active_care_home_branding(
     text_value = str(banner_text or "").strip()
     mode_value = normalize_operating_mode(operating_mode)
     lifecycle_stage_value = normalize_lifecycle_stage(lifecycle_stage)
+    communication_level_value = normalize_communication_level(communication_level)
     main_contact_value = str(main_contact_name or "").strip()
     artwork_value = normalize_banner_artwork_url(banner_artwork_url)
     timeout_value = normalize_care_hub_idle_timeout_seconds(care_hub_idle_timeout_seconds)
@@ -5870,6 +5845,7 @@ def update_active_care_home_branding(
         "name": name_value,
         "operating_mode": mode_value,
         "lifecycle_stage": lifecycle_stage_value,
+        "communication_level": communication_level_value,
         "main_contact_name": main_contact_value or None,
         "branding_banner_title": title_value or None,
         "branding_banner_text": text_value or None,
@@ -5895,10 +5871,12 @@ def update_active_care_home_branding(
             if not (
                 _is_missing_column_error(exc, "care_hub_idle_timeout_seconds")
                 or _is_missing_column_error(exc, "transcript_policy_mode")
+                or _is_missing_column_error(exc, "communication_level")
             ):
                 raise
             update_payload.pop("care_hub_idle_timeout_seconds", None)
             update_payload.pop("transcript_policy_mode", None)
+            update_payload.pop("communication_level", None)
             (
                 supabase.table("care_homes")
                 .update(update_payload)
@@ -5907,13 +5885,16 @@ def update_active_care_home_branding(
             )
         st.session_state.pop(f"care_home_profile_{care_home_id}", None)
         st.session_state.pop(f"care_home_profile_{care_home_id}_ts", None)
-        persisted_profile = fetch_active_care_home_profile(access_token)
+        persisted_profile = fetch_active_care_home_profile(access_token, force_refresh=True)
         persisted_name = str((persisted_profile or {}).get("name") or "").strip()
         persisted_title = str((persisted_profile or {}).get("branding_banner_title") or "").strip()
         persisted_text = str((persisted_profile or {}).get("branding_banner_text") or "").strip()
         persisted_mode = normalize_operating_mode((persisted_profile or {}).get("operating_mode"))
         persisted_lifecycle_stage = normalize_lifecycle_stage(
             (persisted_profile or {}).get("lifecycle_stage")
+        )
+        persisted_communication_level = normalize_communication_level(
+            (persisted_profile or {}).get("communication_level")
         )
         persisted_main_contact_name = str((persisted_profile or {}).get("main_contact_name") or "").strip()
         persisted_artwork = normalize_banner_artwork_url(
@@ -5932,7 +5913,7 @@ def update_active_care_home_branding(
             )
             st.session_state.pop(f"care_home_profile_{care_home_id}", None)
             st.session_state.pop(f"care_home_profile_{care_home_id}_ts", None)
-            persisted_profile = fetch_active_care_home_profile(access_token)
+            persisted_profile = fetch_active_care_home_profile(access_token, force_refresh=True)
             persisted_mode = normalize_operating_mode((persisted_profile or {}).get("operating_mode"))
             if persisted_mode != mode_value:
                 return (
@@ -5976,9 +5957,9 @@ def update_active_care_home_branding(
                 else None
             )
             if persisted_lifecycle_stage == lifecycle_stage_value:
-                persisted_profile = fetch_active_care_home_profile(access_token)
+                persisted_profile = fetch_active_care_home_profile(access_token, force_refresh=True)
             else:
-                persisted_profile = fetch_active_care_home_profile(access_token)
+                persisted_profile = fetch_active_care_home_profile(access_token, force_refresh=True)
                 persisted_lifecycle_stage = normalize_lifecycle_stage(
                     (persisted_profile or {}).get("lifecycle_stage")
                 )
@@ -5987,9 +5968,83 @@ def update_active_care_home_branding(
                     False,
                     "Lifecycle stage change could not be confirmed after save. Please retry or check care_homes update permissions.",
                 )
+        if persisted_communication_level != communication_level_value:
+            try:
+                (
+                    supabase.table("care_homes")
+                    .update({"communication_level": communication_level_value})
+                    .eq("id", care_home_id)
+                    .execute()
+                )
+                level_update_resp = (
+                    supabase.table("care_homes")
+                    .select("communication_level")
+                    .eq("id", care_home_id)
+                    .limit(1)
+                    .execute()
+                )
+            except Exception as exc:
+                if _is_missing_column_error(exc, "communication_level"):
+                    return (
+                        False,
+                        "Communication level cannot be saved because the Supabase database is missing care_homes.communication_level. Apply the latest migration, then try again.",
+                    )
+                raise
+            st.session_state.pop(f"care_home_profile_{care_home_id}", None)
+            st.session_state.pop(f"care_home_profile_{care_home_id}_ts", None)
+            level_update_row = (
+                level_update_resp.data[0]
+                if getattr(level_update_resp, "data", None)
+                and isinstance(level_update_resp.data, list)
+                else {}
+            )
+            persisted_communication_level = normalize_communication_level(
+                level_update_row.get("communication_level")
+                if isinstance(level_update_row, dict)
+                else None
+            )
+            if persisted_communication_level == communication_level_value:
+                persisted_profile = fetch_active_care_home_profile(access_token, force_refresh=True)
+            else:
+                persisted_profile = fetch_active_care_home_profile(access_token, force_refresh=True)
+                persisted_communication_level = normalize_communication_level(
+                    (persisted_profile or {}).get("communication_level")
+                )
+            if persisted_communication_level != communication_level_value:
+                return (
+                    False,
+                    "Communication level change could not be confirmed after save. Please retry or check care_homes update permissions.",
+                )
+        else:
+            try:
+                (
+                    supabase.table("care_homes")
+                    .update({"communication_level": communication_level_value})
+                    .eq("id", care_home_id)
+                    .execute()
+                )
+            except Exception as exc:
+                if _is_missing_column_error(exc, "communication_level"):
+                    return (
+                        False,
+                        "Communication level cannot be saved because the Supabase database is missing care_homes.communication_level. Apply the latest migration, then try again.",
+                    )
+                raise
+            st.session_state.pop(f"care_home_profile_{care_home_id}", None)
+            st.session_state.pop(f"care_home_profile_{care_home_id}_ts", None)
+            persisted_profile = fetch_active_care_home_profile(access_token, force_refresh=True)
+            persisted_communication_level = normalize_communication_level(
+                (persisted_profile or {}).get("communication_level")
+            )
+            if persisted_communication_level != communication_level_value:
+                return (
+                    False,
+                    "Communication level change could not be confirmed after save. Please retry or check care_homes update permissions.",
+                )
         if (
             persisted_name != name_value
             or persisted_lifecycle_stage != lifecycle_stage_value
+            or persisted_communication_level != communication_level_value
             or persisted_main_contact_name != main_contact_value
             or persisted_title != title_value
             or persisted_text != text_value
@@ -6007,14 +6062,111 @@ def update_active_care_home_branding(
         return False, str(exc)
 
 
+def update_active_care_home_stage_level(
+    access_token: str | None,
+    *,
+    lifecycle_stage: int,
+    communication_level: int,
+) -> tuple[bool, str, dict]:
+    care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
+    if not care_home_id:
+        return False, "No active care home is linked to this session.", {}
+    if not access_token:
+        return False, "Session is missing access credentials. Please sign in again.", {}
+    lifecycle_stage_value = normalize_lifecycle_stage(lifecycle_stage)
+    communication_level_value = normalize_communication_level(communication_level)
+    if communication_level_value == 5 and lifecycle_stage_value != 4:
+        return False, "Level 5 cannot be saved unless Current lifecycle stage is Stage 4.", {}
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, error, {}
+    try:
+        update_resp = (
+            supabase.table("care_homes")
+            .update(
+                {
+                    "lifecycle_stage": lifecycle_stage_value,
+                    "communication_level": communication_level_value,
+                }
+            )
+            .eq("id", care_home_id)
+            .execute()
+        )
+        updated_row_count = (
+            len(update_resp.data)
+            if getattr(update_resp, "data", None)
+            and isinstance(update_resp.data, list)
+            else None
+        )
+        readback_resp = (
+            supabase.table("care_homes")
+            .select("id, lifecycle_stage, communication_level")
+            .eq("id", care_home_id)
+            .limit(1)
+            .execute()
+        )
+        row = (
+            readback_resp.data[0]
+            if getattr(readback_resp, "data", None)
+            and isinstance(readback_resp.data, list)
+            and readback_resp.data
+            else {}
+        )
+        if not row:
+            result = {
+                "care_home_id": care_home_id,
+                "requested_lifecycle_stage": lifecycle_stage_value,
+                "requested_communication_level": communication_level_value,
+                "updated_row_returned": bool(updated_row_count),
+                "update_result_count": updated_row_count,
+                "readback_lifecycle_stage": None,
+                "readback_communication_level": None,
+            }
+            return (
+                False,
+                "Supabase update ran, but the setup row could not be read back.",
+                result,
+            )
+        readback_stage = normalize_lifecycle_stage(row.get("lifecycle_stage"))
+        readback_level = normalize_communication_level(row.get("communication_level"))
+        result = {
+            "care_home_id": care_home_id,
+            "requested_lifecycle_stage": lifecycle_stage_value,
+            "requested_communication_level": communication_level_value,
+            "updated_row_returned": bool(updated_row_count),
+            "update_result_count": updated_row_count,
+            "readback_lifecycle_stage": readback_stage,
+            "readback_communication_level": readback_level,
+        }
+        st.session_state.pop(f"care_home_profile_{care_home_id}", None)
+        st.session_state.pop(f"care_home_profile_{care_home_id}_ts", None)
+        if (
+            readback_stage == lifecycle_stage_value
+            and readback_level == communication_level_value
+        ):
+            return True, "Stage and communication level saved.", result
+        return (
+            False,
+            "Stage/level update was sent, but Supabase readback did not match.",
+            result,
+        )
+    except Exception as exc:
+        return False, str(exc), {}
+
+
 def render_care_home_identity_banner(access_token: str | None) -> None:
     if st.session_state.get("_care_home_banner_rendered_in_header"):
         return
-    care_home_profile = fetch_active_care_home_profile(access_token)
+    care_home_profile = fetch_active_care_home_profile(access_token, force_refresh=True)
     care_home_name = str(care_home_profile.get("name") or "").strip()
     operating_mode = normalize_operating_mode(care_home_profile.get("operating_mode"))
     lifecycle_stage = normalize_lifecycle_stage(care_home_profile.get("lifecycle_stage"))
     home_coordination_stage = lifecycle_stage in {1, 2, 3}
+    workspace_labels = get_workspace_labels_for_lifecycle_stage(
+        lifecycle_stage,
+        setup_name=care_home_name,
+    )
+    workspace_type_label = str(workspace_labels.get("workspace_type_label") or "Care Home system")
     if care_home_name:
         safe_name = html.escape(care_home_name)
         if operating_mode == OPERATING_MODE_PERSONAL_USE or home_coordination_stage:
@@ -6034,11 +6186,7 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
                 unsafe_allow_html=True,
             )
         else:
-            identity_label = (
-                "Care home"
-                if lifecycle_stage == 4
-                else organisation_heading(operating_mode)
-            )
+            identity_label = str(workspace_labels.get("organisation_label") or "Care home")
             st.markdown(
                 (
                     '<div style="margin:6px 0 12px 0;padding:8px 10px;'
@@ -6052,15 +6200,7 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
     else:
         st.caption("You are signed in.")
     if get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE, VARIANT_FAMILY}:
-        mode_text = "Shared at-home coordination" if home_coordination_stage else (
-            "Care home coordination"
-            if lifecycle_stage == 4
-            else (
-                "Personal use"
-                if operating_mode == OPERATING_MODE_PERSONAL_USE
-                else "Care organisation"
-            )
-        )
+        mode_text = workspace_type_label
         st.caption(f"Mode: {mode_text}")
     if not bool(st.session_state.get("_care_home_custom_banner_rendered")):
         rendered = render_active_care_home_custom_banner(care_home_profile)
@@ -6078,11 +6218,15 @@ def render_active_care_home_name_caption() -> None:
     access_token = str(st.session_state.get("access_token") or "").strip()
     if not access_token:
         return
-    care_home_profile = fetch_active_care_home_profile(access_token)
+    care_home_profile = fetch_active_care_home_profile(access_token, force_refresh=True)
     care_home_name = str(care_home_profile.get("name") or "").strip()
     operating_mode = normalize_operating_mode(care_home_profile.get("operating_mode"))
     lifecycle_stage = normalize_lifecycle_stage(care_home_profile.get("lifecycle_stage"))
     home_coordination_stage = lifecycle_stage in {1, 2, 3}
+    workspace_labels = get_workspace_labels_for_lifecycle_stage(
+        lifecycle_stage,
+        setup_name=care_home_name,
+    )
     if care_home_name:
         if operating_mode == OPERATING_MODE_PERSONAL_USE or home_coordination_stage:
             person_display = str(st.session_state.get("circle_person_display_name") or "").strip()
@@ -6096,11 +6240,7 @@ def render_active_care_home_name_caption() -> None:
                 unsafe_allow_html=True,
             )
         else:
-            identity_label = (
-                "Care home"
-                if lifecycle_stage == 4
-                else organisation_heading(operating_mode)
-            )
+            identity_label = str(workspace_labels.get("organisation_label") or "Care home")
             st.markdown(
                 (
                     '<div class="vm-care-home-banner">'
@@ -7653,7 +7793,7 @@ def render_logo_row() -> None:
 </style>
 <div class="vm-logo-row">
   <img src="data:image/png;base64,{logo_b64}" alt="logo" />
-  <span class="vm-logo-text">voicemailcare.com</span>
+  <span class="vm-logo-text">familyupdates.care</span>
 </div>
 """,
             unsafe_allow_html=True,
@@ -7755,17 +7895,18 @@ def render_life_file_guide() -> None:
         lifecycle_policy = get_lifecycle_policy(
             lifecycle_stage,
             get_operating_mode(access_token),
+            get_communication_level(access_token),
         )
         render_stage_level_status(
             lifecycle_policy,
-            context="Stage 0 preparation sits outside the app stages.",
+            context="Preparation sits outside the app stages.",
         )
     st.markdown(
         "Use this guide to organise important information outside the app. "
         "Paper, computer files, and phone notes are all fine."
     )
     st.markdown(
-        "This is Stage 0: preparation before family coordination becomes difficult. "
+        "This is preparation before family coordination becomes difficult. "
         "A simple external filing system helps the person stay independent for longer, "
         "reduces family friction, and avoids important information being sorted out in a rush."
     )
@@ -7774,12 +7915,12 @@ def render_life_file_guide() -> None:
         "accessible to the right person when needed, and separated so private information is not shared by accident."
     )
     st.caption(
-        "VoicemailCare does not store these records. Keep private information separate from "
+        "familyupdates.care does not store these records. Keep private information separate from "
         "practical information that a carer, helper, or family member may need."
     )
     st.caption(
         "Do not put medical records, financial records, legal documents, passwords, care logs, "
-        "or private long-form notes into VoicemailCare."
+        "or private long-form notes into familyupdates.care."
     )
     for section_id, title, list_heading, items in LIFE_FILE_GUIDE_SECTIONS:
         with st.expander(title, expanded=(section_id == "prep")):
@@ -7803,6 +7944,16 @@ def render_life_file_guide() -> None:
 def render_header_menu(menu_key: str) -> None:
     current_route = st.session_state.get("current_page") or get_route()
     app_variant = resolve_runtime_variant(route_hint=current_route)
+    if app_variant == VARIANT_PUBLIC and st.session_state.get("auth_uid"):
+        active_role = str(st.session_state.get("active_role") or "").strip().lower()
+        if active_role == "care_hub":
+            app_variant = (
+                VARIANT_OFFICE
+                if bool(st.session_state.get("office_login_explicit"))
+                else VARIANT_MOBILE
+            )
+        elif active_role == "family":
+            app_variant = VARIANT_FAMILY
     prev_route = st.session_state.get("prev_page") or "/"
     show_back_only = current_route.startswith("/how-it-works/") and prev_route in ("/", "", None)
     with st.popover("\u2630"):
@@ -7812,13 +7963,13 @@ def render_header_menu(menu_key: str) -> None:
             is_authed = bool(st.session_state.get("auth_uid"))
             if not is_authed:
                 if st.button("Complaints & Concerns", key=f"{menu_key}_office_complaints_public"):
-                    set_route("/public/complaints-and-concerns")
+                    set_public_document_route("/public/complaints-and-concerns")
                     return
                 if st.button("Go to login", key=f"{menu_key}_office_login"):
                     set_route(get_login_route(app_variant))
                     return
                 if st.button("Privacy Notice", key=f"{menu_key}_office_privacy_public"):
-                    set_route("/public/privacy-notice")
+                    set_public_document_route("/public/privacy-notice")
                     return
                 return
         if app_variant not in (VARIANT_OFFICE, VARIANT_FAMILY, VARIANT_MOBILE) and prev_route and prev_route != current_route:
@@ -7851,7 +8002,7 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", "/billing")
 
             st.markdown("- Daily Use -")
-            handbook_label = "At-home guide" if at_home_lifecycle_stage else "Care Hub handbook"
+            handbook_label = "At-home guide" if at_home_lifecycle_stage else "Care Home handbook"
             if st.button(handbook_label, key=f"{menu_key}_office_doc_handbook"):
                 clicked_action = ("doc", "docs/office/05_care_home_guide.md")
             if st.button("Registering a contact", key=f"{menu_key}_office_doc_register_family"):
@@ -7877,11 +8028,11 @@ def render_header_menu(menu_key: str) -> None:
             if st.button("Safeguarding & consent", key=f"{menu_key}_office_doc_safeguarding"):
                 clicked_action = ("doc", "docs/office/09_safeguarding_consent.md")
             if st.button("Privacy notice", key=f"{menu_key}_office_privacy"):
-                clicked_action = ("route", "/public/privacy-notice")
+                clicked_action = ("public_doc", "/public/privacy-notice")
 
             st.markdown("- Formal -")
             if st.button("Complaints & concerns", key=f"{menu_key}_office_complaints"):
-                clicked_action = ("route", "/public/complaints-and-concerns")
+                clicked_action = ("public_doc", "/public/complaints-and-concerns")
             if not at_home_lifecycle_stage and st.button(
                 "Contracts & templates", key=f"{menu_key}_contracts"
             ):
@@ -7893,6 +8044,8 @@ def render_header_menu(menu_key: str) -> None:
                 action_type, payload = clicked_action
                 if action_type == "route":
                     set_route(payload)
+                elif action_type == "public_doc":
+                    set_public_document_route(payload)
                 elif action_type == "doc":
                     access_token = st.session_state.get("access_token")
                     st.session_state["docs_active"] = resolve_mode_doc_path(
@@ -7940,16 +8093,16 @@ def render_header_menu(menu_key: str) -> None:
                 "Safeguarding and Consent",
                 key=f"{menu_key}_mobile_safeguarding",
             ):
-                set_route("/public/safeguarding-and-consent")
+                set_public_document_route("/public/safeguarding-and-consent")
                 return
             if st.button("Privacy Notice", key=f"{menu_key}_mobile_privacy"):
-                set_route("/public/privacy-notice")
+                set_public_document_route("/public/privacy-notice")
                 return
             if st.button(
                 "Complaints & Concerns",
                 key=f"{menu_key}_mobile_complaints",
             ):
-                set_route("/public/complaints-and-concerns")
+                set_public_document_route("/public/complaints-and-concerns")
                 return
             if st.session_state.get("auth_uid"):
                 if st.button("Sign out", key=f"{menu_key}_mobile_sign_out"):
@@ -7994,7 +8147,7 @@ def render_header_menu(menu_key: str) -> None:
             )
             render_route_link(
                 (
-                    "Contact the coordinator"
+                    "Contact the Family Organiser"
                     if is_current_at_home_lifecycle_stage(st.session_state.get("access_token"))
                     else "Contact the care home"
                 ),
@@ -8150,7 +8303,7 @@ def render_front_page_descriptor() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="front-page-info-box">voicemailcare.com - for non-urgent social voice messages.</div>',
+        '<div class="front-page-info-box">familyupdates.care - for non-urgent updates, voice messages, and practical requests.</div>',
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -8911,13 +9064,13 @@ def render_home(active: str) -> None:
             header_html = (
                 f'<div class="public-header">'
                 f'<img src="{logo_data}" alt="logo" style="height:84px;width:auto;display:block;" />'
-                f'<div class="public-header-title">voicemailcare.com</div>'
+                f'<div class="public-header-title">familyupdates.care</div>'
                 f"</div>"
             )
         else:
             header_html = (
                 '<div class="public-header">'
-                '<div class="public-header-title">voicemailcare.com</div>'
+                '<div class="public-header-title">familyupdates.care</div>'
                 "</div>"
             )
         st.markdown(header_html, unsafe_allow_html=True)
@@ -8935,7 +9088,7 @@ def render_home(active: str) -> None:
             "The care home may also send non-urgent or practical updates, and families may respond with structured text to simple requests."
         )
         st.markdown(
-            "Optional transcript assist is available when recording in Family Hub, Care Hub Mobile, and Care Hub Office."
+            "Optional transcript assist is available when recording in Family Hub, Care Home Mobile, and Care Home Office."
         )
         st.markdown(
             "There is no message history, no long threads, and it is not live. "
@@ -8946,7 +9099,7 @@ def render_home(active: str) -> None:
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("## A simple way to explore the idea")
         st.markdown(
-            "Voicemail Care can be introduced through a one-to-one, activity-based session in the care home."
+            "familyupdates.care can be introduced through a one-to-one, activity-based session in the care home."
         )
         st.markdown(
             "The session uses printed artwork and conversation as a starting point. "
@@ -8975,7 +9128,7 @@ def render_home(active: str) -> None:
                 key="public_feedback_audience",
             )
             ease_score = st.radio(
-                "1. How easy was voicemailcare.com to use today?",
+                "1. How easy was familyupdates.care to use today?",
                 options=[1, 2, 3, 4, 5],
                 horizontal=True,
                 key="public_feedback_q1",
@@ -9024,12 +9177,12 @@ def render_home(active: str) -> None:
             ),
             (
                 VARIANT_MOBILE,
-                "Care Hub - Mobile",
+                "Care Home Mobile",
                 "For care staff to play family messages and support resident recordings.",
             ),
             (
                 VARIANT_OFFICE,
-                "Care Hub - Office",
+                "Care Home Office",
                 "For office oversight, one-way updates, and practical structured messages.",
             ),
         ]
@@ -9052,18 +9205,18 @@ def render_home(active: str) -> None:
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("<h2>How it works</h2>", unsafe_allow_html=True)
         st.markdown(
-            "VoicemailCare helps families share calm updates, reduce repeated calls, "
+            "familyupdates.care helps families share calm updates, reduce the number of calls, "
             "and coordinate practical support without live chat or message history."
         )
         st.markdown("### Communication participants")
         st.markdown("- A person or couple being supported")
         st.markdown("- Registered Family Members")
-        st.markdown("- A family coordinator, carer, helper, or care home where relevant")
+        st.markdown("- A Family Organiser, carer, helper, or care home where relevant")
         st.markdown(
             "Each channel keeps only the latest message. A new message replaces the previous message in that channel."
         )
         render_route_link(
-            "Read how VoicemailCare works",
+            "Read how familyupdates.care works",
             "/public/how-it-works",
             key="public_home_how_it_works_link",
         )
@@ -9119,12 +9272,12 @@ def render_home(active: str) -> None:
                 <div>Family members do not hear each other's Family -&gt; Resident messages. Each Family Member channel is separate.</div>
               </div>
               <div class="public-card pink">
-                <h3>Care Hub playback</h3>
-                <div>Family messages are played to residents in Care Hub - Mobile and are operationally visible in Care Hub - Office.</div>
+                <h3>Care Home playback</h3>
+                <div>Family messages are played to residents in Care Home Mobile and are operationally visible in Care Home Office.</div>
               </div>
               <div class="public-card">
                 <h3>No live pressure</h3>
-                <div>No notifications, no delivery/read receipts, and no typing indicators. Message date is shown without time in Family and Care Hub - Mobile views.</div>
+                <div>No notifications, no delivery/read receipts, and no typing indicators. Message date is shown without time in Family and Care Home Mobile views.</div>
               </div>
             </div>
             """,
@@ -9139,7 +9292,7 @@ def render_home(active: str) -> None:
               <h3>Roles and important boundaries</h3>
               <div><strong>Family Members:</strong> Family Members receive updates and, where enabled, send one latest voice message back.</div>
               <div><strong>Mobile:</strong> a simple phone view for listening and recording where it is useful.</div>
-              <div><strong>Care Hub - Office:</strong> the care-home workspace, used only when a care home is involved.</div>
+              <div><strong>Care Home Office:</strong> the care-home workspace, used only when a care home is involved.</div>
               <div style="margin-top:8px;">This service is for non-urgent communication only. It is not for medical updates, safeguarding communication, financial decisions, legal matters, or emergencies. Use normal direct contact routes for those matters.</div>
             </div>
             """,
@@ -9181,7 +9334,7 @@ def render_home(active: str) -> None:
     if get_app_variant() == VARIANT_PUBLIC:
         st.markdown("Communication participants")
         st.markdown(
-            "VoicemailCare helps families share calm updates, reduce repeated calls, "
+            "familyupdates.care helps families share calm updates, reduce the number of calls, "
             "and coordinate practical support without live chat or message history."
         )
         st.markdown(
@@ -9195,13 +9348,13 @@ def render_home(active: str) -> None:
     current_variant = resolve_runtime_variant(route_hint=get_route())
     if current_variant == VARIANT_MOBILE:
         render_route_link(
-            "Back to Care Hub - Mobile",
+            "Back to Care Home Mobile",
             get_home_route(VARIANT_MOBILE),
             key="service_overview_back_mobile",
         )
     elif current_variant == VARIANT_OFFICE:
         render_route_link(
-            "Back to Care Hub - Office",
+            "Back to Care Home Office",
             get_office_home_route(bool(st.session_state.get("auth_uid"))),
             key="service_overview_back_office",
         )
@@ -9222,16 +9375,16 @@ def render_home(active: str) -> None:
             key=f"service_overview_back_to_public_docs_{current_variant}",
         )
     st.markdown(
-        "voicemailcare.com  \n"
+        "familyupdates.care  \n"
         "Public guides.\n\n"
-        "Choose Family, Care Hub - Mobile, or Care Hub - Office to continue.  \n"
+        "Choose Family, Care Home Mobile, or Care Home Office to continue.  \n"
         "This is not a live service. Messages are played when staff are available."
     )
 
     button_cols = st.columns(3, gap="small")
     render_public_app_buttons(button_cols)
 
-    # Homepage buttons are handled above (Family / Care Hub - Mobile / Care Hub - Office).
+    # Homepage buttons are handled above (Family / Care Home Mobile / Care Home Office).
 
     st.markdown('<div style="margin-top:-8px;"></div>', unsafe_allow_html=True)
 
@@ -9323,39 +9476,29 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
     route_titles: dict[str, str] = {
         "/pr-home": "familyupdates.care - Simple updates and practical requests for families",
         "/public/how-it-works": "How familyupdates.care works",
-        "/family/login": "Family Hub | voicemailcare.com",
-        "/care-hub/mobile/login": "Care Hub - Mobile | voicemailcare.com",
-        "/care-hub/login": "Care Hub - Office | voicemailcare.com",
-        "/public/privacy-notice": "Privacy Notice | voicemailcare.com",
-        "/public/family-terms-of-use": "Family Terms of Use | voicemailcare.com",
-        "/public/complaints-and-concerns": "Complaints and Concerns | voicemailcare.com",
-        "/public/safeguarding-and-consent": "Safeguarding and Consent | voicemailcare.com",
-        "/public/faq": "Family and Care Hub Q&A | voicemailcare.com",
-        "/public/qa": "Family and Care Hub Q&A | voicemailcare.com",
-        "/public/walkthrough-family": "Family Hub walkthrough video | voicemailcare.com",
-        "/public/walkthrough-mobile": "Care Hub - Mobile Record Video | voicemailcare.com",
-        "/public/walkthrough-office": "Care Hub - Office Walkthrough | voicemailcare.com",
-        "/public/walkthrough-overview": "voicemailcare systems video | voicemailcare.com",
-        PUBLIC_HELP_VIDEOS_ROUTE: "Help videos | voicemailcare.com",
-        LIFE_FILE_GUIDE_ROUTE: "Life File Guide | voicemailcare.com",
+        "/family/login": "Family Hub | familyupdates.care",
+        "/care-hub/mobile/login": "Care Home Mobile | familyupdates.care",
+        "/care-hub/login": "Care Home Office | familyupdates.care",
+        "/public/privacy-notice": "Privacy Notice | familyupdates.care",
+        "/public/family-terms-of-use": "Family Terms of Use | familyupdates.care",
+        "/public/complaints-and-concerns": "Complaints and Concerns | familyupdates.care",
+        "/public/safeguarding-and-consent": "Safeguarding and Consent | familyupdates.care",
+        "/public/faq": "Family and Care Home Q&A | familyupdates.care",
+        "/public/qa": "Family and Care Home Q&A | familyupdates.care",
+        LIFE_FILE_GUIDE_ROUTE: "Life File Guide | familyupdates.care",
     }
     route_descriptions: dict[str, str] = {
         "/pr-home": "familyupdates.care helps families share calm updates, voice messages, and practical requests without live chat or message history.",
         "/public/how-it-works": "How familyupdates.care works across stages, communication levels, updates, voice messages, and practical requests.",
         "/family/login": "Family Hub access for non-urgent social voice messages. Not a live service.",
-        "/care-hub/mobile/login": "Care Hub - Mobile access for staff playback and resident recordings within care routines.",
-        "/care-hub/login": "Care Hub - Office access for oversight, family registration, and operational communication.",
-        "/public/privacy-notice": "Privacy notice for voicemailcare.com, including controller/processor roles and retention boundaries.",
-        "/public/family-terms-of-use": "Family Terms of Use for voicemailcare.com and non-urgent message boundaries.",
+        "/care-hub/mobile/login": "Care Home Mobile access for staff playback and resident recordings within care routines.",
+        "/care-hub/login": "Care Home Office access for oversight, family registration, and operational communication.",
+        "/public/privacy-notice": "Privacy notice for familyupdates.care, including controller/processor roles and retention boundaries.",
+        "/public/family-terms-of-use": "Family Terms of Use for familyupdates.care and non-urgent message boundaries.",
         "/public/complaints-and-concerns": "How to raise platform concerns and where care-home responsibilities apply.",
-        "/public/safeguarding-and-consent": "Safeguarding and consent boundaries for voicemailcare.com in care settings.",
-        "/public/faq": "Frequently asked questions for Family Hub and Care Hub usage.",
-        "/public/qa": "Frequently asked questions for Family Hub and Care Hub usage.",
-        "/public/walkthrough-family": "Walkthrough video for Family Hub message recording and playback boundaries.",
-        "/public/walkthrough-mobile": "Walkthrough video for Care Hub - Mobile playback and resident recording workflows.",
-        "/public/walkthrough-office": "Walkthrough video for Care Hub - Office oversight and practical structured messaging.",
-        "/public/walkthrough-overview": "System diagram walkthrough across Family Hub, Care Hub - Mobile, and Care Hub - Office.",
-        PUBLIC_HELP_VIDEOS_ROUTE: "Watch all voicemailcare instructional videos in one place: systems, mobile, family, and office.",
+        "/public/safeguarding-and-consent": "Safeguarding and consent boundaries for familyupdates.care in care settings.",
+        "/public/faq": "Frequently asked questions for Family Hub and Care Home system usage.",
+        "/public/qa": "Frequently asked questions for Family Hub and Care Home system usage.",
         LIFE_FILE_GUIDE_ROUTE: "Guidance for external notebooks, folders, and Life Management Files.",
     }
     if normalized_route == "/public/service-overview":
@@ -9385,7 +9528,7 @@ def apply_seo_head_tags(route: str, app_variant: str) -> None:
     }
     should_index = is_canonical_host and is_public_route and app_variant in {VARIANT_PUBLIC, VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE}
     robots = (
-        "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+        "index,follow,max-image-preview:large,max-snippet:-1"
         if should_index
         else "noindex,nofollow,noarchive"
     )
@@ -9595,12 +9738,17 @@ OFFICE_HOME_ROUTE = "/care-hub/inbox"
 MOBILE_LOGIN_ROUTE = "/care-hub/mobile/login"
 MOBILE_HOME_ROUTE = "/care-hub/mobile/inbox"
 PUBLIC_HOME_ROUTE = "/pr-home"
-PUBLIC_HELP_VIDEOS_ROUTE = "/public/help-videos"
 LIFE_FILE_GUIDE_ROUTE = "/life-file-guide"
-HELP_VIDEO_SYSTEMS = "systems"
-HELP_VIDEO_FAMILY = "family"
-HELP_VIDEO_MOBILE = "mobile"
-HELP_VIDEO_OFFICE = "office"
+REMOVED_VIDEO_ROUTES = {
+    "/public/help-videos",
+    "/public/walkthrough-family",
+    "/public/walkthrough-family-flow",
+    "/public/walkthrough-mobile",
+    "/public/walkthrough-mobile-flow",
+    "/public/walkthrough-office",
+    "/public/walkthrough-office-flow",
+    "/public/walkthrough-overview",
+}
 FAMILY_PUBLIC_ROUTES = {
     "/family/login",
 }
@@ -9619,15 +9767,7 @@ OFFICE_PUBLIC_ROUTES = {
     "/public/complaints-and-concerns",
     "/public/safeguarding-and-consent",
     LIFE_FILE_GUIDE_ROUTE,
-    "/public/walkthrough-family",
-    "/public/walkthrough-family-flow",
-    "/public/walkthrough-mobile",
-    "/public/walkthrough-mobile-flow",
-    "/public/walkthrough-office",
-    "/public/walkthrough-office-flow",
-    "/public/walkthrough-overview",
-    PUBLIC_HELP_VIDEOS_ROUTE,
-    "/care-hub/mobile/qa",
+                                    "/care-hub/mobile/qa",
 }
 MOBILE_PUBLIC_ROUTES = {
     "/care-hub/mobile/login",
@@ -9645,15 +9785,7 @@ MOBILE_PUBLIC_ROUTES = {
     "/public/complaints-and-concerns",
     "/public/safeguarding-and-consent",
     LIFE_FILE_GUIDE_ROUTE,
-    "/public/walkthrough-family",
-    "/public/walkthrough-family-flow",
-    "/public/walkthrough-mobile",
-    "/public/walkthrough-mobile-flow",
-    "/public/walkthrough-office",
-    "/public/walkthrough-office-flow",
-    "/public/walkthrough-overview",
-    PUBLIC_HELP_VIDEOS_ROUTE,
-}
+                                }
 
 VARIANT_CONFIG = {
     VARIANT_FAMILY: {
@@ -9682,20 +9814,12 @@ VARIANT_CONFIG = {
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             LIFE_FILE_GUIDE_ROUTE,
-            "/public/walkthrough-family",
-            "/public/walkthrough-family-flow",
-            "/public/walkthrough-mobile",
-            "/public/walkthrough-mobile-flow",
-            "/public/walkthrough-office",
-            "/public/walkthrough-office-flow",
-            "/public/walkthrough-overview",
-            PUBLIC_HELP_VIDEOS_ROUTE,
-            "/pr-home",
+                                                                                                            "/pr-home",
             "/service-overview",
         },
     },
     VARIANT_MOBILE: {
-        "label": "Care Hub - Mobile",
+        "label": "Care Home Mobile",
         "default_route": MOBILE_LOGIN_ROUTE,
         "how_it_works_route": "/care-hub-mobile/how-it-works",
         "allowed_routes": {
@@ -9720,20 +9844,12 @@ VARIANT_CONFIG = {
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             LIFE_FILE_GUIDE_ROUTE,
-            "/public/walkthrough-family",
-            "/public/walkthrough-family-flow",
-            "/public/walkthrough-mobile",
-            "/public/walkthrough-mobile-flow",
-            "/public/walkthrough-office",
-            "/public/walkthrough-office-flow",
-            "/public/walkthrough-overview",
-            PUBLIC_HELP_VIDEOS_ROUTE,
-            "/pr-home",
+                                                                                                            "/pr-home",
             "/service-overview",
         },
     },
     VARIANT_OFFICE: {
-        "label": "Care Hub - Office",
+        "label": "Care Home Office",
         "default_route": OFFICE_LOGIN_ROUTE,
         "how_it_works_route": "/care-hub-office/how-it-works",
         "allowed_routes": {
@@ -9763,15 +9879,7 @@ VARIANT_CONFIG = {
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             LIFE_FILE_GUIDE_ROUTE,
-            "/public/walkthrough-family",
-            "/public/walkthrough-family-flow",
-            "/public/walkthrough-mobile",
-            "/public/walkthrough-mobile-flow",
-            "/public/walkthrough-office",
-            "/public/walkthrough-office-flow",
-            "/public/walkthrough-overview",
-            PUBLIC_HELP_VIDEOS_ROUTE,
-            "/pr-home",
+                                                                                                            "/pr-home",
             "/service-overview",
         },
     },
@@ -9794,15 +9902,7 @@ VARIANT_CONFIG = {
             "/public/complaints-and-concerns",
             "/public/safeguarding-and-consent",
             LIFE_FILE_GUIDE_ROUTE,
-            "/public/walkthrough-family",
-            "/public/walkthrough-family-flow",
-            "/public/walkthrough-mobile",
-            "/public/walkthrough-mobile-flow",
-            "/public/walkthrough-office",
-            "/public/walkthrough-office-flow",
-            "/public/walkthrough-overview",
-            PUBLIC_HELP_VIDEOS_ROUTE,
-        },
+                                                                                                        },
     },
 }
 
@@ -10215,415 +10315,6 @@ def get_public_app_url(variant: str) -> str:
     return ""
 
 
-def normalize_public_video_url(raw_value: str) -> str:
-    value = (raw_value or "").strip()
-    if not value:
-        return ""
-    # Allow values copied as "URL=https://..." or "PUBLIC_VIDEO_...=https://...".
-    if "=" in value:
-        lhs, rhs = value.split("=", 1)
-        lhs = lhs.strip().lower()
-        rhs = rhs.strip()
-        if lhs.endswith("url") and rhs.startswith(("http://", "https://")):
-            value = rhs
-    # Strip accidental wrapping quotes.
-    if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
-        value = value[1:-1].strip()
-    if not value:
-        return ""
-    if re.match(r"^https?://", value, re.IGNORECASE):
-        parsed = urlparse(value)
-        host = str(parsed.netloc or "").strip().lower()
-        if any(part in host for part in LEGACY_MEDIA_HOST_SUBSTRINGS):
-            media_path = unquote(str(parsed.path or "").strip().lstrip("/"))
-            if media_path:
-                return _join_media_base_url(media_path)
-        return value
-    # Allow object-path values like "video-walkthrough.mp4".
-    return _join_media_base_url(unquote(value))
-
-
-def _video_url_variants(url: str) -> list[str]:
-    normalized = normalize_public_video_url(url)
-    if not normalized:
-        return []
-    variants = [normalized]
-    def _prepend_unique(values: list[str]) -> None:
-        nonlocal variants
-        ordered: list[str] = []
-        for value in values:
-            if value and value not in ordered:
-                ordered.append(value)
-        for value in variants:
-            if value and value not in ordered:
-                ordered.append(value)
-        variants = ordered
-
-    try:
-        parsed = urlparse(normalized)
-        path = str(parsed.path or "")
-        lowered_path = path.lower()
-        if path and lowered_path != path:
-            lowered_url = urlunparse(parsed._replace(path=lowered_path))
-            if lowered_url not in variants:
-                variants.append(lowered_url)
-        host = str(parsed.netloc or "").strip().lower()
-        media_hosts = {"media.voicemailcare.com", "media.voice-message.com"}
-        path_lstrip = path.lstrip("/")
-        if host in media_hosts and path_lstrip.lower().startswith("system-walkthrough"):
-            path_candidates = [
-                "/system-Walkthrough.mp4",
-                "/system-walkthrough.mp4",
-                "/system-Walkthrough.MP4",
-                "/system-walkthrough.MP4",
-            ]
-            preferred_urls: list[str] = []
-            for candidate_path in path_candidates:
-                candidate_url = urlunparse(parsed._replace(path=candidate_path))
-                preferred_urls.append(candidate_url)
-            _prepend_unique(preferred_urls)
-        if host in media_hosts and ("family" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
-            path_candidates = [
-                "/Familyhub-Walkthrough.mp4",
-                "/familyhub-walkthrough.mp4",
-                "/familyhub-walkthrough.MP4",
-                "/family-hub-walkthrough.mp4",
-                "/family-hub-walkthrough.MP4",
-                "/familyhub-walkthough.mp4",
-                "/familyhub-walkthough.MP4",
-                "/voice-message-family-walkthrough-v1.mp4",
-                "/voice-message-family-walkthrough-v1.MP4",
-                "/familyhub%20%20walkthrough.mp4",
-            ]
-            preferred_urls: list[str] = []
-            for candidate_path in path_candidates:
-                candidate_url = urlunparse(parsed._replace(path=candidate_path))
-                preferred_urls.append(candidate_url)
-            _prepend_unique(preferred_urls)
-        if host in media_hosts and ("mobile" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
-            path_candidates = [
-                "/carehub-mobile-walkthrough.MP4",
-                "/carehub-mobile-walkthrough.mp4",
-                "/carehub-mobile-walkthough.mp4",
-                "/carehub-mobile-walkthough.MP4",
-                "/carehubmobile-walkthrough.mp4",
-                "/carehubmobile-walkthrough.MP4",
-                "/carehubmobile-walkthough.mp4",
-                "/carehubmobile-walkthough.MP4",
-                "/voice-message-mobile-walkthrough-v1.mp4",
-                "/voice-message-mobile-walkthrough-v1.MP4",
-            ]
-            preferred_urls: list[str] = []
-            for candidate_path in path_candidates:
-                candidate_url = urlunparse(parsed._replace(path=candidate_path))
-                preferred_urls.append(candidate_url)
-            _prepend_unique(preferred_urls)
-        if host in media_hosts and ("office" in path_lstrip.lower() and "walkthrough" in path_lstrip.lower()):
-            path_candidates = [
-                "/Carehub-Office-Walkthrough.mp4",
-                "/carehub-office-walkthrough.mp4",
-                "/carehub-office%20walkthrough.mp4",
-                "/officehub-walkthrough.mp4",
-                "/voice-message-office-walkthrough-v1.mp4",
-            ]
-            preferred_urls: list[str] = []
-            for candidate_path in path_candidates:
-                candidate_url = urlunparse(parsed._replace(path=candidate_path))
-                preferred_urls.append(candidate_url)
-            _prepend_unique(preferred_urls)
-    except Exception:
-        pass
-    return variants
-
-
-DEFAULT_PUBLIC_VIDEO_URLS: dict[str, str] = {}
-if MEDIA_TEST_VIDEO_OBJECT_PATH:
-    _default_test_video_url = _join_media_base_url(MEDIA_TEST_VIDEO_OBJECT_PATH)
-    DEFAULT_PUBLIC_VIDEO_URLS.update(
-        {
-            "PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL": _default_test_video_url,
-            "PUBLIC_MOBILE_RECORD_VIDEO_URL": _default_test_video_url,
-            "PUBLIC_OFFICE_RECORD_VIDEO_URL": _default_test_video_url,
-        }
-    )
-DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_UNIVERSAL_DIAGRAM_VIDEO_URL"] = _join_media_base_url(
-    "system-Walkthrough.mp4"
-)
-_family_record_path = FAMILY_RECORD_VIDEO_OBJECT_PATH or "Familyhub-Walkthrough.mp4"
-DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_RECORD_VIDEO_URL"] = _join_media_base_url(
-    _family_record_path
-)
-DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILY_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-    _family_record_path
-)
-DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_FAMILYHUB_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-    _family_record_path
-)
-_mobile_record_path = MOBILE_RECORD_VIDEO_OBJECT_PATH or "carehub-mobile-walkthrough.MP4"
-DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_MOBILE_RECORD_VIDEO_URL"] = _join_media_base_url(
-    _mobile_record_path
-)
-DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_MOBILE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-    _mobile_record_path
-)
-DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_CAREHUB_MOBILE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-    _mobile_record_path
-)
-_office_record_path = OFFICE_RECORD_VIDEO_OBJECT_PATH or "Carehub-Office-Walkthrough.mp4"
-DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_OFFICE_RECORD_VIDEO_URL"] = _join_media_base_url(
-    _office_record_path
-)
-DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_OFFICE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-    _office_record_path
-)
-DEFAULT_PUBLIC_VIDEO_URLS["PUBLIC_CAREHUB_OFFICE_WALKTHROUGH_VIDEO_URL"] = _join_media_base_url(
-    _office_record_path
-)
-
-
-def resolve_public_video_source(env_var: str, local_path: str) -> str | None:
-    candidate_vars = [candidate.strip() for candidate in str(env_var).split(",") if candidate.strip()]
-    candidate_urls: list[str] = []
-    for candidate in candidate_vars:
-        raw_url = os.getenv(candidate, "")
-        for url in _video_url_variants(raw_url):
-            parsed = urlparse(url) if url else None
-            host = ((parsed.netloc if parsed else "") or "").lower()
-            if url and host.endswith("dropbox.com"):
-                continue
-            if url and url not in candidate_urls:
-                candidate_urls.append(url)
-    for candidate in candidate_vars:
-        fallback_raw = DEFAULT_PUBLIC_VIDEO_URLS.get(candidate, "")
-        for fallback_url in _video_url_variants(fallback_raw):
-            if fallback_url and fallback_url not in candidate_urls:
-                candidate_urls.append(fallback_url)
-    for candidate_url in candidate_urls:
-        parsed = urlparse(candidate_url)
-        scheme = str(parsed.scheme or "").lower()
-        if scheme not in {"http", "https"}:
-            return candidate_url
-        try:
-            req = urllib.request.Request(
-                candidate_url,
-                method="HEAD",
-                headers={"User-Agent": "voicemailcare-video-check/1.0"},
-            )
-            with urllib.request.urlopen(req, timeout=3) as resp:
-                status = int(getattr(resp, "status", 0) or 0)
-                if 200 <= status < 400:
-                    return candidate_url
-        except Exception:
-            try:
-                req = urllib.request.Request(
-                    candidate_url,
-                    method="GET",
-                    headers={
-                        "User-Agent": "voicemailcare-video-check/1.0",
-                        "Range": "bytes=0-0",
-                    },
-                )
-                with urllib.request.urlopen(req, timeout=4) as resp:
-                    status = int(getattr(resp, "status", 0) or 0)
-                    if 200 <= status < 400:
-                        return candidate_url
-            except Exception:
-                continue
-    if candidate_urls:
-        # Some hosts may block HEAD/range probes even when normal browser playback works.
-        # Fall back to the first resolved URL so Streamlit can attempt direct playback.
-        return candidate_urls[0]
-    local_file = Path(local_path)
-    if local_file.exists():
-        return str(local_file)
-    return None
-
-
-def render_public_app_buttons(cols: list) -> None:
-    entries = [
-        ("Family", "/public/walkthrough-family"),
-        ("Care Hub - Mobile", "/public/walkthrough-mobile"),
-        ("Care Hub - Office", "/public/walkthrough-office"),
-    ]
-    for idx, (label, route) in enumerate(entries):
-        with cols[idx]:
-            if st.button(label, key=f"public_walkthrough_{idx}", use_container_width=True):
-                set_route(route)
-
-
-def render_public_walkthrough_page(
-    page_title: str,
-    video_env_var: str,
-    local_video_path: str,
-    role_summary: list[str],
-    back_route: str | None = None,
-    fallback_doc_path: str | None = None,
-    transcript_doc_path: str | None = None,
-) -> None:
-    def _is_walkthrough_route(route_value: str) -> bool:
-        normalized = normalize_route(route_value)
-        return normalized.startswith("/public/walkthrough")
-
-    effective_back_route = back_route
-    current_route = normalize_route(get_route()) or "/"
-    prev_route = normalize_route(st.session_state.get("prev_page") or "")
-    back_route_memory_key = f"_walkthrough_back_route::{current_route}"
-    if (
-        not effective_back_route
-        and prev_route
-        and prev_route != current_route
-        and not (_is_walkthrough_route(current_route) and _is_walkthrough_route(prev_route))
-    ):
-        # Preserve in-app navigation context (for example Family -> Diagram video -> Back).
-        effective_back_route = prev_route
-        st.session_state[back_route_memory_key] = prev_route
-    if not effective_back_route:
-        remembered_back_route = normalize_route(st.session_state.get(back_route_memory_key) or "")
-        if (
-            remembered_back_route
-            and remembered_back_route != current_route
-            and not (
-                _is_walkthrough_route(current_route)
-                and _is_walkthrough_route(remembered_back_route)
-            )
-        ):
-            effective_back_route = remembered_back_route
-    if not effective_back_route:
-        app_variant = resolve_runtime_variant(route_hint=current_route)
-        if app_variant == VARIANT_PUBLIC:
-            effective_back_route = PUBLIC_HOME_ROUTE
-        elif app_variant == VARIANT_OFFICE:
-            if st.session_state.get("auth_uid"):
-                effective_back_route = "/docs"
-            else:
-                effective_back_route = PUBLIC_HOME_ROUTE
-        elif app_variant in {VARIANT_MOBILE, VARIANT_FAMILY}:
-            effective_back_route = PUBLIC_HOME_ROUTE
-        else:
-            effective_back_route = PUBLIC_HOME_ROUTE
-    # If an authenticated user opened walkthrough pages from login flow/history,
-    # keep Back inside the authenticated app home rather than returning to login.
-    if (
-        st.session_state.get("auth_uid")
-        and effective_back_route in {FAMILY_LOGIN_ROUTE, MOBILE_LOGIN_ROUTE, OFFICE_LOGIN_ROUTE}
-    ):
-        active_role = str(st.session_state.get("active_role") or "").strip().lower()
-        if active_role == "family":
-            effective_back_route = FAMILY_HOME_ROUTE
-        elif active_role == "care_hub":
-            if bool(st.session_state.get("office_login_explicit")):
-                effective_back_route = OFFICE_HOME_ROUTE
-            elif effective_back_route == OFFICE_LOGIN_ROUTE:
-                effective_back_route = OFFICE_HOME_ROUTE
-            else:
-                effective_back_route = MOBILE_HOME_ROUTE
-        else:
-            base_variant = get_app_variant()
-            if base_variant == VARIANT_FAMILY:
-                effective_back_route = FAMILY_HOME_ROUTE
-            elif base_variant == VARIANT_MOBILE:
-                effective_back_route = MOBILE_HOME_ROUTE
-            elif base_variant == VARIANT_OFFICE:
-                effective_back_route = OFFICE_HOME_ROUTE
-    # Keep authenticated Care Hub walkthrough navigation inside the app context.
-    if (
-        st.session_state.get("auth_uid")
-        and str(st.session_state.get("active_role") or "").strip().lower() == "care_hub"
-        and normalize_route(current_route).startswith("/public/walkthrough")
-        and effective_back_route in {
-            PUBLIC_HOME_ROUTE,
-            "/",
-            "/pr-home",
-            MOBILE_LOGIN_ROUTE,
-            OFFICE_LOGIN_ROUTE,
-        }
-    ):
-        effective_back_route = (
-            "/care-hub-office/how-it-works"
-            if bool(st.session_state.get("office_login_explicit"))
-            else "/care-hub-mobile/how-it-works"
-        )
-    has_auth_tokens = bool(
-        st.session_state.get("auth_uid")
-        and st.session_state.get("access_token")
-        and st.session_state.get("refresh_token")
-    )
-    care_session = bool(
-        is_care_authenticated()
-        or (
-            has_auth_tokens
-            and st.session_state.get("active_role") != "family"
-        )
-    )
-    if care_session and effective_back_route in {"/public/walkthrough-overview", "/service-overview", PUBLIC_HOME_ROUTE, "/"}:
-        effective_back_route = (
-            OFFICE_HOME_ROUTE
-            if bool(st.session_state.get("office_login_explicit"))
-            else MOBILE_HOME_ROUTE
-        )
-    render_route_link(
-        "Back",
-        effective_back_route,
-        key=f"walkthrough_back_{page_title.lower().replace(' ', '_').replace('–', '-').replace('—', '-')}",
-    )
-    render_page_header(page_title, show_menu=False, show_variant_subheading=False)
-    if not HELP_VIDEOS_ENABLED:
-        st.warning("Help videos are temporarily unavailable during development.")
-        return
-    st.caption("voicemailcare.com")
-    normalized_title = page_title.strip().lower()
-    if normalized_title.endswith("record video"):
-        st.caption("Record video - Send a voice message.")
-    elif normalized_title.endswith("diagram video") or normalized_title.endswith("systems video"):
-        st.caption("Diagram video - How the system works.")
-    video_source: str | None = None
-    local_video_file = Path(local_video_path)
-    if local_video_file.exists():
-        video_source = str(local_video_file)
-    if not video_source:
-        video_source = resolve_public_video_source(video_env_var, local_video_path)
-    if video_source:
-        try:
-            st.video(video_source)
-        except Exception:
-            st.warning(
-                f"Video failed to load from {video_env_var}. Check the URL format and permissions."
-            )
-            if fallback_doc_path:
-                st.caption("Showing written guide instead:")
-                render_document_boxes(fallback_doc_path, strip_first_heading=True)
-    else:
-        st.warning(
-            f"Video not found. Set {video_env_var} or add {local_video_path}."
-        )
-        if fallback_doc_path:
-            st.caption("Showing written guide instead:")
-            render_document_boxes(fallback_doc_path, strip_first_heading=True)
-    if transcript_doc_path:
-        transcript_path = Path(transcript_doc_path)
-        if transcript_path.exists():
-            transcript_toggle_key = f"walkthrough_transcript_visible::{current_route}"
-            transcript_visible = bool(st.session_state.get(transcript_toggle_key, False))
-            transcript_label = "Hide transcript" if transcript_visible else "View transcript"
-            if st.button(
-                transcript_label,
-                key=f"walkthrough_transcript_toggle_{page_title.lower().replace(' ', '_').replace('-', '_')}",
-                use_container_width=False,
-            ):
-                transcript_visible = not transcript_visible
-                st.session_state[transcript_toggle_key] = transcript_visible
-            if transcript_visible:
-                render_document_boxes(transcript_doc_path, strip_first_heading=False)
-        else:
-            st.caption("Transcript coming soon.")
-    st.markdown("### What this video shows")
-    for line in role_summary:
-        st.markdown(f"- {line}")
-    st.markdown(
-        "For urgent, medical, safeguarding, or emergency matters, contact the care home directly."
-    )
-
-
 def get_how_it_works_route(app_variant: str) -> str:
     return VARIANT_CONFIG.get(app_variant, {}).get("how_it_works_route", "/")
 
@@ -10644,15 +10335,15 @@ def get_expected_variants_for_route(route: str) -> list[str]:
 def get_care_hub_label() -> str:
     runtime_variant = resolve_runtime_variant(route_hint=get_route())
     if runtime_variant == VARIANT_MOBILE:
-        return "Care Hub - Mobile"
+        return "Care Home Mobile"
     if runtime_variant == VARIANT_OFFICE:
         return get_at_home_voicemail_label(st.session_state.get("access_token"))
     app_variant = get_app_variant()
     if app_variant == VARIANT_MOBILE:
-        return "Care Hub - Mobile"
+        return "Care Home Mobile"
     if app_variant == VARIANT_OFFICE:
         return get_at_home_voicemail_label(st.session_state.get("access_token"))
-    return "Care Hub"
+    return "Care Home system"
 
 
 def get_channel_label_and_icon(channel_role: str) -> tuple[str, str]:
@@ -10660,7 +10351,7 @@ def get_channel_label_and_icon(channel_role: str) -> tuple[str, str]:
     if role == "family":
         return "Family", ""
     if role == "care_hub":
-        return "Care Hub", ""
+        return "Care Home system", ""
     if role == "resident":
         return "Resident", ""
     return "System", ""
@@ -10806,7 +10497,7 @@ def render_family_login_hub() -> None:
     )
     render_page_header(
         "Family Hub login",
-        brand_title="voicemailcare.com",
+        brand_title="familyupdates.care",
         show_variant_subheading=False,
         show_menu=False,
     )
@@ -10901,7 +10592,7 @@ def render_family_login() -> None:
             set_route(get_home_route(VARIANT_FAMILY))
         elif care_found:
             st.error("Wrong app variant")
-            st.info("Your login details are for Care Hub.")
+            st.info("Your login details are for the Care Home system.")
             if st.button("Log out", key="family_login_wrong_logout"):
                 sign_out_user("family")
         else:
@@ -10968,6 +10659,7 @@ def render_family_send() -> None:
         unsafe_allow_html=True,
     )
     render_page_header("Family Hub")
+    render_dev_stage_level_status(st.session_state.get("access_token"))
     render_how_it_works_button("family_send_how_it_works")
     family_display_name = st.session_state.get("family_display_name", "Family member")
     st.markdown(f"**Hello {family_display_name}**")
@@ -10981,22 +10673,19 @@ def render_family_send() -> None:
     operating_mode = get_operating_mode(access_token)
     lifecycle_stage = get_lifecycle_stage(access_token)
     lifecycle_stage_number = normalize_lifecycle_stage(lifecycle_stage)
-    lifecycle_policy = get_lifecycle_policy(lifecycle_stage, operating_mode)
+    communication_level = get_communication_level(access_token)
+    lifecycle_policy = get_lifecycle_policy(lifecycle_stage, operating_mode, communication_level)
     lifecycle_stage_label = str(lifecycle_policy.get("lifecycle_stage_label") or "")
     at_home_lifecycle_stage = lifecycle_stage_number in {1, 2, 3}
     shared_coordination_stage = lifecycle_stage_number in {1, 2, 3}
+    workspace_labels = get_workspace_labels_for_lifecycle_stage(lifecycle_stage_number)
     family_messaging_enabled = bool(lifecycle_policy.get("enable_family_messaging"))
     requests_enabled = bool(lifecycle_policy.get("enable_requests"))
     office_channel_enabled = bool(lifecycle_policy.get("enable_office_channel"))
     family_led_mode = operating_mode == OPERATING_MODE_PERSONAL_USE
-    if at_home_lifecycle_stage:
-        subject_singular = "person"
-        subject_singular_title = "Person"
-        subject_plural = "people"
-    else:
-        subject_singular = subject_label(operating_mode)
-        subject_singular_title = subject_label(operating_mode, title=True)
-        subject_plural = subject_label(operating_mode, plural=True)
+    subject_singular = str(workspace_labels.get("subject_singular") or "person")
+    subject_singular_title = str(workspace_labels.get("subject_singular_title") or "Person")
+    subject_plural = str(workspace_labels.get("subject_plural") or "people")
     personal_mode_ok, personal_mode_failures = validate_personal_mode_runtime(operating_mode)
     if family_led_mode and not personal_mode_ok:
         st.error(
@@ -11021,7 +10710,6 @@ def render_family_send() -> None:
         else:
             st.session_state.pop("circle_person_display_name", None)
     render_care_home_identity_banner(access_token)
-    render_stage_level_status(lifecycle_policy)
     if not family_messaging_enabled:
         st.info("Family messaging is inactive for the current lifecycle stage.")
 
@@ -11157,8 +10845,8 @@ def render_family_send() -> None:
         full_name = get_resident_full_name(resident, operating_mode=operating_mode)
         person_first_name = full_name.split()[0] if full_name.split() else full_name
         room_caption = (
-            f"{room_label(operating_mode, title=True)} {resident['room']}"
-            if resident.get("room") and room_label(operating_mode) and not at_home_lifecycle_stage
+            f"{str(workspace_labels.get('room_label') or 'Room').title()} {resident['room']}"
+            if resident.get("room") and bool(workspace_labels.get("show_room"))
             else ""
         )
         family_display_name = str(st.session_state.get("family_display_name") or "Family member").strip()
@@ -11174,9 +10862,9 @@ def render_family_send() -> None:
             if not family_led_mode and not at_home_lifecycle_stage:
                 st.markdown(f"**{full_name}**")
             if care_home_name:
-                if not family_led_mode and not at_home_lifecycle_stage:
+                if bool(workspace_labels.get("show_room")):
                     st.markdown(
-                        f"{organisation_heading(operating_mode)}: {care_home_name}"
+                        f"{workspace_labels.get('organisation_label')}: {care_home_name}"
                     )
             if room_caption:
                 st.markdown(room_caption)
@@ -11204,7 +10892,9 @@ def render_family_send() -> None:
                     include_audio=True,
                 )
                 audio_bytes = decode_audio_payload(latest, access_token=access_token)
-                if audio_bytes:
+                if render_text_update_message(latest):
+                    pass
+                elif audio_bytes:
                     st.audio(audio_bytes, format=latest.get("audio_mime_type") or "audio/wav")
                     resident_sent_label = format_soft_message_period_label(latest.get("recorded_at"))
                     if resident_sent_label:
@@ -11214,7 +10904,7 @@ def render_family_send() -> None:
                         '<div class="vm-muted-line">No new messages.</div>',
                         unsafe_allow_html=True,
                     )
-                if latest:
+                if latest and not is_text_update_message(latest):
                     render_transcript_assist(
                         latest,
                         policy_mode=transcript_policy_mode,
@@ -11232,7 +10922,7 @@ def render_family_send() -> None:
                     else (
                         "Update to Family"
                         if at_home_lifecycle_stage
-                        else "Care Hub update to Family (Office informational message)"
+                        else "Care Home update to Family (Office informational message)"
                     )
                 )
                 if family_led_mode:
@@ -11245,7 +10935,7 @@ def render_family_send() -> None:
                     "office",
                 )
                 if family_led_mode and main_contact_name:
-                    st.caption(f"Coordinator: {main_contact_name}")
+                    st.caption(f"Family Organiser: {main_contact_name}")
                 update_subject = full_name if at_home_lifecycle_stage else f"this {subject_singular}"
                 st.caption(f"Latest update for {update_subject}. Updates are informational only.")
                 latest_office_update = fetch_latest_message(
@@ -11254,35 +10944,19 @@ def render_family_send() -> None:
                     access_token,
                     family_id=resident.get("family_id") or resident_id,
                     channel="office_family",
-                    include_audio=True,
-                )
-                latest_office_audio = decode_audio_payload(
-                    latest_office_update,
-                    access_token=access_token,
+                    include_audio=False,
                 )
                 if render_text_update_message(latest_office_update):
                     pass
-                elif latest_office_audio:
-                    st.audio(
-                        latest_office_audio,
-                        format=latest_office_update.get("audio_mime_type") or "audio/wav",
+                elif latest_office_update:
+                    st.markdown(
+                        '<div class="vm-muted-line">Previous voice update hidden. A new text update will replace it.</div>',
+                        unsafe_allow_html=True,
                     )
-                    office_soft_label = format_soft_message_period_label(
-                        latest_office_update.get("recorded_at")
-                    )
-                    if office_soft_label:
-                        st.caption(office_soft_label)
                 else:
                     st.markdown(
                         '<div class="vm-muted-line">No updates yet.</div>',
                         unsafe_allow_html=True,
-                    )
-                if latest_office_update and not is_text_update_message(latest_office_update):
-                    render_transcript_assist(
-                        latest_office_update,
-                        policy_mode=transcript_policy_mode,
-                        care_home_id=resident.get("care_home_id"),
-                        resident_id=resident_id,
                     )
 
         if family_messaging_enabled and requests_enabled:
@@ -11850,7 +11524,7 @@ def render_docs() -> None:
             {
                 "title": "Care home guide",
                 "path": "docs/office/05_care_home_guide.md",
-                "summary": "Day-to-day Care Hub use (Office and Mobile).",
+                "summary": "Day-to-day Care Home system use (Office and Mobile).",
             },
             {
                 "title": "Registering a contact",
@@ -12092,12 +11766,28 @@ def get_public_document_title(doc_path: str) -> str:
     return "Service overview"
 
 
-def render_public_document(doc_path: str, back_route: str = PUBLIC_HELP_VIDEOS_ROUTE) -> None:
+def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -> None:
     # Render all public documents in the boxed style for consistency.
     use_boxes = not doc_path.endswith("02_how_it_works.md")
     use_qa_search = doc_path.endswith("10_faq.md")
     app_variant = resolve_runtime_variant(route_hint=get_route())
     access_token = st.session_state.get("access_token")
+    if app_variant == VARIANT_PUBLIC and st.session_state.get("auth_uid"):
+        active_role = str(st.session_state.get("active_role") or "").strip().lower()
+        if active_role == "care_hub":
+            app_variant = (
+                VARIANT_OFFICE
+                if bool(st.session_state.get("office_login_explicit"))
+                else VARIANT_MOBILE
+            )
+        elif active_role == "family":
+            app_variant = VARIANT_FAMILY
+        elif str(st.session_state.get("active_care_home_id") or "").strip():
+            app_variant = (
+                VARIANT_OFFICE
+                if bool(st.session_state.get("office_login_explicit"))
+                else VARIANT_MOBILE
+            )
     mode_value = get_operating_mode(access_token) if access_token else OPERATING_MODE_CARE_ORGANISATION
     resolved_doc_path = resolve_mode_doc_path(
         doc_path,
@@ -12105,8 +11795,16 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HELP_VIDEOS_R
         operating_mode=mode_value,
     )
     page_title = get_public_document_title(doc_path)
+    return_route = normalize_route(st.session_state.get("public_doc_return_route") or "")
+    if return_route.startswith("/public"):
+        return_route = ""
     if app_variant == VARIANT_PUBLIC:
         render_page_header(page_title, show_menu=False, show_variant_subheading=False)
+        render_route_link(
+            "Back to familyupdates.care",
+            back_route,
+            key=f"public_doc_back_{re.sub(r'[^a-z0-9]+', '_', doc_path.lower())}",
+        )
         if use_qa_search:
             render_qa_document(resolved_doc_path, search_key="public_faq_search")
         elif use_boxes:
@@ -12115,10 +11813,12 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HELP_VIDEOS_R
             render_document_content(resolved_doc_path)
         return
     if app_variant == VARIANT_FAMILY:
+        family_back_route = return_route or get_home_route(VARIANT_FAMILY)
+        family_back_label = "Back" if return_route else "Back to Family Hub"
         render_page_header(page_title, show_variant_subheading=False)
         render_route_link(
-            "Back to Family Hub login",
-            get_login_route(VARIANT_FAMILY),
+            family_back_label,
+            family_back_route,
             key="public_doc_back_family_login_link",
         )
         if use_qa_search:
@@ -12130,10 +11830,11 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HELP_VIDEOS_R
         return
     if app_variant == VARIANT_OFFICE:
         is_authed = bool(st.session_state.get("auth_uid"))
-        office_home_route = get_office_home_route(is_authed)
+        office_home_route = return_route or get_office_home_route(is_authed)
+        office_back_label = "Back" if return_route else "Back to dashboard"
         render_page_header(page_title, show_variant_subheading=False)
         render_route_link(
-            "Back to dashboard",
+            office_back_label,
             office_home_route,
             key="public_doc_back_office_dashboard_link",
         )
@@ -12143,12 +11844,18 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HELP_VIDEOS_R
             render_document_boxes(resolved_doc_path, strip_first_heading=True)
         else:
             render_document_content(resolved_doc_path, include_logo=False)
+        render_route_link(
+            office_back_label,
+            office_home_route,
+            key="public_doc_back_office_dashboard_bottom_link",
+        )
         return
     if app_variant == VARIANT_MOBILE:
+        mobile_back_route = return_route or get_home_route(app_variant)
         render_page_header(page_title)
         render_route_link(
             "Back",
-            get_home_route(app_variant),
+            mobile_back_route,
             key="public_doc_back_mobile_link",
         )
         if use_qa_search:
@@ -12206,13 +11913,13 @@ def render_public_docs() -> None:
     if app_variant == VARIANT_OFFICE:
         is_authed = bool(st.session_state.get("auth_uid"))
         render_route_link(
-            "Back to Care Hub - Office",
+            "Back to Care Home Office",
             get_office_home_route(is_authed),
             key="public_docs_back_office_link",
         )
     elif app_variant == VARIANT_MOBILE:
         render_route_link(
-            "Back to Care Hub - Mobile",
+            "Back to Care Home Mobile",
             get_home_route(app_variant),
             key="public_docs_back_mobile_link",
         )
@@ -12263,10 +11970,10 @@ def render_pr_homepage() -> None:
     st.markdown('<p class="vm-home-brand">familyupdates.care</p>', unsafe_allow_html=True)
     cartoon_path = resolve_cartoon_asset()
     if cartoon_path is not None:
-        st.image(cartoon_path.read_bytes(), use_container_width=True)
+        st.image(str(cartoon_path), use_container_width=True)
     else:
         st.caption(
-            "Landing artwork missing: add cartoon-voicemailcare.png in assets/."
+            "Landing artwork missing: add familyupdates.png in assets/."
         )
     st.markdown(
         '<p class="vm-home-caption">Choose an interface to continue.</p>',
@@ -12283,11 +11990,11 @@ def render_pr_homepage() -> None:
             set_route(FAMILY_LOGIN_ROUTE)
             st.stop()
     with action_cols[1]:
-        if st.button("Care Hub - Mobile", key="pr_entry_mobile", use_container_width=True):
+        if st.button("Care Home Mobile", key="pr_entry_mobile", use_container_width=True):
             set_route(MOBILE_LOGIN_ROUTE)
             st.stop()
     with action_cols[2]:
-        if st.button("Care Hub - Office", key="pr_entry_office", use_container_width=True):
+        if st.button("Care Home Office", key="pr_entry_office", use_container_width=True):
             set_route(OFFICE_LOGIN_ROUTE)
             st.stop()
     st.markdown("</div>", unsafe_allow_html=True)
@@ -12297,7 +12004,7 @@ def render_pr_homepage() -> None:
 def render_care_hub_banner_settings() -> None:
     require_care_access()
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
-        render_wrong_variant("Operational variables are only available in Care Hub - Office.")
+        render_wrong_variant("Operational variables are only available in Care Home Office.")
         return
     save_notice_state_key = "office_operational_save_notice"
     render_page_header("Operational Variables")
@@ -12306,28 +12013,41 @@ def render_care_hub_banner_settings() -> None:
     lifecycle_stage = get_lifecycle_stage(access_token)
     lifecycle_stage_number = normalize_lifecycle_stage(lifecycle_stage)
     at_home_lifecycle_stage = lifecycle_stage_number in {1, 2, 3}
-    if at_home_lifecycle_stage:
-        subject_singular = "person"
-        subject_singular_title = "Person"
-        subject_plural_title = "People"
-    else:
-        subject_singular = subject_label(mode_value)
-        subject_singular_title = subject_label(mode_value, title=True)
-        subject_plural_title = subject_label(mode_value, plural=True, title=True)
+    current_workspace_labels = get_workspace_labels_for_lifecycle_stage(lifecycle_stage_number)
+    current_workspace_type_label = str(
+        current_workspace_labels.get("workspace_type_label") or "Care Home system"
+    )
+    current_office_label = str(current_workspace_labels.get("office_label") or "Care Home Office")
+    current_mobile_label = str(current_workspace_labels.get("mobile_label") or "Care Home Mobile")
+    subject_singular = str(current_workspace_labels.get("subject_singular") or "resident")
+    subject_singular_title = str(
+        current_workspace_labels.get("subject_singular_title") or "Resident"
+    )
+    subject_plural_title = str(
+        current_workspace_labels.get("subject_plural_title") or "Residents"
+    )
     render_care_home_identity_banner(access_token)
+    current_communication_level = get_communication_level(access_token)
+    current_policy = get_lifecycle_policy(
+        lifecycle_stage,
+        mode_value,
+        current_communication_level,
+    )
+    render_stage_level_status(current_policy)
     save_notice = str(st.session_state.pop(save_notice_state_key, "") or "").strip()
     if save_notice:
         st.success(save_notice)
     st.markdown("### Operational setup variables")
     st.markdown(
         "- Current lifecycle stage\n"
+        "- Communication level\n"
         "- Setup name\n"
         "- Person 1 / Person 2 names for at-home stages\n"
-        "- Main supporter / coordinator\n"
+        "- Main supporter / organiser\n"
         "- Business banner heading (optional)\n"
         "- Business banner message (optional)\n"
         "- Business banner image URL (optional)\n"
-        "- Idle sign-out time for Care Hub sessions"
+        f"- Idle sign-out time for {current_workspace_type_label} sessions"
     )
     st.caption(
         "Review and confirm these settings during setup so day-to-day use is consistent from launch."
@@ -12360,7 +12080,7 @@ def render_care_hub_banner_settings() -> None:
         reset_tool_resident_label_by_id[resident_id] = format_resident_identity_label(
             resident,
             operating_mode=mode_value,
-            include_room=bool(room_label(mode_value)) and not at_home_lifecycle_stage,
+            include_room=bool(current_workspace_labels.get("show_room")),
             include_care_home=False,
             separator=" | ",
         )
@@ -12427,25 +12147,26 @@ def render_care_hub_banner_settings() -> None:
     st.markdown("**Issues**")
     st.checkbox("Log / escalate incidents", key="office_checks_issues_log_escalate")
     st.markdown("### Office shared banner")
-    st.caption("Add your logo or your own banner design for Care Hub - Office and Family views.")
+    st.caption(f"Add your logo or your own banner design for {current_office_label} and Family views.")
     st.markdown("### Operational settings")
     st.caption(
-        "Choose how long Care Hub can stay idle before it signs out. This applies to Care Hub - Office and Care Hub - Mobile."
+        f"Choose how long the active {current_workspace_type_label} can stay idle before it signs out. "
+        f"This applies to {current_office_label} and {current_mobile_label}."
     )
     st.caption(
-        "Transcript policy controls safety/accessibility behavior for Care Hub playback (voice remains source of truth)."
+        "Transcript policy controls safety/accessibility behavior for the active "
+        f"{current_workspace_type_label} playback (voice remains source of truth)."
     )
     st.caption(
         "Lifecycle stage controls which tools are available. It does not assign fixed roles to people."
     )
-    st.caption("Stages 1-3 use the same shared at-home system. Stage 4 keeps the care-home workspace separate.")
     if st.session_state.get("_care_homes_missing_lifecycle_stage"):
         st.warning(
             "Lifecycle stage changes cannot be saved until migration "
             "0029_care_homes_lifecycle_stage.sql is applied in Supabase."
         )
 
-    care_home_profile = fetch_active_care_home_profile(access_token)
+    care_home_profile = fetch_active_care_home_profile(access_token, force_refresh=True)
     if not isinstance(care_home_profile, dict) or not str(care_home_profile.get("name") or "").strip():
         st.error(
             "Could not load the current setup settings. Save is disabled to avoid overwriting existing banner values."
@@ -12479,6 +12200,9 @@ def render_care_hub_banner_settings() -> None:
     current_lifecycle_stage = normalize_lifecycle_stage(
         care_home_profile.get("lifecycle_stage")
     )
+    current_communication_level = normalize_communication_level(
+        care_home_profile.get("communication_level")
+    )
     active_care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
     with st.expander("Technical diagnostics", expanded=False):
         st.markdown(f"- Active care home id: `{active_care_home_id or 'missing'}`")
@@ -12486,7 +12210,12 @@ def render_care_hub_banner_settings() -> None:
         st.markdown(f"- Profile mode (normalized): `{current_operating_mode}`")
         st.markdown(f"- Runtime mode (resolved): `{mode_value}`")
         st.markdown(f"- Profile lifecycle stage: `{current_lifecycle_stage}`")
-        stage_policy = get_lifecycle_policy(current_lifecycle_stage, current_operating_mode)
+        st.markdown(f"- Profile communication level: `{current_communication_level}`")
+        stage_policy = get_lifecycle_policy(
+            current_lifecycle_stage,
+            current_operating_mode,
+            current_communication_level,
+        )
         st.markdown(f"- Lifecycle label: `{stage_policy.get('lifecycle_stage_label', '')}`")
         st.markdown(
             "- Lifecycle policy snapshot: "
@@ -12501,46 +12230,129 @@ def render_care_hub_banner_settings() -> None:
             st.warning("Profile mode and runtime mode differ. Refresh and check save/update permissions.")
         if mode_value == OPERATING_MODE_PERSONAL_USE:
             st.markdown("- Personal mode checks: subject=`person`, plural=`people`, room field hidden.")
+    controls_profile_key = "office_operational_controls_profile_id"
+    controls_nonce_key = "office_operational_controls_nonce"
+    if st.session_state.get(controls_profile_key) != active_care_home_id:
+        st.session_state[controls_profile_key] = active_care_home_id
+        st.session_state[controls_nonce_key] = int(st.session_state.get(controls_nonce_key, 0)) + 1
+    controls_nonce = int(st.session_state.get(controls_nonce_key, 0) or 0)
+    lifecycle_widget_key = f"office_lifecycle_stage_page_{active_care_home_id}_{controls_nonce}"
+    level_widget_key = f"office_communication_level_page_{active_care_home_id}_{controls_nonce}"
     lifecycle_stage_options = [1, 2, 3, 4]
     lifecycle_stage_labels = {
         stage: get_lifecycle_stage_label(stage) for stage in lifecycle_stage_options
     }
-    selected_lifecycle_stage = st.selectbox(
-        "Current lifecycle stage",
-        options=lifecycle_stage_options,
-        index=(
-            lifecycle_stage_options.index(current_lifecycle_stage)
-            if current_lifecycle_stage in lifecycle_stage_options
-            else lifecycle_stage_options.index(DEFAULT_LIFECYCLE_STAGE)
-        ),
-        format_func=lambda value: lifecycle_stage_labels.get(value, f"Stage {value}"),
-        key="office_lifecycle_stage_page",
-        help="Controls which tools are available for this setup.",
-    )
-    selected_lifecycle_note = get_lifecycle_stage_setup_note(selected_lifecycle_stage)
-    if selected_lifecycle_note:
-        st.caption(selected_lifecycle_note)
+    communication_level_options = [1, 2, 3, 4, 5]
+    communication_level_labels = {
+        level: get_communication_level_label(level) for level in communication_level_options
+    }
+    with st.form(f"office_stage_level_form_{active_care_home_id}_{controls_nonce}"):
+        selected_lifecycle_stage = st.selectbox(
+            "Current lifecycle stage",
+            options=lifecycle_stage_options,
+            index=(
+                lifecycle_stage_options.index(current_lifecycle_stage)
+                if current_lifecycle_stage in lifecycle_stage_options
+                else lifecycle_stage_options.index(DEFAULT_LIFECYCLE_STAGE)
+            ),
+            format_func=lambda value: lifecycle_stage_labels.get(value, f"Stage {value}"),
+            key=lifecycle_widget_key,
+            help="Controls which tools are available for this setup.",
+        )
+        selected_lifecycle_note = get_lifecycle_stage_setup_note(selected_lifecycle_stage)
+        if selected_lifecycle_note:
+            st.caption(selected_lifecycle_note)
+        selected_communication_level = st.selectbox(
+            "Communication level (not the life stage)",
+            options=communication_level_options,
+            index=(
+                communication_level_options.index(current_communication_level)
+                if current_communication_level in communication_level_options
+                else communication_level_options.index(DEFAULT_COMMUNICATION_LEVEL)
+            ),
+            format_func=lambda value: communication_level_labels.get(value, f"Level {value}"),
+            key=level_widget_key,
+            help="Controls how much of the system is switched on.",
+        )
+        st.caption("Communication level describes how much of the system is switched on.")
+        if int(selected_communication_level) == 5 and normalize_lifecycle_stage(selected_lifecycle_stage) != 4:
+            st.warning(
+                "Level 5 only applies when the life stage is Stage 4. "
+                "To use Level 5, set Current lifecycle stage to Stage 4 - Care Home."
+            )
+        save_stage_level = st.form_submit_button(
+            "Save stage and communication level",
+            use_container_width=True,
+        )
+    stage_level_notice = str(
+        st.session_state.pop("office_stage_level_save_notice", "") or ""
+    ).strip()
+    if stage_level_notice:
+        st.success(stage_level_notice)
     selected_at_home_stage = normalize_lifecycle_stage(selected_lifecycle_stage) in {1, 2, 3}
     selected_operating_mode = get_operating_mode_for_lifecycle_stage(
         selected_lifecycle_stage,
         current_operating_mode,
     )
-    setup_context_label = (
-        "at-home setup"
-        if selected_at_home_stage
-        else (
-            "care home"
-            if normalize_lifecycle_stage(selected_lifecycle_stage) == 4
-            else "care organisation"
-            if selected_operating_mode == OPERATING_MODE_CARE_ORGANISATION
-            else "home / personal use"
+    if save_stage_level:
+        requested_lifecycle_stage = normalize_lifecycle_stage(selected_lifecycle_stage)
+        requested_communication_level = normalize_communication_level(selected_communication_level)
+        if requested_communication_level == 5 and requested_lifecycle_stage != 4:
+            st.error("Level 5 cannot be saved unless Current lifecycle stage is Stage 4.")
+        else:
+            saved, message, readback = update_active_care_home_stage_level(
+                access_token,
+                lifecycle_stage=requested_lifecycle_stage,
+                communication_level=requested_communication_level,
+            )
+            st.session_state["office_stage_level_last_readback"] = readback
+            if saved:
+                st.session_state.pop(f"care_home_profile_{active_care_home_id}", None)
+                st.session_state.pop(f"care_home_profile_{active_care_home_id}_ts", None)
+                st.session_state[controls_nonce_key] = controls_nonce + 1
+                st.session_state["office_stage_level_save_notice"] = message
+                st.session_state[save_notice_state_key] = message
+                st.rerun()
+            else:
+                st.error(message)
+                if readback:
+                    st.json(readback)
+    last_stage_level_readback = st.session_state.get("office_stage_level_last_readback")
+    if isinstance(last_stage_level_readback, dict) and last_stage_level_readback:
+        st.markdown("### Last stage/level save check")
+        st.caption("Temporary diagnostic while we fix the level save.")
+        st.write(
+            "Level you tried to save:",
+            last_stage_level_readback.get("requested_communication_level", "missing"),
         )
+        st.write(
+            "Did Supabase return an updated row:",
+            last_stage_level_readback.get("updated_row_returned", "missing"),
+        )
+        st.write(
+            "Level Supabase returned after save:",
+            last_stage_level_readback.get("readback_communication_level", "missing"),
+        )
+        st.write(
+            "Setup ID used:",
+            last_stage_level_readback.get("care_home_id", "missing"),
+        )
+    st.caption("Use this button to change the life stage or communication level. The form below saves names, banner, and session settings.")
+    selected_workspace_labels = get_workspace_labels_for_lifecycle_stage(
+        selected_lifecycle_stage,
+        setup_name=str(care_home_profile.get("name") or ""),
+    )
+    selected_workspace_type_label = str(
+        selected_workspace_labels.get("workspace_type_label") or "Care Home system"
+    )
+    setup_context_label = str(
+        selected_workspace_labels.get("setup_context_label") or "care home"
     )
     st.caption(f"Setup context: {setup_context_label}.")
     if normalize_lifecycle_stage(selected_lifecycle_stage) == 4:
         st.caption(
             "This page configures the Care Home Office. Use the actual care home name here. "
-            "The separate Family Coordinator Office will have its own coordinator/family workspace name "
+            "The separate Family system will have its own Organiser/family workspace name "
             "and will not connect to this workspace."
         )
     setup_people = fetch_care_home_residents(access_token or "")
@@ -12552,11 +12364,7 @@ def render_care_hub_banner_settings() -> None:
 
     with st.form("office_care_home_banner_page_form"):
         name_field_label = (
-            "Care home name"
-            if normalize_lifecycle_stage(selected_lifecycle_stage) == 4
-            else "Care organisation name"
-            if selected_operating_mode == OPERATING_MODE_CARE_ORGANISATION and not selected_at_home_stage
-            else "Setup name"
+            "Care home name" if not selected_at_home_stage else "Family setup name"
         )
         care_home_name_value = st.text_input(
             name_field_label,
@@ -12580,13 +12388,7 @@ def render_care_hub_banner_settings() -> None:
             else:
                 st.caption("No people are linked to this setup yet. Add-person setup will be added next.")
         main_contact_name_value = st.text_input(
-            (
-                "Main supporter / coordinator (optional)"
-                if selected_at_home_stage
-                else "Care home contact / coordinator (optional)"
-                if normalize_lifecycle_stage(selected_lifecycle_stage) == 4
-                else "Main contact name (optional)"
-            ),
+            str(selected_workspace_labels.get("main_contact_label") or "Main contact name (optional)"),
             value=str(care_home_profile.get("main_contact_name") or ""),
             max_chars=120,
             key="office_main_contact_name_page",
@@ -12633,47 +12435,64 @@ def render_care_hub_banner_settings() -> None:
             index=transcript_policy_index,
             format_func=lambda value: transcript_policy_labels.get(value, value),
             key="office_transcript_policy_mode",
-            help="Precheck requires transcript review before playback in Care Hub.",
+            help=f"Precheck requires transcript review before playback in the {selected_workspace_type_label}.",
         )
-        save_banner = st.form_submit_button("Save banner and operational settings")
+        save_banner = st.form_submit_button("Save names, banner, and session settings")
     if save_banner:
-        saved, message = update_active_care_home_branding(
-            access_token,
-            care_home_name=care_home_name_value,
-            operating_mode=selected_operating_mode,
-            lifecycle_stage=int(selected_lifecycle_stage),
-            main_contact_name=main_contact_name_value,
-            banner_title=banner_title_value,
-            banner_text=banner_text_value,
-            banner_artwork_url=banner_artwork_value,
-            care_hub_idle_timeout_seconds=int(selected_idle_timeout),
-            transcript_policy_mode=selected_transcript_policy,
+        requested_lifecycle_stage = current_lifecycle_stage
+        requested_communication_level = current_communication_level
+        requested_at_home_stage = requested_lifecycle_stage in {1, 2, 3}
+        requested_operating_mode = get_operating_mode_for_lifecycle_stage(
+            requested_lifecycle_stage,
+            current_operating_mode,
         )
-        if saved:
-            if selected_at_home_stage:
-                people_saved, people_error = update_person_display_names(
-                    access_token,
-                    person_name_updates,
-                )
-                if people_saved:
+        if requested_communication_level == 5 and requested_lifecycle_stage != 4:
+            st.error("Level 5 cannot be saved unless Current lifecycle stage is Stage 4.")
+        else:
+            saved, message = update_active_care_home_branding(
+                access_token,
+                care_home_name=care_home_name_value,
+                operating_mode=requested_operating_mode,
+                lifecycle_stage=requested_lifecycle_stage,
+                communication_level=requested_communication_level,
+                main_contact_name=main_contact_name_value,
+                banner_title=banner_title_value,
+                banner_text=banner_text_value,
+                banner_artwork_url=banner_artwork_value,
+                care_hub_idle_timeout_seconds=int(selected_idle_timeout),
+                transcript_policy_mode=selected_transcript_policy,
+            )
+            if saved:
+                if requested_at_home_stage:
+                    people_saved, people_error = update_person_display_names(
+                        access_token,
+                        person_name_updates,
+                    )
+                    if people_saved:
+                        st.session_state.pop(f"care_home_profile_{active_care_home_id}", None)
+                        st.session_state.pop(f"care_home_profile_{active_care_home_id}_ts", None)
+                        st.session_state[controls_nonce_key] = controls_nonce + 1
+                        st.session_state[save_notice_state_key] = message
+                        st.rerun()
+                    else:
+                        st.warning(
+                            "Settings saved, but person names could not be updated: "
+                            + str(people_error or "Unknown error.")
+                        )
+                else:
                     st.session_state.pop(f"care_home_profile_{active_care_home_id}", None)
                     st.session_state.pop(f"care_home_profile_{active_care_home_id}_ts", None)
-                    st.success(message)
-                else:
-                    st.warning(
-                        "Settings saved, but person names could not be updated: "
-                        + str(people_error or "Unknown error.")
-                    )
+                    st.session_state[controls_nonce_key] = controls_nonce + 1
+                    st.session_state[save_notice_state_key] = message
+                    st.rerun()
             else:
-                st.success(message)
-        else:
-            st.error(message)
+                st.error(message)
 
 
 def render_care_hub_security() -> None:
     require_care_access()
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
-        render_wrong_variant("Security settings are only available in Care Hub - Office.")
+        render_wrong_variant("Security settings are only available in Care Home Office.")
         return
     render_page_header("Account & Security")
     access_token = st.session_state.get("access_token")
@@ -12747,7 +12566,7 @@ def render_care_hub_security() -> None:
     if enabled:
         st.success("Two-factor authentication is enabled.")
         if mfa_required:
-            st.caption("2FA is required for Care Hub - Office and cannot be disabled.")
+            st.caption("2FA is required for Care Home Office and cannot be disabled.")
         elif st.button("Disable 2FA", key="mfa_disable"):
             totp_secret = record.get("totp_secret") or pyotp.random_base32()
             ok = upsert_care_hub_mfa(access_token, auth_uid, totp_secret, [], False)
@@ -12760,9 +12579,9 @@ def render_care_hub_security() -> None:
         st.markdown("Recovery codes are shown once at enrolment. Keep them safe.")
     else:
         if mfa_required:
-            st.info("2FA is required for Care Hub - Office. Set up your authenticator app now.")
+            st.info("2FA is required for Care Home Office. Set up your authenticator app now.")
         else:
-            st.info("2FA is optional but recommended for Care Hub - Office.")
+            st.info("2FA is optional but recommended for Care Home Office.")
         if st.button("Start 2FA setup", key="mfa_start"):
             st.session_state["mfa_enroll_secret"] = pyotp.random_base32()
             st.session_state["mfa_enroll_codes"] = generate_recovery_codes()
@@ -12809,7 +12628,7 @@ def render_care_hub_security() -> None:
                 st.session_state.pop("mfa_show_codes", None)
 
     render_route_link(
-        "Back to Care Hub - Office",
+        "Back to Care Home Office",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="mfa_back_office_link",
     )
@@ -12825,7 +12644,7 @@ def render_care_hub_mfa() -> None:
     )
     if not auth_uid:
         render_access_gate(
-            "Please sign in to access Care Hub - Office.",
+            "Please sign in to access Care Home Office.",
             get_login_route(VARIANT_OFFICE),
             "care_hub",
         )
@@ -12838,7 +12657,7 @@ def render_care_hub_mfa() -> None:
                 set_route(get_home_route(VARIANT_OFFICE))
                 st.rerun()
             return
-        st.info("Two-factor authentication is required for Care Hub - Office.")
+        st.info("Two-factor authentication is required for Care Home Office.")
         st.write("Set up your authenticator app to continue.")
         if st.button("Start 2FA setup", key="mfa_login_start_setup"):
             st.session_state["mfa_enroll_secret"] = pyotp.random_base32()
@@ -12968,7 +12787,7 @@ def render_contracts() -> None:
         {
             "title": "External services and subscriptions register",
             "path": "docs/contracts/registers/external_services_and_subscriptions_register.md",
-            "summary": "Register of third-party websites/apps used by voicemailcare.com.",
+            "summary": "Register of third-party websites/apps used by familyupdates.care.",
         },
     ]
 
@@ -12995,7 +12814,7 @@ def render_contracts() -> None:
             st.session_state["contracts_active"] = ""
 
     render_route_link(
-        "Back to Care Hub - Office",
+        "Back to Care Home Office",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="contracts_home_link",
     )
@@ -13058,7 +12877,7 @@ def render_subscription_billing() -> None:
     billing_box("Invoice download functionality will be available here.")
 
     render_route_link(
-        "Back to Care Hub - Office",
+        "Back to Care Home Office",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="billing_home_link",
     )
@@ -13086,10 +12905,10 @@ def render_care_login() -> None:
         unsafe_allow_html=True,
     )
     app_variant = resolve_runtime_variant(route_hint=get_route())
-    login_title = "Care Hub Mobile" if app_variant == VARIANT_MOBILE else "Care Hub Office"
+    login_title = "Care Home Mobile" if app_variant == VARIANT_MOBILE else "Care Home Office"
     render_page_header(
         login_title,
-        brand_title="voicemailcare.com",
+        brand_title="familyupdates.care",
         show_variant_subheading=False,
         show_menu=app_variant != VARIANT_OFFICE,
     )
@@ -13099,7 +12918,7 @@ def render_care_login() -> None:
     mobile_login_boxes = []
     if app_variant == VARIANT_MOBILE:
         mobile_login_boxes = [
-            "Care Hub - Mobile supports non-urgent social voice messages between residents and families.",
+            "Care Home Mobile supports non-urgent social voice messages between residents and families.",
             "Not a live service. Messages are played when staff are available.",
             "Mobile access uses an individual staff PIN for day-to-day use.",
             "Use email secure link only for first sign-in or when session access has expired.",
@@ -13414,8 +13233,9 @@ def render_care_hub() -> None:
             unsafe_allow_html=True,
         )
     access_token = st.session_state.get("access_token")
-    page_title = "Care Hub Mobile" if runtime_variant == VARIANT_MOBILE else get_at_home_voicemail_label(access_token)
+    page_title = "Care Home Mobile" if runtime_variant == VARIANT_MOBILE else get_at_home_voicemail_label(access_token)
     render_page_header(page_title)
+    render_dev_stage_level_status(access_token)
     if runtime_variant == VARIANT_MOBILE:
         render_public_landing_button("Back to hub selection")
     elif runtime_variant == VARIANT_OFFICE:
@@ -13435,26 +13255,22 @@ def render_care_hub() -> None:
     operating_mode = get_operating_mode(access_token)
     lifecycle_stage = get_lifecycle_stage(access_token)
     lifecycle_stage_number = normalize_lifecycle_stage(lifecycle_stage)
-    lifecycle_policy = get_lifecycle_policy(lifecycle_stage, operating_mode)
+    communication_level = get_communication_level(access_token)
+    lifecycle_policy = get_lifecycle_policy(lifecycle_stage, operating_mode, communication_level)
     lifecycle_stage_label = str(lifecycle_policy.get("lifecycle_stage_label") or "")
     at_home_lifecycle_stage = lifecycle_stage_number in {1, 2, 3}
     shared_coordination_stage = lifecycle_stage_number in {1, 2, 3}
+    workspace_labels = get_workspace_labels_for_lifecycle_stage(lifecycle_stage_number)
     family_messaging_enabled = bool(lifecycle_policy.get("enable_family_messaging"))
     requests_enabled = bool(lifecycle_policy.get("enable_requests"))
     office_channel_enabled = bool(lifecycle_policy.get("enable_office_channel"))
     mobile_channel_enabled = bool(lifecycle_policy.get("enable_mobile_channel"))
     family_led_mode = operating_mode == OPERATING_MODE_PERSONAL_USE
     main_contact_name = get_main_contact_name(access_token)
-    if at_home_lifecycle_stage:
-        subject_singular = "person"
-        subject_singular_title = "Person"
-        subject_plural = "people"
-        subject_plural_title = "People"
-    else:
-        subject_singular = subject_label(operating_mode)
-        subject_singular_title = subject_label(operating_mode, title=True)
-        subject_plural = subject_label(operating_mode, plural=True)
-        subject_plural_title = subject_label(operating_mode, plural=True, title=True)
+    subject_singular = str(workspace_labels.get("subject_singular") or "resident")
+    subject_singular_title = str(workspace_labels.get("subject_singular_title") or "Resident")
+    subject_plural = str(workspace_labels.get("subject_plural") or "residents")
+    subject_plural_title = str(workspace_labels.get("subject_plural_title") or "Residents")
     personal_mode_ok, personal_mode_failures = validate_personal_mode_runtime(operating_mode)
     if family_led_mode and not personal_mode_ok:
         st.error(
@@ -13475,14 +13291,16 @@ def render_care_hub() -> None:
     render_care_home_identity_banner(access_token)
     if runtime_variant == VARIANT_OFFICE:
         coordinator_name = main_contact_name or "Not set"
-        st.caption(f"Coordinator: {coordinator_name}")
+        coordinator_caption_label = (
+            "Family Organiser" if at_home_lifecycle_stage else "Coordinator"
+        )
+        st.caption(f"{coordinator_caption_label}: {coordinator_name}")
         st.caption("Role reviewed on: Not set")
     if runtime_variant == VARIANT_OFFICE and family_led_mode and main_contact_name:
         st.caption(
             "If you hold LPA or similar authority, you may be able to act depending on your arrangement. "
             "It is worth checking your documents."
         )
-    render_stage_level_status(lifecycle_policy)
     channel_enabled_for_variant = (
         mobile_channel_enabled if runtime_variant == VARIANT_MOBILE else office_channel_enabled
     )
@@ -13550,7 +13368,7 @@ def render_care_hub() -> None:
             resident_label_by_id[resident["id"]] = format_resident_identity_label(
                 resident,
                 operating_mode=operating_mode,
-                include_room=bool(room_label(operating_mode)) and not at_home_lifecycle_stage,
+                include_room=bool(workspace_labels.get("show_room")),
                 include_care_home=include_care_home_in_resident_labels,
                 separator=" | ",
             )
@@ -13683,11 +13501,11 @@ def render_care_hub() -> None:
                     st.markdown(f"**{full_name}**")
                 care_home_name = str(resident.get("care_home") or "").strip()
                 if care_home_name:
-                    if not family_led_mode and not at_home_lifecycle_stage:
-                        st.markdown(f"{location_label(operating_mode, title=True)}: {care_home_name}")
+                    if bool(workspace_labels.get("show_room")):
+                        st.markdown(f"{workspace_labels.get('organisation_label')}: {care_home_name}")
                 room_value = str(resident.get("room") or "").strip()
-                if room_value and room_label(operating_mode) and not at_home_lifecycle_stage:
-                    st.markdown(f"{room_label(operating_mode, title=True)} {room_value}")
+                if room_value and bool(workspace_labels.get("show_room")):
+                    st.markdown(f"{workspace_labels.get('room_label')} {room_value}")
 
         channel_enabled_for_current_variant = (
             mobile_channel_enabled if runtime_variant == VARIANT_MOBILE else office_channel_enabled
@@ -13710,7 +13528,7 @@ def render_care_hub() -> None:
                 no_contacts_subject = full_name if at_home_lifecycle_stage else f"this {subject_singular}"
                 st.warning(
                     f"No Family Members are linked to {no_contacts_subject} yet. "
-                    "Register a contact in Care Hub - Office before sending messages."
+                    f"Register a contact in {workspace_labels.get('office_label')} before sending messages."
                 )
                 if st.button(
                     "Register contact now",
@@ -14020,7 +13838,7 @@ def render_care_hub() -> None:
                     )
                     st.caption(
                         "Playback does not change order by itself. "
-                        'The order only changes when you confirm the message has been listened to and select "Mark listened and move to next".'
+                        'The order only changes when you tick listened and click "Move to next message".'
                     )
                     st.caption(f"Unread family messages: {queue_unread_count}")
                     if effective_queue_next_contact:
@@ -14124,7 +13942,7 @@ def render_care_hub() -> None:
                 st.caption(f"Unread family messages: {queue_unread_count}")
                 st.caption(
                     "Playback does not change order by itself. "
-                    'The order only changes when you confirm the message has been listened to and select "Mark listened and move to next".'
+                    'The order only changes when you tick listened and click "Move to next message".'
                 )
                 if effective_queue_next_contact:
                     next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
@@ -14430,7 +14248,7 @@ def render_care_hub() -> None:
                 has_playback_source = bool(playback_source)
                 played_now = bool(has_playback_source and should_show_message and playback_allowed)
                 precheck_blocking = bool(has_playback_source and should_show_message and not playback_allowed)
-    
+
                 if has_playback_source and should_show_message:
                     if playback_allowed:
                         try:
@@ -14454,12 +14272,12 @@ def render_care_hub() -> None:
                         if is_mobile_variant:
                             st.caption(
                                 "Playback alone does not change order. "
-                                'The order only changes when you confirm the message has been listened to and select "Mark listened and move to next".'
+                                'The order only changes when you tick listened and click "Move to next message".'
                             )
                         else:
                             st.caption(
                                 "Playback alone does not change order. "
-                                'The order only changes when you confirm the message has been listened to and select "Mark listened and move to next".'
+                                'The order only changes when you tick listened and click "Move to next message".'
                             )
                     else:
                         st.caption("Playback locked until transcript review is complete.")
@@ -14604,7 +14422,9 @@ def render_care_hub() -> None:
                 access_token=access_token,
             )
             if latest_sent:
-                if latest_sent_audio:
+                if render_text_update_message(latest_sent):
+                    pass
+                elif latest_sent_audio:
                     if latest_sent_audio_kind == "bytes":
                         st.audio(
                             latest_sent_audio,
@@ -14621,17 +14441,107 @@ def render_care_hub() -> None:
                         )
                     )
                 latest_sent_at = latest_sent.get("recorded_at")
-                if latest_sent_at:
+                if latest_sent_at and not is_text_update_message(latest_sent):
                     latest_sent_label = format_soft_message_period_label(latest_sent_at)
                     if latest_sent_label:
                         st.caption(latest_sent_label)
-                render_transcript_assist(
-                    latest_sent,
-                    policy_mode="assist",
-                    care_home_id=resident["care_home_id"],
-                    resident_id=resident_id,
-                )
+                if not is_text_update_message(latest_sent):
+                    render_transcript_assist(
+                        latest_sent,
+                        policy_mode="assist",
+                        care_home_id=resident["care_home_id"],
+                        resident_id=resident_id,
+                    )
             if is_mobile_variant or is_office_variant:
+                text_nonce = int(state.get("resident_text_message_nonce", 0))
+                st.markdown("**Short text message to family**")
+                resident_text_body = st.text_area(
+                    "Short message to family",
+                    key=f"resident_short_text_{resident_id}_{text_nonce}",
+                    height=90,
+                    max_chars=800,
+                )
+                resident_text_can_send = bool(str(resident_text_body or "").strip())
+                if st.button(
+                    "Send short message to family",
+                    key=f"resident_short_text_send_{resident_id}_{text_nonce}",
+                    disabled=not resident_text_can_send,
+                    use_container_width=True,
+                ):
+                    if not resident_text_can_send:
+                        st.info("Please write a short message before sending.")
+                    else:
+                        supabase, error = get_authed_supabase(access_token)
+                        if error:
+                            st.error(error)
+                        else:
+                            now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                            payload = {
+                                "resident_id": resident_id,
+                                "contact_user_id": None,
+                                "family_id": resident.get("family_id") or resident_id,
+                                "channel": "resident_family",
+                                "direction": "from_resident",
+                                "audio_storage_path": "",
+                                "audio_mime_type": "text/plain",
+                                "audio_bytes": 0,
+                                "message_kind": "text",
+                                "text_title": None,
+                                "text_body": str(resident_text_body or "").strip(),
+                                "recorded_at": now_iso,
+                            }
+                            resp, upsert_error = upsert_latest_message_with_fallback(
+                                supabase,
+                                payload,
+                                "resident_id,family_id,direction,channel",
+                                {
+                                    "resident_id": resident_id,
+                                    "family_id": resident.get("family_id") or resident_id,
+                                    "channel": "resident_family",
+                                    "direction": "from_resident",
+                                },
+                            )
+                            if upsert_error:
+                                if _message_missing_text_columns(Exception(upsert_error)):
+                                    st.error(
+                                        "Short text messages need Supabase migration 0035_messages_text_updates.sql."
+                                    )
+                                else:
+                                    st.error(upsert_error)
+                            else:
+                                message_id = (
+                                    (
+                                        resp.data[0].get("id")
+                                        if hasattr(resp, "data")
+                                        and isinstance(resp.data, list)
+                                        and resp.data
+                                        else None
+                                    )
+                                    if resp is not None
+                                    else None
+                                )
+                                log_audit_event(
+                                    "message_sent",
+                                    "care_hub",
+                                    resident["care_home_id"],
+                                    message_id,
+                                )
+                                bump_message_cache_epoch()
+                                state["recording_bytes"] = None
+                                state["recording_mime_type"] = "audio/wav"
+                                state["preview_confirmed"] = False
+                                state["transcribe_requested"] = False
+                                clear_transcript_preview_state(state)
+                                st.session_state["care_last_sent"] = {
+                                    "resident_id": resident_id,
+                                    "contact_id": None,
+                                    "message": "Short message sent to all Family Members.",
+                                    "sent_at_ts": time.time(),
+                                }
+                                state["resident_text_message_nonce"] = text_nonce + 1
+                                activate_send_guard(send_guard_scope)
+                                st.rerun()
+
                 native_recording_available = hasattr(st, "audio_input")
                 native_recorder_error = False
                 recorded_from_native = None
@@ -14704,11 +14614,11 @@ def render_care_hub() -> None:
                                 getattr(uploaded_recording, "type", None)
                                 or "audio/wav"
                             )
-    
+
                 st.caption(
                     "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
                 )
-    
+
                 if state.get("recording_bytes"):
                     st.caption("Captured message preview:")
                     st.audio(
@@ -14749,11 +14659,11 @@ def render_care_hub() -> None:
                     state["preview_confirmed"] = False
                     state["transcribe_requested"] = False
                     clear_transcript_preview_state(state)
-    
+
                 sent_now = False
                 room_display = (
-                    f"{room_label(operating_mode, title=True)} {resident.get('room')}"
-                    if resident.get("room") and room_label(operating_mode) and not at_home_lifecycle_stage
+                    f"{workspace_labels.get('room_label')} {resident.get('room')}"
+                    if resident.get("room") and bool(workspace_labels.get("show_room"))
                     else ""
                 )
                 if is_office_variant:
@@ -14769,10 +14679,10 @@ def render_care_hub() -> None:
                     if room_display:
                         identity_parts.append(room_display)
                     care_home_display = ""
-                    if not at_home_lifecycle_stage:
+                    if bool(workspace_labels.get("show_room")):
                         care_home_display = (
                             str(resident.get("care_home") or "").strip()
-                            or f"{location_label(operating_mode, title=True)} not set"
+                            or f"{workspace_labels.get('organisation_label')} not set"
                         )
                     if care_home_display:
                         identity_parts.append(care_home_display)
@@ -14788,7 +14698,7 @@ def render_care_hub() -> None:
                     "After pressing Send, wait for the sent confirmation before playing another message."
                 )
                 last_sent = st.session_state.get("care_last_sent")
-    
+
                 can_send = bool(
                     state.get("recording_bytes")
                     and state.get("preview_confirmed")
@@ -14835,6 +14745,9 @@ def render_care_hub() -> None:
                                 "audio_source": "inline" if use_inline_fallback else "storage",
                                 "audio_mime_type": audio_mime_type,
                                 "audio_bytes": len(audio_bytes),
+                                "message_kind": "voice",
+                                "text_title": None,
+                                "text_body": None,
                                 "recorded_at": now_iso,
                             }
                             transcript_fields, transcript_error = build_transcript_fields_from_preview(
@@ -14931,7 +14844,7 @@ def render_care_hub() -> None:
                 office_update_title = (
                     "Shared update to Family"
                     if shared_coordination_stage
-                    else "Care Hub update to Family (Office informational message)"
+                    else "Care Home update to Family (Office informational message)"
                 )
                 if family_led_mode:
                     if main_contact_name:
@@ -14943,7 +14856,7 @@ def render_care_hub() -> None:
                     "office",
                 )
                 if family_led_mode and main_contact_name:
-                    st.caption(f"Coordinator: {main_contact_name}")
+                    st.caption(f"Family Organiser: {main_contact_name}")
                 update_subject = full_name if at_home_lifecycle_stage else f"this {subject_singular}"
                 st.caption(f"Latest update for {update_subject}. Updates are informational only.")
                 latest_office_update = fetch_latest_message(
@@ -14952,43 +14865,19 @@ def render_care_hub() -> None:
                     access_token,
                     family_id=resident.get("family_id") or resident_id,
                     channel="office_family",
-                    include_audio=True,
-                )
-                latest_office_audio, latest_office_audio_kind = resolve_audio_playback_source_lazy(
-                    latest_office_update,
-                    access_token=access_token,
+                    include_audio=False,
                 )
                 if render_text_update_message(latest_office_update):
                     pass
-                elif latest_office_audio:
-                    if latest_office_audio_kind == "bytes":
-                        render_audio_safe(
-                            latest_office_audio,
-                            audio_format=latest_office_update.get("audio_mime_type") or "audio/wav",
-                            unavailable_message="Office update audio could not be played.",
-                        )
-                    else:
-                        render_audio_safe(
-                            latest_office_audio,
-                            unavailable_message="Office update audio could not be played.",
-                        )
-                    if runtime_variant == VARIANT_MOBILE:
-                        soft_label = format_soft_message_period_label(
-                            latest_office_update.get("recorded_at")
-                        )
-                        if soft_label:
-                            st.caption(soft_label)
+                elif latest_office_update:
+                    st.markdown(
+                        '<div class="vm-muted-line">Previous voice update hidden. Send a text update to replace it.</div>',
+                        unsafe_allow_html=True,
+                    )
                 else:
                     st.markdown(
                         '<div class="vm-muted-line">No updates yet.</div>',
                         unsafe_allow_html=True,
-                    )
-                if not is_text_update_message(latest_office_update):
-                    render_transcript_assist(
-                        latest_office_update,
-                        policy_mode="assist",
-                        care_home_id=resident["care_home_id"],
-                        resident_id=resident_id,
                     )
                 office_update_phrase = (
                     "shared update" if shared_coordination_stage else "care hub update"
@@ -14999,104 +14888,13 @@ def render_care_hub() -> None:
                         if main_contact_name
                         else "main contact update"
                     )
-    
-                if show_update_box and hasattr(st, "audio_input"):
-                    recorded_office = st.audio_input(
-                        f"Record {office_update_phrase}",
-                        key=f"care_office_audio_input_{resident_id}_{state.get('office_recording_input_nonce', 0)}",
-                    )
-                    render_slow_speech_hint()
-                    if recorded_office is not None:
-                        try:
-                            office_bytes = recorded_office.getvalue()
-                            office_fp = (
-                                __import__("hashlib").sha1(office_bytes).hexdigest()
-                                if office_bytes
-                                else None
-                            )
-                            if not office_bytes:
-                                st.warning(
-                                    f"That {office_update_phrase} recording could not be captured correctly. Please record again."
-                                )
-                            now_ts = time.time()
-                            # Prevent stale recorder replay after a send from re-populating the form.
-                            if (
-                                now_ts < float(state.get("office_ignore_audio_until") or 0.0)
-                                and not state.get("office_recording_bytes")
-                            ):
-                                pass
-                            elif (
-                                office_bytes
-                                and office_fp
-                                and office_fp == state.get("office_last_sent_fingerprint")
-                                and not state.get("office_recording_bytes")
-                            ):
-                                pass
-                            # Once user has confirmed preview for current recording, avoid resetting
-                            # from duplicate/replayed audio_input payloads.
-                            elif state.get("office_preview_confirmed") and state.get("office_recording_bytes"):
-                                pass
-                            elif office_bytes and office_fp != state.get("office_recording_fingerprint"):
-                                state["office_recording_bytes"] = office_bytes
-                                state["office_recording_fingerprint"] = office_fp
-                                state["office_recording_mime_type"] = (
-                                    getattr(recorded_office, "type", None) or "audio/wav"
-                                )
-                                state["office_preview_confirmed"] = False
-                                clear_transcript_preview_state(state, prefix="office_")
-                                state["office_last_sent_label"] = None
-                                state["office_last_sent_fingerprint"] = None
-                                st.session_state[f"care_office_listened_{resident_id}"] = False
-                        except Exception as exc:
-                            if APP_DEBUG:
-                                print(f"[office-recorder] suppressed audio_input error: {exc}", flush=True)
-                            st.warning(
-                                "Office recorder could not process that audio capture. Please record again."
-                            )
-                elif show_update_box:
-                    st.warning("Native microphone recording is unavailable in this environment.")
-    
-                if show_update_box and state.get("office_recording_bytes"):
-                    st.caption(f"Captured {office_update_phrase} preview:")
-                    render_audio_safe(
-                        state["office_recording_bytes"],
-                        audio_format=state.get("office_recording_mime_type") or "audio/wav",
-                        unavailable_message=f"{office_update_phrase.capitalize()} preview could not be played.",
-                    )
-                    state["office_preview_confirmed"] = st.checkbox(
-                        f"I have listened to this {office_update_phrase}.",
-                        value=state.get("office_preview_confirmed", False),
-                        key=f"care_office_listened_{resident_id}",
-                    )
-                    render_transcript_preview_controls(
-                        state,
-                        state.get("office_recording_bytes") or b"",
-                        state.get("office_recording_mime_type") or "audio/wav",
-                        policy_mode=transcript_policy_mode,
-                        key_scope=f"care_office_preview_{resident_id}",
-                        prefix="office_",
-                    )
-                    if st.button(
-                        f"Reset {office_update_phrase} recorder",
-                        key=f"care_office_reset_recorder_{resident_id}",
-                        use_container_width=True,
-                    ):
-                        state["office_recording_bytes"] = None
-                        state["office_recording_mime_type"] = "audio/wav"
-                        state["office_recording_fingerprint"] = None
-                        state["office_preview_confirmed"] = False
-                        state["office_last_sent_label"] = None
-                        state["office_last_sent_fingerprint"] = None
-                        clear_transcript_preview_state(state, prefix="office_")
-                        state["office_recording_input_nonce"] = int(
-                            state.get("office_recording_input_nonce", 0)
-                        ) + 1
-                        st.rerun()
-                elif show_update_box:
-                    state["office_preview_confirmed"] = False
-                    state["office_transcribe_requested"] = False
-                    clear_transcript_preview_state(state, prefix="office_")
-    
+                state["office_recording_bytes"] = None
+                state["office_recording_mime_type"] = "audio/wav"
+                state["office_preview_confirmed"] = False
+                state["office_transcribe_requested"] = False
+                state["office_recording_fingerprint"] = None
+                clear_transcript_preview_state(state, prefix="office_")
+
                 if show_update_box:
                     st.markdown(f"**{office_update_phrase.capitalize()}**")
                     update_send_subject = full_name if at_home_lifecycle_stage else f"this {subject_singular}"
@@ -15112,7 +14910,7 @@ def render_care_hub() -> None:
                             "Office updates are non-urgent, one-way updates from the care team (no replies). For any queries, please contact the care home directly."
                         )
                     st.caption(
-                        "After pressing Send, wait for the sent confirmation before playing another message."
+                        "After pressing Send, wait for the sent confirmation before editing another update."
                     )
                     selected_office_category = st.selectbox(
                         "Office update category (non-urgent)",
@@ -15232,136 +15030,9 @@ def render_care_hub() -> None:
                                     state["office_text_update_nonce"] = text_nonce + 1
                                     activate_send_guard(send_guard_scope)
                                     st.rerun()
-    
-                office_can_send = bool(
-                    state.get("office_recording_bytes") and state.get("office_preview_confirmed")
-                )
-                if show_update_box and st.button(
-                    f"Send {office_update_phrase} for {full_name}",
-                    key=f"care_send_office_update_{resident_id}",
-                    disabled=not office_can_send,
-                ):
-                    if not office_can_send:
-                        st.info(f"Please record and listen before sending the {office_update_phrase}.")
-                    else:
-                        supabase, error = get_authed_supabase(access_token)
-                        if error:
-                            st.error(error)
-                        else:
-                            office_audio_bytes = state.get("office_recording_bytes") or b""
-                            office_audio_mime = state.get("office_recording_mime_type") or "audio/wav"
-                            office_now_iso = __import__("datetime").datetime.utcnow().isoformat()
-                            office_audio_object_path, office_upload_error = upload_audio_to_storage(
-                                office_audio_bytes,
-                                office_audio_mime,
-                                resident_id=resident_id,
-                                direction="office_to_family",
-                            )
-                            office_inline_fallback = not bool(office_audio_object_path)
-                            if APP_DEBUG and office_upload_error:
-                                print(
-                                    "[audio-upload] office_to_family fallback to inline payload:",
-                                    office_upload_error,
-                                )
-                            office_payload = {
-                                "resident_id": resident_id,
-                                "family_id": resident.get("family_id") or resident_id,
-                                "channel": "office_family",
-                                "direction": "office_to_family",
-                                "audio_storage_path": (
-                                    base64.b64encode(office_audio_bytes).decode("ascii")
-                                    if office_inline_fallback
-                                    else ""
-                                ),
-                                "audio_object_path": office_audio_object_path,
-                                "audio_source": "inline" if office_inline_fallback else "storage",
-                                "audio_mime_type": office_audio_mime,
-                                "audio_bytes": len(office_audio_bytes),
-                                "recorded_at": office_now_iso,
-                            }
-                            transcript_fields, transcript_error = build_transcript_fields_from_preview(
-                                state,
-                                office_audio_bytes,
-                                office_audio_mime,
-                                requested=bool(state.get("office_transcribe_requested")),
-                                prefix="office_",
-                            )
-                            office_payload.update(transcript_fields)
-                            office_resp, upsert_error = upsert_latest_message_with_fallback(
-                                supabase,
-                                office_payload,
-                                "resident_id,family_id,direction,channel",
-                                {
-                                    "resident_id": resident_id,
-                                    "family_id": resident.get("family_id") or resident_id,
-                                    "channel": "office_family",
-                                    "direction": "office_to_family",
-                                },
-                            )
-                            if upsert_error:
-                                st.error(upsert_error)
-                            else:
-                                if transcript_error and bool(state.get("office_transcribe_requested")):
-                                    st.warning(f"Update sent, but transcript failed: {transcript_error}")
-                                transcript_persist_warning = consume_transcript_persist_warning()
-                                if transcript_persist_warning:
-                                    st.warning(transcript_persist_warning)
-                                office_message_id = (
-                                    (
-                                        office_resp.data[0].get("id")
-                                        if hasattr(office_resp, "data")
-                                        and isinstance(office_resp.data, list)
-                                        and office_resp.data
-                                        else None
-                                    )
-                                    if office_resp is not None
-                                    else None
-                                )
-                                log_audit_event(
-                                    "message_sent",
-                                    "care_hub",
-                                    resident["care_home_id"],
-                                    office_message_id,
-                                )
-                                bump_message_cache_epoch()
-                                state["office_recording_bytes"] = None
-                                state["office_recording_mime_type"] = "audio/wav"
-                                state["office_preview_confirmed"] = False
-                                state["office_transcribe_requested"] = False
-                                clear_transcript_preview_state(state, prefix="office_")
-                                sent_office_fp = state.get("office_recording_fingerprint")
-                                state["office_recording_fingerprint"] = None
-                                state["office_recording_input_nonce"] = (
-                                    int(state.get("office_recording_input_nonce", 0)) + 1
-                                )
-                                state["office_ignore_audio_until"] = time.time() + 5.0
-                                soft_sent_label = format_soft_message_period_label(office_now_iso)
-                                category_label = (
-                                    state.get("office_update_category")
-                                    or OFFICE_UPDATE_CATEGORIES[0]
-                                )
-                                if family_led_mode:
-                                    label_prefix = (
-                                        f"{category_label} update from {main_contact_name}"
-                                        if main_contact_name
-                                        else f"{category_label} main contact update"
-                                    )
-                                elif shared_coordination_stage:
-                                    label_prefix = f"{category_label} shared update sent to all Family Members"
-                                else:
-                                    label_prefix = f"{category_label} update sent to all Family Members"
-                                state["office_last_sent_label"] = (
-                                    f"{label_prefix}. {soft_sent_label}"
-                                    if soft_sent_label
-                                    else f"{label_prefix}."
-                                )
-                                state["office_last_sent_fingerprint"] = sent_office_fp
-                                activate_send_guard(send_guard_scope)
-                                st.rerun()
                 if (
                     show_update_box
                     and state.get("office_last_sent_label")
-                    and not state.get("office_recording_bytes")
                 ):
                     st.success(state.get("office_last_sent_label"))
 
@@ -15860,7 +15531,7 @@ def render_care_hub() -> None:
                             st.rerun()
                         else:
                             st.error(practical_message)
-    
+
                     active_practical = fetch_latest_open_office_practical_message(
                         resident_id, access_token
                     )
@@ -16028,7 +15699,7 @@ def render_care_hub_register_family() -> None:
 
 def main() -> None:
     st.set_page_config(
-        page_title="VoicemailCare – Simple communication for care homes and families",
+        page_title="familyupdates.care - Simple communication for care homes and families",
         page_icon="ðŸ—£ï¸",
         layout="centered",
         initial_sidebar_state="collapsed",
@@ -16448,22 +16119,8 @@ def main() -> None:
         render_public_document("docs/public/complaints_and_concerns.md")
     elif route == "/public/safeguarding-and-consent":
         render_public_document("docs/public/safeguarding_and_consent.md")
-    elif route == PUBLIC_HELP_VIDEOS_ROUTE:
-        set_route("/pr-home")
-    elif route == "/public/walkthrough-family":
-        set_route("/pr-home")
-    elif route == "/public/walkthrough-family-flow":
-        set_route("/pr-home")
-    elif route == "/public/walkthrough-overview":
-        set_route("/pr-home")
-    elif route == "/public/walkthrough-mobile":
-        set_route("/pr-home")
-    elif route == "/public/walkthrough-mobile-flow":
-        set_route("/pr-home")
-    elif route == "/public/walkthrough-office":
-        set_route("/pr-home")
-    elif route == "/public/walkthrough-office-flow":
-        set_route("/pr-home")
+    elif route in REMOVED_VIDEO_ROUTES:
+        set_route("/public/how-it-works")
     elif route == "/public-privacy":
         set_route("/public/privacy-notice")
     elif route == "/public-complaints":

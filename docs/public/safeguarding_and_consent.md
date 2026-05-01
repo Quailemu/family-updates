@@ -1,12 +1,12 @@
-# Safeguarding and Consent
+﻿# Safeguarding and Consent
 
 ## Purpose
 
-This page sets out safeguarding and consent boundaries for voicemailcare.com.
+This page sets out safeguarding and consent boundaries for familyupdates.care.
 
 ## Platform boundary
 
-voicemailcare.com provides communication infrastructure only.
+familyupdates.care provides communication infrastructure only.
 
 The platform is not monitored in real time and does not moderate, screen, or approve message content.
 
@@ -25,7 +25,7 @@ Each care home remains responsible for:
 
 The care home decides whether a resident can participate and how consent/authority is established and reviewed.
 
-voicemailcare.com does not assess capacity or consent.
+familyupdates.care does not assess capacity or consent.
 
 ## Appropriate use
 
@@ -39,4 +39,4 @@ Not a live service. Messages are played and recorded when staff are available.
 
 For safeguarding concerns, contact the care home directly through its normal safeguarding routes.
 
-For platform faults, contact voicemailcare.com via the care home.
+For platform faults, contact familyupdates.care via the care home.

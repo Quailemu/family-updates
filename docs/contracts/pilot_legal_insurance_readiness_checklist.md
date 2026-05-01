@@ -4,15 +4,15 @@
 
 Status: draft for legal/broker review before go-live
 
-Date:  
-Care home name:  
+Date:
+Care home name:
 Pilot start target date:
 
 ## 1) Contract readiness
 
 - [ ] Final service agreement signed by both parties (not draft/outline only).
 - [ ] Scope boundaries match service design (non-urgent social messaging only).
-- [ ] Role separation is explicit (Family / Care Hub – Mobile / Care Hub – Office).
+- [ ] Role separation is explicit (Family / Care Home Mobile / Care Home Office).
 - [ ] Suspension and termination clauses are included and approved.
 - [ ] Liability, exclusions, and limitation clauses are reviewed by legal counsel.
 

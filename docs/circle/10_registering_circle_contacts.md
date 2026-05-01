@@ -12,6 +12,6 @@ Use this flow to invite a Family Member/contact into the at-home setup.
 
 ## Notes
 
-- Invite sends access only after local authorisation by the person or family coordinator.
+- Invite sends access only after local authorisation by the person or Family Organiser.
 - Keep relationship labels clear so others understand who is linked.
 - Main contact can be set/updated when needed.

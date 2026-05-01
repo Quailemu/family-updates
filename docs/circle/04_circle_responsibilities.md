@@ -1,6 +1,6 @@
 # At-home responsibilities
 
-The person, family coordinator, and any supporters involved are responsible for local decisions and participation.
+The person, Family Organiser, and any supporters involved are responsible for local decisions and participation.
 
 - Decide who is invited to take part.
 - Decide who can access each person's messages.

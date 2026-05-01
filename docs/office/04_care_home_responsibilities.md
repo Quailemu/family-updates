@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document sets out the care home’s responsibilities when using voicemailcare.com.
+This document sets out the care home’s responsibilities when using familyupdates.care.
 It is intended to be clear, practical, and suitable for care managers, inspectors, and legal review.
 
 The care home decides whether and how the service is used within the home and is responsible for its day-to-day operation and oversight.
@@ -24,8 +24,8 @@ The service is not a safeguarding system and is not designed to provide alerts, 
 To maintain clarity and safety, roles are strictly separated:
 
 - Family Members use the Family Hub only
-- Carers use Care Hub – Mobile only
-- Office staff use Care Hub – Office only
+- Carers use Care Home Mobile only
+- Office staff use Care Home Office only
 
 Each role uses its own app.
 

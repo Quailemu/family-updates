@@ -1,14 +1,14 @@
-![logo](../../assets/logo.png)
+﻿![logo](../../assets/logo.png)
 
 # Privacy notice
 
 ## Purpose
 
-This notice explains what personal data is used in voicemailcare.com and why.
+This notice explains what personal data is used in familyupdates.care and why.
 
 ## Data roles
 
-The care home is the Data Controller. voicemailcare.com is the Data Processor and acts on the care home's instructions.
+The care home is the Data Controller. familyupdates.care is the Data Processor and acts on the care home's instructions.
 
 The care home decides access, participation, and day-to-day use in its service.
 

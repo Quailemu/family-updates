@@ -9,7 +9,7 @@ It is not emergency communication, not a live chat service, and not a medical re
 
 ## Access and participation
 
-The person or family coordinator decides who is invited, linked, and active.
+The person or Family Organiser decides who is invited, linked, and active.
 The platform does not verify local authority or entitlement.
 
 ## Messaging model

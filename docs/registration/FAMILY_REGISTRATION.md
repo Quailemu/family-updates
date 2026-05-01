@@ -20,7 +20,7 @@ The care home controls who is invited. The family activates themselves via a sec
 ## 3) Registration Flow
 
 ### Step 1 – Care Home Invites (Office)
-In Care Hub – Office, for a resident, the care home enters:
+In Care Home Office, for a resident, the care home enters:
 - Family member name
 - Email address
 Then selects: “Send Invite”.
@@ -98,7 +98,7 @@ This model provides:
 
 Legal boundary statement:
 Family registration is a care-home action between the named care home and the named Family Member for a named resident.
-voicemailcare.com provides technical infrastructure only and does not decide or approve who is authorised.
+familyupdates.care provides technical infrastructure only and does not decide or approve who is authorised.
 Care homes should keep a local registration record including care home name, Family Member name/email, office staff name, and date.
 
 It is proportionate for low-urgency social communication.

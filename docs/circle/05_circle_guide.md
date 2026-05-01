@@ -1,6 +1,6 @@
 # At-home guide
 
-This guide is for at-home setups where a person, couple, family coordinator, carer, or supporter uses VoicemailCare for simple family communication.
+This guide is for at-home setups where a person, couple, Family Organiser, carer, or supporter uses familyupdates.care for simple family communication.
 
 ## Core model
 

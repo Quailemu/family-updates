@@ -9,14 +9,14 @@ Office staff/admin login email:
 
 ## Setup and access
 
-- [ ] Care Hub – Office login is set up for office staff/admin users.
-- [ ] Care Hub – Mobile uses individual staff Mobile PIN access (no shared Mobile PIN).
+- [ ] Care Home Office login is set up for office staff/admin users.
+- [ ] Care Home Mobile uses individual staff Mobile PIN access (no shared Mobile PIN).
 - [ ] Device PIN/password is enabled on all devices used for recordings/playback.
 - [ ] Desk devices have a visible "Lock session" step and staff use it when stepping away.
-- [ ] Care Hub – Mobile idle sign-out time is set in Operational Variables.
+- [ ] Care Home Mobile idle sign-out time is set in Operational Variables.
 - [ ] Only devices designated by the care home are used for the service.
-- [ ] Dedicated Care Hub – Mobile device supplied for this service (with lanyard) is in use.
-- [ ] Role separation confirmed: Family Members use Family Hub only, carers use Care Hub – Mobile only, office staff use Care Hub – Office only.
+- [ ] Dedicated Care Home Mobile device supplied for this service (with lanyard) is in use.
+- [ ] Role separation confirmed: Family Members use Family Hub only, carers use Care Home Mobile only, office staff use Care Home Office only.
 - [ ] Operational setup variables reviewed on the Operational Variables page (name, banner settings, idle sign-out time).
 
 ## Residents and consent
@@ -29,7 +29,7 @@ Office staff/admin login email:
 
 - [ ] Family Member registration is carried out only by the care home.
 - [ ] Family member removal is tested (access removed immediately).
-- [ ] Platform role boundary confirmed: voicemailcare.com does not verify or validate identity, authority, entitlement, or appropriateness; it enforces care-home registration and access configuration.
+- [ ] Platform role boundary confirmed: familyupdates.care does not verify or validate identity, authority, entitlement, or appropriateness; it enforces care-home registration and access configuration.
 - [ ] Each registration record includes named care home, named Family Member (name/email), office staff name, and date.
 - [ ] Family members and friends are told the service is non-urgent and social only.
 - [ ] Family members and friends are told to contact the care home for any care-related matters.
@@ -44,8 +44,8 @@ Office staff/admin login email:
 
 ## Office documents and oversight
 
-- [ ] Documents and contracts are stored and accessed only in Care Hub – Office.
-- [ ] Access management is handled in Care Hub – Office only.
+- [ ] Documents and contracts are stored and accessed only in Care Home Office.
+- [ ] Access management is handled in Care Home Office only.
 
 ## Support and incidents
 

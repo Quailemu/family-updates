@@ -2,7 +2,7 @@
 
 # Office completed docs (care home records)
 
-This folder stores completed/signed records managed by the care home in Care Hub – Office.
+This folder stores completed/signed records managed by the care home in Care Home Office.
 
 ## Subfolders
 

@@ -1,8 +1,8 @@
-![logo](../../assets/logo.png)
+﻿![logo](../../assets/logo.png)
 
 # Family Terms Summary
 
-This is a short, plain-English summary of the Family Hub terms. It does not replace the care home’s own policies.
+This is a short, plain-English summary of the Family Hub terms. It does not replace the care home's own policies.
 
 ## Key points
 

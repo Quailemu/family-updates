@@ -1,16 +1,16 @@
-![logo](../../assets/logo.png)
+﻿![logo](../../assets/logo.png)
 
-# Care Hub - Mobile training and instructions
+# Care Home Mobile training and instructions
 
-Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
+Communication participants: residents, Family Members, and Care Home system (Care Home Office and Care Home Mobile).
 
-Each Family Member has their own channel for Family/Friend -> Resident messages. Care Hub - Mobile plays these family messages in a fair rotating order, with unplayed messages first.
+Each Family Member has their own channel for Family/Friend -> Resident messages. Care Home Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
 Resident -> Family channel keeps only the latest resident message shared to all Family Members. The care home can also send a one-way Office update to all Family Members. Each Family Member channel keeps only the latest Family -> Resident message. A new message replaces the previous message in that channel.
 
 ## Who this is for
 
-This guide is for care staff using Care Hub - Mobile during day-to-day resident support.
+This guide is for care staff using Care Home Mobile during day-to-day resident support.
 
 ## What this app is for
 
@@ -47,4 +47,3 @@ This guide is for care staff using Care Hub - Mobile during day-to-day resident 
 - This is not an emergency or urgent service.
 - Do not use this channel for clinical, medication, appointment, or safeguarding content.
 - For those matters, follow normal care home escalation routes.
-

@@ -1,34 +1,41 @@
-![logo](../../assets/logo.png)
+﻿![logo](../../assets/logo.png)
 
 # How familyupdates.care works
 
 familyupdates.care helps people remain independent for longer by sending simple updates to family, helping family members keep in touch, and reducing the number of calls through practical requests with structured responses.
 
-| Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family coordinator | Stage 3: + Carer | Stage 4: Care home + Family coordinator |
-| ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
-| 1     | Single update to family group                            | Yes                    | Yes                           | Yes              | Yes - care home system                  |
-| 2     | Individual voice messages from family members            | Yes                    | Yes                           | Yes              | Yes - care home system                  |
-| 3     | Voice message request (+ structured replies from family) | Yes                    | Yes                           | Yes              | Yes - care home system                  |
-| 4     | Option: Mobile additional channel                        | Yes                    | Yes                           | Yes              | Yes - care home system                  |
-| 5     | Care home plus separate family coordinator system        | -                      | -                             | -                | Yes                                     |
+familyupdates.care has two separate systems:
 
-The life stage describes who is involved. The communication level describes how much of the system is switched on.
+- **Family system:** Family Office, Family Mobile, and Family Hub.
+- **Care Home system:** Care Home Office, Care Home Mobile, and Care Home Family Hub.
+
+They follow the same one-current-message communication model. The Care Home system is only used in Stage 4, when a person is living in a care home. At that stage, a separate Family system may exist alongside it, but the two systems do not connect.
+
+| Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family Organiser | Stage 3: + Carer | Stage 4: Care home + Family Organiser |
+| ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
+| 1     | Single update to family group                            | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
+| 2     | Individual voice messages from family members            | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
+| 3     | Voice message request (+ structured replies from family) | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
+| 4     | Option: Mobile additional channel                        | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
+| 5     | Separate Family Organiser system                    | -                      | -                             | -                | Yes                                     |
+
+The life stage describes who is involved: from managing independently at Stage 1, to help from a family member (Family Organiser) at Stage 2, to having a paid carer at Stage 3, and finally to a care home plus Family Organiser at Stage 4. The communication level describes how much of the system is switched on.
 
 One message replaces the last in each channel.
 
 Transcripts of voice messages are available.
 
-Text is available for short care updates with no replies. One text replaces the last in that channel, so messages stay fresh and relevant.
+Text is available for short updates with no replies. One text replaces the last in that channel, so messages stay fresh and relevant.
 
 ## Stages
 
 **Stage 1: Person/Couple** - An individual person or a couple living at home and managing their own day-to-day communication.
 
-**Stage 2: + Family coordinator** - The person/couple plus a family coordinator. A family coordinator is a family member who helps organise communication and practical requests.
+**Stage 2: + Family Organiser** - The person/couple plus a Family Organiser. A Family Organiser is a family member who helps organise communication and practical requests.
 
-**Stage 3: + Carer** - The person/couple plus a family coordinator and a paid carer.
+**Stage 3: + Carer** - The person/couple plus a Family Organiser and a paid carer.
 
-**Stage 4: Care home + Family coordinator** - The person/couple moves into a care home. The care home has its own internal familyupdates.care system for levels 1-4. The family coordinator, and maybe one of the couple if still at home and able to use it, has a totally separate familyupdates.care system comprising Family Office, Family Hub, and Mobile where useful.
+**Stage 4: Care home + Family Organiser** - The person/couple moves into a care home. The care home uses the Care Home system: Care Home Office, Care Home Mobile, and Care Home Family Hub. The Family Organiser, and maybe one of the couple if still at home and able to use it, may also use a totally separate Family system: Family Office, Family Mobile, and Family Hub.
 
 ## Not for urgent matters
 

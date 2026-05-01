@@ -8,12 +8,12 @@ Status: working register (update when documents are added, revised, signed, or r
 
 | Document | Location | Status | Owner | Last updated |
 |---|---|---|---|---|
-| Care home contract template | `docs/contracts/care_home_contract_template.md` | Draft template | voicemailcare.com |  |
-| Data Processing Agreement (DPA) template | `docs/contracts/data_processing_agreement_template.md` | Draft template | voicemailcare.com |  |
-| Pilot legal and insurance readiness checklist | `docs/contracts/pilot_legal_insurance_readiness_checklist.md` | Draft checklist | voicemailcare.com |  |
-| Privacy notice | `docs/public/privacy_policy.md` | Published | voicemailcare.com |  |
-| Safeguarding and consent | `docs/public/safeguarding_and_consent.md` | Published | voicemailcare.com |  |
-| Family terms of use | `docs/public/family_terms_of_use.md` | Published | voicemailcare.com |  |
+| Care home contract template | `docs/contracts/care_home_contract_template.md` | Draft template | familyupdates.care |  |
+| Data Processing Agreement (DPA) template | `docs/contracts/data_processing_agreement_template.md` | Draft template | familyupdates.care |  |
+| Pilot legal and insurance readiness checklist | `docs/contracts/pilot_legal_insurance_readiness_checklist.md` | Draft checklist | familyupdates.care |  |
+| Privacy notice | `docs/public/privacy_policy.md` | Published | familyupdates.care |  |
+| Safeguarding and consent | `docs/public/safeguarding_and_consent.md` | Published | familyupdates.care |  |
+| Family terms of use | `docs/public/family_terms_of_use.md` | Published | familyupdates.care |  |
 
 ## Signed document storage (recommended convention)
 

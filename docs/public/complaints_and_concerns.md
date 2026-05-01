@@ -1,4 +1,4 @@
-# Complaints & Concerns
+﻿# Complaints & Concerns
 
 We take concerns seriously and respond in line with role boundaries.
 
@@ -10,9 +10,9 @@ The care home is responsible for care delivery, safeguarding, and operational de
 
 ## Platform-related concerns
 
-If your concern is about access, technical faults, system errors, or data handling by voicemailcare.com, contact:
+If your concern is about access, technical faults, system errors, or data handling by familyupdates.care, contact:
 
-`hello@voicemailcare.com`
+`hello@familyupdates.care`
 
 ## Response approach
 
@@ -26,7 +26,7 @@ If more time is needed, we explain why.
 
 ## Clarification
 
-voicemailcare.com does not provide care services, supervise care home staff, or replace care home complaints procedures.
+familyupdates.care does not provide care services, supervise care home staff, or replace care home complaints procedures.
 
 ## Service rules reference
 
@@ -35,4 +35,4 @@ When reviewing concerns about expected behaviour, apply these service rules:
 - Not a live service. Messages are played and recorded when staff are available.
 - Each channel keeps only the latest message. A new message replaces the previous message in that channel.
 - No message history and no archive are provided.
-- Message date is shown in Family Hub and Care Hub - Mobile (date only, no time).
+- Message date is shown in Family Hub and Care Home Mobile (date only, no time).

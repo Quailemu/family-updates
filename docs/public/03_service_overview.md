@@ -1,14 +1,14 @@
-![logo](../../assets/logo.png)
+﻿![logo](../../assets/logo.png)
 
 # Service overview
 
-Communication participants: residents, Family Members, and Care Hub (Office and Mobile).
+Communication participants: residents, Family Members, and Care Home system (Care Home Office and Care Home Mobile).
 
-VoicemailCare helps families share calm voice updates, reduce repeated calls, and coordinate practical support without live chat or message history.
+familyupdates.care helps families share calm voice updates, reduce the number of calls, and coordinate practical support without live chat or message history.
 
 ## Purpose
 
-voicemailcare.com is a simple system for non-urgent social voice messages between a resident and Family Members.
+familyupdates.care is a simple system for non-urgent social voice messages between a resident and Family Members.
 
 It also supports non-urgent care-home communication to family in two Office modes:
 
@@ -20,11 +20,11 @@ It also supports non-urgent care-home communication to family in two Office mode
 - Each channel keeps only the latest message.
 - A new message replaces the previous message in that channel.
 - No archive, no scrolling thread, no live chat.
-- Message date is shown in Family Hub and Care Hub - Mobile (date only, no time).
+- Message date is shown in Family Hub and Care Home Mobile (date only, no time).
 
 ## Transcript assist (optional)
 
-- A transcript can be requested when recording in Family Hub, Care Hub - Mobile, and Care Hub - Office.
+- A transcript can be requested when recording in Family Hub, Care Home Mobile, and Care Home Office.
 - When available, transcript text is shown under "Transcript assist" for the current message.
 - Transcript text may contain errors; voice playback remains the source of truth.
 
@@ -32,8 +32,8 @@ It also supports non-urgent care-home communication to family in two Office mode
 
 ### Family -> Resident
 
-Each Family Member channel keeps only the latest Family -> Resident message.  
-Care Hub - Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.
+Each Family Member channel keeps only the latest Family -> Resident message.
+Care Home Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.
 
 ### Resident -> Family
 
@@ -41,12 +41,12 @@ Resident -> Family channel keeps only the latest resident reply shared to all Fa
 
 ### Office -> Family (general update)
 
-One-way broadcast to all Family Members for non-urgent, non-medical information and reassurance.  
+One-way broadcast to all Family Members for non-urgent, non-medical information and reassurance.
 General updates do not accept replies in the update channel.
 
 ### Office practical message (structured reply)
 
-Office can publish a practical message for a resident (for example visits, attendance, reminders, item requests).  
+Office can publish a practical message for a resident (for example visits, attendance, reminders, item requests).
 Each Family Member can submit:
 
 - Yes / No / Maybe
@@ -67,4 +67,3 @@ It is not for:
 - urgent or emergency enquiries
 
 For those matters, contact the care home directly using normal channels.
-

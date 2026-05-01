@@ -1,22 +1,22 @@
-![logo](../../assets/logo.png)
+﻿![logo](../../assets/logo.png)
 
 ## What this service is for
 
-voicemailcare.com is a simple tool for exchanging non-urgent, social voice messages between residents and their family or friends. It is designed for use in UK care homes and is intended to be reliable, low-risk, and easy to operate.
+familyupdates.care is a simple tool for exchanging non-urgent, social voice messages between residents and their family or friends. It is designed for use in UK care homes and is intended to be reliable, low-risk, and easy to operate.
 
 Care homes operate the system and act as the data controller. The platform provides the technical tool only and does not verify identity, consent, authority, or message content.
 
 ## App versions (three distinct experiences)
 
-Care Hub – Mobile is a restricted operational view for carers. Care Hub – Office provides full access and includes Care Hub – Mobile functionality.
+The Care Home system has three distinct experiences:
 
-- Family Hub: used by family members and friends only.
-- Care Hub – Mobile: used by carers on a shared lanyard device.
-- Care Hub – Office: includes Care Hub – Mobile tasks plus admin documents and compliance.
+- Care Home Family Hub: used by family members and friends only.
+- Care Home Mobile: used by carers on a shared lanyard device.
+- Care Home Office: used by office staff for admin, oversight, and setup.
 
-Family members and friends use the Family Hub only.  
-Carers use Care Hub – Mobile only.  
-Office staff use Care Hub – Office only.
+Family members and friends use the Family Hub only.
+Carers use Care Home Mobile only.
+Office staff use Care Home Office only.
 
 ## What this service is not for
 
