@@ -139,22 +139,9 @@ OFFICE_UPDATE_CATEGORIES = (
     "Meals",
 )
 OFFICE_PRACTICAL_CHECKBOX_OPTIONS = (
-    "Pencil me in",
-    "Send me a link",
-    "Send me an invite",
-    "Day/date/time please",
-    "Please call me",
-    "I will call the care home",
     "I will sort this out",
-    "I will bring requested items",
     "I can attend",
     "I cannot attend",
-    "I will book and take them",
-    "Please arrange this and confirm to family",
-    "Please share more detail",
-    "I don't understand - please explain",
-    "I will do this if no one else can",
-    "I have seen this",
 )
 OFFICE_PRACTICAL_CONTEXT_GENERAL = "general"
 OFFICE_PRACTICAL_CONTEXT_VISIT = "visit"
@@ -5201,9 +5188,6 @@ def render_stage_level_status(
     if context:
         parts.append(context)
     st.info(" | ".join(parts))
-    st.caption(
-        "Life stage describes who is involved. Communication level describes how much of the system is switched on."
-    )
 
 
 def render_dev_stage_level_status(access_token: str | None = None) -> None:
@@ -10402,33 +10386,6 @@ def format_office_sent_label(now_dt: object | None = None) -> str:
     return "Message sent \u2014 today"
 
 
-def render_slow_speech_hint() -> None:
-    st.markdown(
-        """
-<style>
-  .vm-slow-hint {
-    display: flex;
-    align-items: center;
-    margin: 6px 0 10px 0;
-  }
-  .vm-slow-text {
-    font-size: 0.9rem;
-    color: #111;
-  }
-</style>
-""",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
-<div class="vm-slow-hint" aria-label="Speak slowly and clearly">
-  <div class="vm-slow-text">Speak slowly and clearly.</div>
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-
-
 def render_audio_safe(
     audio_payload: bytes | str | None,
     *,
@@ -10761,8 +10718,8 @@ def render_family_send() -> None:
   border: 1px solid rgba(201, 122, 44, 0.24);
 }
 .family-flow-title.practical {
-  background: rgba(163, 90, 150, 0.10);
-  border: 1px solid rgba(163, 90, 150, 0.24);
+  background: rgba(229, 221, 199, 0.55);
+  border: 1px solid rgba(139, 126, 92, 0.24);
 }
 .family-flow-title.outbound {
   background: rgba(46, 142, 117, 0.10);
@@ -10937,7 +10894,7 @@ def render_family_send() -> None:
                 if family_led_mode and main_contact_name:
                     st.caption(f"Family Organiser: {main_contact_name}")
                 update_subject = full_name if at_home_lifecycle_stage else f"this {subject_singular}"
-                st.caption(f"Latest update for {update_subject}. Updates are informational only.")
+                st.caption(f"Latest update for {update_subject}.")
                 latest_office_update = fetch_latest_message(
                     resident_id,
                     "office_to_family",
@@ -11236,7 +11193,6 @@ def render_family_send() -> None:
                     f"Record voice message to {full_name}",
                     key=f"family_audio_input_{resident_id}",
                 )
-                render_slow_speech_hint()
                 if recorded_from_native is not None:
                     native_bytes = recorded_from_native.getvalue()
                     if native_bytes:
@@ -11951,9 +11907,17 @@ def render_pr_homepage() -> None:
         }
         .vm-home-brand {
             margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 1.05rem;
             font-weight: 700;
             color: #1f1f1f;
+        }
+        .vm-home-brand img {
+            width: 44px;
+            height: auto;
+            display: block;
         }
         .vm-home-caption {
             margin: 8px 0 0 0;
@@ -11967,7 +11931,12 @@ def render_pr_homepage() -> None:
 
     st.markdown('<div class="vm-home-shell">', unsafe_allow_html=True)
     st.markdown('<div class="vm-home-card">', unsafe_allow_html=True)
-    st.markdown('<p class="vm-home-brand">familyupdates.care</p>', unsafe_allow_html=True)
+    logo_data = get_logo_data_uri()
+    logo_html = f'<img src="{logo_data}" alt="familyupdates.care logo" />' if logo_data else ""
+    st.markdown(
+        f'<div class="vm-home-brand">{logo_html}<span>familyupdates.care</span></div>',
+        unsafe_allow_html=True,
+    )
     cartoon_path = resolve_cartoon_asset()
     if cartoon_path is not None:
         st.image(str(cartoon_path), use_container_width=True)
@@ -11975,10 +11944,6 @@ def render_pr_homepage() -> None:
         st.caption(
             "Landing artwork missing: add familyupdates.png in assets/."
         )
-    st.markdown(
-        '<p class="vm-home-caption">Choose an interface to continue.</p>',
-        unsafe_allow_html=True,
-    )
 
     if st.button("How it works", key="pr_entry_how_it_works", use_container_width=True):
         set_route("/public/how-it-works")
@@ -13189,8 +13154,8 @@ def render_care_hub() -> None:
     border: 1px solid rgba(201, 122, 44, 0.24);
   }}
   .care-flow-title.practical {{
-    background: rgba(163, 90, 150, 0.10);
-    border: 1px solid rgba(163, 90, 150, 0.24);
+    background: rgba(229, 221, 199, 0.55);
+    border: 1px solid rgba(139, 126, 92, 0.24);
   }}
   .care-flow-title.outbound {{
     background: rgba(46, 142, 117, 0.10);
@@ -13214,8 +13179,8 @@ def render_care_hub() -> None:
     border: 1px solid rgba(201, 122, 44, 0.22);
   }}
   .care-flow-box.practical {{
-    background: rgba(163, 90, 150, 0.05);
-    border: 1px solid rgba(163, 90, 150, 0.22);
+    background: rgba(238, 246, 232, 0.70);
+    border: 1px solid rgba(111, 137, 93, 0.22);
   }}
   .care-flow-box.outbound {{
     background: rgba(46, 142, 117, 0.05);
@@ -13236,6 +13201,7 @@ def render_care_hub() -> None:
     page_title = "Care Home Mobile" if runtime_variant == VARIANT_MOBILE else get_at_home_voicemail_label(access_token)
     render_page_header(page_title)
     render_dev_stage_level_status(access_token)
+    st.caption("Each sent message replaces the previous one in that channel.")
     if runtime_variant == VARIANT_MOBILE:
         render_public_landing_button("Back to hub selection")
     elif runtime_variant == VARIANT_OFFICE:
@@ -13289,13 +13255,6 @@ def render_care_hub() -> None:
         else:
             st.session_state.pop("circle_person_display_name", None)
     render_care_home_identity_banner(access_token)
-    if runtime_variant == VARIANT_OFFICE:
-        coordinator_name = main_contact_name or "Not set"
-        coordinator_caption_label = (
-            "Family Organiser" if at_home_lifecycle_stage else "Coordinator"
-        )
-        st.caption(f"{coordinator_caption_label}: {coordinator_name}")
-        st.caption("Role reviewed on: Not set")
     if runtime_variant == VARIANT_OFFICE and family_led_mode and main_contact_name:
         st.caption(
             "If you hold LPA or similar authority, you may be able to act depending on your arrangement. "
@@ -13308,7 +13267,6 @@ def render_care_hub() -> None:
         st.info("This channel is inactive for the current lifecycle stage.")
     elif not family_messaging_enabled:
         st.info("Messaging is inactive for the current lifecycle stage.")
-    st.caption(SENSITIVE_DATA_BOUNDARY_WARNING)
     is_care_queue_variant_screen = runtime_variant in {VARIANT_MOBILE, VARIANT_OFFICE}
     include_care_home_in_resident_labels = (
         runtime_variant == VARIANT_MOBILE and not family_led_mode and not at_home_lifecycle_stage
@@ -13316,7 +13274,7 @@ def render_care_hub() -> None:
     contacts_by_resident: dict[str, list[dict]] = {}
 
     show_person_search = lifecycle_stage_number == 4 and not family_led_mode
-    resident_search_container = st.container(border=True)
+    resident_search_container = st.container(border=bool(show_person_search or family_led_mode))
     search_value = ""
     if show_person_search:
         with resident_search_container:
@@ -13491,7 +13449,7 @@ def render_care_hub() -> None:
         )
         full_name = get_resident_full_name(resident, operating_mode=operating_mode)
         person_first_name = full_name.split()[0] if full_name.split() else full_name
-        if runtime_variant != VARIANT_MOBILE:
+        if runtime_variant not in {VARIANT_MOBILE, VARIANT_OFFICE}:
             with st.container(border=True):
                 if family_led_mode or at_home_lifecycle_stage:
                     render_care_flow_title(full_name, "resident")
@@ -13651,60 +13609,6 @@ def render_care_hub() -> None:
             state["selected_contact_id"] = (selected_contact or {}).get("id")
             state["selected_contact_user_id"] = (selected_contact or {}).get("auth_user_id")
         elif is_office_variant:
-            queue_subject = person_first_name if at_home_lifecycle_stage else subject_singular
-            office_playback_caption = (
-                "Playback follows the same fixed contact order "
-                if at_home_lifecycle_stage
-                else "Office review playback follows the same fixed contact order "
-            )
-            play_next_label = (
-                "Play next unread family message"
-                if at_home_lifecycle_stage
-                else "Play next unread family message (Office review)"
-            )
-            st.caption(
-                office_playback_caption
-                + f"(does not change {queue_subject} queue order)."
-            )
-            if st.button(
-                play_next_label,
-                key=f"office_play_next_{resident_id}",
-                use_container_width=True,
-            ):
-                st.session_state[manual_selection_key] = False
-                manual_selected_active = False
-                selected_contact, latest, queue_mode_label = select_next_family_message_for_mobile(
-                    resident_id,
-                    resident["care_home_id"],
-                    contacts,
-                    access_token,
-                )
-                if selected_contact:
-                    state["selected_contact_id"] = selected_contact.get("id")
-                    state["selected_contact_user_id"] = selected_contact.get("auth_user_id")
-                    latest = fetch_latest_message_for_contact_with_mapping_repair(
-                        resident_id,
-                        access_token,
-                        selected_contact,
-                        channel="resident_family",
-                        include_audio=True,
-                    )
-                    resolved_contact_user_id = str(
-                        (latest or {}).get("contact_user_id")
-                        or selected_contact.get("auth_user_id")
-                        or ""
-                    ).strip()
-                    state["selected_contact_user_id"] = resolved_contact_user_id
-                    # Advance Office session pointer so each click moves through queue order.
-                    office_next_contact_user_id = get_next_contact_user_id_with_message(
-                        resident_id,
-                        contacts,
-                        access_token,
-                        state.get("selected_contact_user_id"),
-                    )
-                    st.session_state[f"care_mobile_pointer_{resident_id}"] = (
-                        office_next_contact_user_id or ""
-                    )
             if selected_contact is None:
                 # Respect explicit manual selection first; otherwise default to queue-next.
                 if state.get("selected_contact_id"):
@@ -13829,34 +13733,17 @@ def render_care_hub() -> None:
                 effective_queue_next_contact = ordered_contacts_for_queue[0]
         mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
         mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
+        family_message_panel = (
+            st.container(border=True)
+            if contacts and (is_mobile_variant or is_office_variant)
+            else None
+        )
         if contacts and (is_mobile_variant or is_office_variant):
             if is_mobile_variant:
-                with st.container(border=True):
+                with family_message_panel:
                     render_care_flow_title("Family messages", "inbound")
-                    st.caption(
-                        "Play messages follows a fixed contact order. Unplayed messages are always first."
-                    )
-                    st.caption(
-                        "Playback does not change order by itself. "
-                        'The order only changes when you tick listened and click "Move to next message".'
-                    )
-                    st.caption(f"Unread family messages: {queue_unread_count}")
-                    if effective_queue_next_contact:
-                        next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
-                        next_relationship = ((effective_queue_next_contact.get("relationship") or "").strip())
-                        next_contact_id = str(effective_queue_next_contact.get("id") or "").strip()
-                        next_position = queue_position_by_contact_id.get(next_contact_id)
-                        next_prefix = f"{next_position}. " if next_position else ""
-                        next_display = (
-                            f"{next_prefix}{next_name} ({next_relationship.title()})"
-                            if next_relationship
-                            else f"{next_prefix}{next_name} (Family Member)"
-                        )
-                        st.caption(f"Next in queue: {next_display}")
-                    else:
-                        st.caption("Next in queue: none")
+                    st.caption(f"Unplayed list ({queue_unread_count})")
                     if queue_unread_contacts:
-                        st.caption("Unplayed list:")
                         for unread_contact in queue_unread_contacts:
                             unread_name = (unread_contact.get("full_name") or "family contact").strip()
                             unread_relationship = ((unread_contact.get("relationship") or "").strip())
@@ -13869,6 +13756,8 @@ def render_care_hub() -> None:
                                 else f"{unread_prefix}{unread_name} (Family Member)"
                             )
                             st.markdown(f"- {unread_display}")
+                    else:
+                        st.caption("No unplayed messages.")
                     send_guard_scope = f"care_send_{resident_id}"
                     send_guard_remaining = get_send_guard_remaining_seconds(send_guard_scope)
                     send_guard_active = send_guard_remaining > 0
@@ -13885,162 +13774,55 @@ def render_care_hub() -> None:
                         if recent_sent_message:
                             st.success(recent_sent_message)
 
-                    playlist_contacts = ordered_contacts_for_queue
-                    if playlist_contacts:
-                        with st.expander("Select from family playlist"):
-                            playlist_options = []
-                            for playlist_index, playlist_contact in enumerate(playlist_contacts, start=1):
-                                playlist_name = (playlist_contact.get("full_name") or "family contact").strip()
-                                playlist_relationship = ((playlist_contact.get("relationship") or "").strip())
-                                playlist_label = (
-                                    f"{playlist_index}. {playlist_name} ({playlist_relationship.title()})"
-                                    if playlist_relationship
-                                    else f"{playlist_index}. {playlist_name} (Family Member)"
-                                )
-                                playlist_options.append((playlist_label, playlist_contact))
-                            selected_playlist_label = st.selectbox(
-                                "Family Member",
-                                options=[label for label, _ in playlist_options],
-                                key=f"care_playlist_select_{resident_id}",
-                            )
-                            if st.button(
-                                "Play selected family message",
-                                key=f"care_playlist_play_{resident_id}",
-                                disabled=send_guard_active,
-                                use_container_width=True,
-                            ):
-                                selected_contact = next(
-                                    (
-                                        contact
-                                        for label, contact in playlist_options
-                                        if label == selected_playlist_label
-                                    ),
-                                    None,
-                                )
-                                if selected_contact:
-                                    st.session_state[manual_selection_key] = True
-                                    manual_selected_active = True
-                                    state["selected_contact_id"] = selected_contact.get("id")
-                                    latest = fetch_latest_message_for_contact_with_mapping_repair(
-                                        resident_id,
-                                        access_token,
-                                        selected_contact,
-                                        channel="resident_family",
-                                        include_audio=True,
-                                    )
-                                    resolved_contact_user_id = str(
-                                        (latest or {}).get("contact_user_id")
-                                        or selected_contact.get("auth_user_id")
-                                        or ""
-                                    ).strip()
-                                    state["selected_contact_user_id"] = resolved_contact_user_id
-                                    if is_mobile_variant or is_office_variant:
-                                        listen_prefix = "care_mobile" if is_mobile_variant else "care_office"
-                                        st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
-                                        st.session_state[f"{listen_prefix}_listened_confirm_{resident_id}"] = False
             else:
-                st.caption(f"Unread family messages: {queue_unread_count}")
-                st.caption(
-                    "Playback does not change order by itself. "
-                    'The order only changes when you tick listened and click "Move to next message".'
-                )
-                if effective_queue_next_contact:
-                    next_name = (effective_queue_next_contact.get("full_name") or "family contact").strip()
-                    next_relationship = ((effective_queue_next_contact.get("relationship") or "").strip())
-                    next_contact_id = str(effective_queue_next_contact.get("id") or "").strip()
-                    next_position = queue_position_by_contact_id.get(next_contact_id)
-                    next_prefix = f"{next_position}. " if next_position else ""
-                    next_display = (
-                        f"{next_prefix}{next_name} ({next_relationship.title()})"
-                        if next_relationship
-                        else f"{next_prefix}{next_name} (Family Member)"
-                    )
-                    st.caption(f"Next in queue: {next_display}")
-                else:
-                    st.caption("Next in queue: none")
-                if queue_unread_contacts:
-                    st.caption("Unplayed list:")
-                    for unread_contact in queue_unread_contacts:
-                        unread_name = (unread_contact.get("full_name") or "family contact").strip()
-                        unread_relationship = ((unread_contact.get("relationship") or "").strip())
-                        unread_contact_id = str(unread_contact.get("id") or "").strip()
-                        unread_position = queue_position_by_contact_id.get(unread_contact_id)
-                        unread_prefix = f"{unread_position}. " if unread_position else ""
-                        unread_display = (
-                            f"{unread_prefix}{unread_name} ({unread_relationship.title()})"
-                            if unread_relationship
-                            else f"{unread_prefix}{unread_name} (Family Member)"
+                with family_message_panel:
+                    if family_led_mode or at_home_lifecycle_stage:
+                        render_care_flow_title(full_name, "resident")
+                    else:
+                        render_care_flow_title(
+                            f"{subject_singular_title} ({full_name})",
+                            "resident",
                         )
-                        st.markdown(f"- {unread_display}")
-                send_guard_scope = f"care_send_{resident_id}"
-                send_guard_remaining = get_send_guard_remaining_seconds(send_guard_scope)
-                send_guard_active = send_guard_remaining > 0
-                if send_guard_active:
-                    recent_sent = st.session_state.get("care_last_sent")
-                    recent_sent_message = (
-                        str((recent_sent or {}).get("message") or "Message sent to all Family Members.")
-                        if isinstance(recent_sent, dict)
-                        and str((recent_sent or {}).get("resident_id") or "").strip() == str(resident_id).strip()
-                        and (time.time() - float((recent_sent or {}).get("sent_at_ts") or 0.0))
-                        <= float(SEND_ACTION_GUARD_SECONDS + 2)
-                        else ""
-                    )
-                    if recent_sent_message:
-                        st.success(recent_sent_message)
+                    if not family_led_mode and not at_home_lifecycle_stage:
+                        st.markdown(f"**{full_name}**")
+                    care_home_name = str(resident.get("care_home") or "").strip()
+                    if care_home_name and bool(workspace_labels.get("show_room")):
+                        st.markdown(f"{workspace_labels.get('organisation_label')}: {care_home_name}")
+                    room_value = str(resident.get("room") or "").strip()
+                    if room_value and bool(workspace_labels.get("show_room")):
+                        st.markdown(f"{workspace_labels.get('room_label')} {room_value}")
+                    st.caption(f"Unplayed list ({queue_unread_count})")
+                    if queue_unread_contacts:
+                        for unread_contact in queue_unread_contacts:
+                            unread_name = (unread_contact.get("full_name") or "family contact").strip()
+                            unread_relationship = ((unread_contact.get("relationship") or "").strip())
+                            unread_contact_id = str(unread_contact.get("id") or "").strip()
+                            unread_position = queue_position_by_contact_id.get(unread_contact_id)
+                            unread_prefix = f"{unread_position}. " if unread_position else ""
+                            unread_display = (
+                                f"{unread_prefix}{unread_name} ({unread_relationship.title()})"
+                                if unread_relationship
+                                else f"{unread_prefix}{unread_name} (Family Member)"
+                            )
+                            st.markdown(f"- {unread_display}")
+                    else:
+                        st.caption("No unplayed messages.")
+                    send_guard_scope = f"care_send_{resident_id}"
+                    send_guard_remaining = get_send_guard_remaining_seconds(send_guard_scope)
+                    send_guard_active = send_guard_remaining > 0
+                    if send_guard_active:
+                        recent_sent = st.session_state.get("care_last_sent")
+                        recent_sent_message = (
+                            str((recent_sent or {}).get("message") or "Message sent to all Family Members.")
+                            if isinstance(recent_sent, dict)
+                            and str((recent_sent or {}).get("resident_id") or "").strip() == str(resident_id).strip()
+                            and (time.time() - float((recent_sent or {}).get("sent_at_ts") or 0.0))
+                            <= float(SEND_ACTION_GUARD_SECONDS + 2)
+                            else ""
+                        )
+                        if recent_sent_message:
+                            st.success(recent_sent_message)
 
-                playlist_contacts = ordered_contacts_for_queue
-                if playlist_contacts:
-                    with st.expander("Select from family playlist"):
-                        playlist_options = []
-                        for playlist_index, playlist_contact in enumerate(playlist_contacts, start=1):
-                            playlist_name = (playlist_contact.get("full_name") or "family contact").strip()
-                            playlist_relationship = ((playlist_contact.get("relationship") or "").strip())
-                            playlist_label = (
-                                f"{playlist_index}. {playlist_name} ({playlist_relationship.title()})"
-                                if playlist_relationship
-                                else f"{playlist_index}. {playlist_name} (Family Member)"
-                            )
-                            playlist_options.append((playlist_label, playlist_contact))
-                        selected_playlist_label = st.selectbox(
-                            "Family Member",
-                            options=[label for label, _ in playlist_options],
-                            key=f"care_playlist_select_{resident_id}",
-                        )
-                        if st.button(
-                            "Play selected family message",
-                            key=f"care_playlist_play_{resident_id}",
-                            disabled=send_guard_active,
-                            use_container_width=True,
-                        ):
-                            selected_contact = next(
-                                (
-                                    contact
-                                    for label, contact in playlist_options
-                                    if label == selected_playlist_label
-                                ),
-                                None,
-                            )
-                            if selected_contact:
-                                st.session_state[manual_selection_key] = True
-                                manual_selected_active = True
-                                state["selected_contact_id"] = selected_contact.get("id")
-                                latest = fetch_latest_message_for_contact_with_mapping_repair(
-                                    resident_id,
-                                    access_token,
-                                    selected_contact,
-                                    channel="resident_family",
-                                    include_audio=True,
-                                )
-                                resolved_contact_user_id = str(
-                                    (latest or {}).get("contact_user_id")
-                                    or selected_contact.get("auth_user_id")
-                                    or ""
-                                ).strip()
-                                state["selected_contact_user_id"] = resolved_contact_user_id
-                                if is_mobile_variant or is_office_variant:
-                                    listen_prefix = "care_mobile" if is_mobile_variant else "care_office"
-                                    st.session_state[f"care_mobile_play_requested_{resident_id}"] = True
-                                    st.session_state[f"{listen_prefix}_listened_confirm_{resident_id}"] = False
                     if st.button(
                         "Play next family message",
                         key=f"care_play_next_{resident_id}",
@@ -14182,12 +13964,20 @@ def render_care_hub() -> None:
                 and selected_contact is not None
             ):
                 queue_mode_label = "Session order"
-            with st.container(border=True):
+            with (family_message_panel or st.container(border=True)):
+                selected_contact_name_for_title = (
+                    ((selected_contact or {}).get("full_name") or "").strip()
+                )
+                from_contact_suffix = (
+                    f" (from {selected_contact_name_for_title})"
+                    if selected_contact_name_for_title
+                    else ""
+                )
                 render_care_flow_title(
                     (
-                        f"Latest family message to {full_name}"
+                        f"Latest family message to {full_name}{from_contact_suffix}"
                         if at_home_lifecycle_stage
-                        else f"Latest family message to {subject_singular} ({full_name})"
+                        else f"Latest family message to {subject_singular} ({full_name}){from_contact_suffix}"
                     ),
                     "inbound",
                 )
@@ -14231,9 +14021,6 @@ def render_care_hub() -> None:
                                 if is_mobile_variant or at_home_lifecycle_stage
                                 else "Office review"
                             )
-                if is_mobile_variant:
-                    if not mobile_play_requested:
-                        st.caption("Press 'Play next family message' to continue queue playback order.")
                 playback_policy_mode = transcript_policy_mode
                 if is_mobile_variant and transcript_policy_mode == "precheck":
                     playback_policy_mode = "assist"
@@ -14269,16 +14056,6 @@ def render_care_hub() -> None:
                         played_label = format_soft_message_period_label(latest.get("recorded_at"))
                         if played_label:
                             st.caption(played_label)
-                        if is_mobile_variant:
-                            st.caption(
-                                "Playback alone does not change order. "
-                                'The order only changes when you tick listened and click "Move to next message".'
-                            )
-                        else:
-                            st.caption(
-                                "Playback alone does not change order. "
-                                'The order only changes when you tick listened and click "Move to next message".'
-                            )
                     else:
                         st.caption("Playback locked until transcript review is complete.")
                 elif should_show_message and not has_playback_source:
@@ -14290,28 +14067,33 @@ def render_care_hub() -> None:
                 if is_mobile_variant or is_office_variant:
                     latest_message_id = str((latest or {}).get("id") or "").strip()
                     listened_prefix = "care_mobile" if is_mobile_variant else "care_office"
-                    listened_confirm_key = f"{listened_prefix}_listened_confirm_{resident_id}"
                     if played_now and latest_message_id:
-                        st.checkbox(
+                        latest_contact_user_id = str(
+                            (latest or {}).get("contact_user_id")
+                            or state.get("selected_contact_user_id")
+                            or ""
+                        ).strip()
+                        latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
+                        listened_confirm_key = (
+                            f"{listened_prefix}_listened_confirm_{resident_id}_{latest_message_id}"
+                        )
+                        listened_action_token = (
+                            f"{latest_message_id}:{latest_contact_user_id}:{latest_recorded_at}"
+                        )
+                        listened_action_key = f"{listened_prefix}_listened_action_done_{resident_id}"
+                        listened_now = st.checkbox(
                             (
-                                f"Tick when {person_first_name} has listened to this message."
+                                f"{person_first_name} has listened - move to next message"
                                 if at_home_lifecycle_stage
-                                else f"Tick when the {subject_singular} has listened to this message."
+                                else f"The {subject_singular} has listened - move to next message"
                             ),
                             key=listened_confirm_key,
                         )
-                        if st.button(
-                            "Move to next message",
-                            key=f"{listened_prefix}_mark_listened_next_{resident_id}",
-                            use_container_width=True,
-                            disabled=not bool(st.session_state.get(listened_confirm_key, False)),
+                        if (
+                            listened_now
+                            and st.session_state.get(listened_action_key) != listened_action_token
                         ):
-                            latest_contact_user_id = str(
-                                (latest or {}).get("contact_user_id")
-                                or state.get("selected_contact_user_id")
-                                or ""
-                            ).strip()
-                            latest_recorded_at = str((latest or {}).get("recorded_at") or "").strip()
+                            st.session_state[listened_action_key] = listened_action_token
                             log_audit_event(
                                 "message_played",
                                 "care_hub",
@@ -14364,13 +14146,6 @@ def render_care_hub() -> None:
                                 cache[cache_key] = int(cache.get(cache_key, 0) or 0) + 1
                                 st.session_state["_message_play_count_cache"] = cache
                             st.rerun()
-                        st.caption(
-                            (
-                                f"Click when {person_first_name} has listened and you want to move to the next message."
-                                if at_home_lifecycle_stage
-                                else f"Click when the {subject_singular} has listened and you want to move to the next message."
-                            )
-                        )
                 selected_contact_name = (
                     (selected_contact or {}).get("full_name") or "family contact"
                 )
@@ -14384,29 +14159,18 @@ def render_care_hub() -> None:
                 )
                 selected_contact_id = str((selected_contact or {}).get("id") or "").strip()
                 selected_contact_position = queue_position_by_contact_id.get(selected_contact_id)
-                if selected_contact_position:
-                    selected_contact_display = f"{selected_contact_position}. {selected_contact_display}"
                 if is_queue_playback_variant and queue_mode_label:
                     st.caption(f"Queue mode: {queue_mode_label}")
-                if is_mobile_variant:
-                    st.caption(f"Now playing from: {selected_contact_display}")
-                elif at_home_lifecycle_stage:
-                    st.caption(f"Playing from: {selected_contact_display}")
-                else:
-                    st.caption(f"Office review playing: {selected_contact_display}")
-                st.markdown(f"**Latest message from {selected_contact_name} to {full_name}**")
         with st.container(border=True):
             render_care_flow_title(
                 (
-                    f"Latest message from {full_name} to family"
+                    f"Latest message from {full_name} to all Family Members"
                     if at_home_lifecycle_stage
-                    else f"Latest message from {subject_singular} ({full_name}) to family"
+                    else f"Latest message from {subject_singular} ({full_name}) to all Family Members"
                 ),
                 "outbound",
             )
-            if is_mobile_variant or is_office_variant:
-                st.markdown(f"**Latest message from {full_name} to all Family Members**")
-            else:
+            if not (is_mobile_variant or is_office_variant):
                 st.markdown(f"**Latest message from {full_name} to {selected_contact_name}**")
 
             latest_sent = fetch_latest_message(
@@ -14456,10 +14220,11 @@ def render_care_hub() -> None:
                 text_nonce = int(state.get("resident_text_message_nonce", 0))
                 st.markdown("**Short text message to family**")
                 resident_text_body = st.text_area(
-                    "Short message to family",
+                    "Short text message to family",
                     key=f"resident_short_text_{resident_id}_{text_nonce}",
                     height=90,
                     max_chars=800,
+                    label_visibility="collapsed",
                 )
                 resident_text_can_send = bool(str(resident_text_body or "").strip())
                 if st.button(
@@ -14554,7 +14319,6 @@ def render_care_hub() -> None:
                     except Exception:
                         native_recorder_error = True
                         recorded_from_native = None
-                    render_slow_speech_hint()
                 if recorded_from_native is not None:
                     native_bytes = recorded_from_native.getvalue()
                     if native_bytes:
@@ -14614,10 +14378,6 @@ def render_care_hub() -> None:
                                 getattr(uploaded_recording, "type", None)
                                 or "audio/wav"
                             )
-
-                st.caption(
-                    "Mobile recording needs a secure browser context (HTTPS) and microphone permission."
-                )
 
                 if state.get("recording_bytes"):
                     st.caption("Captured message preview:")
@@ -14693,9 +14453,6 @@ def render_care_hub() -> None:
                 st.markdown(
                     f'<div class="vm-muted-line">{confirmation_line}</div>',
                     unsafe_allow_html=True,
-                )
-                st.caption(
-                    "After pressing Send, wait for the sent confirmation before playing another message."
                 )
                 last_sent = st.session_state.get("care_last_sent")
 
@@ -14841,24 +14598,23 @@ def render_care_hub() -> None:
 
         if show_update_box:
             with st.container(border=True):
+                update_subject = full_name if at_home_lifecycle_stage else full_name
                 office_update_title = (
-                    "Shared update to Family"
+                    f"Shared update to all Family re: {update_subject}"
                     if shared_coordination_stage
-                    else "Care Home update to Family (Office informational message)"
+                    else f"Care Home update to all Family re: {update_subject}"
                 )
                 if family_led_mode:
                     if main_contact_name:
-                        office_update_title = f"Update from {main_contact_name}"
+                        office_update_title = f"Update from {main_contact_name} re: {update_subject}"
                     else:
-                        office_update_title = "Main contact update"
+                        office_update_title = f"Main contact update re: {update_subject}"
                 render_care_flow_title(
                     office_update_title,
                     "office",
                 )
                 if family_led_mode and main_contact_name:
                     st.caption(f"Family Organiser: {main_contact_name}")
-                update_subject = full_name if at_home_lifecycle_stage else f"this {subject_singular}"
-                st.caption(f"Latest update for {update_subject}. Updates are informational only.")
                 latest_office_update = fetch_latest_message(
                     resident_id,
                     "office_to_family",
@@ -14896,24 +14652,8 @@ def render_care_hub() -> None:
                 clear_transcript_preview_state(state, prefix="office_")
 
                 if show_update_box:
-                    st.markdown(f"**{office_update_phrase.capitalize()}**")
-                    update_send_subject = full_name if at_home_lifecycle_stage else f"this {subject_singular}"
-                    st.caption(
-                        f"This update will be sent to all Family Members for {update_send_subject}."
-                    )
-                    if shared_coordination_stage or family_led_mode:
-                        st.caption(
-                            "Updates are non-urgent, one-way updates (no replies). For urgent or clinical matters, use your normal direct contact route."
-                        )
-                    else:
-                        st.caption(
-                            "Office updates are non-urgent, one-way updates from the care team (no replies). For any queries, please contact the care home directly."
-                        )
-                    st.caption(
-                        "After pressing Send, wait for the sent confirmation before editing another update."
-                    )
                     selected_office_category = st.selectbox(
-                        "Office update category (non-urgent)",
+                        "Update category",
                         options=list(OFFICE_UPDATE_CATEGORIES),
                         index=(
                             list(OFFICE_UPDATE_CATEGORIES).index(
@@ -15209,38 +14949,27 @@ def render_care_hub() -> None:
                             key=f"mobile_family_practical_requested_time_window_{resident_id}",
                             placeholder="Example: Morning, around 11am",
                         )
-                    mobile_family_checkboxes = st.multiselect(
-                        "Optional tick-box responses",
-                        options=[
-                            normalize_practical_option_label_for_mode(
-                                option,
-                                OPERATING_MODE_PERSONAL_USE
-                                if at_home_lifecycle_stage
-                                else operating_mode,
-                                person_first_name=person_first_name,
-                            )
-                            for option in practical_checkbox_options(
-                                OPERATING_MODE_PERSONAL_USE
-                                if at_home_lifecycle_stage
-                                else operating_mode
-                            )
-                        ],
-                        default=[
-                            normalize_practical_option_label_for_mode(
-                                option,
-                                OPERATING_MODE_PERSONAL_USE
-                                if at_home_lifecycle_stage
-                                else operating_mode,
-                                person_first_name=person_first_name,
-                            )
-                            for option in practical_checkbox_options(
-                                OPERATING_MODE_PERSONAL_USE
-                                if at_home_lifecycle_stage
-                                else operating_mode
-                            )
-                        ],
-                        key=f"mobile_family_practical_options_{resident_id}",
-                    )
+                    mobile_family_checkboxes = []
+                    with st.expander("Optional structured reply choices", expanded=False):
+                        mobile_family_checkboxes = st.multiselect(
+                            "Add optional tick-box choices",
+                            options=[
+                                normalize_practical_option_label_for_mode(
+                                    option,
+                                    OPERATING_MODE_PERSONAL_USE
+                                    if at_home_lifecycle_stage
+                                    else operating_mode,
+                                    person_first_name=person_first_name,
+                                )
+                                for option in practical_checkbox_options(
+                                    OPERATING_MODE_PERSONAL_USE
+                                    if at_home_lifecycle_stage
+                                    else operating_mode
+                                )
+                            ],
+                            default=[],
+                            key=f"mobile_family_practical_options_{resident_id}",
+                        )
                     if st.button(
                         "Publish request to Family Members",
                         key=f"mobile_family_practical_publish_{resident_id}",
@@ -15441,42 +15170,29 @@ def render_care_hub() -> None:
                             key=f"office_practical_requested_time_window_{resident_id}",
                             placeholder="Example: Morning, around 11am",
                         )
-                    practical_checkboxes = st.multiselect(
-                        "Optional tick-box responses",
-                        options=[
-                            normalize_practical_option_label_for_mode(
-                                option,
-                                (
+                    practical_checkboxes = []
+                    with st.expander("Optional structured reply choices", expanded=False):
+                        practical_checkboxes = st.multiselect(
+                            "Add optional tick-box choices",
+                            options=[
+                                normalize_practical_option_label_for_mode(
+                                    option,
+                                    (
+                                        OPERATING_MODE_PERSONAL_USE
+                                        if at_home_lifecycle_stage
+                                        else operating_mode
+                                    ),
+                                    person_first_name=person_first_name,
+                                )
+                                for option in practical_checkbox_options(
                                     OPERATING_MODE_PERSONAL_USE
                                     if at_home_lifecycle_stage
                                     else operating_mode
-                                ),
-                                person_first_name=person_first_name,
-                            )
-                            for option in practical_checkbox_options(
-                                OPERATING_MODE_PERSONAL_USE
-                                if at_home_lifecycle_stage
-                                else operating_mode
-                            )
-                        ],
-                        default=[
-                            normalize_practical_option_label_for_mode(
-                                option,
-                                (
-                                    OPERATING_MODE_PERSONAL_USE
-                                    if at_home_lifecycle_stage
-                                    else operating_mode
-                                ),
-                                person_first_name=person_first_name,
-                            )
-                            for option in practical_checkbox_options(
-                                OPERATING_MODE_PERSONAL_USE
-                                if at_home_lifecycle_stage
-                                else operating_mode
-                            )
-                        ],
-                        key=f"office_practical_options_{resident_id}",
-                    )
+                                )
+                            ],
+                            default=[],
+                            key=f"office_practical_options_{resident_id}",
+                        )
                     if st.button(
                         f"Publish request to {selected_request_target.get('label')}",
                         key=f"office_practical_publish_{resident_id}",

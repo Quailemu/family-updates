@@ -27,6 +27,18 @@ Transcripts of voice messages are available.
 
 Text is available for short updates with no replies. One text replaces the last in that channel, so messages stay fresh and relevant.
 
+## Playback order
+
+Family messages are played in a fixed contact order, with unplayed messages first.
+
+Playing a message does not change the order by itself. The order only changes when the listener confirms the message has been listened to and selects **Move to next message**.
+
+Life stage describes who is involved. Communication level describes how much of the system is switched on.
+
+## Recording
+
+Voice recording needs a browser with microphone permission. If recording is unavailable, use the upload option where shown.
+
 ## Stages
 
 **Stage 1: Person/Couple** - An individual person or a couple living at home and managing their own day-to-day communication.
@@ -37,6 +49,10 @@ Text is available for short updates with no replies. One text replaces the last 
 
 **Stage 4: Care home + Family Organiser** - The person/couple moves into a care home. The care home uses the Care Home system: Care Home Office, Care Home Mobile, and Care Home Family Hub. The Family Organiser, and maybe one of the couple if still at home and able to use it, may also use a totally separate Family system: Family Office, Family Mobile, and Family Hub.
 
+## Family Organiser
+
+A Family Organiser is the family member who helps keep communication and practical requests clear. They may send updates, ask simple structured questions, and help reduce repeated calls across the family. The role does not give legal authority by itself.
+
 ## Not for urgent matters
 
 familyupdates.care is non-urgent and not live. Requests and structured replies are for non-urgent, non-essential coordination only.
@@ -46,6 +62,8 @@ Family requests remain visible to all linked Family Members and may specify that
 Family members may send individual voice messages and also may reply to requests using fixed structured choices, optional fixed tick-boxes, and an optional short context note. There are no private chats, threads, or back-and-forth conversations.
 
 For essential, urgent, sensitive, medical, safeguarding, privacy-related, or time-critical matters, use normal direct communication outside familyupdates.care, such as phone, text, WhatsApp, email, or existing care-home channels.
+
+Keep sensitive records outside the app. Use familyupdates.care only for simple communication and coordination.
 
 ## Starting simply
 
