@@ -2,9 +2,11 @@
 
 # How familyupdates.care works
 
-familyupdates.care helps people remain independent for longer by sharing simple updates with family, helping family members keep in touch, and reducing repeated calls through practical requests with structured responses.
+familyupdates.care helps people remain independent for longer by supporting simple, efficient family communication.
 
-If a family member, carer, or supporter becomes involved, the system helps structure and simplify family communication.
+One update can be shared with the family group, and each new update replaces the last, so the information stays current without threads or message history. Family members can keep in touch with voice messages, respond to practical requests using structured replies, and add practical notes to a shared family noticeboard.
+
+If a family member, paid carer, or supporter becomes involved, these tools help keep communication clear and manageable.
 
 If a person later moves into a care home, the Family system may continue for family-side updates and coordination. The same core structure can also be used by a care home, if the care home chooses to adopt and run its own separate Care Home system.
 
