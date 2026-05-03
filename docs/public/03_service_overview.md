@@ -37,7 +37,7 @@ Care Home Mobile playback is one-at-a-time in a fair rotating order, with unplay
 
 ### Resident -> Family
 
-Resident -> Family channel keeps only the latest resident reply shared to all Family Members.
+Resident -> Family channels keep only the latest shared resident reply to the family group, and the latest direct resident reply to a selected Family Member.
 
 ### Office -> Family (general update)
 

@@ -24,7 +24,7 @@ The Care Home system is separate from any Family system used by a Family Organis
 The messaging system uses four channel types linked to each resident:
 
 - Family Member channels for Family/Friend -> Resident messages
-- A shared Resident -> Family message channel to all Family Members
+- A shared Resident -> Family message channel to the family group, plus a direct Resident -> Family message channel to a selected Family Member
 - A one-way Office update channel used by the care home to send updates to Family Members
 - An Office practical text message channel used by the care home to request structured family replies
 
@@ -53,7 +53,7 @@ Example resident flow
 
 Each Family Member has their own channel for Family/Friend -> Resident messages. Care Home Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-Resident -> Family channel keeps the latest resident message shared to all Family Members. The care home can also send a one-way Office update to all Family Members. Office can additionally send a practical text message to gather structured family responses (for example yes/no/maybe, fixed tick-box options, and an optional short context note). Each Family Member channel keeps only the latest Family/Friend -> Resident message. A new message replaces only the previous message in that channel.
+Resident -> Family channels keep the latest shared resident message to the family group, and the latest direct resident message to a selected Family Member. The care home can also send a one-way Office update to all Family Members. Office can additionally send a practical text message to gather structured family responses (for example yes/no/maybe, fixed tick-box options, and an optional short context note). Each Family Member channel keeps only the latest Family/Friend -> Resident message. A new message replaces only the previous message in that channel.
 
 ## Family member channel structure
 
@@ -62,7 +62,7 @@ For each resident, communication with family and friends is organised through Fa
 Each Family Member channel contains one Family Member only (no shared multi-user channels).
 
 Only the latest Family/Friend -> Resident message is kept per Family Member channel.
-Resident -> Family channel keeps the latest shared resident message to all Family Members.
+Resident -> Family channels keep the latest shared resident message to the family group, and the latest direct resident message to a selected Family Member.
 The Office update channel is separate and one-way from the care home to Family Members.
 Office practical text messages are separate from voice channels and support structured family replies.
 
@@ -126,7 +126,7 @@ In Care Home Office and Care Home Mobile, each resident has one communication ar
 
 ### Mobile send section
 
-Staff can record an outgoing message for a resident from the Send section. The communication area includes a single recorder/player and an "I have listened to this message." checkbox before sending. The resident message is then sent to all Family Members as the latest shared resident message.
+Staff can record an outgoing message for a resident from the Send section. The communication area includes a single recorder/player and an "I have listened to this message." checkbox before sending. The resident message is then sent to the family group or to the selected Family Member as that current resident message.
 
 ### Office update message
 
@@ -138,9 +138,9 @@ Mobile users can play this Office message but cannot replace it.
 
 Staff may help residents record short social messages as part of normal day-to-day support, carried out on behalf of the care home.
 
-When a resident message is sent, it is shared as one latest Resident -> Family message to all Family Members for that resident.
+When a resident message is sent, it is saved as one latest Resident -> Family message to the family group or to the selected Family Member for that resident.
 
-This channel is one-way from resident to Family Members (it is not a live conversation thread). A new resident message replaces the previous shared resident message.
+This channel is one-way from resident to family (it is not a live conversation thread). A new resident message replaces the previous resident message in that selected channel.
 
 Recording and playback are done when staff are available, to fit normal care routines.
 

@@ -4,18 +4,28 @@
 
 familyupdates.care helps people remain independent for longer by supporting simple, efficient family communication.
 
-One update can be shared with the family group, and each new update replaces the last, so the information stays current without threads or message history. Family members can keep in touch with voice messages, respond to practical requests using structured replies, and add practical notes to a shared family noticeboard.
+One update can be shared with the family group, and each new update replaces the last, so the information stays current without threads or message history. Family members and the person can keep in touch through selected voice-message channels, respond to practical requests using structured replies, and add practical notes to a shared family noticeboard.
 
 If a family member, paid carer, or supporter becomes involved, these tools help keep communication clear and manageable.
 
-If a person later moves into a care home, the Family system may continue for family-side updates and coordination. The same core structure can also be used by a care home, if the care home chooses to adopt and run its own separate Care Home system.
+## What the app does
+
+- One current update from the Family Organiser to the family group.
+- One current voice message from each Family Member to the person.
+- One current voice message from the person to the family group, or one current direct voice message to the Family Organiser or selected Family Member.
+- One practical request from the Family Organiser, with structured responses from Family Members.
+- One current noticeboard note from each Family Member, visible to the family group.
+
+Each new item replaces the previous one in that channel. There are no threads, no archive, and no live chat.
+
+The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current.
 
 familyupdates.care has two separate systems:
 
 - **Family system:** Family Office, Family Mobile, and Family Hub.
 - **Care Home system:** Care Home Office, Care Home Mobile, and Care Home Family Hub.
 
-They follow the same one-current-message communication model. The Family system may continue in Stage 4 when a person is living in a care home. The Care Home system is a separate optional addition for Stage 4 only, and only exists where the care home chooses to adopt and run it. The two systems do not connect.
+They follow the same one-current-message communication model.
 
 | Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family Organiser | Stage 3: + Carer | Stage 4: Care home + Family Organiser |
 | ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
@@ -53,7 +63,9 @@ Voice recording needs a browser with microphone permission. If recording is unav
 
 **Stage 3: + Carer** - The person/couple plus a Family Organiser and a paid carer.
 
-**Stage 4: Care home + Family Organiser** - The person/couple moves into a care home. The Family system may continue for family-side communication and coordination. The Care Home system is a separate optional system: Care Home Office, Care Home Mobile, and Care Home Family Hub. It is only used if the care home chooses to adopt and run it. The two systems do not connect.
+**Stage 4: Care home + Family Organiser** - The person/couple moves into a care home.
+
+In Stage 4, the Family system may continue for family-side updates and coordination. The same core structure can also be used by a care home, if the care home chooses to adopt and run its own separate Care Home system. The two systems do not connect.
 
 ## Family Organiser
 

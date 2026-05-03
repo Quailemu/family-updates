@@ -14,6 +14,16 @@ It supports:
 - Submitting structured replies to an Office practical message
 - Adding one current family noticeboard note where practical coordination is enabled
 
+## Communication boundaries
+
+- One current update from the organiser to the family group.
+- One current voice message from each Family Member to the person.
+- One current voice message from the person to the family group, or one current direct voice message to the organiser or selected Family Member.
+- One practical request with structured responses.
+- One current noticeboard note from each Family Member.
+
+Each new item replaces the previous one in that channel. There are no threads, no archive, and no live chat.
+
 ## How messages work
 
 - Each channel keeps only the latest message.

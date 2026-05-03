@@ -6,7 +6,7 @@ Communication participants: residents, Family Members, and Care Home system (Car
 
 Each Family Member has their own channel for Family/Friend -> Resident messages. Care Home Mobile plays these family messages in a fair rotating order, with unplayed messages first.
 
-Resident -> Family channel keeps only the latest resident message shared to all Family Members. The care home can also send a one-way Office update to all Family Members. Each Family Member channel keeps only the latest Family -> Resident message. A new message replaces the previous message in that channel.
+Resident -> Family channels keep only the latest shared resident message to the family group, and the latest direct resident message to a selected Family Member. The care home can also send a one-way Office update to all Family Members. Each Family Member channel keeps only the latest Family -> Resident message. A new message replaces the previous message in that channel.
 
 ## Who this is for
 
@@ -23,7 +23,7 @@ This guide is for care staff using Care Home Mobile during day-to-day resident s
 ## Resident and Family messages
 
 - Play the latest family messages for the resident in the app's fair rotating order (unplayed first).
-- Record and send the latest resident message to all Family Members.
+- Record and send the latest resident message to the family group or to a selected Family Member.
 - A new message replaces the previous message in that channel.
 
 ## Transcript assist (optional)

@@ -26,7 +26,7 @@ Homepage public info copy (before feedback section):
 ## Familiar voices
 A simple communication tool for care homes, residents, and their families.
 
-Family members may each send an individual message to a resident at any time, as it is not a live service. Carers may play messages for the resident when convenient. Carers may also help residents record one reply to the family group.
+Family members may each send an individual message to a resident at any time, as it is not a live service. Carers may play messages for the resident when convenient. Carers may also help residents record one current shared message to the family group, or one current direct message to a selected Family Member.
 
 The care home may also send non-urgent or practical updates, and families may respond with structured text to simple requests.
 
@@ -111,11 +111,21 @@ Essential platform data only:
 
 familyupdates.care helps people remain independent for longer by supporting simple, efficient family communication.
 
-One update can be shared with the family group, and each new update replaces the last, so the information stays current without threads or message history. Family members can keep in touch with voice messages, respond to practical requests using structured replies, and add practical notes to a shared family noticeboard.
+One update can be shared with the family group, and each new update replaces the last, so the information stays current without threads or message history. Family members and the person can keep in touch through selected voice-message channels, respond to practical requests using structured replies, and add practical notes to a shared family noticeboard.
 
 If a family member, paid carer, or supporter becomes involved, these tools help keep communication clear and manageable.
 
-If a person later moves into a care home, the Family system may continue for family-side updates and coordination. The same core structure can also be used by a care home, if the care home chooses to adopt and run its own separate Care Home system.
+What the app does:
+- One current update from the Family Organiser to the family group.
+- One current voice message from each Family Member to the person.
+- One current voice message from the person to the family group, or one current direct voice message to the Family Organiser or selected Family Member.
+- One practical request from the Family Organiser, with structured responses from Family Members.
+- One current noticeboard note from each Family Member, visible to the family group.
+
+Each new item replaces the previous one in that channel. There are no threads, no archive, and no live chat.
+
+Family Organiser role boundary:
+The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current.
 
 familyupdates.care can be used in levels, so you do not have to use the whole system at once. You can use the full system, or start with simple updates and add more when needed.
 
@@ -134,7 +144,9 @@ The table below gives a quick overview of what becomes available at each stage. 
 * **Stage 1: Person/Couple** â€” An individual person or a couple living at home and managing their own day-to-day communication.
 * **Stage 2: + Family Organiser** â€” The person/couple plus a Family Organiser. A Family Organiser is a family member who helps organise communication and practical requests.
 * **Stage 3: + Carer** â€” The person/couple plus a Family Organiser and a paid carer.
-* **Stage 4: Care home + Family Organiser** - The person/couple moves into a care home. The Family system may continue for family-side communication and coordination. The Care Home system is a separate optional system: Care Home Office, Care Home Mobile, and Care Home Family Hub. It is only used if the care home chooses to adopt and run it. The two systems do not connect.
+* **Stage 4: Care home + Family Organiser** - The person/couple moves into a care home.
+
+In Stage 4, the Family system may continue for family-side updates and coordination. The same core structure can also be used by a care home, if the care home chooses to adopt and run its own separate Care Home system. The two systems do not connect.
 
 ### Notes
 
@@ -172,7 +184,7 @@ The user should choose the lifecycle stage, not a separate organisation mode. Pr
 
 - Preparation of documents: this is not an active app communication stage. It is the external filing system step: Life Log, Contacts, Admin and Key Documents, Private Finance, Private Health Notes, and Carer and Housekeeping Notes. The files remain outside familyupdates.care.
 
-Stages 1-3 use the same at-home Family system principles: one current message, no threads, no live chat, and practical structured replies where helpful. Stage 1 uses [Surname] Family Office, Family Mobile, and Family Hub. Family Mobile lets the person or couple hear family voice messages and send one shared voice message to family. From Stage 2, Family Mobile also gives the person or couple and the family member separate ways to send messages and keep independence. In Stage 3, Family Mobile helps a carer or supporter work separately from the family member.
+Stages 1-3 use the same at-home Family system principles: one current message, no threads, no live chat, and practical structured replies where helpful. Stage 1 uses [Surname] Family Office, Family Mobile, and Family Hub. Family Mobile lets the person or couple hear family voice messages and send one current shared voice message to the family group, or one current direct voice message to a selected Family Member. From Stage 2, Family Mobile also gives the person or couple and the family member separate ways to send messages and keep independence. In Stage 3, Family Mobile helps a carer or supporter work separately from the family member.
 
 - Stage 1 - Individual or Couple at Home: this stage is for an individual or couple still mainly managing at home. Family contact may be increasing, and repeated calls or scattered messages can become tiring. familyupdates.care helps them share one calm family voice update and receive family messages when useful, without creating a live chat or long message thread.
 - Stage 2 - Support from a Family Member: this stage is for when one family member starts helping organise things. The family member may help share updates, ask practical questions, and reduce repeated conversations across the family. Mobile gives the person or couple and the family member separate ways to send messages. The aim is to make the coordination role manageable without taking over the person's life.
@@ -248,7 +260,7 @@ Workspace label policy:
 - Avoid scattered wording conditionals. Use one central workspace-label policy so the same feature can render correctly in either system.
 
 Mobile channel principle:
-Mobile is not the carer app. Mobile is the simple in-the-moment channel. In Stage 1, Mobile lets the person or couple hear family voice messages and send one shared voice message to family. In Stages 2-3, Mobile may be used by the person, a family member, a supporter, or a carer depending on how the household works.
+Mobile is not the carer app. Mobile is the simple in-the-moment channel. In Stage 1, Mobile lets the person or couple hear family voice messages and send one current shared voice message to the family group, or one current direct voice message to a selected Family Member. In Stages 2-3, Mobile may be used by the person, a family member, a supporter, or a carer depending on how the household works.
 In Stages 2-3, Mobile may send shared updates and structured practical requests where enabled. This is useful when the person present in the home can ask the wider family for practical help without routing every request through the coordinator.
 In Stage 4 care-home mode, Care Home Mobile remains voice playback/recording only. Structured requests stay with Care Home Office.
 
@@ -268,7 +280,7 @@ Once the external filing system is in place, users can start with one calm voice
 
 Add only the communication tools that are useful: family voice messages, practical requests, and structured replies. Mobile is added only where useful from Stage 2 onward. One voice message replaces the last voice message in that channel.
 
-Stage 1 uses [Surname] Family Office, Mobile, and Family Hub. Mobile lets the person or couple hear family voice messages and send one shared voice message to family. From Stage 2, Mobile also gives the person or couple and the family member separate ways to send messages and keep independence. In Stage 3, Mobile helps a carer or supporter work separately from the family member. What changes is who is involved, not a new technical system.
+Stage 1 uses [Surname] Family Office, Mobile, and Family Hub. Mobile lets the person or couple hear family voice messages and send one current shared voice message to the family group, or one current direct voice message to a selected Family Member. From Stage 2, Mobile also gives the person or couple and the family member separate ways to send messages and keep independence. In Stage 3, Mobile helps a carer or supporter work separately from the family member. What changes is who is involved, not a new technical system.
 
 Private notes and records stay outside familyupdates.care, in the person's or Family Organiser's own filing system.
 
