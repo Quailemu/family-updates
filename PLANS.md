@@ -14,7 +14,7 @@ Homepage buttons (only):
 
 Canonical interface sentence:
 The platform has three app interfaces: Family Hub, Care Home Mobile, and Care Home Office.
-The Care Home system is only used in Stage 4, when a person is living in a care home. At that stage, a separate Family system may exist alongside it, but the two systems do not connect.
+The Family system may continue in Stage 4 when a person is living in a care home. The Care Home system is a separate optional addition for Stage 4 only, and only exists where the care home chooses to adopt and run it. The two systems do not connect.
 
 Architecture decision:
 The Family system and Care Home system should be functionally identical wherever possible. Build one shared communication engine and duplicate the existing workspace pattern for the second system, with naming and context controlled by Operational Variables. Changes to core communication behaviour should apply to both systems unless deliberately switched off by settings. Do not build a separate reduced Family-system code path.
@@ -68,6 +68,8 @@ General updates are sent from the care home to keep families informed about day-
 
 Office practical messages are optional structured requests linked to a specific resident (for example visits, attendance, reminders, or item requests). Family members, friends, or other individuals designated by the care home can reply with a minimal structured response (Yes / No / Maybe), optional fixed tick-box options, and an optional short context note. This is still non-urgent and not live messaging.
 
+Family noticeboard notes are optional practical notes from Family Members, visible to all linked Family Members and to the relevant Office workspace. Each Family Member has one current noticeboard note per person/resident. A new note replaces that Family Member's previous note, and the note may be cleared when no longer useful. Noticeboard notes are for practical coordination only, not private health, care, legal, financial, safeguarding, or urgent matters.
+
 For urgent, medical, safeguarding, or other time-sensitive matters, families must contact the care home directly through normal channels.
 
 Service overview purpose statement:
@@ -76,6 +78,8 @@ familyupdates.care is a simple tool for exchanging non-urgent social voice messa
 Office general updates are one-way informational messages.
 
 The care home may also publish an Office practical message that allows each registered Family Member to send a structured non-urgent reply (Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
+
+Where enabled, Family Members may also add one current family noticeboard note for practical coordination. Noticeboard notes are visible to linked Family Members and the relevant Office workspace, and are not private messages.
 
 The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
 
@@ -105,7 +109,11 @@ Essential platform data only:
 
 ## How familyupdates.care Works
 
-familyupdates.care helps families share calm updates, reduce the number of calls, and coordinate practical support without live chat or message history.
+familyupdates.care helps people remain independent for longer by sharing simple updates with family, helping family members keep in touch, and reducing repeated calls through practical requests with structured responses.
+
+If a family member, carer, or supporter becomes involved, the system helps structure and simplify family communication.
+
+If a person later moves into a care home, the Family system may continue for family-side updates and coordination. The same core structure can also be used by a care home, if the care home chooses to adopt and run its own separate Care Home system.
 
 familyupdates.care can be used in levels, so you do not have to use the whole system at once. You can use the full system, or start with simple updates and add more when needed.
 
@@ -113,24 +121,24 @@ The table below gives a quick overview of what becomes available at each stage. 
 
 | Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family Organiser | Stage 3: + Carer | Stage 4: Care home + Family Organiser |
 | ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
-| 1     | Single update to family group                            | âœ“                      | âœ“                             | âœ“                | âœ“ Care home system                      |
-| 2     | Individual voice messages from family members            | âœ“                      | âœ“                             | âœ“                | âœ“ Care home system                      |
-| 3     | Voice message request (+ structured replies from family) | âœ“                      | âœ“                             | âœ“                | âœ“ Care home system                      |
-| 4     | Option: Mobile additional channel*                       | âœ“                      | âœ“                             | âœ“                | âœ“ Care home system                      |
-| 5     | Family Organiser system**                              | â€”                      | â€”                             | â€”                | âœ“                                       |
+| 1     | Single update to family group                            | âœ“                      | âœ“                             | âœ“                | âœ“                                      |
+| 2     | Individual voice messages from family members            | âœ“                      | âœ“                             | âœ“                | âœ“                                      |
+| 3     | Practical requests, noticeboard notes, and structured replies | âœ“                      | âœ“                             | âœ“                | âœ“                                      |
+| 4     | Option: Mobile additional channel*                       | âœ“                      | âœ“                             | âœ“                | âœ“                                      |
+| 5     | Optional separate Care Home system**                     | â€”                      | â€”                             | â€”                | Optional - care home adopted only        |
 
 ### Stage explanations
 
 * **Stage 1: Person/Couple** â€” An individual person or a couple living at home and managing their own day-to-day communication.
 * **Stage 2: + Family Organiser** â€” The person/couple plus a Family Organiser. A Family Organiser is a family member who helps organise communication and practical requests.
 * **Stage 3: + Carer** â€” The person/couple plus a Family Organiser and a paid carer.
-* **Stage 4: Care home + Family Organiser** - The person/couple moves into a care home. The care home uses the Care Home system: Care Home Office, Care Home Mobile, and Care Home Family Hub. The Family Organiser, and maybe one of the couple if still at home and able to use it, may also use a totally separate Family system: Family Office, Family Mobile, and Family Hub.
+* **Stage 4: Care home + Family Organiser** - The person/couple moves into a care home. The Family system may continue for family-side communication and coordination. The Care Home system is a separate optional system: Care Home Office, Care Home Mobile, and Care Home Family Hub. It is only used if the care home chooses to adopt and run it. The two systems do not connect.
 
 ### Notes
 
 *Additional mobile channel: a separate mobile channel that can send a single voice message to the family group, receive family voice messages, and send requests with structured replies.*
 
-**Level 5: Separate Family Organiser system: used separately from the care home system. It allows the Family Organiser to send a single voice message to the family group, receive individual family voice messages to the office, and use requests with structured replies.**
+**Level 5: Optional separate Care Home system: planned and prepared for care home use, but only active where the care home adopts the system itself. The Family system can be tested and used without care home involvement. If the Care Home system is adopted, it remains separate from the Family system.**
 
 ## How the levels work
 
@@ -144,12 +152,17 @@ The external filing system should be organised first, before starting updates, u
 
 Once the external filing system is in place, start small: one calm update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.
 
-Then add only the communication tools that are useful: family voice messages, text updates, practical requests, and structured replies. One item replaces the last item in each channel.
+Then add only the communication tools that are useful: family voice messages, text updates, practical requests, family noticeboard notes, and structured replies. One item replaces the last item in each channel.
+
+Where family noticeboard notes are enabled, each Family Member may keep one current practical note visible to the family group. This is for simple coordination, such as visits or items to bring. It is not a private notes area and must not be used for sensitive health, care, legal, financial, safeguarding, or urgent matters.
 
 The life stage describes who is involved: from managing independently at Stage 1, to help from a family member (Family Organiser) at Stage 2, to having a paid carer at Stage 3, and finally to a care home plus Family Organiser at Stage 4. The communication level describes how much of the system is switched on.
 
 Targeted request boundary:
 Requests and structured replies are for non-urgent, non-essential coordination only. Family requests remain visible to all linked Family Members and may name an intended responder, such as Sarah, Tom, or Coordinator. Office-to-Mobile/carer requests are a separate working channel where enabled. Replies use fixed structured choices, optional fixed tick-boxes, and an optional short context note only: no private chat, no threads, and no back-and-forth conversation. Essential, urgent, sensitive, or time-critical matters should use normal direct communication outside familyupdates.care, such as phone, text, WhatsApp, email, or existing care-home channels.
+
+Family noticeboard boundary:
+Noticeboard notes are transparent practical notes, visible to linked Family Members and the relevant Office workspace. Each Family Member has one current note per person/resident. Noticeboard notes must not be used for private health, care, legal, financial, safeguarding, or urgent matters.
 
 Lifecycle model:
 The app uses four active lifecycle stages to describe the real-life situation. Stage policy controls capabilities; it must not assign fixed role ownership.

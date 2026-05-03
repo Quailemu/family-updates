@@ -12,6 +12,7 @@ It supports:
 - Playing the resident's current shared reply
 - Playing current Office general update
 - Submitting structured replies to an Office practical message
+- Adding one current family noticeboard note where practical coordination is enabled
 
 ## How messages work
 
@@ -40,6 +41,14 @@ You can reply with:
 - Yes / No / Maybe
 - Optional tick-box selections
 - Optional short context note
+
+### Family noticeboard
+
+Where enabled, you can add one current practical note visible to linked Family Members and the relevant Office workspace.
+
+A new noticeboard note from you replaces your previous note. You can clear your note when it is no longer useful.
+
+Use noticeboard notes for simple practical updates, such as visits or items to bring. Do not use them for private health, care, legal, financial, safeguarding, or urgent matters.
 
 ## Service style
 

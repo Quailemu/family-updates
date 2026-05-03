@@ -5164,7 +5164,7 @@ def get_lifecycle_stage_setup_note(stage_value: object) -> str:
         1: "Stage 1: an individual or couple is at home. familyupdates.care can start with one calm family voice update and add more only when useful.",
         2: "Stage 2: support from a family member begins. The aim is to make the coordination role manageable without taking over the person's life.",
         3: "Stage 3: support from a family member plus a carer, supporter, or regular helper is involved at home. The same shared system keeps practical communication clear.",
-        4: "Stage 4: the person is living in a care home, with external and separate support from a family member. The Care Home system stays separate from any Family system workspace.",
+        4: "Stage 4: the person is living in a care home, with external and separate support from a family member. The Family system may continue for family-side coordination. The Care Home system is optional and only exists where the care home adopts and runs it.",
     }
     return notes.get(stage, "")
 
@@ -5215,13 +5215,19 @@ def render_stage_level_capability_tables(access_token: str | None = None) -> Non
 
     st.markdown(
         """
+familyupdates.care helps people remain independent for longer by sharing simple updates with family, helping family members keep in touch, and reducing repeated calls through practical requests with structured responses.
+
+If a family member, carer, or supporter becomes involved, the system helps structure and simplify family communication.
+
+If a person later moves into a care home, the Family system may continue for family-side updates and coordination. The same core structure can also be used by a care home, if the care home chooses to adopt and run its own separate Care Home system.
+
 | Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family Organiser | Stage 3: + Carer | Stage 4: Care home + Family Organiser |
 | ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
-| 1     | Single update to family group                            | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
-| 2     | Individual voice messages from family members            | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
-| 3     | Voice message request (+ structured replies from family) | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
-| 4     | Option: Mobile additional channel                        | Yes                    | Yes                           | Yes              | Yes - Care Home system                  |
-| 5     | Separate Family Organiser system                         | -                      | -                             | -                | Yes                                     |
+| 1     | Single update to family group                            | Yes                    | Yes                           | Yes              | Yes                                     |
+| 2     | Individual voice messages from family members            | Yes                    | Yes                           | Yes              | Yes                                     |
+| 3     | Practical requests, noticeboard notes, and structured replies | Yes                    | Yes                           | Yes              | Yes                                     |
+| 4     | Option: Mobile additional channel                        | Yes                    | Yes                           | Yes              | Yes                                     |
+| 5     | Optional separate Care Home system                       | -                      | -                             | -                | Optional - care home adopted only       |
 
 The life stage describes who is involved: from managing independently at Stage 1, to help from a family member (Family Organiser) at Stage 2, to having a paid carer at Stage 3, and finally to a care home plus Family Organiser at Stage 4. The communication level describes how much of the system is switched on.
 
@@ -5239,7 +5245,7 @@ Text is available for short updates with no replies. One text replaces the last 
 
 **Stage 3: + Carer** - The person/couple plus a Family Organiser and a paid carer.
 
-**Stage 4: Care home + Family Organiser** - The person/couple moves into a care home. The care home uses the Care Home system: Care Home Office, Care Home Mobile, and Care Home Family Hub. The Family Organiser, and maybe one of the couple if still at home and able to use it, may also use a totally separate Family system: Family Office, Family Mobile, and Family Hub.
+**Stage 4: Care home + Family Organiser** - The person/couple moves into a care home. The Family system may continue for family-side communication and coordination. The Care Home system is a separate optional system: Care Home Office, Care Home Mobile, and Care Home Family Hub. It is only used if the care home chooses to adopt and run it. The two systems do not connect.
 
 #### Not for urgent matters
 
@@ -5291,9 +5297,9 @@ def get_communication_level_label(level_value: object) -> str:
     labels = {
         1: "Level 1 - Single update to family group",
         2: "Level 2 - Individual voice messages from family members",
-        3: "Level 3 - Voice message request with structured replies",
+        3: "Level 3 - Practical requests, noticeboard notes, and structured replies",
         4: "Level 4 - Optional Mobile additional channel",
-        5: "Level 5 - Separate Family Organiser system",
+        5: "Level 5 - Optional separate Care Home system",
     }
     return labels.get(level, f"Level {level}")
 
@@ -5309,7 +5315,7 @@ def get_communication_level_policy(level_value: object) -> dict[str, object]:
         "enable_practical_requests": level >= 3,
         "enable_structured_replies": level >= 3,
         "enable_full_coordination": level >= 4,
-        "enable_family_coordinator_separate_system": level >= 5,
+        "enable_optional_care_home_system": level >= 5,
     }
 
 
@@ -6963,6 +6969,157 @@ def fetch_shared_family_practical_responses(
         return rows
     except Exception:
         return []
+
+
+def fetch_family_noticeboard_notes(
+    resident_id: str,
+    access_token: str | None,
+) -> list[dict]:
+    if not resident_id:
+        return []
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return []
+    family_rel = _family_user_relation_name(supabase)
+    try:
+        resp = (
+            supabase.table("family_noticeboard_notes")
+            .select(f"id, family_user_id, note_body, {family_rel}(display_name)")
+            .eq("resident_id", resident_id)
+            .order("updated_at", desc=True)
+            .execute()
+        )
+        rows = []
+        for row in resp.data or []:
+            family_details = row.get(family_rel) or {}
+            rows.append(
+                {
+                    "id": str(row.get("id") or "").strip(),
+                    "family_user_id": str(row.get("family_user_id") or "").strip(),
+                    "contact_name": str(family_details.get("display_name") or "Family Member"),
+                    "note_body": str(row.get("note_body") or "").strip(),
+                }
+            )
+        return rows
+    except Exception:
+        return []
+
+
+def upsert_family_noticeboard_note(
+    resident_id: str,
+    care_home_id: str,
+    family_user_id: str,
+    note_body: str,
+    access_token: str | None,
+) -> tuple[bool, str]:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, error
+    resident_id = str(resident_id or "").strip()
+    care_home_id = str(care_home_id or "").strip()
+    family_user_id = str(family_user_id or "").strip()
+    note_value = str(note_body or "").strip()
+    if not resident_id or not care_home_id or not family_user_id:
+        return False, "Your Family Member mapping could not be found. Please sign in again."
+    if not note_value:
+        return False, "Write a short practical note first."
+    if len(note_value) > 500:
+        note_value = note_value[:500]
+    now_iso = __import__("datetime").datetime.utcnow().isoformat()
+    payload = {
+        "care_home_id": care_home_id,
+        "resident_id": resident_id,
+        "family_user_id": family_user_id,
+        "note_body": note_value,
+        "updated_at": now_iso,
+    }
+    try:
+        try:
+            (
+                supabase.table("family_noticeboard_notes")
+                .upsert(payload, on_conflict="resident_id,family_user_id")
+                .execute()
+            )
+        except Exception:
+            existing_resp = (
+                supabase.table("family_noticeboard_notes")
+                .select("id")
+                .eq("resident_id", resident_id)
+                .eq("family_user_id", family_user_id)
+                .limit(1)
+                .execute()
+            )
+            existing_id = (
+                str(existing_resp.data[0].get("id") or "").strip()
+                if existing_resp.data
+                else ""
+            )
+            if existing_id:
+                (
+                    supabase.table("family_noticeboard_notes")
+                    .update(payload)
+                    .eq("id", existing_id)
+                    .execute()
+                )
+            else:
+                payload["created_at"] = now_iso
+                supabase.table("family_noticeboard_notes").insert(payload).execute()
+        return True, "Noticeboard note saved."
+    except Exception as exc:
+        return False, str(exc)
+
+
+def clear_family_noticeboard_note(
+    note_id: str,
+    access_token: str | None,
+) -> tuple[bool, str]:
+    note_id = str(note_id or "").strip()
+    if not note_id:
+        return False, "Noticeboard note not found."
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, error
+    try:
+        supabase.table("family_noticeboard_notes").delete().eq("id", note_id).execute()
+        return True, "Noticeboard note cleared."
+    except Exception as exc:
+        return False, str(exc)
+
+
+def render_family_noticeboard_notes_for_staff(
+    resident_id: str,
+    access_token: str | None,
+    *,
+    allow_clear: bool,
+    key_prefix: str,
+) -> None:
+    noticeboard_notes = fetch_family_noticeboard_notes(resident_id, access_token)
+    st.markdown("**Family noticeboard**")
+    st.caption(
+        "Current practical notes from Family Members. No chat, no threads, and no urgent or sensitive matters."
+    )
+    if not noticeboard_notes:
+        st.caption("No family noticeboard notes yet.")
+        return
+    for notice in noticeboard_notes:
+        notice_id = str(notice.get("id") or "").strip()
+        contact_name = str(notice.get("contact_name") or "Family Member").strip()
+        note_body = str(notice.get("note_body") or "").strip()
+        if not note_body:
+            continue
+        st.markdown(f"- {contact_name}: {note_body}")
+        if allow_clear and notice_id:
+            if st.button(
+                f"Clear note from {contact_name}",
+                key=f"{key_prefix}_noticeboard_clear_{resident_id}_{notice_id}",
+                use_container_width=True,
+            ):
+                ok, message = clear_family_noticeboard_note(notice_id, access_token)
+                if ok:
+                    st.success(message)
+                    st.rerun()
+                else:
+                    st.error(message)
 
 
 def upsert_family_practical_response(
@@ -11081,6 +11238,79 @@ def render_family_send() -> None:
                         st.caption("No other structured responses yet.")
                 else:
                     st.caption(f"No open requests for this {subject_singular}.")
+
+            with st.container(border=True):
+                render_family_flow_title(
+                    f"Family noticeboard ({family_display_name})",
+                    "practical",
+                )
+                st.caption(
+                    "Visible to linked Family Members. Use this for practical updates only, not private health, care, legal, financial, or urgent matters."
+                )
+                noticeboard_notes = fetch_family_noticeboard_notes(resident_id, access_token)
+                own_notice = next(
+                    (
+                        note
+                        for note in noticeboard_notes
+                        if str(note.get("family_user_id") or "").strip() == family_user_id
+                    ),
+                    None,
+                )
+                family_notice_body = st.text_area(
+                    "Your current practical note",
+                    value=str((own_notice or {}).get("note_body") or ""),
+                    key=f"family_noticeboard_note_{resident_id}",
+                    max_chars=500,
+                    placeholder="Example: I am visiting Saturday afternoon.",
+                )
+                family_notice_cols = st.columns(2)
+                with family_notice_cols[0]:
+                    if st.button(
+                        "Save noticeboard note",
+                        key=f"family_noticeboard_save_{resident_id}",
+                        use_container_width=True,
+                    ):
+                        ok, message = upsert_family_noticeboard_note(
+                            resident_id,
+                            str(resident.get("care_home_id") or ""),
+                            family_user_id,
+                            family_notice_body,
+                            access_token,
+                        )
+                        if ok:
+                            st.success(message)
+                            st.rerun()
+                        else:
+                            st.error(message)
+                with family_notice_cols[1]:
+                    if own_notice and st.button(
+                        "Clear my note",
+                        key=f"family_noticeboard_clear_{resident_id}_{own_notice.get('id')}",
+                        use_container_width=True,
+                    ):
+                        ok, message = clear_family_noticeboard_note(
+                            str(own_notice.get("id") or ""),
+                            access_token,
+                        )
+                        if ok:
+                            st.success(message)
+                            st.rerun()
+                        else:
+                            st.error(message)
+                other_noticeboard_notes = [
+                    note
+                    for note in noticeboard_notes
+                    if str(note.get("family_user_id") or "").strip() != family_user_id
+                ]
+                st.caption("Current notes from other Family Members:")
+                if other_noticeboard_notes:
+                    for notice in other_noticeboard_notes:
+                        contact_name = str(notice.get("contact_name") or "Family Member").strip()
+                        note_body = str(notice.get("note_body") or "").strip()
+                        if note_body:
+                            st.markdown(f"- {contact_name}: {note_body}")
+                else:
+                    st.caption("No other noticeboard notes yet.")
 
         with outbound_section_slot.container(border=True):
             render_family_flow_title(
@@ -15389,6 +15619,13 @@ def render_care_hub() -> None:
                                 st.rerun()
                             else:
                                 st.error(close_message)
+
+                    render_family_noticeboard_notes_for_staff(
+                        resident_id,
+                        access_token,
+                        allow_clear=True,
+                        key_prefix="office",
+                    )
 
     # Navigation rendered at the top of the page.
 
