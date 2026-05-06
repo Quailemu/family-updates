@@ -9337,6 +9337,78 @@ def render_home(active: str) -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
+        st.markdown("## Try one-message communication")
+        st.caption(
+            "This public tester stores messages only in this browser session. "
+            "Each new message replaces the previous one from that person."
+        )
+        tester_state = st.session_state.setdefault(
+            "public_one_message_tester",
+            {
+                "a_name": "Person A",
+                "b_name": "Person B",
+                "a_to_b": "I will be there at 3.",
+                "b_to_a": "Great. Please bring milk.",
+            },
+        )
+        name_cols = st.columns(2, gap="small")
+        with name_cols[0]:
+            tester_state["a_name"] = st.text_input(
+                "First person",
+                value=str(tester_state.get("a_name") or "Person A"),
+                key="one_message_tester_a_name",
+            )
+        with name_cols[1]:
+            tester_state["b_name"] = st.text_input(
+                "Second person",
+                value=str(tester_state.get("b_name") or "Person B"),
+                key="one_message_tester_b_name",
+            )
+        a_name = str(tester_state.get("a_name") or "Person A").strip() or "Person A"
+        b_name = str(tester_state.get("b_name") or "Person B").strip() or "Person B"
+        message_cols = st.columns(2, gap="small")
+        with message_cols[0]:
+            st.markdown(f"**Latest from {a_name} to {b_name}**")
+            st.info(str(tester_state.get("a_to_b") or "No current message."))
+            with st.form("one_message_tester_a_form", clear_on_submit=True):
+                next_a_message = st.text_area(
+                    f"Replace {a_name}'s message",
+                    key="one_message_tester_a_text",
+                    max_chars=220,
+                )
+                if st.form_submit_button("Replace message"):
+                    cleaned_message = next_a_message.strip()
+                    if cleaned_message:
+                        tester_state["a_to_b"] = cleaned_message
+                        st.rerun()
+        with message_cols[1]:
+            st.markdown(f"**Latest from {b_name} to {a_name}**")
+            st.info(str(tester_state.get("b_to_a") or "No current message."))
+            with st.form("one_message_tester_b_form", clear_on_submit=True):
+                next_b_message = st.text_area(
+                    f"Replace {b_name}'s message",
+                    key="one_message_tester_b_text",
+                    max_chars=220,
+                )
+                if st.form_submit_button("Replace message"):
+                    cleaned_message = next_b_message.strip()
+                    if cleaned_message:
+                        tester_state["b_to_a"] = cleaned_message
+                        st.rerun()
+        st.markdown(
+            "No thread is created. No history is shown. If you need a reply, send a request in the real app."
+        )
+        if st.button("Reset tester", key="one_message_tester_reset"):
+            st.session_state["public_one_message_tester"] = {
+                "a_name": "Person A",
+                "b_name": "Person B",
+                "a_to_b": "I will be there at 3.",
+                "b_to_a": "Great. Please bring milk.",
+            }
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("## A simple way to explore the idea")
         st.markdown(
             "familyupdates.care can be introduced through a one-to-one, activity-based session in the care home."
@@ -12365,6 +12437,74 @@ def render_pr_homepage() -> None:
         st.caption(
             "Landing artwork missing: add infographic.png in assets/."
         )
+
+    st.markdown("## Try one-message communication")
+    st.caption(
+        "This public tester stores messages only in this browser session. "
+        "Each new message replaces the previous one from that person."
+    )
+    tester_state = st.session_state.setdefault(
+        "public_one_message_tester_home",
+        {
+            "a_name": "Person A",
+            "b_name": "Person B",
+            "a_to_b": "I will be there at 3.",
+            "b_to_a": "Great. Please bring milk.",
+        },
+    )
+    name_cols = st.columns(2, gap="small")
+    with name_cols[0]:
+        tester_state["a_name"] = st.text_input(
+            "First person",
+            value=str(tester_state.get("a_name") or "Person A"),
+            key="one_message_home_a_name",
+        )
+    with name_cols[1]:
+        tester_state["b_name"] = st.text_input(
+            "Second person",
+            value=str(tester_state.get("b_name") or "Person B"),
+            key="one_message_home_b_name",
+        )
+    a_name = str(tester_state.get("a_name") or "Person A").strip() or "Person A"
+    b_name = str(tester_state.get("b_name") or "Person B").strip() or "Person B"
+    message_cols = st.columns(2, gap="small")
+    with message_cols[0]:
+        st.markdown(f"**Latest from {a_name} to {b_name}**")
+        st.info(str(tester_state.get("a_to_b") or "No current message."))
+        with st.form("one_message_home_a_form", clear_on_submit=True):
+            next_message = st.text_area(
+                f"Replace {a_name}'s message",
+                key="one_message_home_a_text",
+                max_chars=220,
+            )
+            if st.form_submit_button("Replace message"):
+                if next_message.strip():
+                    tester_state["a_to_b"] = next_message.strip()
+                    st.rerun()
+    with message_cols[1]:
+        st.markdown(f"**Latest from {b_name} to {a_name}**")
+        st.info(str(tester_state.get("b_to_a") or "No current message."))
+        with st.form("one_message_home_b_form", clear_on_submit=True):
+            next_message = st.text_area(
+                f"Replace {b_name}'s message",
+                key="one_message_home_b_text",
+                max_chars=220,
+            )
+            if st.form_submit_button("Replace message"):
+                if next_message.strip():
+                    tester_state["b_to_a"] = next_message.strip()
+                    st.rerun()
+    st.caption(
+        "No thread is created. No history is shown. If you need a reply, send a request in the real app."
+    )
+    if st.button("Reset tester", key="one_message_home_reset"):
+        st.session_state["public_one_message_tester_home"] = {
+            "a_name": "Person A",
+            "b_name": "Person B",
+            "a_to_b": "I will be there at 3.",
+            "b_to_a": "Great. Please bring milk.",
+        }
+        st.rerun()
 
     if st.button("How it works", key="pr_entry_how_it_works", use_container_width=True):
         set_route("/public/how-it-works")
