@@ -2269,15 +2269,6 @@ def normalize_auth_hash_fragment_on_login_routes() -> None:
     var raw = hash.substring(1);
     if (raw.indexOf("access_token=") === -1 && raw.indexOf("refresh_token=") === -1) return;
 
-    var markerKey = "vm_hash_normalized_sig_v1";
-    var sig = raw.slice(0, 180);
-    try {
-      if (topWin.sessionStorage && topWin.sessionStorage.getItem(markerKey) === sig) return;
-      if (topWin.sessionStorage) topWin.sessionStorage.setItem(markerKey, sig);
-    } catch (e) {
-      // Continue even if sessionStorage is unavailable.
-    }
-
     var url = new URL(topWin.location.href);
     var hashParams = new URLSearchParams(raw);
     allowedKeys.forEach(function (k) {
