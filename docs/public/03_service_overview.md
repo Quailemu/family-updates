@@ -2,18 +2,20 @@
 
 # Service overview
 
-Communication participants: residents, Family Members, and Care Home system (Care Home Office and Care Home Mobile).
+Communication participants: the person being supported, Family Members, the Family Organiser, and optional carers.
 
-familyupdates.care helps families share calm voice updates, reduce the number of calls, and coordinate practical support without live chat or message history.
+familyupdates.care helps families structure non-urgent communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
 
 ## Purpose
 
-familyupdates.care is a simple system for non-urgent social voice messages between a resident and Family Members.
+familyupdates.care is a simple system for everyday communication, reassurance, structured requests, noticeboard-style information, and family messages.
 
-It also supports non-urgent care-home communication to family in two Office modes:
+- one current update to family
+- one current request with structured replies
+- one current message per person
+- one current noticeboard note per Family Member
 
-- Office general update (one-way to all Family Members)
-- Office practical message (structured family reply to a specific office message)
+A care home could run its own completely separate Care Home system using the same model, but it does not connect to the Family Organiser's app. There is no planned direct connection between the two systems at this stage.
 
 ## Core message model
 
@@ -21,6 +23,8 @@ It also supports non-urgent care-home communication to family in two Office mode
 - A new message replaces the previous message in that channel.
 - No archive, no scrolling thread, no live chat.
 - Message date is shown in Family Hub and Care Home Mobile (date only, no time).
+
+The Family Organiser tells essential contacts how often messages are checked, for example once or twice a day. Messages inside the app are treated as non-urgent.
 
 ## Transcript assist (optional)
 
@@ -30,23 +34,22 @@ It also supports non-urgent care-home communication to family in two Office mode
 
 ## Main flows
 
-### Family -> Resident
+### Family Member -> person being supported
 
-Each Family Member channel keeps only the latest Family -> Resident message.
-Care Home Mobile playback is one-at-a-time in a fair rotating order, with unplayed messages first.
+Each Family Member channel keeps only the latest Family Member -> person message.
 
-### Resident -> Family
+### Person being supported -> Family
 
-Resident -> Family channels keep only the latest shared resident reply to the family group, and the latest direct resident reply to a selected Family Member.
+Person -> Family channels keep only the latest shared message to the family group, and the latest direct message to a selected Family Member.
 
-### Office -> Family (general update)
+### Family Organiser -> Family (general update)
 
-One-way broadcast to all Family Members for non-urgent, non-medical information and reassurance.
+One current update to all Family Members for non-urgent, non-medical information and reassurance.
 General updates do not accept replies in the update channel.
 
-### Office practical message (structured reply)
+### Family Organiser practical request (structured reply)
 
-Office can publish a practical message for a resident (for example visits, attendance, reminders, item requests).
+The Family Organiser can publish a practical request (for example visits, attendance, reminders, item requests).
 Each Family Member can submit:
 
 - Yes / No / Maybe
@@ -59,6 +62,8 @@ This is not a live conversation and is not monitored for emergencies.
 
 This service is for social and practical non-urgent communication only.
 
+Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact.
+
 It is not for:
 
 - medical updates
@@ -66,4 +71,4 @@ It is not for:
 - safeguarding communication
 - urgent or emergency enquiries
 
-For those matters, contact the care home directly using normal channels.
+For those matters, follow the agreed emergency protocol, then phone the agreed emergency contact.

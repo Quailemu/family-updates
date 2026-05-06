@@ -1,12 +1,28 @@
 ﻿![logo](../../assets/logo.png)
 
+![familyupdates.care infographic](../../assets/infographic.png)
+
 # How familyupdates.care works
 
-familyupdates.care helps people remain independent for longer by supporting simple, efficient family communication.
+familyupdates.care helps structure non-urgent family communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
 
-One update can be shared with the family group, and each new update replaces the last, so the information stays current without threads or message history. Family members and the person can keep in touch through selected voice-message channels, respond to practical requests using structured replies, and add practical notes to a shared family noticeboard.
+Everyday communication only. No threads, no history, no search. If something needs to be kept, make a note of it outside the app.
 
-If a family member, paid carer, or supporter becomes involved, these tools help keep communication clear and manageable.
+familyupdates.care deliberately limits communication so it stays workable. It keeps communication current and bounded, rather than complete and searchable.
+
+Families use the app for everyday communication, reassurance, structured requests, noticeboard-style information, and family messages. The Family Organiser tells essential contacts how often messages are checked, for example once or twice a day.
+
+familyupdates.care helps the Family Organiser keep family communication more structured, while giving the person being supported a realistic, supported way to keep in touch. It creates clear boundaries: one current update, one current request, and one current message per person. No threads, no message build-up, and no expectation of instant replies.
+
+familyupdates.care does not remove the need for care, support, or professional help. But where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded.
+
+## Emergency and everyday communication
+
+Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact.
+
+Emergencies follow the agreed protocol, otherwise all messages are treated as non-urgent.
+
+Families use the app for everyday communication. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly.
 
 ## What the app does
 
@@ -65,7 +81,7 @@ Voice recording needs a browser with microphone permission. If recording is unav
 
 **Stage 4: Care home + Family Organiser** - The person/couple moves into a care home.
 
-In Stage 4, the Family system may continue for family-side updates and coordination. The same core structure can also be used by a care home, if the care home chooses to adopt and run its own separate Care Home system. The two systems do not connect.
+In Stage 4, the Family system may continue for family-side updates and coordination. A care home could choose to run its own completely separate Care Home system using the same model, but it does not connect to the Family Organiser's app. There is no planned direct connection between the two systems at this stage.
 
 ## Family Organiser
 

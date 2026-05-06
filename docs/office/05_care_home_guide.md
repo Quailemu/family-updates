@@ -1,15 +1,15 @@
 ![logo](../../assets/logo.png)
 
-![familyupdates.care cartoon overview](../../assets/cartoon-familyupdates.png)
+![familyupdates.care infographic](../../assets/infographic.png)
 
 ## Purpose
 
 This guide is for care home managers and staff.
-It explains how familyupdates.care is used day to day across Care Home Mobile and Care Home Office, and how those care-home tools connect to Care Home Family Hub, in line with the agreed scope for non-urgent communication, and not for safeguarding matters.
+It explains how familyupdates.care is used day to day for structured, non-urgent family communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
 
 ## System structure
 
-The Care Home system provides three app interfaces connected to a resident's care-home communication setup:
+If a care home later runs its own completely separate system, the Care Home system provides three app interfaces for that care-home setup:
 
 - Care Home Mobile: the operational interface used by carers to support the resident and manage voice messaging
 - Care Home Office: the office/administration interface used by care-home staff
@@ -19,7 +19,9 @@ Each interface has its own controls for creating and managing the messages it se
 
 In this guide, **Family Member** means a person the care home has decided may access a resident in the service.
 
-The Care Home system is separate from any Family system used by a Family Organiser. The two systems may relate to the same real-life person, but they do not connect inside familyupdates.care.
+The Care Home system is separate from any Family system used by a Family Organiser. The two systems may relate to the same real-life person, but they do not connect inside familyupdates.care, and there is no planned direct connection at this stage.
+
+In the family-facing version, the app does not communicate directly with the care home. Care home updates usually go to the Family Organiser by the care home's normal method, such as email. The Family Organiser may then post an organiser update or request in the app if appropriate.
 
 The messaging system uses four channel types linked to each resident:
 
@@ -27,6 +29,8 @@ The messaging system uses four channel types linked to each resident:
 - A shared Resident -> Family message channel to the family group, plus a direct Resident -> Family message channel to a selected Family Member
 - A one-way Office update channel used by the care home to send updates to Family Members
 - An Office practical text message channel used by the care home to request structured family replies
+
+Carers may send their own professional care updates using their own system. They may also use the app directly for family communication where enabled. If they do not use the app, they can text the Family Organiser, who may post an organiser update or request if appropriate.
 
 ## Message playback and control
 

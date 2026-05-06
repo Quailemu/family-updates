@@ -7,6 +7,17 @@ Communication participants: residents, Family Members, and Care Home system (Car
 ## What Family Hub is for
 
 Family Hub is for Family Members granted by the care home.
+
+familyupdates.care helps structure non-urgent family communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
+
+Everyday communication only. No threads, no history, no search. If something needs to be kept, make a note of it outside the app.
+
+familyupdates.care deliberately limits communication so it stays workable. It keeps communication current and bounded, rather than complete and searchable.
+
+Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact.
+
+The Family Organiser has full access to the family tools. Family Members and carers can use their own enabled channels directly.
+
 It supports:
 - Family -> Resident social voice messages
 - Playing the resident's current shared reply

@@ -315,6 +315,7 @@ AUTH_STATE_KEYS = (
     "auth_email",
     "active_role",
     "active_care_home_id",
+    "care_access_level",
     "mfa_verified",
 )
 
@@ -520,14 +521,26 @@ def restore_auth_session_from_cookie() -> None:
                 .limit(1)
                 .execute()
             )
-            care_resp = (
-                supabase.table("care_home_users")
-                .select("care_home_id")
-                .eq("auth_user_id", auth_uid)
-                .eq("active", True)
-                .limit(1)
-                .execute()
-            )
+            try:
+                care_resp = (
+                    supabase.table("care_home_users")
+                    .select("care_home_id, care_access_level")
+                    .eq("auth_user_id", auth_uid)
+                    .eq("active", True)
+                    .limit(1)
+                    .execute()
+                )
+            except Exception as exc:
+                if not _is_missing_column_error(exc, "care_access_level"):
+                    raise
+                care_resp = (
+                    supabase.table("care_home_users")
+                    .select("care_home_id")
+                    .eq("auth_user_id", auth_uid)
+                    .eq("active", True)
+                    .limit(1)
+                    .execute()
+                )
             family_row = family_resp.data[0] if family_resp.data else None
             care_row = care_resp.data[0] if care_resp.data else None
             if family_row:
@@ -536,6 +549,9 @@ def restore_auth_session_from_cookie() -> None:
             elif care_row:
                 st.session_state["active_role"] = "care_hub"
                 st.session_state["active_care_home_id"] = care_row.get("care_home_id")
+                st.session_state["care_access_level"] = normalize_care_access_level(
+                    care_row.get("care_access_level")
+                )
         except Exception:
             # Keep auth tokens; route-level access checks still fail closed if mapping is missing.
             pass
@@ -1744,7 +1760,7 @@ def _apply_dev_auth_bypass_session(app_variant: str) -> tuple[bool, str | None]:
         else:
             query = (
                 admin_client.table("care_home_users")
-                .select("auth_user_id, care_home_id")
+                .select("auth_user_id, care_home_id, care_access_level")
                 .eq("active", True)
             )
             if care_home_id:
@@ -1761,6 +1777,10 @@ def _apply_dev_auth_bypass_session(app_variant: str) -> tuple[bool, str | None]:
         st.session_state["refresh_token"] = DEV_AUTH_BYPASS_TOKEN
         st.session_state["active_role"] = role
         st.session_state["active_care_home_id"] = record.get("care_home_id")
+        if role == "care_hub":
+            st.session_state["care_access_level"] = normalize_care_access_level(
+                record.get("care_access_level")
+            )
         if app_variant == VARIANT_MOBILE:
             mark_mobile_pin_verified()
         if app_variant == VARIANT_OFFICE:
@@ -1821,12 +1841,17 @@ def _resolve_auth_user_id_by_email(admin_client: object, email: str) -> str:
     return ""
 
 
-def invite_user(admin_client: object, email: str) -> tuple[bool, str | None, str | None]:
+def invite_user(
+    admin_client: object,
+    email: str,
+    redirect_to_override: str = "",
+) -> tuple[bool, str | None, str | None]:
     normalized_email = email.strip().lower()
     if not normalized_email:
         return False, None, "Email is required."
     redirect_to = (
-        os.getenv("FAMILY_INVITE_REDIRECT_URL", "").strip()
+        str(redirect_to_override or "").strip()
+        or os.getenv("FAMILY_INVITE_REDIRECT_URL", "").strip()
         or os.getenv("PASSWORD_RESET_REDIRECT_URL", "").strip()
     )
     if not redirect_to:
@@ -1855,6 +1880,25 @@ def invite_user(admin_client: object, email: str) -> tuple[bool, str | None, str
     if not auth_user_id:
         return False, None, "Invite sent but auth user ID could not be resolved."
     return True, auth_user_id, None
+
+
+CARE_ACCESS_OFFICE = "office"
+CARE_ACCESS_MOBILE = "mobile"
+
+
+def normalize_care_access_level(value: object) -> str:
+    candidate = str(value or "").strip().lower()
+    if candidate == CARE_ACCESS_MOBILE:
+        return CARE_ACCESS_MOBILE
+    return CARE_ACCESS_OFFICE
+
+
+def current_care_access_level() -> str:
+    return normalize_care_access_level(st.session_state.get("care_access_level"))
+
+
+def current_user_can_access_office() -> bool:
+    return current_care_access_level() == CARE_ACCESS_OFFICE
 
 
 def get_magic_link_redirect_url(app_variant: str) -> str:
@@ -3012,14 +3056,26 @@ def get_mapping_status() -> tuple[bool, bool, str | None, dict | None, dict | No
                             family_record["auth_user_id"] = auth_uid
                         except Exception:
                             pass
-            care_resp = (
-                supabase.table("care_home_users")
-                .select("id, care_home_id")
-                .eq("auth_user_id", auth_uid)
-                .eq("active", True)
-                .limit(1)
-                .execute()
-            )
+            try:
+                care_resp = (
+                    supabase.table("care_home_users")
+                    .select("id, care_home_id, care_access_level")
+                    .eq("auth_user_id", auth_uid)
+                    .eq("active", True)
+                    .limit(1)
+                    .execute()
+                )
+            except Exception as exc:
+                if not _is_missing_column_error(exc, "care_access_level"):
+                    raise
+                care_resp = (
+                    supabase.table("care_home_users")
+                    .select("id, care_home_id")
+                    .eq("auth_user_id", auth_uid)
+                    .eq("active", True)
+                    .limit(1)
+                    .execute()
+                )
             care_record = care_resp.data[0] if care_resp.data else None
             family_found = family_record is not None
             care_found = care_record is not None
@@ -3358,6 +3414,7 @@ def render_how_it_works_diagram_and_notes() -> None:
 
 def resolve_cartoon_asset() -> Path | None:
     preferred_names = [
+        "infographic.png",
         "familyupdates.png",
         "cartoon-familyupdates.png",
         "cartoon-voicemailcare.png",
@@ -3798,6 +3855,14 @@ def require_care_access() -> None:
         if care_record:
             st.session_state["active_role"] = "care_hub"
             st.session_state["active_care_home_id"] = care_record.get("care_home_id")
+            st.session_state["care_access_level"] = normalize_care_access_level(
+                care_record.get("care_access_level")
+            )
+        if runtime_variant == VARIANT_OFFICE and not current_user_can_access_office():
+            render_wrong_variant(
+                "This account has Mobile-only access. It cannot use Office setup, registration, operational variables, security, or billing."
+            )
+            st.stop()
         if runtime_variant == VARIANT_OFFICE:
             st.session_state["office_login_explicit"] = True
         if runtime_variant == VARIANT_OFFICE and is_office_mfa_required():
@@ -5167,7 +5232,7 @@ def get_lifecycle_stage_setup_note(stage_value: object) -> str:
         1: "Stage 1: an individual or couple is at home. familyupdates.care can start with one calm family voice update and add more only when useful.",
         2: "Stage 2: support from a family member begins. The aim is to make the coordination role manageable without taking over the person's life.",
         3: "Stage 3: support from a family member plus a carer, supporter, or regular helper is involved at home. The same shared system keeps practical communication clear.",
-        4: "Stage 4: the person is living in a care home, with external and separate support from a family member. The Family system may continue for family-side coordination. The Care Home system is optional and only exists where the care home adopts and runs it.",
+        4: "Stage 4: the person is living in a care home, with external and separate support from a family member. The Family system may continue for family-side coordination. A care home could run its own completely separate system using the same model, but it does not connect to the Family Organiser's app.",
     }
     return notes.get(stage, "")
 
@@ -5208,6 +5273,7 @@ def render_dev_stage_level_status(access_token: str | None = None) -> None:
 def render_stage_level_capability_tables(access_token: str | None = None) -> None:
     token = access_token if access_token is not None else st.session_state.get("access_token")
     current_policy: dict[str, object] | None = None
+    render_how_it_works_cartoon()
     if token:
         current_policy = get_lifecycle_policy(
             get_lifecycle_stage(token),
@@ -5218,11 +5284,15 @@ def render_stage_level_capability_tables(access_token: str | None = None) -> Non
 
     st.markdown(
         """
-familyupdates.care helps people remain independent for longer by supporting simple, efficient family communication.
+familyupdates.care helps structure non-urgent family communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
 
-One update can be shared with the family group, and each new update replaces the last, so the information stays current without threads or message history. Family members and the person can keep in touch through selected voice-message channels, respond to practical requests using structured replies, and add practical notes to a shared family noticeboard.
+familyupdates.care deliberately limits communication so it stays workable. It keeps communication current and bounded, rather than complete and searchable.
 
-If a family member, paid carer, or supporter becomes involved, these tools help keep communication clear and manageable.
+Families use the app for everyday communication, reassurance, structured requests, noticeboard-style information, and family messages. The Family Organiser tells essential contacts how often messages are checked, for example once or twice a day.
+
+familyupdates.care helps the Family Organiser keep family communication more structured, while giving the person being supported a realistic, supported way to keep in touch. It creates clear boundaries: one current update, one current request, and one current message per person. No threads, no message build-up, and no expectation of instant replies.
+
+familyupdates.care does not remove the need for care, support, or professional help. But where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded.
 
 #### What the app does
 
@@ -5262,7 +5332,7 @@ Text is available for short updates with no replies. One text replaces the last 
 
 **Stage 4: Care home + Family Organiser** - The person/couple moves into a care home.
 
-In Stage 4, the Family system may continue for family-side updates and coordination. The same core structure can also be used by a care home, if the care home chooses to adopt and run its own separate Care Home system. The two systems do not connect.
+In Stage 4, the Family system may continue for family-side updates and coordination. A care home could choose to run its own completely separate Care Home system using the same model, but it does not connect to the Family Organiser's app. There is no planned direct connection between the two systems at this stage.
 
 #### Not for urgent matters
 
@@ -8156,6 +8226,8 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", get_home_route(app_variant))
             if st.button("How it works", key=f"{menu_key}_office_how_it_works"):
                 clicked_action = ("route", "/care-hub-office/how-it-works")
+            if st.button("Setup family system", key=f"{menu_key}_setup_family_system"):
+                clicked_action = ("route", "/care-hub/setup-family-system")
             if st.button("Register contact", key=f"{menu_key}_register_family"):
                 clicked_action = ("route", "/care-hub/register-family")
             if st.button("Operational variables", key=f"{menu_key}_operational_variables"):
@@ -9242,21 +9314,25 @@ def render_home(active: str) -> None:
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("## Familiar voices")
         st.markdown(
-            "A simple communication tool for care homes, residents, and their families."
+            "A structured, non-urgent family communication system around care."
         )
         st.markdown(
-            "Family members may each send an individual message to a resident at any time, as it is not a live service. "
-            "Carers may play messages for the resident when convenient. Carers may also help residents record one current shared message to the family group, or one current direct message to a selected Family Member."
+            "familyupdates.care separates emergency communication from everyday communication. "
+            "Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact."
         )
         st.markdown(
-            "The care home may also send non-urgent or practical updates, and families may respond with structured text to simple requests."
+            "The app provides one current update to family, one current request, family messages, "
+            "and noticeboard-style information. The Family Organiser has full access to the family tools; "
+            "Family Members and carers can use their own enabled channels directly. One current item replaces the last, "
+            "with no threads, no message build-up, and no pressure to reply instantly."
         )
         st.markdown(
-            "Optional transcript assist is available when recording in Family Hub, Care Home Mobile, and Care Home Office."
+            "Families use the app for everyday communication. Carers may use the app directly where enabled, or text the Family Organiser. "
+            "Care homes may email. The Family Organiser tells essential contacts how often messages are checked, "
+            "for example once or twice a day."
         )
         st.markdown(
-            "There is no message history, no long threads, and it is not live. "
-            "It fits around normal care routines and helps keep communication manageable."
+            "Emergencies follow the agreed protocol, otherwise all messages are treated as non-urgent."
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -9369,8 +9445,8 @@ def render_home(active: str) -> None:
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("<h2>How it works</h2>", unsafe_allow_html=True)
         st.markdown(
-            "familyupdates.care helps families share calm updates, reduce the number of calls, "
-            "and coordinate practical support without live chat or message history."
+            "familyupdates.care helps families structure non-urgent communication around care. "
+            "Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact."
         )
         st.markdown("### Communication participants")
         st.markdown("- A person or couple being supported")
@@ -9498,15 +9574,15 @@ def render_home(active: str) -> None:
     if get_app_variant() == VARIANT_PUBLIC:
         st.markdown("Communication participants")
         st.markdown(
-            "familyupdates.care helps families share calm updates, reduce the number of calls, "
-            "and coordinate practical support without live chat or message history."
+            "familyupdates.care helps families structure non-urgent communication around care. "
+            "Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact."
         )
         st.markdown(
-            "Resident -> Family channels keep the latest shared resident message to the family group, and the latest direct resident message to a selected Family Member. "
-            "The care home can also send a one-way Office update to all Family Members. "
-            "Requests collect quick structured family responses, and the care home makes the final operational decision. "
+            "Person -> Family channels keep the latest shared message to the family group, and the latest direct message to a selected Family Member. "
+            "The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly. "
             "Each Family Member channel keeps only the latest message. "
-            "A new message replaces only the previous message in that channel."
+            "A new message replaces only the previous message in that channel. "
+            "A care home could run its own completely separate Care Home system using the same model, but it does not connect to the Family Organiser's app."
         )
     st.markdown("### Service overview")
     current_variant = resolve_runtime_variant(route_hint=get_route())
@@ -9652,7 +9728,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
         LIFE_FILE_GUIDE_ROUTE: "Life File Guide | familyupdates.care",
     }
     route_descriptions: dict[str, str] = {
-        "/pr-home": "familyupdates.care helps families share calm updates, voice messages, and practical requests without live chat or message history.",
+        "/pr-home": "familyupdates.care helps families structure non-urgent communication around care without live chat or message history.",
         "/public/how-it-works": "How familyupdates.care works across stages, communication levels, updates, voice messages, and practical requests.",
         "/family/login": "Family Hub access for non-urgent social voice messages. Not a live service.",
         "/care-hub/mobile/login": "Care Home Mobile access for staff playback and resident recordings within care routines.",
@@ -10019,6 +10095,7 @@ VARIANT_CONFIG = {
         "allowed_routes": {
             OFFICE_LOGIN_ROUTE,
             OFFICE_HOME_ROUTE,
+            "/care-hub/setup-family-system",
             "/care-hub/register-family",
             "/care-hub/operational-variables",
             "/care-hub/instructions",
@@ -10444,6 +10521,8 @@ def get_office_home_route(is_authed: bool) -> str:
         and st.session_state.get("active_role") == "care_hub"
     )
     if has_care_hub_session:
+        if not current_user_can_access_office():
+            return get_login_route(VARIANT_MOBILE)
         st.session_state["office_login_explicit"] = True
         return get_home_route(VARIANT_OFFICE)
     return get_login_route(VARIANT_OFFICE)
@@ -10800,6 +10879,10 @@ def render_family_send() -> None:
     render_how_it_works_button("family_send_how_it_works")
     family_display_name = st.session_state.get("family_display_name", "Family member")
     st.markdown(f"**Hello {family_display_name}**")
+    st.info(
+        "Everyday communication only. No threads, no history, no search. "
+        "Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact."
+    )
     st.markdown(
         "**Messages are for non-urgent, social contact only. This is not a messaging service to carers or the care home.**"
     )
@@ -10847,8 +10930,8 @@ def render_family_send() -> None:
         else:
             st.session_state.pop("circle_person_display_name", None)
     render_care_home_identity_banner(access_token)
-    if not family_messaging_enabled:
-        st.info("Family messaging is inactive for the current lifecycle stage.")
+    if not (family_messaging_enabled or office_channel_enabled or requests_enabled):
+        st.info("Communication is inactive for the current lifecycle stage.")
 
     if not residents:
         st.info(f"No {subject_plural} are currently linked to your Family Member account.")
@@ -10905,6 +10988,12 @@ def render_family_send() -> None:
   background: rgba(46, 142, 117, 0.10);
   border: 1px solid rgba(46, 142, 117, 0.24);
 }
+.family-channel-note {
+  color: rgba(31,31,31,0.62);
+  font-size: 0.88rem;
+  margin: -2px 0 10px 0;
+  line-height: 1.35;
+}
 .family-flow-box {
   border-radius: 10px;
   padding: 10px 10px 2px 10px;
@@ -10924,6 +11013,13 @@ def render_family_send() -> None:
         safe_tone = html.escape(tone)
         st.markdown(
             f"<div class='family-flow-title {safe_tone}'>{safe_text}</div>",
+            unsafe_allow_html=True,
+        )
+
+    def render_family_channel_note(text: str) -> None:
+        safe_text = html.escape(text)
+        st.markdown(
+            f"<div class='family-channel-note'>{safe_text}</div>",
             unsafe_allow_html=True,
         )
 
@@ -11020,6 +11116,9 @@ def render_family_send() -> None:
                     ),
                     "inbound",
                 )
+                render_family_channel_note(
+                    "Everyone linked can see this channel."
+                )
                 latest = fetch_latest_message(
                     resident_id,
                     "from_resident",
@@ -11058,6 +11157,9 @@ def render_family_send() -> None:
                     ),
                     "inbound",
                 )
+                render_family_channel_note(
+                    f"Direct current message from {full_name} to you. Other Family Members do not see this channel."
+                )
                 latest_direct = fetch_latest_message(
                     resident_id,
                     "from_resident",
@@ -11094,7 +11196,7 @@ def render_family_send() -> None:
 
         outbound_section_slot = st.container()
 
-        if family_messaging_enabled and office_channel_enabled:
+        if office_channel_enabled:
             with st.container(border=True):
                 office_update_title = (
                     "Shared update to Family"
@@ -11113,6 +11215,9 @@ def render_family_send() -> None:
                 render_family_flow_title(
                     office_update_title,
                     "office",
+                )
+                render_family_channel_note(
+                    "One current organiser update for the family group."
                 )
                 if family_led_mode and main_contact_name:
                     st.caption(f"Family Organiser: {main_contact_name}")
@@ -11139,11 +11244,14 @@ def render_family_send() -> None:
                         unsafe_allow_html=True,
                     )
 
-        if family_messaging_enabled and requests_enabled:
+        if requests_enabled:
             with st.container(border=True):
                 render_family_flow_title(
                     f"Request for family ({family_display_name})",
                     "practical",
+                )
+                render_family_channel_note(
+                    "One current practical request with structured responses, not a discussion thread."
                 )
                 practical_message = fetch_latest_open_office_practical_message(
                     resident_id, access_token, family_user_id=family_user_id
@@ -11310,6 +11418,9 @@ def render_family_send() -> None:
                     f"Family noticeboard ({family_display_name})",
                     "practical",
                 )
+                render_family_channel_note(
+                    "One current practical note from each Family Member. Visible to the family group."
+                )
                 st.caption(
                     "Visible to linked Family Members. Use this for practical updates only, not private health, care, legal, financial, or urgent matters."
                 )
@@ -11378,14 +11489,17 @@ def render_family_send() -> None:
                 else:
                     st.caption("No other noticeboard notes yet.")
 
+        if not family_messaging_enabled:
+            continue
+
         with outbound_section_slot.container(border=True):
             render_family_flow_title(
                 f"Latest message from you ({family_display_name}) to resident ({full_name})",
                 "outbound",
             )
-            if not family_messaging_enabled:
-                st.caption("Messaging is inactive for the current lifecycle stage.")
-                continue
+            render_family_channel_note(
+                f"Your current voice message to {full_name}."
+            )
             latest_sent = fetch_latest_message(
                 resident_id,
                 "to_resident",
@@ -12022,6 +12136,7 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
     # Render all public documents in the boxed style for consistency.
     use_boxes = not doc_path.endswith("02_how_it_works.md")
     use_qa_search = doc_path.endswith("10_faq.md")
+    is_how_it_works_doc = doc_path.endswith("02_how_it_works.md")
     app_variant = resolve_runtime_variant(route_hint=get_route())
     access_token = st.session_state.get("access_token")
     if app_variant == VARIANT_PUBLIC and st.session_state.get("auth_uid"):
@@ -12052,6 +12167,8 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
         return_route = ""
     if app_variant == VARIANT_PUBLIC:
         render_page_header(page_title, show_menu=False, show_variant_subheading=False)
+        if is_how_it_works_doc:
+            render_how_it_works_cartoon()
         render_route_link(
             "Back to familyupdates.care",
             back_route,
@@ -12068,6 +12185,8 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
         family_back_route = return_route or get_home_route(VARIANT_FAMILY)
         family_back_label = "Back" if return_route else "Back to Family Hub"
         render_page_header(page_title, show_variant_subheading=False)
+        if is_how_it_works_doc:
+            render_how_it_works_cartoon()
         render_route_link(
             family_back_label,
             family_back_route,
@@ -12085,6 +12204,8 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
         office_home_route = return_route or get_office_home_route(is_authed)
         office_back_label = "Back" if return_route else "Back to dashboard"
         render_page_header(page_title, show_variant_subheading=False)
+        if is_how_it_works_doc:
+            render_how_it_works_cartoon()
         render_route_link(
             office_back_label,
             office_home_route,
@@ -12105,6 +12226,8 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
     if app_variant == VARIANT_MOBILE:
         mobile_back_route = return_route or get_home_route(app_variant)
         render_page_header(page_title)
+        if is_how_it_works_doc:
+            render_how_it_works_cartoon()
         render_route_link(
             "Back",
             mobile_back_route,
@@ -12118,6 +12241,8 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
             render_document_content(resolved_doc_path)
         return
     render_page_header(page_title, show_menu=False, show_variant_subheading=False)
+    if is_how_it_works_doc:
+        render_how_it_works_cartoon()
     if use_qa_search:
         render_qa_document(resolved_doc_path, search_key="fallback_faq_search")
     elif use_boxes:
@@ -12238,7 +12363,7 @@ def render_pr_homepage() -> None:
         st.image(str(cartoon_path), use_container_width=True)
     else:
         st.caption(
-            "Landing artwork missing: add familyupdates.png in assets/."
+            "Landing artwork missing: add infographic.png in assets/."
         )
 
     if st.button("How it works", key="pr_entry_how_it_works", use_container_width=True):
@@ -12910,6 +13035,10 @@ def render_care_hub_mfa() -> None:
             "care_hub",
         )
         return
+    get_mapping_status()
+    if not current_user_can_access_office():
+        render_wrong_variant("This account has Mobile-only access and cannot use Office two-factor verification.")
+        return
     record = get_care_hub_mfa_record(access_token, auth_uid)
     if not record or not record.get("enabled"):
         if not mfa_required:
@@ -13222,6 +13351,17 @@ def render_care_login() -> None:
             if care_record:
                 st.session_state["active_role"] = "care_hub"
                 st.session_state["active_care_home_id"] = care_record.get("care_home_id")
+                st.session_state["care_access_level"] = normalize_care_access_level(
+                    care_record.get("care_access_level")
+                )
+            if app_variant == VARIANT_OFFICE and not current_user_can_access_office():
+                st.error("This account has Mobile-only access.")
+                st.info("Mobile-only carers cannot use Office setup, registration, operational variables, security, or billing.")
+                if st.button("Go to Mobile login", key="care_login_mobile_only_go_mobile"):
+                    set_route(get_login_route(VARIANT_MOBILE))
+                if st.button("Sign out", key="care_login_mobile_only_sign_out"):
+                    sign_out_user("care_hub")
+                return
             if app_variant == VARIANT_MOBILE:
                 st.markdown("### Mobile PIN access")
                 if render_mobile_pin_gate(st.session_state.get("access_token")):
@@ -13339,6 +13479,13 @@ def render_care_login() -> None:
                             st.session_state["active_care_home_id"] = care_record.get(
                                 "care_home_id"
                             )
+                            st.session_state["care_access_level"] = normalize_care_access_level(
+                                care_record.get("care_access_level")
+                            )
+                        if app_variant == VARIANT_OFFICE and not current_user_can_access_office():
+                            st.error("This account has Mobile-only access.")
+                            st.info("Mobile-only carers cannot use Office setup, registration, operational variables, security, or billing.")
+                            return
                         if app_variant == VARIANT_OFFICE:
                             st.session_state["office_login_explicit"] = True
                         log_audit_event(
@@ -13457,6 +13604,12 @@ def render_care_hub() -> None:
     background: rgba(46, 142, 117, 0.10);
     border: 1px solid rgba(46, 142, 117, 0.24);
   }}
+  .care-channel-note {{
+    color: rgba(31,31,31,0.62);
+    font-size: 0.88rem;
+    margin: -2px 0 10px 0;
+    line-height: 1.35;
+  }}
   .care-flow-box {{
     border-radius: 10px;
     padding: 10px 10px 2px 10px;
@@ -13493,11 +13646,20 @@ def render_care_hub() -> None:
             f"<div class='care-flow-title {safe_tone}'>{safe_text}</div>",
             unsafe_allow_html=True,
         )
+    def render_care_channel_note(text: str) -> None:
+        safe_text = html.escape(text)
+        st.markdown(
+            f"<div class='care-channel-note'>{safe_text}</div>",
+            unsafe_allow_html=True,
+        )
     access_token = st.session_state.get("access_token")
     page_title = "Care Home Mobile" if runtime_variant == VARIANT_MOBILE else get_at_home_voicemail_label(access_token)
     render_page_header(page_title)
     render_dev_stage_level_status(access_token)
-    st.caption("Each sent message replaces the previous one in that channel.")
+    st.info(
+        "Everyday communication only. No threads, no history, no search. "
+        "Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact."
+    )
     if runtime_variant == VARIANT_MOBILE:
         render_public_landing_button("Back to hub selection")
     elif runtime_variant == VARIANT_OFFICE:
@@ -13764,13 +13926,13 @@ def render_care_hub() -> None:
         channel_enabled_for_current_variant = (
             mobile_channel_enabled if runtime_variant == VARIANT_MOBILE else office_channel_enabled
         )
-        communication_enabled = channel_enabled_for_current_variant and family_messaging_enabled
+        communication_enabled = channel_enabled_for_current_variant and (
+            office_channel_enabled or family_messaging_enabled or requests_enabled
+        )
         if not communication_enabled:
             if not channel_enabled_for_current_variant:
                 channel_name = "Mobile Channel" if runtime_variant == VARIANT_MOBILE else "Office Channel"
                 st.caption(f"{channel_name} is inactive in this lifecycle stage.")
-            else:
-                st.caption("Family messaging is inactive in this lifecycle stage.")
             continue
 
         contacts = contacts_by_resident.get(resident_id)
@@ -14031,10 +14193,10 @@ def render_care_hub() -> None:
         mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
         family_message_panel = (
             st.container(border=True)
-            if contacts and (is_mobile_variant or is_office_variant)
+            if family_messaging_enabled and contacts and (is_mobile_variant or is_office_variant)
             else None
         )
-        if contacts and (is_mobile_variant or is_office_variant):
+        if family_messaging_enabled and contacts and (is_mobile_variant or is_office_variant):
             if is_mobile_variant:
                 with family_message_panel:
                     render_care_flow_title("Family messages", "inbound")
@@ -14160,7 +14322,7 @@ def render_care_hub() -> None:
                             )
                             st.session_state[mobile_play_requested_key] = False
                             st.session_state[mobile_advance_pointer_key] = False
-        if is_mobile_variant or is_office_variant:
+        if family_messaging_enabled and (is_mobile_variant or is_office_variant):
             if latest is None:
                 if selected_contact is not None:
                     latest = fetch_latest_message_for_contact_with_mapping_repair(
@@ -14457,468 +14619,477 @@ def render_care_hub() -> None:
                 selected_contact_position = queue_position_by_contact_id.get(selected_contact_id)
                 if is_queue_playback_variant and queue_mode_label:
                     st.caption(f"Queue mode: {queue_mode_label}")
-        with st.container(border=True):
-            selected_recipient_user_id = str(
-                (selected_contact or {}).get("auth_user_id")
-                or state.get("selected_contact_user_id")
-                or ""
-            ).strip()
-            target_options = ["Family group"]
-            if selected_contact is not None:
-                target_options.append(selected_contact_display)
-            target_key = f"resident_message_target_{resident_id}"
-            previous_target = str(state.get("resident_message_target") or "Family group")
-            target_index = target_options.index(previous_target) if previous_target in target_options else 0
-            selected_message_target = st.radio(
-                "Message target",
-                options=target_options,
-                index=target_index,
-                horizontal=True,
-                key=target_key,
-            )
-            state["resident_message_target"] = selected_message_target
-            send_to_family_group = selected_message_target == "Family group"
-            target_display_name = "family group" if send_to_family_group else selected_contact_name
-            target_contact_user_id = None if send_to_family_group else selected_recipient_user_id
-            target_conflict_columns = (
-                "resident_id,family_id,direction,channel"
-                if send_to_family_group
-                else "resident_id,contact_user_id,direction,channel"
-            )
-            target_lookup_filters = {
-                "resident_id": resident_id,
-                "channel": "resident_family",
-                "direction": "from_resident",
-            }
-            if send_to_family_group:
-                target_lookup_filters["family_id"] = resident.get("family_id") or resident_id
-                target_lookup_filters["contact_user_id"] = None
-            else:
-                target_lookup_filters["contact_user_id"] = target_contact_user_id
-            render_care_flow_title(
-                (
-                    f"Latest message from {full_name} to {target_display_name}"
-                    if at_home_lifecycle_stage
-                    else f"Latest message from {subject_singular} ({full_name}) to {target_display_name}"
-                ),
-                "outbound",
-            )
-            if not (is_mobile_variant or is_office_variant):
-                st.markdown(f"**Latest message from {full_name} to {target_display_name}**")
-
-            latest_sent = (
-                fetch_latest_message(
-                    resident_id,
-                    "from_resident",
-                    access_token,
-                    contact_user_id=target_contact_user_id,
-                    contact_user_id_is_null=send_to_family_group,
-                    family_id=(resident.get("family_id") or resident_id) if send_to_family_group else None,
-                    channel="resident_family",
-                    include_audio=True,
+        if family_messaging_enabled:
+            with st.container(border=True):
+                selected_recipient_user_id = str(
+                    (selected_contact or {}).get("auth_user_id")
+                    or state.get("selected_contact_user_id")
+                    or ""
+                ).strip()
+                target_options = ["Family group"]
+                if selected_contact is not None:
+                    target_options.append(selected_contact_display)
+                target_key = f"resident_message_target_{resident_id}"
+                previous_target = str(state.get("resident_message_target") or "Family group")
+                target_index = target_options.index(previous_target) if previous_target in target_options else 0
+                selected_message_target = st.radio(
+                    "Message target",
+                    options=target_options,
+                    index=target_index,
+                    horizontal=True,
+                    key=target_key,
                 )
-                if send_to_family_group or target_contact_user_id
-                else None
-            )
-            latest_sent_audio, latest_sent_audio_kind = resolve_audio_playback_source_lazy(
-                latest_sent,
-                access_token=access_token,
-            )
-            if latest_sent:
-                if render_text_update_message(latest_sent):
-                    pass
-                elif latest_sent_audio:
-                    if latest_sent_audio_kind == "bytes":
-                        st.audio(
-                            latest_sent_audio,
-                            format=latest_sent.get("audio_mime_type") or "audio/wav",
-                        )
-                    else:
-                        st.audio(latest_sent_audio)
+                state["resident_message_target"] = selected_message_target
+                send_to_family_group = selected_message_target == "Family group"
+                target_display_name = "family group" if send_to_family_group else selected_contact_name
+                target_channel_note = (
+                    "Everyone linked can see this channel."
+                    if send_to_family_group
+                    else f"Direct current message from {full_name} to {selected_contact_name}. Only that Family Member sees this channel."
+                )
+                target_contact_user_id = None if send_to_family_group else selected_recipient_user_id
+                target_conflict_columns = (
+                    "resident_id,family_id,direction,channel"
+                    if send_to_family_group
+                    else "resident_id,contact_user_id,direction,channel"
+                )
+                target_lookup_filters = {
+                    "resident_id": resident_id,
+                    "channel": "resident_family",
+                    "direction": "from_resident",
+                }
+                if send_to_family_group:
+                    target_lookup_filters["family_id"] = resident.get("family_id") or resident_id
+                    target_lookup_filters["contact_user_id"] = None
                 else:
-                    st.success(
-                        (
-                            f"Latest {full_name} -> Family message is saved."
-                            if at_home_lifecycle_stage
-                            else f"Latest {subject_singular_title} -> Family message is saved."
-                        )
-                    )
-                latest_sent_at = latest_sent.get("recorded_at")
-                if latest_sent_at and not is_text_update_message(latest_sent):
-                    latest_sent_label = format_soft_message_period_label(latest_sent_at)
-                    if latest_sent_label:
-                        st.caption(latest_sent_label)
-                if not is_text_update_message(latest_sent):
-                    render_transcript_assist(
-                        latest_sent,
-                        policy_mode="assist",
-                        care_home_id=resident["care_home_id"],
-                        resident_id=resident_id,
-                    )
-            if is_mobile_variant or is_office_variant:
-                text_nonce = int(state.get("resident_text_message_nonce", 0))
-                st.markdown(f"**Short text message to {target_display_name}**")
-                resident_text_body = st.text_area(
-                    f"Short text message to {target_display_name}",
-                    key=f"resident_short_text_{resident_id}_{text_nonce}",
-                    height=90,
-                    max_chars=800,
-                    label_visibility="collapsed",
+                    target_lookup_filters["contact_user_id"] = target_contact_user_id
+                render_care_flow_title(
+                    (
+                        f"Latest message from {full_name} to {target_display_name}"
+                        if at_home_lifecycle_stage
+                        else f"Latest message from {subject_singular} ({full_name}) to {target_display_name}"
+                    ),
+                    "outbound",
                 )
-                resident_text_can_send = bool(
-                    str(resident_text_body or "").strip()
-                    and (send_to_family_group or target_contact_user_id)
+                render_care_channel_note(
+                    target_channel_note
                 )
-                if st.button(
-                    f"Send short message to {target_display_name}",
-                    key=f"resident_short_text_send_{resident_id}_{text_nonce}",
-                    disabled=not resident_text_can_send,
-                    use_container_width=True,
-                ):
-                    if not resident_text_can_send:
-                        if not send_to_family_group and not target_contact_user_id:
-                            st.info("Please select a Family Member before sending.")
-                        else:
-                            st.info("Please write a short message before sending.")
-                    else:
-                        supabase, error = get_authed_supabase(access_token)
-                        if error:
-                            st.error(error)
-                        else:
-                            now_iso = __import__("datetime").datetime.utcnow().isoformat()
-                            payload = {
-                                "resident_id": resident_id,
-                                "contact_user_id": target_contact_user_id,
-                                "family_id": resident.get("family_id") or resident_id,
-                                "channel": "resident_family",
-                                "direction": "from_resident",
-                                "audio_storage_path": "",
-                                "audio_mime_type": "text/plain",
-                                "audio_bytes": 0,
-                                "message_kind": "text",
-                                "text_title": None,
-                                "text_body": str(resident_text_body or "").strip(),
-                                "recorded_at": now_iso,
-                            }
-                            resp, upsert_error = upsert_latest_message_with_fallback(
-                                supabase,
-                                payload,
-                                target_conflict_columns,
-                                target_lookup_filters,
+                if not (is_mobile_variant or is_office_variant):
+                    st.markdown(f"**Latest message from {full_name} to {target_display_name}**")
+    
+                latest_sent = (
+                    fetch_latest_message(
+                        resident_id,
+                        "from_resident",
+                        access_token,
+                        contact_user_id=target_contact_user_id,
+                        contact_user_id_is_null=send_to_family_group,
+                        family_id=(resident.get("family_id") or resident_id) if send_to_family_group else None,
+                        channel="resident_family",
+                        include_audio=True,
+                    )
+                    if send_to_family_group or target_contact_user_id
+                    else None
+                )
+                latest_sent_audio, latest_sent_audio_kind = resolve_audio_playback_source_lazy(
+                    latest_sent,
+                    access_token=access_token,
+                )
+                if latest_sent:
+                    if render_text_update_message(latest_sent):
+                        pass
+                    elif latest_sent_audio:
+                        if latest_sent_audio_kind == "bytes":
+                            st.audio(
+                                latest_sent_audio,
+                                format=latest_sent.get("audio_mime_type") or "audio/wav",
                             )
-                            if upsert_error:
-                                if _message_missing_text_columns(Exception(upsert_error)):
-                                    st.error(
-                                        "Short text messages need Supabase migration 0035_messages_text_updates.sql."
-                                    )
-                                else:
-                                    st.error(upsert_error)
+                        else:
+                            st.audio(latest_sent_audio)
+                    else:
+                        st.success(
+                            (
+                                f"Latest {full_name} -> Family message is saved."
+                                if at_home_lifecycle_stage
+                                else f"Latest {subject_singular_title} -> Family message is saved."
+                            )
+                        )
+                    latest_sent_at = latest_sent.get("recorded_at")
+                    if latest_sent_at and not is_text_update_message(latest_sent):
+                        latest_sent_label = format_soft_message_period_label(latest_sent_at)
+                        if latest_sent_label:
+                            st.caption(latest_sent_label)
+                    if not is_text_update_message(latest_sent):
+                        render_transcript_assist(
+                            latest_sent,
+                            policy_mode="assist",
+                            care_home_id=resident["care_home_id"],
+                            resident_id=resident_id,
+                        )
+                if is_mobile_variant or is_office_variant:
+                    text_nonce = int(state.get("resident_text_message_nonce", 0))
+                    st.markdown(f"**Short text message to {target_display_name}**")
+                    resident_text_body = st.text_area(
+                        f"Short text message to {target_display_name}",
+                        key=f"resident_short_text_{resident_id}_{text_nonce}",
+                        height=90,
+                        max_chars=800,
+                        label_visibility="collapsed",
+                    )
+                    resident_text_can_send = bool(
+                        str(resident_text_body or "").strip()
+                        and (send_to_family_group or target_contact_user_id)
+                    )
+                    if st.button(
+                        f"Send short message to {target_display_name}",
+                        key=f"resident_short_text_send_{resident_id}_{text_nonce}",
+                        disabled=not resident_text_can_send,
+                        use_container_width=True,
+                    ):
+                        if not resident_text_can_send:
+                            if not send_to_family_group and not target_contact_user_id:
+                                st.info("Please select a Family Member before sending.")
                             else:
-                                message_id = (
-                                    (
-                                        resp.data[0].get("id")
-                                        if hasattr(resp, "data")
-                                        and isinstance(resp.data, list)
-                                        and resp.data
+                                st.info("Please write a short message before sending.")
+                        else:
+                            supabase, error = get_authed_supabase(access_token)
+                            if error:
+                                st.error(error)
+                            else:
+                                now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                                payload = {
+                                    "resident_id": resident_id,
+                                    "contact_user_id": target_contact_user_id,
+                                    "family_id": resident.get("family_id") or resident_id,
+                                    "channel": "resident_family",
+                                    "direction": "from_resident",
+                                    "audio_storage_path": "",
+                                    "audio_mime_type": "text/plain",
+                                    "audio_bytes": 0,
+                                    "message_kind": "text",
+                                    "text_title": None,
+                                    "text_body": str(resident_text_body or "").strip(),
+                                    "recorded_at": now_iso,
+                                }
+                                resp, upsert_error = upsert_latest_message_with_fallback(
+                                    supabase,
+                                    payload,
+                                    target_conflict_columns,
+                                    target_lookup_filters,
+                                )
+                                if upsert_error:
+                                    if _message_missing_text_columns(Exception(upsert_error)):
+                                        st.error(
+                                            "Short text messages need Supabase migration 0035_messages_text_updates.sql."
+                                        )
+                                    else:
+                                        st.error(upsert_error)
+                                else:
+                                    message_id = (
+                                        (
+                                            resp.data[0].get("id")
+                                            if hasattr(resp, "data")
+                                            and isinstance(resp.data, list)
+                                            and resp.data
+                                            else None
+                                        )
+                                        if resp is not None
                                         else None
                                     )
-                                    if resp is not None
-                                    else None
-                                )
-                                log_audit_event(
-                                    "message_sent",
-                                    "care_hub",
-                                    resident["care_home_id"],
-                                    message_id,
-                                )
-                                bump_message_cache_epoch()
-                                state["recording_bytes"] = None
-                                state["recording_mime_type"] = "audio/wav"
-                                state["preview_confirmed"] = False
-                                state["transcribe_requested"] = False
-                                clear_transcript_preview_state(state)
-                                st.session_state["care_last_sent"] = {
-                                    "resident_id": resident_id,
-                                    "contact_id": None if send_to_family_group else selected_contact_id,
-                                    "message": f"Short message sent to {target_display_name}.",
-                                    "sent_at_ts": time.time(),
-                                }
-                                state["resident_text_message_nonce"] = text_nonce + 1
-                                activate_send_guard(send_guard_scope)
-                                st.rerun()
-
-                native_recording_available = hasattr(st, "audio_input")
-                native_recorder_error = False
-                recorded_from_native = None
-                if native_recording_available:
-                    try:
-                        recorded_from_native = st.audio_input(
-                            f"Record voice message from {full_name} to {target_display_name}",
-                            key=f"care_audio_input_{resident_id}_{state.get('recording_input_nonce', 0)}",
-                        )
-                    except Exception:
-                        native_recorder_error = True
-                        recorded_from_native = None
-                if recorded_from_native is not None:
-                    native_bytes = recorded_from_native.getvalue()
-                    if native_bytes:
-                        native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
-                    else:
-                        native_fp = None
-                    if not native_bytes:
-                        st.warning(
-                            "That recording could not be captured correctly. Please record again."
-                        )
-                    # Once user has confirmed preview for current recording, avoid resetting
-                    # from duplicate/replayed audio_input payloads on rerun.
-                    elif state.get("preview_confirmed") and state.get("recording_bytes"):
-                        pass
-                    elif native_fp != state.get("recording_fingerprint"):
-                        reset_outbox_state_on_new_recording(
-                            state,
-                            ack_widget_key=f"care_listened_{resident_id}",
-                            clear_care_last_sent_for_resident=resident_id,
-                        )
-                        state["recording_bytes"] = native_bytes
-                        state["recording_fingerprint"] = native_fp
-                        state["recording_mime_type"] = (
-                            getattr(recorded_from_native, "type", None) or "audio/wav"
-                        )
-                elif not native_recording_available or native_recorder_error:
-                    if native_recorder_error:
-                        st.warning(
-                            "Microphone recorder could not load in this browser view. "
-                            "Use the upload option below."
-                        )
-                    else:
-                        st.warning("Native microphone recording is unavailable in this environment.")
-                    uploaded_recording = st.file_uploader(
-                        "Upload recorded voice message",
-                        type=["wav", "mp3", "m4a", "ogg", "webm"],
-                        key=f"care_upload_{resident_id}_{state.get('recording_input_nonce', 0)}",
-                    )
-                    if uploaded_recording is not None:
-                        upload_bytes = uploaded_recording.getvalue()
-                        upload_fp = (
-                            __import__("hashlib").sha1(upload_bytes).hexdigest()
-                            if upload_bytes
-                            else None
-                        )
-                        if not upload_bytes:
-                            st.warning("Uploaded audio file is empty. Please choose another file.")
-                        elif upload_fp != state.get("recording_fingerprint"):
+                                    log_audit_event(
+                                        "message_sent",
+                                        "care_hub",
+                                        resident["care_home_id"],
+                                        message_id,
+                                    )
+                                    bump_message_cache_epoch()
+                                    state["recording_bytes"] = None
+                                    state["recording_mime_type"] = "audio/wav"
+                                    state["preview_confirmed"] = False
+                                    state["transcribe_requested"] = False
+                                    clear_transcript_preview_state(state)
+                                    st.session_state["care_last_sent"] = {
+                                        "resident_id": resident_id,
+                                        "contact_id": None if send_to_family_group else selected_contact_id,
+                                        "message": f"Short message sent to {target_display_name}.",
+                                        "sent_at_ts": time.time(),
+                                    }
+                                    state["resident_text_message_nonce"] = text_nonce + 1
+                                    activate_send_guard(send_guard_scope)
+                                    st.rerun()
+    
+                    native_recording_available = hasattr(st, "audio_input")
+                    native_recorder_error = False
+                    recorded_from_native = None
+                    if native_recording_available:
+                        try:
+                            recorded_from_native = st.audio_input(
+                                f"Record voice message from {full_name} to {target_display_name}",
+                                key=f"care_audio_input_{resident_id}_{state.get('recording_input_nonce', 0)}",
+                            )
+                        except Exception:
+                            native_recorder_error = True
+                            recorded_from_native = None
+                    if recorded_from_native is not None:
+                        native_bytes = recorded_from_native.getvalue()
+                        if native_bytes:
+                            native_fp = __import__("hashlib").sha1(native_bytes).hexdigest()
+                        else:
+                            native_fp = None
+                        if not native_bytes:
+                            st.warning(
+                                "That recording could not be captured correctly. Please record again."
+                            )
+                        # Once user has confirmed preview for current recording, avoid resetting
+                        # from duplicate/replayed audio_input payloads on rerun.
+                        elif state.get("preview_confirmed") and state.get("recording_bytes"):
+                            pass
+                        elif native_fp != state.get("recording_fingerprint"):
                             reset_outbox_state_on_new_recording(
                                 state,
                                 ack_widget_key=f"care_listened_{resident_id}",
                                 clear_care_last_sent_for_resident=resident_id,
                             )
-                            state["recording_bytes"] = upload_bytes
-                            state["recording_fingerprint"] = upload_fp
+                            state["recording_bytes"] = native_bytes
+                            state["recording_fingerprint"] = native_fp
                             state["recording_mime_type"] = (
-                                getattr(uploaded_recording, "type", None)
-                                or "audio/wav"
+                                getattr(recorded_from_native, "type", None) or "audio/wav"
                             )
-
-                if state.get("recording_bytes"):
-                    st.caption("Captured message preview:")
-                    st.audio(
-                        state["recording_bytes"],
-                        format=state.get("recording_mime_type") or "audio/wav",
+                    elif not native_recording_available or native_recorder_error:
+                        if native_recorder_error:
+                            st.warning(
+                                "Microphone recorder could not load in this browser view. "
+                                "Use the upload option below."
+                            )
+                        else:
+                            st.warning("Native microphone recording is unavailable in this environment.")
+                        uploaded_recording = st.file_uploader(
+                            "Upload recorded voice message",
+                            type=["wav", "mp3", "m4a", "ogg", "webm"],
+                            key=f"care_upload_{resident_id}_{state.get('recording_input_nonce', 0)}",
+                        )
+                        if uploaded_recording is not None:
+                            upload_bytes = uploaded_recording.getvalue()
+                            upload_fp = (
+                                __import__("hashlib").sha1(upload_bytes).hexdigest()
+                                if upload_bytes
+                                else None
+                            )
+                            if not upload_bytes:
+                                st.warning("Uploaded audio file is empty. Please choose another file.")
+                            elif upload_fp != state.get("recording_fingerprint"):
+                                reset_outbox_state_on_new_recording(
+                                    state,
+                                    ack_widget_key=f"care_listened_{resident_id}",
+                                    clear_care_last_sent_for_resident=resident_id,
+                                )
+                                state["recording_bytes"] = upload_bytes
+                                state["recording_fingerprint"] = upload_fp
+                                state["recording_mime_type"] = (
+                                    getattr(uploaded_recording, "type", None)
+                                    or "audio/wav"
+                                )
+    
+                    if state.get("recording_bytes"):
+                        st.caption("Captured message preview:")
+                        st.audio(
+                            state["recording_bytes"],
+                            format=state.get("recording_mime_type") or "audio/wav",
+                        )
+                        state["preview_confirmed"] = st.checkbox(
+                            "I have listened to this message.",
+                            value=state.get("preview_confirmed", False),
+                            key=f"care_listened_{resident_id}",
+                        )
+                        render_transcript_preview_controls(
+                            state,
+                            state.get("recording_bytes") or b"",
+                            state.get("recording_mime_type") or "audio/wav",
+                            policy_mode=transcript_policy_mode,
+                            key_scope=f"care_preview_{resident_id}",
+                        )
+                        if st.button(
+                            "Reset recorder",
+                            key=f"care_reset_recorder_{resident_id}",
+                            use_container_width=True,
+                        ):
+                            state["recording_bytes"] = None
+                            state["recording_mime_type"] = "audio/wav"
+                            state["recording_fingerprint"] = None
+                            state["recording_input_nonce"] = int(
+                                state.get("recording_input_nonce", 0)
+                            ) + 1
+                            reset_outbox_state_on_new_recording(
+                                state,
+                                ack_widget_key=f"care_listened_{resident_id}",
+                                clear_care_last_sent_for_resident=resident_id,
+                                update_widget_state=False,
+                            )
+                            st.rerun()
+                    else:
+                        state["preview_confirmed"] = False
+                        state["transcribe_requested"] = False
+                        clear_transcript_preview_state(state)
+    
+                    sent_now = False
+                    room_display = (
+                        f"{workspace_labels.get('room_label')} {resident.get('room')}"
+                        if resident.get("room") and bool(workspace_labels.get("show_room"))
+                        else ""
                     )
-                    state["preview_confirmed"] = st.checkbox(
-                        "I have listened to this message.",
-                        value=state.get("preview_confirmed", False),
-                        key=f"care_listened_{resident_id}",
+                    if is_office_variant:
+                        identity_suffix = (
+                            f" - {room_display}" if room_display else ""
+                        )
+                        confirmation_line = (
+                            "Sending on behalf of:<br/>"
+                            f"{full_name}{identity_suffix} -> {target_display_name}"
+                        )
+                    else:
+                        identity_parts = [full_name]
+                        if room_display:
+                            identity_parts.append(room_display)
+                        care_home_display = ""
+                        if bool(workspace_labels.get("show_room")):
+                            care_home_display = (
+                                str(resident.get("care_home") or "").strip()
+                                or f"{workspace_labels.get('organisation_label')} not set"
+                            )
+                        if care_home_display:
+                            identity_parts.append(care_home_display)
+                        confirmation_line = (
+                            "Sending on behalf of:<br/>"
+                            f"{' - '.join(identity_parts)} -> {target_display_name}"
+                        )
+                    st.markdown(
+                        f'<div class="vm-muted-line">{confirmation_line}</div>',
+                        unsafe_allow_html=True,
                     )
-                    render_transcript_preview_controls(
-                        state,
-                        state.get("recording_bytes") or b"",
-                        state.get("recording_mime_type") or "audio/wav",
-                        policy_mode=transcript_policy_mode,
-                        key_scope=f"care_preview_{resident_id}",
+                    last_sent = st.session_state.get("care_last_sent")
+    
+                    can_send = bool(
+                        state.get("recording_bytes")
+                        and state.get("preview_confirmed")
+                        and (send_to_family_group or target_contact_user_id)
                     )
                     if st.button(
-                        "Reset recorder",
-                        key=f"care_reset_recorder_{resident_id}",
-                        use_container_width=True,
+                        f"Send for {full_name}",
+                        key=f"care_send_{resident_id}",
+                        disabled=not can_send,
                     ):
-                        state["recording_bytes"] = None
-                        state["recording_mime_type"] = "audio/wav"
-                        state["recording_fingerprint"] = None
-                        state["recording_input_nonce"] = int(
-                            state.get("recording_input_nonce", 0)
-                        ) + 1
-                        reset_outbox_state_on_new_recording(
-                            state,
-                            ack_widget_key=f"care_listened_{resident_id}",
-                            clear_care_last_sent_for_resident=resident_id,
-                            update_widget_state=False,
-                        )
-                        st.rerun()
-                else:
-                    state["preview_confirmed"] = False
-                    state["transcribe_requested"] = False
-                    clear_transcript_preview_state(state)
-
-                sent_now = False
-                room_display = (
-                    f"{workspace_labels.get('room_label')} {resident.get('room')}"
-                    if resident.get("room") and bool(workspace_labels.get("show_room"))
-                    else ""
-                )
-                if is_office_variant:
-                    identity_suffix = (
-                        f" - {room_display}" if room_display else ""
-                    )
-                    confirmation_line = (
-                        "Sending on behalf of:<br/>"
-                        f"{full_name}{identity_suffix} -> {target_display_name}"
-                    )
-                else:
-                    identity_parts = [full_name]
-                    if room_display:
-                        identity_parts.append(room_display)
-                    care_home_display = ""
-                    if bool(workspace_labels.get("show_room")):
-                        care_home_display = (
-                            str(resident.get("care_home") or "").strip()
-                            or f"{workspace_labels.get('organisation_label')} not set"
-                        )
-                    if care_home_display:
-                        identity_parts.append(care_home_display)
-                    confirmation_line = (
-                        "Sending on behalf of:<br/>"
-                        f"{' - '.join(identity_parts)} -> {target_display_name}"
-                    )
-                st.markdown(
-                    f'<div class="vm-muted-line">{confirmation_line}</div>',
-                    unsafe_allow_html=True,
-                )
-                last_sent = st.session_state.get("care_last_sent")
-
-                can_send = bool(
-                    state.get("recording_bytes")
-                    and state.get("preview_confirmed")
-                    and (send_to_family_group or target_contact_user_id)
-                )
-                if st.button(
-                    f"Send for {full_name}",
-                    key=f"care_send_{resident_id}",
-                    disabled=not can_send,
-                ):
-                    if not can_send:
-                        if not send_to_family_group and not target_contact_user_id:
-                            st.info("Please select a Family Member before sending.")
-                        else:
-                            st.info("Please record and listen before sending.")
-                    else:
-                        supabase, error = get_authed_supabase(access_token)
-                        if error:
-                            st.error(error)
-                        else:
-                            audio_bytes = state.get("recording_bytes") or b""
-                            audio_mime_type = state.get("recording_mime_type") or "audio/wav"
-                            now_iso = __import__("datetime").datetime.utcnow().isoformat()
-                            audio_object_path, upload_error = upload_audio_to_storage(
-                                audio_bytes,
-                                audio_mime_type,
-                                resident_id=resident_id,
-                                direction="from_resident",
-                            )
-                            use_inline_fallback = not bool(audio_object_path)
-                            if APP_DEBUG and upload_error:
-                                print(
-                                    "[audio-upload] from_resident fallback to inline payload:",
-                                    upload_error,
-                                )
-                            payload = {
-                                "resident_id": resident_id,
-                                "contact_user_id": target_contact_user_id,
-                                "family_id": resident.get("family_id") or resident_id,
-                                "channel": "resident_family",
-                                "direction": "from_resident",
-                                "audio_storage_path": (
-                                    base64.b64encode(audio_bytes).decode("ascii")
-                                    if use_inline_fallback
-                                    else ""
-                                ),
-                                "audio_object_path": audio_object_path,
-                                "audio_source": "inline" if use_inline_fallback else "storage",
-                                "audio_mime_type": audio_mime_type,
-                                "audio_bytes": len(audio_bytes),
-                                "message_kind": "voice",
-                                "text_title": None,
-                                "text_body": None,
-                                "recorded_at": now_iso,
-                            }
-                            transcript_fields, transcript_error = build_transcript_fields_from_preview(
-                                state,
-                                audio_bytes,
-                                audio_mime_type,
-                                requested=bool(state.get("transcribe_requested")),
-                            )
-                            payload.update(transcript_fields)
-                            resp, upsert_error = upsert_latest_message_with_fallback(
-                                supabase,
-                                payload,
-                                target_conflict_columns,
-                                target_lookup_filters,
-                            )
-                            if upsert_error:
-                                st.error(upsert_error)
+                        if not can_send:
+                            if not send_to_family_group and not target_contact_user_id:
+                                st.info("Please select a Family Member before sending.")
                             else:
-                                if transcript_error and bool(state.get("transcribe_requested")):
-                                    st.warning(f"Message sent, but transcript failed: {transcript_error}")
-                                transcript_persist_warning = consume_transcript_persist_warning()
-                                if transcript_persist_warning:
-                                    st.warning(transcript_persist_warning)
-                                message_id = (
-                                    (
-                                        resp.data[0].get("id")
-                                        if hasattr(resp, "data")
-                                        and isinstance(resp.data, list)
-                                        and resp.data
+                                st.info("Please record and listen before sending.")
+                        else:
+                            supabase, error = get_authed_supabase(access_token)
+                            if error:
+                                st.error(error)
+                            else:
+                                audio_bytes = state.get("recording_bytes") or b""
+                                audio_mime_type = state.get("recording_mime_type") or "audio/wav"
+                                now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                                audio_object_path, upload_error = upload_audio_to_storage(
+                                    audio_bytes,
+                                    audio_mime_type,
+                                    resident_id=resident_id,
+                                    direction="from_resident",
+                                )
+                                use_inline_fallback = not bool(audio_object_path)
+                                if APP_DEBUG and upload_error:
+                                    print(
+                                        "[audio-upload] from_resident fallback to inline payload:",
+                                        upload_error,
+                                    )
+                                payload = {
+                                    "resident_id": resident_id,
+                                    "contact_user_id": target_contact_user_id,
+                                    "family_id": resident.get("family_id") or resident_id,
+                                    "channel": "resident_family",
+                                    "direction": "from_resident",
+                                    "audio_storage_path": (
+                                        base64.b64encode(audio_bytes).decode("ascii")
+                                        if use_inline_fallback
+                                        else ""
+                                    ),
+                                    "audio_object_path": audio_object_path,
+                                    "audio_source": "inline" if use_inline_fallback else "storage",
+                                    "audio_mime_type": audio_mime_type,
+                                    "audio_bytes": len(audio_bytes),
+                                    "message_kind": "voice",
+                                    "text_title": None,
+                                    "text_body": None,
+                                    "recorded_at": now_iso,
+                                }
+                                transcript_fields, transcript_error = build_transcript_fields_from_preview(
+                                    state,
+                                    audio_bytes,
+                                    audio_mime_type,
+                                    requested=bool(state.get("transcribe_requested")),
+                                )
+                                payload.update(transcript_fields)
+                                resp, upsert_error = upsert_latest_message_with_fallback(
+                                    supabase,
+                                    payload,
+                                    target_conflict_columns,
+                                    target_lookup_filters,
+                                )
+                                if upsert_error:
+                                    st.error(upsert_error)
+                                else:
+                                    if transcript_error and bool(state.get("transcribe_requested")):
+                                        st.warning(f"Message sent, but transcript failed: {transcript_error}")
+                                    transcript_persist_warning = consume_transcript_persist_warning()
+                                    if transcript_persist_warning:
+                                        st.warning(transcript_persist_warning)
+                                    message_id = (
+                                        (
+                                            resp.data[0].get("id")
+                                            if hasattr(resp, "data")
+                                            and isinstance(resp.data, list)
+                                            and resp.data
+                                            else None
+                                        )
+                                        if resp is not None
                                         else None
                                     )
-                                    if resp is not None
-                                    else None
-                                )
-                                log_audit_event(
-                                    "message_sent",
-                                    "care_hub",
-                                    resident["care_home_id"],
-                                    message_id,
-                                )
-                                bump_message_cache_epoch()
-                                if APP_DEBUG:
-                                    print(
-                                        "Saving Resident->Family message:",
+                                    log_audit_event(
+                                        "message_sent",
+                                        "care_hub",
+                                        resident["care_home_id"],
                                         message_id,
-                                        now_iso,
-                                        target_contact_user_id or "family_group",
                                     )
-                                state["recording_bytes"] = None
-                                state["recording_mime_type"] = "audio/wav"
-                                state["preview_confirmed"] = False
-                                state["transcribe_requested"] = False
-                                clear_transcript_preview_state(state)
-                                sent_now = True
-                                st.session_state["care_last_sent"] = {
-                                    "resident_id": resident_id,
-                                    "contact_id": None if send_to_family_group else selected_contact_id,
-                                    "message": f"Message sent to {target_display_name}.",
-                                    "sent_at_ts": time.time(),
-                                }
-                                activate_send_guard(send_guard_scope)
-                                state["recording_input_nonce"] = (
-                                    int(state.get("recording_input_nonce", 0)) + 1
-                                )
-                                st.rerun()
-                if sent_now:
-                    st.success("Message sent.")
-                elif last_sent and last_sent.get("resident_id") == resident_id:
-                    st.success(last_sent.get("message", "Message sent."))
-
+                                    bump_message_cache_epoch()
+                                    if APP_DEBUG:
+                                        print(
+                                            "Saving Resident->Family message:",
+                                            message_id,
+                                            now_iso,
+                                            target_contact_user_id or "family_group",
+                                        )
+                                    state["recording_bytes"] = None
+                                    state["recording_mime_type"] = "audio/wav"
+                                    state["preview_confirmed"] = False
+                                    state["transcribe_requested"] = False
+                                    clear_transcript_preview_state(state)
+                                    sent_now = True
+                                    st.session_state["care_last_sent"] = {
+                                        "resident_id": resident_id,
+                                        "contact_id": None if send_to_family_group else selected_contact_id,
+                                        "message": f"Message sent to {target_display_name}.",
+                                        "sent_at_ts": time.time(),
+                                    }
+                                    activate_send_guard(send_guard_scope)
+                                    state["recording_input_nonce"] = (
+                                        int(state.get("recording_input_nonce", 0)) + 1
+                                    )
+                                    st.rerun()
+                    if sent_now:
+                        st.success("Message sent.")
+                    elif last_sent and last_sent.get("resident_id") == resident_id:
+                        st.success(last_sent.get("message", "Message sent."))
+    
         allow_mobile_extended_actions = family_led_mode or (
             runtime_variant == VARIANT_MOBILE
             and shared_coordination_stage
@@ -15759,6 +15930,256 @@ def render_care_hub_register_family() -> None:
     render_office_family_registration_form(access_token, residents)
 
 
+def create_supported_person(
+    access_token: str | None,
+    *,
+    display_name: str,
+    reference: str,
+) -> tuple[bool, str]:
+    care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
+    if not care_home_id:
+        return False, "No active family setup is linked to this session."
+    name_value = str(display_name or "").strip()
+    reference_value = str(reference or "").strip() or "Home"
+    if not name_value:
+        return False, "Enter the person/couple display name."
+    if len(name_value) > 160:
+        return False, "Display name must be 160 characters or fewer."
+    if len(reference_value) > 80:
+        return False, "Reference must be 80 characters or fewer."
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return False, error
+    try:
+        supabase.table("residents").insert(
+            {
+                "care_home_id": care_home_id,
+                "preferred_display_name": name_value,
+                "care_home_reference": reference_value,
+                "active": True,
+            }
+        ).execute()
+        return True, "Person added."
+    except Exception as exc:
+        return False, str(exc)
+
+
+def invite_mobile_carer(
+    *,
+    email: str,
+) -> tuple[bool, str]:
+    care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
+    normalized_email = str(email or "").strip().lower()
+    if not care_home_id:
+        return False, "No active family setup is linked to this session."
+    if not normalized_email:
+        return False, "Enter the carer's email."
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", normalized_email):
+        return False, "Enter a valid carer email address."
+    admin_client, admin_error = get_admin_client()
+    if admin_error:
+        return False, admin_error
+    redirect_to = get_magic_link_redirect_url(VARIANT_MOBILE).strip()
+    invited, auth_user_id, invite_error = invite_user(
+        admin_client,
+        normalized_email,
+        redirect_to_override=redirect_to,
+    )
+    if not auth_user_id:
+        auth_user_id = _resolve_auth_user_id_by_email(admin_client, normalized_email)
+    if not auth_user_id:
+        return False, str(invite_error or "Could not invite or resolve this carer account.")
+    try:
+        try:
+            admin_client.table("care_home_users").upsert(
+                {
+                    "care_home_id": care_home_id,
+                    "auth_user_id": auth_user_id,
+                    "care_access_level": CARE_ACCESS_MOBILE,
+                    "active": True,
+                },
+                on_conflict="care_home_id,auth_user_id",
+            ).execute()
+        except Exception as exc:
+            if not _is_missing_column_error(exc, "care_access_level"):
+                raise
+            return (
+                False,
+                "The database is missing care_home_users.care_access_level. Apply migration 0039 before adding Mobile-only carers.",
+            )
+        if invited:
+            return True, "Mobile carer invited. They will set their Mobile PIN at first Mobile login."
+        return True, "Existing user linked as Mobile-only carer. They can use Mobile login."
+    except Exception as exc:
+        return False, str(exc)
+
+
+def invite_office_user(
+    *,
+    email: str,
+) -> tuple[bool, str]:
+    care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
+    normalized_email = str(email or "").strip().lower()
+    if not care_home_id:
+        return False, "No active family setup is linked to this session."
+    if not normalized_email:
+        return False, "Enter the Office user's email."
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", normalized_email):
+        return False, "Enter a valid Office user email address."
+    admin_client, admin_error = get_admin_client()
+    if admin_error:
+        return False, admin_error
+    redirect_to = get_magic_link_redirect_url(VARIANT_OFFICE).strip()
+    invited, auth_user_id, invite_error = invite_user(
+        admin_client,
+        normalized_email,
+        redirect_to_override=redirect_to,
+    )
+    if not auth_user_id:
+        auth_user_id = _resolve_auth_user_id_by_email(admin_client, normalized_email)
+    if not auth_user_id:
+        return False, str(invite_error or "Could not invite or resolve this Office account.")
+    try:
+        try:
+            admin_client.table("care_home_users").upsert(
+                {
+                    "care_home_id": care_home_id,
+                    "auth_user_id": auth_user_id,
+                    "care_access_level": CARE_ACCESS_OFFICE,
+                    "active": True,
+                },
+                on_conflict="care_home_id,auth_user_id",
+            ).execute()
+        except Exception as exc:
+            if not _is_missing_column_error(exc, "care_access_level"):
+                raise
+            return (
+                False,
+                "The database is missing care_home_users.care_access_level. Apply migration 0039 before adding Office users.",
+            )
+        if invited:
+            return True, "Office user invited. They will have full Office access for this family setup."
+        return True, "Existing user linked with full Office access."
+    except Exception as exc:
+        return False, str(exc)
+
+
+def render_family_system_setup() -> None:
+    require_care_access()
+    if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
+        render_wrong_variant("Setup is only available in Office.")
+        return
+    if not current_user_can_access_office():
+        render_wrong_variant("Mobile-only carers cannot use setup.")
+        return
+    access_token = st.session_state.get("access_token")
+    render_page_header("Setup family system", show_menu=False)
+    render_route_link(
+        f"Back to {get_at_home_voicemail_label(access_token)}",
+        get_home_route(VARIANT_OFFICE),
+        key="family_system_setup_back",
+    )
+    render_care_home_identity_banner(access_token)
+    st.info(
+        "Use this page before a trial: add the person being supported, record the Family Organiser name, and invite any Mobile-only carer."
+    )
+
+    st.markdown("### Person being supported")
+    current_people = fetch_care_home_residents(access_token or "")
+    if current_people:
+        for person in current_people:
+            st.caption("Current: " + format_resident_identity_label(
+                person,
+                operating_mode=get_operating_mode(access_token),
+                include_room=False,
+            ))
+    with st.form("family_setup_add_person_form"):
+        person_name = st.text_input("Person/couple display name", key="family_setup_person_name")
+        person_reference = st.text_input(
+            "Reference (optional)",
+            value="Home",
+            key="family_setup_person_reference",
+        )
+        add_person = st.form_submit_button("Add person")
+    if add_person:
+        ok, message = create_supported_person(
+            access_token,
+            display_name=person_name,
+            reference=person_reference,
+        )
+        if ok:
+            st.success(message)
+            st.rerun()
+        else:
+            st.error(message)
+
+    st.markdown("### Family Organiser")
+    profile = fetch_active_care_home_profile(access_token, force_refresh=True)
+    st.caption("The Family Organiser has full access to the family tools. This does not make them the emergency contact automatically.")
+    with st.form("family_setup_organiser_form"):
+        organiser_name = st.text_input(
+            "Family Organiser name",
+            value=str(profile.get("main_contact_name") or ""),
+            key="family_setup_organiser_name",
+        )
+        setup_name = st.text_input(
+            "Family setup name",
+            value=str(profile.get("name") or ""),
+            key="family_setup_name",
+        )
+        save_organiser = st.form_submit_button("Save organiser details")
+    if save_organiser:
+        saved, message = update_active_care_home_branding(
+            access_token,
+            care_home_name=setup_name,
+            operating_mode=OPERATING_MODE_PERSONAL_USE,
+            lifecycle_stage=get_lifecycle_stage(access_token),
+            communication_level=get_communication_level(access_token),
+            main_contact_name=organiser_name,
+            banner_title=str(profile.get("branding_banner_title") or ""),
+            banner_text=str(profile.get("branding_banner_text") or ""),
+            banner_artwork_url=str(profile.get("branding_banner_artwork_url") or ""),
+            care_hub_idle_timeout_seconds=int(profile.get("care_hub_idle_timeout_seconds") or CARE_HUB_SESSION_TIMEOUT_SECONDS),
+            transcript_policy_mode=str(profile.get("transcript_policy_mode") or "assist"),
+        )
+        if saved:
+            st.success("Family Organiser details saved.")
+        else:
+            st.error(message)
+
+    st.markdown("### Mobile-only carer")
+    st.caption("Mobile-only carers can use Mobile to support playback/recording. They cannot register people, change operational variables, open security settings, or view billing.")
+    with st.form("family_setup_mobile_carer_form"):
+        carer_email = st.text_input("Carer email", key="family_setup_carer_email")
+        invite_carer = st.form_submit_button("Invite Mobile-only carer")
+    if invite_carer:
+        ok, message = invite_mobile_carer(email=carer_email)
+        if ok:
+            st.success(message)
+        else:
+            st.error(message)
+
+    st.markdown("### Office users")
+    st.caption("Office users have full access to the family setup, including registration, setup variables, security, and billing. Use this only for trusted people such as a co-organiser or LPA/finance sibling.")
+    with st.form("family_setup_office_user_form"):
+        office_user_email = st.text_input("Office user email", key="family_setup_office_user_email")
+        invite_office = st.form_submit_button("Invite Office user")
+    if invite_office:
+        ok, message = invite_office_user(email=office_user_email)
+        if ok:
+            st.success(message)
+        else:
+            st.error(message)
+
+    st.markdown("### Family Members")
+    st.caption("Use Register contact for brother and other family members.")
+    render_route_link(
+        "Register contact",
+        "/care-hub/register-family",
+        key="family_setup_register_contact_link",
+    )
+
+
 def main() -> None:
     st.set_page_config(
         page_title="familyupdates.care - Simple communication for care homes and families",
@@ -16106,6 +16527,8 @@ def main() -> None:
         render_care_hub()
     elif route == "/care-hub/register-family":
         render_care_hub_register_family()
+    elif route == "/care-hub/setup-family-system":
+        render_family_system_setup()
     elif route == "/care-hub/instructions":
         render_care_hub_instructions()
     elif route == "/care-hub/training":
