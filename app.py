@@ -12401,9 +12401,10 @@ def render_pr_homepage() -> None:
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 1.05rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: #1f1f1f;
+            line-height: 1.2;
         }
         .vm-home-brand img {
             width: 44px;
@@ -12425,8 +12426,11 @@ def render_pr_homepage() -> None:
     logo_data = get_logo_data_uri()
     logo_html = f'<img src="{logo_data}" alt="familyupdates.care logo" />' if logo_data else ""
     st.markdown(
-        f'<div class="vm-home-brand">{logo_html}<span>familyupdates.care</span></div>',
+        f'<h1 class="vm-home-brand">{logo_html}<span>familyupdates.care</span></h1>',
         unsafe_allow_html=True,
+    )
+    st.markdown(
+        "Structured, non-urgent family communication around care: one current message, no threads, no pressure.",
     )
     cartoon_path = resolve_cartoon_asset()
     if cartoon_path is not None:
@@ -16320,7 +16324,7 @@ def render_family_system_setup() -> None:
 
 def main() -> None:
     st.set_page_config(
-        page_title="familyupdates.care - Simple communication for care homes and families",
+        page_title="familyupdates.care - Structured family communication around care",
         page_icon="ðŸ—£ï¸",
         layout="centered",
         initial_sidebar_state="collapsed",
