@@ -2686,10 +2686,11 @@ def render_office_family_registration_form(
     pending_payload = st.session_state.get(pending_key)
     if isinstance(pending_payload, dict) and pending_payload.get("care_home_id") == care_home_id:
         st.warning(
-            "Invite already sent. Retry mapping below without sending another invite."
+            "The invitation email was already sent, but the final app link may not have completed."
         )
+        st.caption("Click below once to finish linking this Family Member without sending another email.")
         if st.button(
-            "Retry mapping without re-invite",
+            "Finish linking Family Member",
             key="office_family_register_retry_mapping",
         ):
             ok, mapping_error = _apply_family_registration_mapping(
@@ -2706,19 +2707,28 @@ def render_office_family_registration_form(
                 )
                 st.rerun()
             else:
-                st.error(mapping_error or "Retry failed. Please try again.")
+                st.error(mapping_error or "Could not finish the link. Please try again.")
 
+    st.markdown("#### What to do")
+    st.markdown(
+        f"""
+1. Choose the {subject_singular} this Family Member is linked to.
+2. Enter the Family Member's name, email, and relationship.
+3. Confirm that the right person or organisation has agreed they can be added.
+4. Send the invitation.
+5. The Family Member then signs in from the Family login page using the same email.
+"""
+    )
     if at_home_lifecycle_stage:
         st.caption(
-            f"Register a Family Member for this {subject_singular}. "
-            "The organiser / family makes the access decision and keeps any registration record outside the app if needed."
+            "For at-home use, the organiser / family decides who should be added. "
+            "Keep any private records outside the app."
         )
     else:
         st.caption(
-            f"{active_care_home_name} is registering a Family Member for this {subject_singular}. "
-            f"The {decision_owner_label} makes the access decision and keeps the registration record."
+            f"For care-home use, {active_care_home_name} decides who should be added and keeps the registration record."
         )
-    st.markdown("#### Registration record details")
+    st.markdown("#### This registration")
     st.markdown(
         f"{organisation_label}: **{active_care_home_name}**  \n"
         f"Registered by: **{registering_staff_name}**  \n"
@@ -2758,9 +2768,8 @@ def render_office_family_registration_form(
         )
 
     with st.form("office_register_family_member_form"):
-        st.markdown("#### Register/invite Family Member")
-        st.caption("Family login will only work after this registration/invitation has been completed.")
-        st.markdown("#### Section 1 - Family Member Details")
+        st.markdown("#### Family Member details")
+        st.caption("Use the email address they will use to sign in.")
         first_name = st.text_input("First name", key="office_family_first_name")
         last_name = st.text_input("Last name", key="office_family_last_name")
         email = st.text_input("Email", key="office_family_email")
@@ -2768,14 +2777,14 @@ def render_office_family_registration_form(
             f"Relationship to {subject_singular} (for example: daughter, cousin)",
             key="office_family_relationship",
         )
-        st.markdown(f"#### Section 2 - Link to {subject_singular_title}")
+        st.markdown(f"#### Link to {subject_singular_title}")
         resident_id = st.selectbox(
             subject_singular_title,
             resident_options,
             format_func=lambda rid: resident_label_by_id.get(rid, subject_singular_title),
             key="office_family_resident_select",
         )
-        st.markdown("#### Section 3 - Confirmation")
+        st.markdown("#### Permission to add them")
         confirmation_copy = (
             f"I confirm that the organiser / family has decided this person may be added "
             f"as a Family Member for this {subject_singular} and is responsible for determining, "
@@ -2901,7 +2910,7 @@ def render_office_family_registration_form(
 
     st.session_state[pending_key] = payload
     st.error(
-        "Invite sent but mapping failed. Use 'Retry mapping without re-invite'."
+        "The invitation email was sent, but the app did not finish linking this Family Member. Click 'Finish linking Family Member' above; do not send another invitation yet."
     )
     if mapping_error:
         st.error(mapping_error)
@@ -8241,8 +8250,6 @@ def render_header_menu(menu_key: str) -> None:
             handbook_label = "At-home guide" if at_home_lifecycle_stage else "Care Home handbook"
             if st.button(handbook_label, key=f"{menu_key}_office_doc_handbook"):
                 clicked_action = ("doc", "docs/office/05_care_home_guide.md")
-            if st.button("Registering a contact", key=f"{menu_key}_office_doc_register_family"):
-                clicked_action = ("doc", "docs/office/10_registering_family_member.md")
             if not at_home_lifecycle_stage and st.button(
                 "Handover checklist", key=f"{menu_key}_office_doc_handover"
             ):
@@ -11860,11 +11867,6 @@ def render_docs() -> None:
                 "summary": "Simple message and coordination guidance for at-home stages.",
             },
             {
-                "title": "Registering a contact",
-                "path": "docs/office/10_registering_family_member.md",
-                "summary": "How to invite and register a family contact.",
-            },
-            {
                 "title": "At-home responsibilities",
                 "path": "docs/office/04_care_home_responsibilities.md",
                 "summary": "Responsibilities and boundaries for at-home use.",
@@ -11891,11 +11893,6 @@ def render_docs() -> None:
                 "title": "Care home guide",
                 "path": "docs/office/05_care_home_guide.md",
                 "summary": "Day-to-day Care Home system use (Office and Mobile).",
-            },
-            {
-                "title": "Registering a contact",
-                "path": "docs/office/10_registering_family_member.md",
-                "summary": "How to invite and register a Family Member.",
             },
             {
                 "title": "Safeguarding and consent",
@@ -16006,11 +16003,11 @@ def render_care_hub_register_family() -> None:
     require_care_access()
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
         render_wrong_variant(
-            "Contact registration is only available in the main voicemail area."
+            "Family Member registration is only available in Office."
         )
         return
     back_route = OFFICE_HOME_ROUTE
-    render_page_header("Register a Contact", show_menu=False)
+    render_page_header("Register/invite Family Member", show_menu=False)
     access_token = st.session_state.get("access_token")
     render_route_link(
         f"Back to {get_at_home_voicemail_label(access_token)}",
@@ -16018,6 +16015,10 @@ def render_care_hub_register_family() -> None:
         key="office_register_family_back_dashboard_link",
     )
     render_care_home_identity_banner(access_token)
+    st.info(
+        "Use this page to add a Family Member, such as a brother, daughter, son, friend, or other approved person. "
+        "Family login will not work for their email until this step has been completed."
+    )
     residents = fetch_care_home_residents(access_token)
     render_office_family_registration_form(access_token, residents)
 
@@ -16173,10 +16174,21 @@ def render_family_system_setup() -> None:
     )
     render_care_home_identity_banner(access_token)
     st.info(
-        "Use this page first: add the person being supported and record the Family Organiser details. Then use Register/invite Family Member so family login will work."
+        "Use this page first for the basic trial setup. After this, use Register/invite Family Member so family login will work."
+    )
+    st.markdown("#### Setup order")
+    st.markdown(
+        """
+1. Add the person being supported.
+2. Save the Family Organiser details.
+3. Add any carer who needs Mobile access.
+4. Add any trusted co-organiser who needs Office access.
+5. Register/invite Family Members, such as brothers, sisters, children, or friends.
+"""
     )
 
     st.markdown("### Person being supported")
+    st.caption("Add the person or couple the family communication is about.")
     current_people = fetch_care_home_residents(access_token or "")
     if current_people:
         for person in current_people:
@@ -16264,7 +16276,7 @@ def render_family_system_setup() -> None:
             st.error(message)
 
     st.markdown("### Family Members")
-    st.caption("Step 2: use Register/invite Family Member for brother and other family members. They cannot log in until this has been done.")
+    st.caption("Use this for family members and friends. They cannot log in until they have been registered/invited.")
     render_route_link(
         "Register/invite Family Member",
         "/care-hub/register-family",
