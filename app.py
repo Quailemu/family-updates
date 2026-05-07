@@ -9335,78 +9335,6 @@ def render_home(active: str) -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
-        st.markdown("## Try one-message communication")
-        st.caption(
-            "This public tester stores messages only in this browser session. "
-            "Each new message replaces the previous one from that person."
-        )
-        tester_state = st.session_state.setdefault(
-            "public_one_message_tester",
-            {
-                "a_name": "Person A",
-                "b_name": "Person B",
-                "a_to_b": "I will be there at 3.",
-                "b_to_a": "Great. Please bring milk.",
-            },
-        )
-        name_cols = st.columns(2, gap="small")
-        with name_cols[0]:
-            tester_state["a_name"] = st.text_input(
-                "First person",
-                value=str(tester_state.get("a_name") or "Person A"),
-                key="one_message_tester_a_name",
-            )
-        with name_cols[1]:
-            tester_state["b_name"] = st.text_input(
-                "Second person",
-                value=str(tester_state.get("b_name") or "Person B"),
-                key="one_message_tester_b_name",
-            )
-        a_name = str(tester_state.get("a_name") or "Person A").strip() or "Person A"
-        b_name = str(tester_state.get("b_name") or "Person B").strip() or "Person B"
-        message_cols = st.columns(2, gap="small")
-        with message_cols[0]:
-            st.markdown(f"**Latest from {a_name} to {b_name}**")
-            st.info(str(tester_state.get("a_to_b") or "No current message."))
-            with st.form("one_message_tester_a_form", clear_on_submit=True):
-                next_a_message = st.text_area(
-                    f"Replace {a_name}'s message",
-                    key="one_message_tester_a_text",
-                    max_chars=220,
-                )
-                if st.form_submit_button("Replace message"):
-                    cleaned_message = next_a_message.strip()
-                    if cleaned_message:
-                        tester_state["a_to_b"] = cleaned_message
-                        st.rerun()
-        with message_cols[1]:
-            st.markdown(f"**Latest from {b_name} to {a_name}**")
-            st.info(str(tester_state.get("b_to_a") or "No current message."))
-            with st.form("one_message_tester_b_form", clear_on_submit=True):
-                next_b_message = st.text_area(
-                    f"Replace {b_name}'s message",
-                    key="one_message_tester_b_text",
-                    max_chars=220,
-                )
-                if st.form_submit_button("Replace message"):
-                    cleaned_message = next_b_message.strip()
-                    if cleaned_message:
-                        tester_state["b_to_a"] = cleaned_message
-                        st.rerun()
-        st.markdown(
-            "No thread is created. No history is shown. If you need a reply, send a request in the real app."
-        )
-        if st.button("Reset tester", key="one_message_tester_reset"):
-            st.session_state["public_one_message_tester"] = {
-                "a_name": "Person A",
-                "b_name": "Person B",
-                "a_to_b": "I will be there at 3.",
-                "b_to_a": "Great. Please bring milk.",
-            }
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("## A simple way to explore the idea")
         st.markdown(
             "familyupdates.care can be introduced through a one-to-one, activity-based session in the care home."
@@ -12202,6 +12130,84 @@ def get_public_document_title(doc_path: str) -> str:
     return "Service overview"
 
 
+def render_one_message_tester(prefix: str, state_key: str) -> None:
+    st.caption(
+        "This public tester stores messages only in this browser session. "
+        "Each new message replaces the previous one from that person."
+    )
+    tester_state = st.session_state.setdefault(
+        state_key,
+        {
+            "a_name": "Person A",
+            "b_name": "Person B",
+            "a_to_b": "I will be there at 3.",
+            "b_to_a": "Great. Please bring milk.",
+        },
+    )
+    name_cols = st.columns(2, gap="small")
+    with name_cols[0]:
+        tester_state["a_name"] = st.text_input(
+            "First person",
+            value=str(tester_state.get("a_name") or "Person A"),
+            key=f"{prefix}_a_name",
+        )
+    with name_cols[1]:
+        tester_state["b_name"] = st.text_input(
+            "Second person",
+            value=str(tester_state.get("b_name") or "Person B"),
+            key=f"{prefix}_b_name",
+        )
+    a_name = str(tester_state.get("a_name") or "Person A").strip() or "Person A"
+    b_name = str(tester_state.get("b_name") or "Person B").strip() or "Person B"
+    message_cols = st.columns(2, gap="small")
+    with message_cols[0]:
+        st.markdown(f"**Latest from {a_name} to {b_name}**")
+        st.info(str(tester_state.get("a_to_b") or "No current message."))
+        with st.form(f"{prefix}_a_form", clear_on_submit=True):
+            next_message = st.text_area(
+                f"Replace {a_name}'s message",
+                key=f"{prefix}_a_text",
+                max_chars=220,
+            )
+            if st.form_submit_button("Replace message"):
+                if next_message.strip():
+                    tester_state["a_to_b"] = next_message.strip()
+                    st.rerun()
+    with message_cols[1]:
+        st.markdown(f"**Latest from {b_name} to {a_name}**")
+        st.info(str(tester_state.get("b_to_a") or "No current message."))
+        with st.form(f"{prefix}_b_form", clear_on_submit=True):
+            next_message = st.text_area(
+                f"Replace {b_name}'s message",
+                key=f"{prefix}_b_text",
+                max_chars=220,
+            )
+            if st.form_submit_button("Replace message"):
+                if next_message.strip():
+                    tester_state["b_to_a"] = next_message.strip()
+                    st.rerun()
+    st.caption(
+        "No thread is created. No history is shown. If you need a reply, send a request in the real app."
+    )
+    if st.button("Reset tester", key=f"{prefix}_reset"):
+        st.session_state[state_key] = {
+            "a_name": "Person A",
+            "b_name": "Person B",
+            "a_to_b": "I will be there at 3.",
+            "b_to_a": "Great. Please bring milk.",
+        }
+        st.rerun()
+
+
+def render_how_it_works_tester_button(prefix: str) -> None:
+    st.markdown("## Try one-message communication")
+    open_key = f"{prefix}_open"
+    if st.button("Open one-message tester", key=f"{prefix}_button", use_container_width=True):
+        st.session_state[open_key] = not bool(st.session_state.get(open_key, False))
+    if st.session_state.get(open_key, False):
+        render_one_message_tester(prefix, f"{prefix}_state")
+
+
 def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -> None:
     # Render all public documents in the boxed style for consistency.
     use_boxes = not doc_path.endswith("02_how_it_works.md")
@@ -12250,6 +12256,8 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
             render_document_boxes(resolved_doc_path, strip_first_heading=True)
         else:
             render_document_content(resolved_doc_path)
+        if is_how_it_works_doc:
+            render_how_it_works_tester_button("public_how_it_works_one_message")
         return
     if app_variant == VARIANT_FAMILY:
         family_back_route = return_route or get_home_route(VARIANT_FAMILY)
@@ -12268,6 +12276,8 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
             render_document_boxes(resolved_doc_path, strip_first_heading=True)
         else:
             render_document_content(resolved_doc_path, include_logo=False, strip_first_heading=True)
+        if is_how_it_works_doc:
+            render_how_it_works_tester_button("family_how_it_works_one_message")
         return
     if app_variant == VARIANT_OFFICE:
         is_authed = bool(st.session_state.get("auth_uid"))
@@ -12287,6 +12297,8 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
             render_document_boxes(resolved_doc_path, strip_first_heading=True)
         else:
             render_document_content(resolved_doc_path, include_logo=False)
+        if is_how_it_works_doc:
+            render_how_it_works_tester_button("office_how_it_works_one_message")
         render_route_link(
             office_back_label,
             office_home_route,
@@ -12309,6 +12321,8 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
             render_document_boxes(resolved_doc_path, strip_first_heading=True)
         else:
             render_document_content(resolved_doc_path)
+        if is_how_it_works_doc:
+            render_how_it_works_tester_button("mobile_how_it_works_one_message")
         return
     render_page_header(page_title, show_menu=False, show_variant_subheading=False)
     if is_how_it_works_doc:
@@ -12319,6 +12333,8 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
         render_document_boxes(resolved_doc_path, strip_first_heading=True)
     else:
         render_document_content(resolved_doc_path)
+    if is_how_it_works_doc:
+        render_how_it_works_tester_button("fallback_how_it_works_one_message")
     render_public_landing_button("Back to hub selection")
 
 
@@ -12439,74 +12455,6 @@ def render_pr_homepage() -> None:
         st.caption(
             "Landing artwork missing: add infographic.png in assets/."
         )
-
-    st.markdown("## Try one-message communication")
-    st.caption(
-        "This public tester stores messages only in this browser session. "
-        "Each new message replaces the previous one from that person."
-    )
-    tester_state = st.session_state.setdefault(
-        "public_one_message_tester_home",
-        {
-            "a_name": "Person A",
-            "b_name": "Person B",
-            "a_to_b": "I will be there at 3.",
-            "b_to_a": "Great. Please bring milk.",
-        },
-    )
-    name_cols = st.columns(2, gap="small")
-    with name_cols[0]:
-        tester_state["a_name"] = st.text_input(
-            "First person",
-            value=str(tester_state.get("a_name") or "Person A"),
-            key="one_message_home_a_name",
-        )
-    with name_cols[1]:
-        tester_state["b_name"] = st.text_input(
-            "Second person",
-            value=str(tester_state.get("b_name") or "Person B"),
-            key="one_message_home_b_name",
-        )
-    a_name = str(tester_state.get("a_name") or "Person A").strip() or "Person A"
-    b_name = str(tester_state.get("b_name") or "Person B").strip() or "Person B"
-    message_cols = st.columns(2, gap="small")
-    with message_cols[0]:
-        st.markdown(f"**Latest from {a_name} to {b_name}**")
-        st.info(str(tester_state.get("a_to_b") or "No current message."))
-        with st.form("one_message_home_a_form", clear_on_submit=True):
-            next_message = st.text_area(
-                f"Replace {a_name}'s message",
-                key="one_message_home_a_text",
-                max_chars=220,
-            )
-            if st.form_submit_button("Replace message"):
-                if next_message.strip():
-                    tester_state["a_to_b"] = next_message.strip()
-                    st.rerun()
-    with message_cols[1]:
-        st.markdown(f"**Latest from {b_name} to {a_name}**")
-        st.info(str(tester_state.get("b_to_a") or "No current message."))
-        with st.form("one_message_home_b_form", clear_on_submit=True):
-            next_message = st.text_area(
-                f"Replace {b_name}'s message",
-                key="one_message_home_b_text",
-                max_chars=220,
-            )
-            if st.form_submit_button("Replace message"):
-                if next_message.strip():
-                    tester_state["b_to_a"] = next_message.strip()
-                    st.rerun()
-    st.caption(
-        "No thread is created. No history is shown. If you need a reply, send a request in the real app."
-    )
-    if st.button("Reset tester", key="one_message_home_reset"):
-        st.session_state["public_one_message_tester_home"] = {
-            "a_name": "Person A",
-            "b_name": "Person B",
-            "a_to_b": "I will be there at 3.",
-            "b_to_a": "Great. Please bring milk.",
-        }
-        st.rerun()
 
     if st.button("How it works", key="pr_entry_how_it_works", use_container_width=True):
         set_route("/public/how-it-works")
