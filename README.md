@@ -1,6 +1,6 @@
 baseline before cleanup
 
-# voicemailcare.com
+# familyupdates.care
 
 Calm, non-urgent voice messaging between residents and authorised contacts. One message in, one message out.
 
@@ -35,8 +35,8 @@ Runtime resolves app variant from request path first:
 ## Deployment topology (current live)
 
 - Live Render service: `voicemailcare-main`
-- Primary domain (indexed): `https://voicemailcare.com`
-- Media domain: `https://media.voicemailcare.com`
+- Primary domain (indexed): `https://familyupdates.care`
+- Media domain: `https://media.familyupdates.care`
 
 ### Legacy infrastructure status
 
@@ -106,6 +106,6 @@ no selector is provided.
 ## Cloudflare media (R2)
 
 - Media base URL: `https://media.familyupdates.care`
-- Media bucket name (ops reference): `voicemailcare-media`
+- Media bucket name (ops reference): `familyupdates-media`
 - App uses Supabase Storage for message audio playback.
 - Keep public walkthrough videos out of the app.

@@ -1,4 +1,4 @@
-﻿# voicemailcare.com UI
+﻿# familyupdates.care UI
 
 import os
 import base64
@@ -92,7 +92,7 @@ APP_OFFICE_LIVE_REFRESH = os.getenv("APP_OFFICE_LIVE_REFRESH", "0").strip().lowe
 SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY", "").strip()
 SUPABASE_AUDIO_BUCKET = os.getenv("SUPABASE_AUDIO_BUCKET", "voice-messages").strip() or "voice-messages"
 MEDIA_BASE_URL = (
-    str(os.getenv("MEDIA_BASE_URL", "https://media.voicemailcare.com") or "").strip().rstrip("/")
+    str(os.getenv("MEDIA_BASE_URL", "https://media.familyupdates.care") or "").strip().rstrip("/")
 )
 CARE_HOME_BANNER_OBJECT_PATH = (
     str(os.getenv("CARE_HOME_BANNER_OBJECT_PATH", "banners/office/care-home-banner.png") or "")
@@ -103,10 +103,10 @@ LEGACY_MEDIA_HOST_SUBSTRINGS = (
     "voice-message.com",
     "voicemailcare-main.onrender.com",
 )
-CANONICAL_PUBLIC_HOST = str(os.getenv("CANONICAL_PUBLIC_HOST", "voicemailcare.com") or "").strip().lower()
+CANONICAL_PUBLIC_HOST = str(os.getenv("CANONICAL_PUBLIC_HOST", "familyupdates.care") or "").strip().lower()
 CANONICAL_PUBLIC_HOST_ALIASES = tuple(
     host.strip().lower()
-    for host in str(os.getenv("CANONICAL_PUBLIC_HOST_ALIASES", "www.voicemailcare.com") or "").split(",")
+    for host in str(os.getenv("CANONICAL_PUBLIC_HOST_ALIASES", "www.familyupdates.care") or "").split(",")
     if host.strip()
 )
 NON_CANONICAL_REDIRECT_HOST_SUFFIXES = tuple(
@@ -324,6 +324,13 @@ def normalize_route(route: str | None) -> str:
     value = (route or "").strip()
     if not value:
         return ""
+    # Supabase redirects can carry the route inside an encoded redirect_to URL.
+    # Decode a couple of times so both /family/login and %2Ffamily%2Flogin resolve.
+    for _ in range(2):
+        decoded = unquote(value).strip()
+        if decoded == value:
+            break
+        value = decoded
     if "&" in value:
         base, suffix = value.split("&", 1)
         suffix_lower = suffix.lower()
@@ -13109,7 +13116,7 @@ def render_care_hub_security() -> None:
             totp = pyotp.TOTP(secret)
             provisioning_uri = totp.provisioning_uri(
                 name=f"{auth_email} (Office)",
-                issuer_name="voicemailcare-office",
+                issuer_name="familyupdates-office",
             )
             qr = qrcode.make(provisioning_uri)
             qr_image = qr.get_image() if hasattr(qr, "get_image") else qr
@@ -13191,7 +13198,7 @@ def render_care_hub_mfa() -> None:
             auth_email = st.session_state.get("auth_email") or "office-user"
             provisioning_uri = totp.provisioning_uri(
                 name=f"{auth_email} (Office)",
-                issuer_name="voicemailcare-office",
+                issuer_name="familyupdates-office",
             )
             qr = qrcode.make(provisioning_uri)
             qr_image = qr.get_image() if hasattr(qr, "get_image") else qr
