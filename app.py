@@ -2022,7 +2022,7 @@ def send_magic_link_email(
         ):
             return (
                 False,
-                "This email has not been invited yet. Please ask the care home to invite you.",
+                "This email has not been registered yet. Ask the Family Organiser or Office user to register/invite you first.",
             )
         return False, raw_error
     return (
@@ -2758,6 +2758,8 @@ def render_office_family_registration_form(
         )
 
     with st.form("office_register_family_member_form"):
+        st.markdown("#### Register/invite Family Member")
+        st.caption("Family login will only work after this registration/invitation has been completed.")
         st.markdown("#### Section 1 - Family Member Details")
         first_name = st.text_input("First name", key="office_family_first_name")
         last_name = st.text_input("Last name", key="office_family_last_name")
@@ -8224,9 +8226,9 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", get_home_route(app_variant))
             if st.button("How it works", key=f"{menu_key}_office_how_it_works"):
                 clicked_action = ("route", "/care-hub-office/how-it-works")
-            if st.button("Setup family system", key=f"{menu_key}_setup_family_system"):
+            if st.button("1. Setup person/system", key=f"{menu_key}_setup_family_system"):
                 clicked_action = ("route", "/care-hub/setup-family-system")
-            if st.button("Register contact", key=f"{menu_key}_register_family"):
+            if st.button("2. Register/invite Family Member", key=f"{menu_key}_register_family"):
                 clicked_action = ("route", "/care-hub/register-family")
             if st.button("Operational variables", key=f"{menu_key}_operational_variables"):
                 clicked_action = ("route", "/care-hub/operational-variables")
@@ -10756,7 +10758,7 @@ def render_family_login_hub() -> None:
         submit_login = st.button("Send secure sign-in link", key="family_login_submit")
     with action_cols[1]:
         resend_pressed = st.button("Resend sign-in link", key="family_login_resend")
-    st.caption("If this email has not been invited yet, ask the care home to invite you.")
+    st.caption("New Family Members must be registered/invited from Office before Family login will work.")
     sign_out_pressed = False
     if st.session_state.get("auth_uid"):
         if st.button("Sign out", key="family_login_sign_out"):
@@ -10769,7 +10771,7 @@ def render_family_login_hub() -> None:
             st.success(message)
         else:
             st.error(message)
-            st.info("If you are new, ask the care home to send your invitation first.")
+            st.info("If you are new, ask the Family Organiser or Office user to register/invite you first.")
 
     if sign_out_pressed:
         sign_out_user("family")
@@ -10781,7 +10783,7 @@ def render_family_login_hub() -> None:
             st.success(message)
         else:
             st.error(message)
-            st.info("If you are new, ask the care home to send your invitation first.")
+            st.info("If you are new, ask the Family Organiser or Office user to register/invite you first.")
 
     for box in login_info_boxes:
         st.markdown(f'<div class="family-login-box">{box}</div>', unsafe_allow_html=True)
@@ -14037,7 +14039,7 @@ def render_care_hub() -> None:
                     f"Register a contact in {workspace_labels.get('office_label')} before sending messages."
                 )
                 if st.button(
-                    "Register contact now",
+                    "Register/invite Family Member now",
                     key=f"care_register_family_cta_{resident_id}",
                     use_container_width=True,
                 ):
@@ -16171,7 +16173,7 @@ def render_family_system_setup() -> None:
     )
     render_care_home_identity_banner(access_token)
     st.info(
-        "Use this page before a trial: add the person being supported, record the Family Organiser name, and invite any Mobile-only carer."
+        "Use this page first: add the person being supported and record the Family Organiser details. Then use Register/invite Family Member so family login will work."
     )
 
     st.markdown("### Person being supported")
@@ -16262,9 +16264,9 @@ def render_family_system_setup() -> None:
             st.error(message)
 
     st.markdown("### Family Members")
-    st.caption("Use Register contact for brother and other family members.")
+    st.caption("Step 2: use Register/invite Family Member for brother and other family members. They cannot log in until this has been done.")
     render_route_link(
-        "Register contact",
+        "Register/invite Family Member",
         "/care-hub/register-family",
         key="family_setup_register_contact_link",
     )
