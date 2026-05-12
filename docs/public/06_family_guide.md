@@ -1,35 +1,39 @@
-﻿![logo](../../assets/logo.png)
+![logo](../../assets/logo.png)
 
 # Family and friends guide
 
-Communication participants: residents, Family Members, and Care Home system (Care Home Office and Care Home Mobile).
+Communication participants: the person being supported, Family Members, the Family Organiser, and Mobile Support.
 
 ## What Family Hub is for
 
-Family Hub is for Family Members granted by the care home.
+Family Hub is for registered Family Members.
 
-familyupdates.care helps structure non-urgent family communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
+familyupdates.care helps structure communication when a family member needs support.
 
-Everyday communication only. No threads, no history, no search. If something needs to be kept, make a note of it outside the app.
+There are three roles for the family to fill:
 
-familyupdates.care deliberately limits communication so it stays workable. It keeps communication current and bounded, rather than complete and searchable.
+1. Family Organiser.
+2. Person available for urgent/emergency phone contact and emergency protocol.
+3. Care support.
+
+familyupdates.care is for non-urgent communication only.
+
+familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
 
 Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact.
 
-The Family Organiser has full access to the family tools. Family Members and carers can use their own enabled channels directly.
+The Family Organiser has full access to the family tools. Family Members and Mobile Support can use their own enabled channels directly.
 
 It supports:
-- Family -> Resident social voice messages
-- Playing the resident's current shared reply
-- Playing current Office general update
-- Submitting structured replies to an Office practical message
-- Adding one current family noticeboard note where practical coordination is enabled
+- receiving the current Family Organiser update
+- receiving one current specific organiser message
+- submitting structured replies to a practical request
+- adding one current family noticeboard note where practical coordination is enabled
 
 ## Communication boundaries
 
 - One current update from the organiser to the family group.
-- One current voice message from each Family Member to the person.
-- One current voice message from the person to the family group, or one current direct voice message to the organiser or selected Family Member.
+- One current specific message between the organiser and each Family Member.
 - One practical request with structured responses.
 - One current noticeboard note from each Family Member.
 
@@ -40,12 +44,6 @@ Each new item replaces the previous one in that channel. There are no threads, n
 - Each channel keeps only the latest message.
 - A new message replaces the previous message in that channel.
 - There is no archive and no scrolling thread.
-
-## Transcript assist (optional)
-
-- Family can request a transcript when recording a message.
-- When available, transcript text appears under "Transcript assist" for the current message.
-- Transcript text may contain errors; voice remains the source of truth.
 
 ## Office communication in Family Hub
 
@@ -73,11 +71,10 @@ Use noticeboard notes for simple practical updates, such as visits or items to b
 
 ## Service style
 
-- Not a live service. Messages are played when staff are available.
+- Not a live service.
 - No read receipts, no delivery confirmations, no typing indicators.
-- Message date is shown in Family Hub and Care Home Mobile (date only, no time).
 
 ## Boundaries
 
 Do not use this service for urgent, medical, safeguarding, or emergency communication.
-For those matters, contact the care home directly.
+For those matters, follow the agreed emergency protocol and direct contact route.

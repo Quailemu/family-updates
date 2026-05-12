@@ -12,5 +12,7 @@ if "%SUPABASE_SECRET_KEY%"=="" (
   echo SUPABASE_SECRET_KEY is not set. Set it in this terminal before running this script.
   exit /b 1
 )
-echo Starting Voice Message - CARE HUB OFFICE DEV BYPASS (APP_VARIANT=%APP_VARIANT%)
-python -m streamlit run app.py --server.port 8503
+echo Starting Family Office DEV BYPASS (APP_VARIANT=%APP_VARIANT%)
+echo Office URL: http://localhost:8503/?route=/care-hub/login
+start "" powershell -WindowStyle Hidden -NoProfile -Command "Start-Sleep -Seconds 5; Start-Process 'http://localhost:8503/?route=/care-hub/login'"
+python -m streamlit run app.py --server.port 8503 --server.headless true

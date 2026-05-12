@@ -1,38 +1,41 @@
-﻿![logo](../../assets/logo.png)
+![logo](../../assets/logo.png)
 
-# Family Q&A
+# Family Hub Q&A
 
-Communication participants: residents, Family Members, and Care Home system (Care Home Office and Care Home Mobile).
+Communication participants: the person being supported, Family Members, the Family Organiser, and Mobile Support where needed.
 
 Q: Is this a live messaging service?
-A: No. It is not live. Messages are handled when staff are available.
+A: No. It is not live messaging. Messages are checked at agreed intervals.
 
-Q: What is this service for?
-A: Non-urgent social voice messages between residents and Family Members, plus non-urgent Office communication.
+Q: What is Family Hub for?
+A: Family Hub is for wider Family Members to receive current updates, respond to practical requests, and add one current noticeboard note.
+
+Q: Who uses Family Office?
+A: The Family Organiser uses Family Office to coordinate updates, practical requests, access, and boundaries.
+
+Q: Who uses Mobile?
+A: Mobile is for the person providing practical support. This may be a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper.
 
 Q: Can I send urgent updates here?
-A: No. For urgent, clinical, safeguarding, or emergency matters, contact the care home directly.
+A: No. For urgent, medical, safeguarding, or emergency matters, use the agreed direct contact route.
 
 Q: Why did my previous message disappear?
-A: Each channel keeps only the latest message. New messages replace previous ones in that channel.
+A: Each channel keeps only the latest item. New items replace previous ones in that channel.
 
 Q: Can I see a message timeline?
 A: No. There is no archive and no scrolling thread.
 
-Q: Can I request a transcript?
-A: Yes. When recording, you can request transcript assist. If available, it appears under "Transcript assist" for that message.
+Q: What is a Family Office update?
+A: A one-way update from the Family Organiser to Family Members for non-urgent general information.
 
-Q: What is an Office general update?
-A: A one-way Office broadcast to all Family Members for non-urgent general information.
+Q: What is a practical request?
+A: A non-urgent practical question from Family Office, such as visits, belongings, appointments, family occasions, or tasks that need a structured family response.
 
-Q: What is an Office practical message?
-A: A practical Office request linked to a resident (for example visits, attendance, reminders, or item requests) that allows a structured family reply.
-
-Q: How do I reply to an Office practical message?
+Q: How do I reply to a practical request?
 A: Choose Yes/No/Maybe, then optionally tick fixed options and add a short context note where offered.
 
 Q: Is this practical reply a chat conversation?
-A: No. It is a structured response to a specific Office message.
+A: No. It is a structured response to one request.
 
 Q: Do I get read receipts or delivery confirmations?
 A: No.

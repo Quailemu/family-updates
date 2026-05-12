@@ -2,11 +2,13 @@
 
 # Public Q&A
 
-Communication participants: residents, Family Members, and Care Home system (Care Home Office and Care Home Mobile).
+Communication participants: the person being supported, Family Members, the Family Organiser, and a carer/helper/support person using Mobile where needed.
 
 ## What is familyupdates.care for?
 
-Non-urgent social voice messaging between residents and Family Members, plus non-urgent Office communication to family.
+Non-urgent family communication around care: one current update, one current specific organiser message, one current practical request with structured replies, and one current noticeboard note per Family Member.
+
+The app is for when ordinary direct family communication is no longer enough. If a person or couple is managing independently, they may not need familyupdates.care.
 
 ## Is this a live chat?
 
@@ -14,7 +16,19 @@ No. It is not live messaging.
 
 ## How many app interfaces are there?
 
-Three: Family Hub, Care Home Mobile, and Care Home Office.
+Three active family interfaces: Family Office, Family Hub, and Mobile.
+
+Family Office is for the Family Organiser. Family Hub is for wider Family Members. Mobile is a reduced-tool interface for a carer, helper, supported person, or trusted family member.
+
+The separation matters: familyupdates.care should reduce pressure on the Family Organiser, not turn them into the default carer.
+
+## What are the active situations?
+
+There are two active family situations.
+
+At home with Family Organiser + Mobile Support.
+
+Care home with Family Organiser + Mobile Support. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
 
 ## What is an Office general update?
 
@@ -32,11 +46,6 @@ No. It is a structured reply to one Office message, not open chat.
 
 Each channel keeps only the latest message. A new message replaces the previous message in that channel.
 
-## Can transcripts be provided?
-
-Yes. A transcript can be requested when recording in Family Hub, Care Home Mobile, and Care Home Office.
-When available, it appears under "Transcript assist" for the current message.
-
 ## Does the service show message history?
 
 No archive and no scrolling thread.
@@ -45,10 +54,6 @@ No archive and no scrolling thread.
 
 No. There are no live notifications, delivery confirmations, or read receipts.
 
-## Are timestamps shown in the app?
-
-Message date is shown in Family Hub and Care Home Mobile (date only, no time).
-
 ## Is this suitable for urgent or medical matters?
 
-No. For urgent, medical, safeguarding, or emergency matters, contact the care home directly.
+No. For urgent, medical, safeguarding, or emergency matters, follow the agreed emergency protocol and direct contact route.

@@ -1,11 +1,17 @@
 ![logo](../../assets/logo.png)
 
-![familyupdates.care infographic](../../assets/infographic.png)
-
 ## Purpose
 
 This guide is for care home managers and staff.
-It explains how familyupdates.care is used day to day for structured, non-urgent family communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
+It explains how familyupdates.care is used day to day for structured family communication around care.
+
+There are three roles for the family to fill:
+
+1. Family Organiser.
+2. Person available for urgent/emergency phone contact and emergency protocol.
+3. Care support.
+
+familyupdates.care is for non-urgent communication only.
 
 ## System structure
 

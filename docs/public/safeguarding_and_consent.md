@@ -10,20 +10,19 @@ familyupdates.care provides communication infrastructure only.
 
 The platform is not monitored in real time and does not moderate, screen, or approve message content.
 
-## Care home responsibility
+## Family and support responsibility
 
-Each care home remains responsible for:
+The person, Family Organiser, and any supporters involved remain responsible for:
 
 - Safeguarding and risk management
-- Consent and capacity decisions
-- Suitability of resident participation
-- Staff supervision and local procedures
+- Consent, authority, and suitability decisions
+- Local support arrangements
 - Handling inappropriate message content
-- Device security and operational governance
+- Device security and practical boundaries
 
 ## Consent and capacity
 
-The care home decides whether a resident can participate and how consent/authority is established and reviewed.
+The family-side workspace decides who is invited, who participates, and how consent or authority is established and reviewed locally.
 
 familyupdates.care does not assess capacity or consent.
 
@@ -33,10 +32,10 @@ The service is for non-urgent social communication only.
 
 It is not for clinical communication, safeguarding reporting, or urgent matters.
 
-Not a live service. Messages are played and recorded when staff are available.
+Not a live service. Messages are checked at agreed intervals.
 
 ## Reporting concerns
 
-For safeguarding concerns, contact the care home directly through its normal safeguarding routes.
+For safeguarding concerns, use the agreed direct safeguarding or emergency route immediately.
 
-For platform faults, contact familyupdates.care via the care home.
+For platform faults, contact familyupdates.care.

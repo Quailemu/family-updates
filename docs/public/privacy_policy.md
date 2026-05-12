@@ -8,22 +8,21 @@ This notice explains what personal data is used in familyupdates.care and why.
 
 ## Data roles
 
-The care home is the Data Controller. familyupdates.care is the Data Processor and acts on the care home's instructions.
+The Family Organiser or subscribing family-side workspace is the Data Controller. familyupdates.care is the Data Processor and acts on the workspace's instructions.
 
-The care home decides access, participation, and day-to-day use in its service.
+The Family Organiser decides access, participation, and day-to-day use.
 
 ## Data used
 
-- Care home account and access data
-- Resident identifiers set by the care home
+- Family workspace account and access data
+- Person being supported identifiers set by the Family Organiser
 - Family Member details (for example, name and email)
-- Voice messages (latest message only per channel)
-- Optional transcript text for the current message where requested and available
+- Family updates, specific organiser messages, practical requests, structured replies, and noticeboard notes
 - Security and operational logs needed to run the service safely
 
 ## Why data is used
 
-Data is used to deliver non-urgent social voice messaging between residents and Family Members in a care setting.
+Data is used to deliver non-urgent family communication around care.
 
 The service is not for medical updates, safeguarding reporting, or urgent enquiries.
 
@@ -32,8 +31,6 @@ The service is not for medical updates, safeguarding reporting, or urgent enquir
 Each channel keeps only the latest message.
 
 When a new message is sent in a channel, it replaces the previous one in that channel.
-Where transcript assist is requested, transcript text for that current message is replaced in the same way.
-
 No message history and no archive are provided.
 
 ## Hosting and security
@@ -46,4 +43,4 @@ Personal data is deleted within 30 days after service termination, including nor
 
 ## Questions
 
-For care-home-specific data questions, contact the care home first.
+For family-workspace-specific data questions, contact the Family Organiser first.

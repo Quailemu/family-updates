@@ -1,12 +1,12 @@
 # Documentation split plan
 
-The product now has four active lifecycle stages plus preparation guidance. The existing documentation was mostly written for the original care-home-only model, so documents should be split by use context instead of patched one phrase at a time.
+The product now has two active situations plus preparation guidance. The existing documentation was mostly written for the original care-home-only model, so documents should be split by use context instead of patched one phrase at a time.
 
 ## Document groups
 
 ### 1. At-home guidance
 
-For Stage 1, Stage 2, and Stage 3.
+For the at-home situation: At home with Family Organiser + Mobile Support.
 
 This should be a smaller at-home help set, not the full care-home Office pack with changed nouns. Many original Office documents are not relevant to a person at home, family-supported coordination, or family plus carer at home.
 
@@ -27,7 +27,7 @@ Use this wording:
 - normal direct contact route
 - shared at-home coordination
 
-Avoid this wording unless referring to a later care-home stage:
+Avoid this wording unless referring to the care-home situation:
 
 - resident
 - care home
@@ -35,16 +35,9 @@ Avoid this wording unless referring to a later care-home stage:
 - care-home staff
 - care-home responsibility
 
-Current source candidates:
+Legacy note:
 
-- `docs/circle/05_circle_guide.md`
-- `docs/circle/10_registering_circle_contacts.md`
-- `docs/circle/10_faq.md`
-- `docs/circle/11_family_qa.md`
-- `docs/circle/12_mobile_qa.md`
-- `docs/circle/common_questions_qa.md`
-- `docs/circle/circle_onboarding_script.md`
-- `docs/circle/circle_handover_checklist.md`
+The old `docs/circle` set should not drive current copy. The "Circle" concept is retired. Use Family Office, Family Hub, and Mobile Support wording instead.
 
 High-priority rewrite targets:
 
@@ -54,11 +47,11 @@ High-priority rewrite targets:
 - registering a Family Member / contact
 - at-home FAQ
 
-### 2. Stage 4 Care Home Office guidance
+### 2. Archived care-home guidance
 
-For the care-home workspace only.
+For the archived/future care-home workspace only.
 
-The original care-home documentation remains the Stage 4 Care Home documentation set. Preserve the care-home governance language and use these documents for the care-home side of Stage 4. Do not rewrite them into at-home wording or remove care-home responsibility language from this set.
+The original care-home documentation remains archived as a possible later product. Preserve the care-home governance language in that archive. Do not rewrite it into at-home wording or remove care-home responsibility language from this set.
 
 Use this wording:
 
@@ -82,16 +75,16 @@ Keep these documents care-home-specific:
 - `docs/public/15_mobile_training_instructions.md`
 - care-home contracts and DPA templates
 
-These documents may need clearer headings saying they apply to Stage 4 Care Home Office, not at-home stages.
+These documents may need clearer headings saying they apply to archived/future Care Home Office material, not the active familyupdates.care product.
 
-### 3. Stage 4 Family Coordinator guidance
+### 3. Care-home situation family-side guidance
 
-Planned later. Do not write as care-home operations.
+Active as the care-home situation of the familyupdates.care product. Do not write as care-home operations.
 
 Use this wording:
 
-- Family Coordinator Office
-- Family Coordinator Mobile
+- Family Office
+- Mobile Support
 - family-side workspace
 - wider family
 - visits
@@ -106,13 +99,13 @@ Avoid:
 - resident admin
 - care-home responsibility for the family workspace
 
-Future documents needed:
+Documents needed:
 
-- Family Coordinator Office guide
-- Family Coordinator Mobile guide
-- Family-side Family Hub guide
-- Family Coordinator FAQ
-- Family Coordinator workspace privacy/boundary note
+- Family Office guide for the care-home situation
+- Mobile Support guide for the care-home situation
+- Family Hub guide for the care-home situation
+- Family Office care-home situation FAQ
+- Family workspace privacy/boundary note
 
 ## Public and legal documents
 
@@ -122,9 +115,9 @@ They need a separate legal/data-protection review because the current documents 
 
 Before any real pilot or payment, prepare a legal review pack covering:
 
-- at-home stages
-- Stage 4 Care Home Office
-- future Stage 4 Family Coordinator workspace
+- at-home situation
+- care-home situation family-side workspace
+- archived/future Care Home Office product
 - data controller / processor positions for each context
 - disclaimer wording
 - privacy notice variants
@@ -133,7 +126,7 @@ Before any real pilot or payment, prepare a legal review pack covering:
 ## Rewrite order
 
 1. High-traffic in-app docs and help pages.
-2. At-home user guides based on `docs/circle`.
-3. Stage 4 care-home docs with clearer Stage 4 headings.
-4. Future Family Coordinator docs after the workspace design is stable.
+2. Family-side user guides based on the current Family Office / Family Hub / Mobile Support model.
+3. Archived care-home docs with clearer archive headings.
+4. Care-home situation family-side docs after the workspace design is stable.
 5. Legal/privacy/terms after product boundaries are stable and before real users.

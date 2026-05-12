@@ -11,5 +11,7 @@ if "%SUPABASE_SECRET_KEY%"=="" (
   echo SUPABASE_SECRET_KEY is not set. Set it in this terminal before running this script.
   exit /b 1
 )
-echo Starting Voice Message - FAMILY DEV BYPASS (APP_VARIANT=%APP_VARIANT%)
-python -m streamlit run app.py --server.port 8501
+echo Starting Family Hub DEV BYPASS (APP_VARIANT=%APP_VARIANT%)
+echo Family Hub URL: http://localhost:8501/?route=/family/login
+start "" powershell -WindowStyle Hidden -NoProfile -Command "Start-Sleep -Seconds 5; Start-Process 'http://localhost:8501/?route=/family/login'"
+python -m streamlit run app.py --server.port 8501 --server.headless true

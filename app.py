@@ -2388,7 +2388,7 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
                     or "idx_care_home_users_unique_mobile_pin_per_home" in msg_l
                 ):
                     st.error(
-                        "This Mobile PIN is already used by another staff account in this care home. Choose a different PIN."
+                        "This Mobile PIN is already used by another Mobile Support user in this workspace. Choose a different PIN."
                     )
                 else:
                     st.error(msg)
@@ -2399,9 +2399,9 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
             return True
         return False
 
-    st.caption("PIN access is individual to each staff account.")
+    st.caption("PIN access is individual to each Mobile Support user.")
     with st.expander("Change Mobile PIN"):
-        st.caption("Use this if you know your current PIN. If forgotten, ask Office to reset it.")
+        st.caption("Use this if you know your current PIN. If forgotten, ask Family Office to reset it.")
         with st.form("mobile_pin_change_form", clear_on_submit=False):
             current_pin = st.text_input(
                 "Current Mobile PIN",
@@ -2445,7 +2445,7 @@ def render_mobile_pin_gate(access_token: str | None) -> bool:
                     or "idx_care_home_users_unique_mobile_pin_per_home" in msg_l
                 ):
                     st.error(
-                        "This Mobile PIN is already used by another staff account in this care home. Choose a different PIN."
+                        "This Mobile PIN is already used by another Mobile Support user in this workspace. Choose a different PIN."
                     )
                 else:
                     st.error(msg)
@@ -2497,7 +2497,7 @@ def reset_care_home_staff_mobile_pin(
 ) -> tuple[bool, str]:
     target_user_id = str(staff_auth_user_id or "").strip()
     if not target_user_id:
-        return False, "Select a staff account first."
+        return False, "Select a Mobile Support user first."
     supabase, error = get_authed_supabase(access_token)
     if error:
         return False, error
@@ -2505,7 +2505,7 @@ def reset_care_home_staff_mobile_pin(
         supabase.rpc(
             "reset_staff_mobile_pin", {"p_staff_auth_user_id": target_user_id}
         ).execute()
-        return True, "Mobile PIN reset. Staff member must set a new PIN at next Mobile login."
+        return True, "Mobile PIN reset. The Mobile Support user must set a new PIN at next Mobile login."
     except Exception as exc:  # pragma: no cover - Supabase runtime error
         return False, str(exc)
 
@@ -3423,7 +3423,6 @@ def render_how_it_works_diagram_and_notes() -> None:
 
 def resolve_cartoon_asset() -> Path | None:
     preferred_names = [
-        "infographic.png",
         "familyupdates.png",
         "cartoon-familyupdates.png",
         "cartoon-voicemailcare.png",
@@ -3448,23 +3447,33 @@ def render_how_it_works_cartoon() -> None:
 
 def get_how_it_works_access_copy(access_token: str | None, variant: str) -> list[str]:
     if is_current_at_home_lifecycle_stage(access_token):
+        if variant == VARIANT_FAMILY:
+            return [
+                "Family Hub uses secure email login links. Family Members use Family Hub for family communication, not Mobile Support.",
+            ]
+        if variant == VARIANT_MOBILE:
+            return [
+                "Mobile Support may be used by the person providing practical support, paid or unpaid.",
+                "Mobile uses individual PIN access for day-to-day use.",
+                "Secure email link is used only for first sign-in or expired-session recovery.",
+            ]
         return [
-            "Stage 1 - Individual or Couple at Home: an individual or couple is still mainly managing at home. Family contact may be increasing, and repeated calls or scattered messages can become tiring. familyupdates.care helps them share one calm family voice update and receive family messages when useful, without creating a live chat or long message thread.",
-            "Stage 2 - Support from a Family Member: one family member starts helping organise things. The family member may help share updates, ask practical questions, and reduce repeated conversations across the family. Mobile gives the person or couple and the family member separate ways to send messages. The aim is to make the coordination role manageable without taking over the person's life.",
-            "Stage 3 - Family Support plus Carer: support from a family member continues and a carer, supporter, or regular helper is involved at home. The same shared system helps the person or couple, family member, and helper keep practical communication clear. It avoids creating separate message streams for everyone.",
+            "Family Office is the organiser access path for setup, Family Member registration, organiser updates, practical requests, and oversight.",
+            "Mobile Support may be invited where a distinct practical support role is needed.",
+            "Family Hub, Mobile, and Family Office use separate access routes.",
         ]
     if variant == VARIANT_FAMILY:
         return ["Family access uses secure email login links. No SMS and no phone-number login."]
     if variant == VARIANT_MOBILE:
         return [
-            "Care Home Mobile uses individual staff PIN access for day-to-day use.",
+            "Mobile uses individual PIN access for day-to-day use.",
             "Secure email link is used only for first sign-in or expired-session recovery.",
-            "Care Home Office is a separate care home staff/admin access path.",
-            "Office authentication is distinct from Family email links and Mobile staff PIN access.",
+            "Family Office is a separate organiser access path.",
+            "Office authentication is distinct from Family email links and Mobile PIN access.",
         ]
     return [
-        "Care Home Office is a separate care home staff/admin access path.",
-        "Office authentication is distinct from Family email links and Mobile staff PIN access.",
+        "Family Office is a separate organiser access path.",
+        "Office authentication is distinct from Family email links and Mobile PIN access.",
         "If Office 2FA is enabled, users complete Office verification after login.",
     ]
 
@@ -3504,7 +3513,7 @@ def render_how_it_works_family() -> None:
 
 
 def render_how_it_works_mobile() -> None:
-    render_page_header("How it works - Care Home Mobile")
+    render_page_header("How it works - Mobile")
     runtime_variant = resolve_runtime_variant(route_hint=get_route())
     mobile_session = bool(
         st.session_state.get("auth_uid")
@@ -3869,7 +3878,7 @@ def require_care_access() -> None:
             )
         if runtime_variant == VARIANT_OFFICE and not current_user_can_access_office():
             render_wrong_variant(
-                "This account has Mobile-only access. It cannot use Office setup, registration, operational variables, security, or billing."
+                "This account has Mobile access. It cannot use Family Office setup, registration, setup variables, or Account & Security."
             )
             st.stop()
         if runtime_variant == VARIANT_OFFICE:
@@ -3880,7 +3889,11 @@ def require_care_access() -> None:
             st.stop()
         return
     if family_found:
-        render_wrong_variant("Your login details are for Family.")
+        render_access_gate(
+            "This browser is signed in to Family Hub. Sign out of Family Hub before using Mobile or Family Office.",
+            get_login_route(runtime_variant),
+            "family",
+        )
         st.stop()
     render_access_gate("Account not set up yet.", get_login_route(runtime_variant), "care_hub")
     st.stop()
@@ -5227,21 +5240,21 @@ def get_workspace_labels_for_lifecycle_stage(
 def get_lifecycle_stage_label(stage_value: object) -> str:
     stage = normalize_lifecycle_stage(stage_value)
     labels = {
-        1: "Stage 1 - Individual or Couple at Home",
-        2: "Stage 2 - Support from a Family Member",
-        3: "Stage 3 - Family Support plus Carer",
-        4: "Stage 4 - Care Home",
+        1: "At home with Family Organiser + Mobile Support",
+        2: "At home with Family Organiser + Mobile Support",
+        3: "At home with Family Organiser + Mobile Support",
+        4: "Care home with Family Organiser + Mobile Support",
     }
-    return labels.get(stage, f"Stage {stage}")
+    return labels.get(stage, "At home with Family Organiser + Mobile Support")
 
 
 def get_lifecycle_stage_setup_note(stage_value: object) -> str:
     stage = normalize_lifecycle_stage(stage_value)
     notes = {
-        1: "Stage 1: an individual or couple is at home. familyupdates.care can start with one calm family voice update and add more only when useful.",
-        2: "Stage 2: support from a family member begins. The aim is to make the coordination role manageable without taking over the person's life.",
-        3: "Stage 3: support from a family member plus a carer, supporter, or regular helper is involved at home. The same shared system keeps practical communication clear.",
-        4: "Stage 4: the person is living in a care home, with external and separate support from a family member. The Family system may continue for family-side coordination. A care home could run its own completely separate system using the same model, but it does not connect to the Family Organiser's app.",
+        1: "At home: the person is at home and family coordination has become necessary. The Family Organiser coordinates communication; Mobile Support is used by the practical support role.",
+        2: "At home: the person is at home and family coordination has become necessary. The Family Organiser coordinates communication; Mobile Support is used by the practical support role.",
+        3: "At home: the person is at home and family coordination has become necessary. The Family Organiser coordinates communication; Mobile Support is used by the practical support role.",
+        4: "Care home: the person is living in a care home, but family organisation continues. The care home handles care operations; familyupdates.care handles family-side non-urgent focussed communications where needed.",
     }
     return notes.get(stage, "")
 
@@ -5252,16 +5265,11 @@ def render_stage_level_status(
     context: str = "",
 ) -> None:
     lifecycle_stage_label = str(lifecycle_policy.get("lifecycle_stage_label") or "").strip()
-    communication_level_label = str(
-        lifecycle_policy.get("communication_level_label") or ""
-    ).strip()
-    if not lifecycle_stage_label and not communication_level_label:
+    if not lifecycle_stage_label:
         return
     parts = []
     if lifecycle_stage_label:
-        parts.append(f"Stage: {lifecycle_stage_label}")
-    if communication_level_label:
-        parts.append(f"Communication level: {communication_level_label}")
+        parts.append(lifecycle_stage_label)
     if context:
         parts.append(context)
     st.info(" | ".join(parts))
@@ -5282,7 +5290,6 @@ def render_dev_stage_level_status(access_token: str | None = None) -> None:
 def render_stage_level_capability_tables(access_token: str | None = None) -> None:
     token = access_token if access_token is not None else st.session_state.get("access_token")
     current_policy: dict[str, object] | None = None
-    render_how_it_works_cartoon()
     if token:
         current_policy = get_lifecycle_policy(
             get_lifecycle_stage(token),
@@ -5293,55 +5300,41 @@ def render_stage_level_capability_tables(access_token: str | None = None) -> Non
 
     st.markdown(
         """
-familyupdates.care helps structure non-urgent family communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
+familyupdates.care helps structure communication when a family member needs support.
 
-familyupdates.care deliberately limits communication so it stays workable. It keeps communication current and bounded, rather than complete and searchable.
+There are three roles for the family to fill:
 
-Families use the app for everyday communication, reassurance, structured requests, noticeboard-style information, and family messages. The Family Organiser tells essential contacts how often messages are checked, for example once or twice a day.
+1. Family Organiser.
+2. Person available for urgent/emergency phone contact and emergency protocol.
+3. Care support.
 
-familyupdates.care helps the Family Organiser keep family communication more structured, while giving the person being supported a realistic, supported way to keep in touch. It creates clear boundaries: one current update, one current request, and one current message per person. No threads, no message build-up, and no expectation of instant replies.
+familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
+
+Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser tells the family when and how frequently they will check messages.
 
 familyupdates.care does not remove the need for care, support, or professional help. But where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded.
 
 #### What the app does
 
 - One current update from the Family Organiser to the family group.
-- One current voice message from each Family Member to the person.
-- One current voice message from the person to the family group, or one current direct voice message to the Family Organiser or selected Family Member.
+- One current specific message each way between the Family Organiser and each Family Member.
+- One current update/request each way between the Family Organiser and Mobile Support, if required.
 - One practical request from the Family Organiser, with structured responses from Family Members.
 - One current noticeboard note from each Family Member, visible to the family group.
 
-Each new item replaces the previous one in that channel. There are no threads, no archive, and no live chat.
+Each person's new message replaces their own previous message in that channel. One sender does not overwrite another sender's message. There are no threads, no archive, and no live chat.
 
 The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current.
 
-| Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family Organiser | Stage 3: + Carer | Stage 4: Care home + Family Organiser |
-| ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
-| 1     | Single update to family group                            | Yes                    | Yes                           | Yes              | Yes                                     |
-| 2     | Individual voice messages from family members            | Yes                    | Yes                           | Yes              | Yes                                     |
-| 3     | Practical requests, noticeboard notes, and structured replies | Yes                    | Yes                           | Yes              | Yes                                     |
-| 4     | Option: Mobile additional channel                        | Yes                    | Yes                           | Yes              | Yes                                     |
-| 5     | Optional separate Care Home system                       | -                      | -                             | -                | Optional - care home adopted only       |
+familyupdates.care is for situations where family coordination is needed. It is not offered as a system for people or couples who are managing communication and support arrangements themselves.
 
-The life stage describes who is involved: from managing independently at Stage 1, to help from a family member (Family Organiser) at Stage 2, to having a paid carer at Stage 3, and finally to a care home plus Family Organiser at Stage 4. The communication level describes how much of the system is switched on.
+#### Where the app may be used
 
-One message replaces the last in each channel.
+There are two settings: at home, and care home.
 
-Transcripts of voice messages are available.
+**At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
 
-Text is available for short updates with no replies. One text replaces the last in that channel, so messages stay fresh and relevant.
-
-#### Stages
-
-**Stage 1: Person/Couple** - An individual person or a couple living at home and managing their own day-to-day communication.
-
-**Stage 2: + Family Organiser** - The person/couple plus a Family Organiser. A Family Organiser is a family member who helps organise communication and practical requests.
-
-**Stage 3: + Carer** - The person/couple plus a Family Organiser and a paid carer.
-
-**Stage 4: Care home + Family Organiser** - The person/couple moves into a care home.
-
-In Stage 4, the Family system may continue for family-side updates and coordination. A care home could choose to run its own completely separate Care Home system using the same model, but it does not connect to the Family Organiser's app. There is no planned direct connection between the two systems at this stage.
+**Care home with Family Organiser + Mobile Support** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
 
 #### Not for urgent matters
 
@@ -5349,7 +5342,7 @@ familyupdates.care is non-urgent and not live. Requests and structured replies a
 
 Family requests remain visible to all linked Family Members and may specify that a message is relevant to a named person - but is viewable by all. All linked Family Members can see the request and any structured responses.
 
-Family members may send individual voice messages and also may reply to requests using fixed structured choices, optional fixed tick-boxes, and an optional short context note. There are no private chats, threads, or back-and-forth conversations.
+Family Members may reply to requests using fixed structured choices, optional fixed tick-boxes, and an optional short context note. There are no private chats, threads, or back-and-forth conversations.
 
 For essential, urgent, sensitive, medical, safeguarding, privacy-related, legal, financial, time-critical, or emergency matters, use normal direct communication outside familyupdates.care, such as phone, text, WhatsApp, email, or existing care-home channels. Seek appropriate professional advice where needed.
 
@@ -5357,7 +5350,7 @@ For essential, urgent, sensitive, medical, safeguarding, privacy-related, legal,
 
 ##### Getting organised
 
-The external filing system should be organised first, before starting updates, using your own external file management and storage system for data security. The information should be organised, separated, and accessible to the right person when needed. The six files we recommend that you prepare are:
+In preparation for using the app, your external filing system should be organised and for data security use your own secure file management and storage system. The information should be organised, separated, and accessible to the right person when needed. The six files we recommend that you prepare are:
 
 - Life Log
 - Contacts
@@ -5370,7 +5363,7 @@ You may also want to consider Lasting Powers of Attorney for property and financ
 
 Once the external filing system is in place, start small: one calm update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.
 
-Then add only the communication tools that are useful: family voice messages, text updates, practical requests, and structured replies.
+Then add only the communication tools that are useful: specific organiser messages to individual Family Members, practical requests, family noticeboard notes, and structured replies.
 """
     )
 
@@ -5388,23 +5381,10 @@ def normalize_communication_level(level_value: object) -> int:
     return max(COMMUNICATION_LEVEL_MIN, min(parsed, COMMUNICATION_LEVEL_MAX))
 
 
-def get_communication_level_label(level_value: object) -> str:
-    level = normalize_communication_level(level_value)
-    labels = {
-        1: "Level 1 - Single update to family group",
-        2: "Level 2 - Individual voice messages from family members",
-        3: "Level 3 - Practical requests, noticeboard notes, and structured replies",
-        4: "Level 4 - Optional Mobile additional channel",
-        5: "Level 5 - Optional separate Care Home system",
-    }
-    return labels.get(level, f"Level {level}")
-
-
 def get_communication_level_policy(level_value: object) -> dict[str, object]:
     level = normalize_communication_level(level_value)
     return {
         "communication_level": level,
-        "communication_level_label": get_communication_level_label(level),
         "enable_one_way_updates": True,
         "enable_family_voice_messages": level >= 2,
         "enable_mobile_listen_and_record": level >= 2,
@@ -5600,7 +5580,7 @@ def validate_personal_mode_runtime(operating_mode: object) -> tuple[bool, list[s
     return not failures, failures
 
 
-def _derive_circle_title(context_phrase: str, person_name: str = "") -> str:
+def _derive_family_workspace_title(context_phrase: str, person_name: str = "") -> str:
     person = str(person_name or "").strip()
     phrase = str(context_phrase or "").strip()
     if not person and phrase:
@@ -5613,9 +5593,25 @@ def _derive_circle_title(context_phrase: str, person_name: str = "") -> str:
             person = candidate
     if person:
         if person.endswith("s"):
-            return f"{person}' Circle"
-        return f"{person}'s Circle"
-    return "Circle"
+            return f"{person}' Family"
+        return f"{person}'s Family"
+    return "Family"
+
+
+def _family_display_name_without_legacy_circle(value: object) -> str:
+    cleaned = re.sub(r"\s+", " ", str(value or "").strip())
+    if not cleaned:
+        return ""
+    cleaned = re.sub(r"\bCare\s+Circle\b", "Family", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bCircle\b", "Family", cleaned, flags=re.IGNORECASE)
+    return cleaned.strip()
+
+
+def _family_title_from_person_display_name(person_name: object) -> str:
+    person = re.sub(r"\s+", " ", str(person_name or "").strip())
+    if not person:
+        return ""
+    return f"{person}' Family" if person.endswith("s") else f"{person}'s Family"
 
 
 def _resolve_person_display_name_from_residents(
@@ -5635,23 +5631,8 @@ def _resolve_person_display_name_from_residents(
 
 
 MODE_DOC_OVERRIDES: dict[str, dict[str, str]] = {
-    OPERATING_MODE_PERSONAL_USE: {
-        "docs/office/04_care_home_responsibilities.md": "docs/circle/04_circle_responsibilities.md",
-        "docs/office/05_care_home_guide.md": "docs/circle/05_circle_guide.md",
-        "docs/office/09_safeguarding_consent.md": "docs/circle/09_circle_safeguarding_consent.md",
-        "docs/office/10_registering_family_member.md": "docs/circle/10_registering_circle_contacts.md",
-        "docs/office/care_home_onboarding_script.md": "docs/circle/circle_onboarding_script.md",
-        "docs/office/care_home_handover_checklist.md": "docs/circle/circle_handover_checklist.md",
-        "docs/office/common_questions_qa.md": "docs/circle/common_questions_qa.md",
-        "docs/public/10_faq.md": "docs/circle/10_faq.md",
-        "docs/public/11_family_qa.md": "docs/circle/11_family_qa.md",
-        "docs/public/12_mobile_qa.md": "docs/circle/12_mobile_qa.md",
-        "docs/public/privacy_policy.md": "docs/circle/privacy_policy.md",
-        "docs/public/complaints_and_concerns.md": "docs/circle/complaints_and_concerns.md",
-        "docs/public/safeguarding_and_consent.md": "docs/circle/safeguarding_and_consent.md",
-        "docs/public/family_terms_summary.md": "docs/circle/family_terms_summary.md",
-        "docs/public/family_terms_of_use.md": "docs/circle/family_terms_of_use.md",
-    }
+    # The earlier "Circle" document set is legacy and no longer drives public/help copy.
+    OPERATING_MODE_PERSONAL_USE: {}
 }
 
 
@@ -5767,7 +5748,7 @@ def fetch_active_care_home_profile(access_token: str | None, *, force_refresh: b
     select_fields = (
         "name, branding_banner_title, branding_banner_text, "
         "branding_banner_artwork_url, care_hub_idle_timeout_seconds, transcript_policy_mode, "
-        "operating_mode, main_contact_name, lifecycle_stage, communication_level"
+        "operating_mode, main_contact_name, message_check_note, lifecycle_stage, communication_level"
     )
     fallback_select_fields = (
         "name, branding_banner_title, branding_banner_text, branding_banner_artwork_url, "
@@ -5793,6 +5774,7 @@ def fetch_active_care_home_profile(access_token: str | None, *, force_refresh: b
                 or _is_missing_column_error(exc, "transcript_policy_mode")
                 or _is_missing_column_error(exc, "operating_mode")
                 or _is_missing_column_error(exc, "main_contact_name")
+                or _is_missing_column_error(exc, "message_check_note")
                 or _is_missing_column_error(exc, "lifecycle_stage")
                 or _is_missing_column_error(exc, "communication_level")
             ):
@@ -5834,6 +5816,7 @@ def fetch_active_care_home_profile(access_token: str | None, *, force_refresh: b
                     or _is_missing_column_error(exc, "transcript_policy_mode")
                     or _is_missing_column_error(exc, "operating_mode")
                     or _is_missing_column_error(exc, "main_contact_name")
+                    or _is_missing_column_error(exc, "message_check_note")
                     or _is_missing_column_error(exc, "lifecycle_stage")
                     or _is_missing_column_error(exc, "communication_level")
                 ):
@@ -5872,6 +5855,7 @@ def fetch_active_care_home_profile(access_token: str | None, *, force_refresh: b
             ),
             "operating_mode": normalize_operating_mode(row.get("operating_mode")),
             "main_contact_name": str(row.get("main_contact_name") or "").strip(),
+            "message_check_note": str(row.get("message_check_note") or "").strip(),
             "lifecycle_stage": normalize_lifecycle_stage(row.get("lifecycle_stage")),
             "communication_level": normalize_communication_level(row.get("communication_level")),
         }
@@ -5891,6 +5875,7 @@ def update_active_care_home_branding(
     lifecycle_stage: int,
     communication_level: int,
     main_contact_name: str,
+    message_check_note: str,
     banner_title: str,
     banner_text: str,
     banner_artwork_url: str,
@@ -5909,6 +5894,7 @@ def update_active_care_home_branding(
     lifecycle_stage_value = normalize_lifecycle_stage(lifecycle_stage)
     communication_level_value = normalize_communication_level(communication_level)
     main_contact_value = str(main_contact_name or "").strip()
+    message_check_note_value = str(message_check_note or "").strip()
     artwork_value = normalize_banner_artwork_url(banner_artwork_url)
     timeout_value = normalize_care_hub_idle_timeout_seconds(care_hub_idle_timeout_seconds)
     transcript_policy_value = normalize_transcript_policy_mode(transcript_policy_mode)
@@ -5920,6 +5906,8 @@ def update_active_care_home_branding(
         return False, "Banner title must be 120 characters or fewer."
     if len(main_contact_value) > 120:
         return False, "Main contact name must be 120 characters or fewer."
+    if len(message_check_note_value) > 500:
+        return False, "Message check note must be 500 characters or fewer."
     if len(text_value) > 800:
         return False, "Banner text must be 800 characters or fewer."
     if len(artwork_value) > 1000:
@@ -5933,6 +5921,7 @@ def update_active_care_home_branding(
         "lifecycle_stage": lifecycle_stage_value,
         "communication_level": communication_level_value,
         "main_contact_name": main_contact_value or None,
+        "message_check_note": message_check_note_value or None,
         "branding_banner_title": title_value or None,
         "branding_banner_text": text_value or None,
         "branding_banner_artwork_url": artwork_value or None,
@@ -5952,17 +5941,19 @@ def update_active_care_home_branding(
                 st.session_state["_care_homes_missing_lifecycle_stage"] = True
                 return (
                     False,
-                    "Lifecycle stage cannot be saved because the Supabase database is missing care_homes.lifecycle_stage. Apply migration 0029_care_homes_lifecycle_stage.sql, then try again.",
+                    "Current situation cannot be saved because the Supabase database is missing care_homes.lifecycle_stage. Apply migration 0029_care_homes_lifecycle_stage.sql, then try again.",
                 )
             if not (
                 _is_missing_column_error(exc, "care_hub_idle_timeout_seconds")
                 or _is_missing_column_error(exc, "transcript_policy_mode")
                 or _is_missing_column_error(exc, "communication_level")
+                or _is_missing_column_error(exc, "message_check_note")
             ):
                 raise
             update_payload.pop("care_hub_idle_timeout_seconds", None)
             update_payload.pop("transcript_policy_mode", None)
             update_payload.pop("communication_level", None)
+            update_payload.pop("message_check_note", None)
             (
                 supabase.table("care_homes")
                 .update(update_payload)
@@ -5983,6 +5974,7 @@ def update_active_care_home_branding(
             (persisted_profile or {}).get("communication_level")
         )
         persisted_main_contact_name = str((persisted_profile or {}).get("main_contact_name") or "").strip()
+        persisted_message_check_note = str((persisted_profile or {}).get("message_check_note") or "").strip()
         persisted_artwork = normalize_banner_artwork_url(
             (persisted_profile or {}).get("branding_banner_artwork_url")
         )
@@ -6027,7 +6019,7 @@ def update_active_care_home_branding(
                 st.session_state["_care_homes_missing_lifecycle_stage"] = True
                 return (
                     False,
-                    "Lifecycle stage cannot be saved because the Supabase database is missing care_homes.lifecycle_stage. Apply migration 0029_care_homes_lifecycle_stage.sql, then try again.",
+                    "Current situation cannot be saved because the Supabase database is missing care_homes.lifecycle_stage. Apply migration 0029_care_homes_lifecycle_stage.sql, then try again.",
                 )
             st.session_state.pop(f"care_home_profile_{care_home_id}", None)
             st.session_state.pop(f"care_home_profile_{care_home_id}_ts", None)
@@ -6052,7 +6044,7 @@ def update_active_care_home_branding(
             if persisted_lifecycle_stage != lifecycle_stage_value:
                 return (
                     False,
-                    "Lifecycle stage change could not be confirmed after save. Please retry or check care_homes update permissions.",
+                    "Current situation change could not be confirmed after save. Please retry or check care_homes update permissions.",
                 )
         if persisted_communication_level != communication_level_value:
             try:
@@ -6073,7 +6065,7 @@ def update_active_care_home_branding(
                 if _is_missing_column_error(exc, "communication_level"):
                     return (
                         False,
-                        "Communication level cannot be saved because the Supabase database is missing care_homes.communication_level. Apply the latest migration, then try again.",
+                        "Internal capability settings cannot be saved because the Supabase database is missing care_homes.communication_level. Apply the latest migration, then try again.",
                     )
                 raise
             st.session_state.pop(f"care_home_profile_{care_home_id}", None)
@@ -6099,7 +6091,7 @@ def update_active_care_home_branding(
             if persisted_communication_level != communication_level_value:
                 return (
                     False,
-                    "Communication level change could not be confirmed after save. Please retry or check care_homes update permissions.",
+                    "Internal capability settings could not be confirmed after save. Please retry or check care_homes update permissions.",
                 )
         else:
             try:
@@ -6113,7 +6105,7 @@ def update_active_care_home_branding(
                 if _is_missing_column_error(exc, "communication_level"):
                     return (
                         False,
-                        "Communication level cannot be saved because the Supabase database is missing care_homes.communication_level. Apply the latest migration, then try again.",
+                        "Internal capability settings cannot be saved because the Supabase database is missing care_homes.communication_level. Apply the latest migration, then try again.",
                     )
                 raise
             st.session_state.pop(f"care_home_profile_{care_home_id}", None)
@@ -6125,13 +6117,14 @@ def update_active_care_home_branding(
             if persisted_communication_level != communication_level_value:
                 return (
                     False,
-                    "Communication level change could not be confirmed after save. Please retry or check care_homes update permissions.",
+                    "Internal capability settings could not be confirmed after save. Please retry or check care_homes update permissions.",
                 )
         if (
             persisted_name != name_value
             or persisted_lifecycle_stage != lifecycle_stage_value
             or persisted_communication_level != communication_level_value
             or persisted_main_contact_name != main_contact_value
+            or persisted_message_check_note != message_check_note_value
             or persisted_title != title_value
             or persisted_text != text_value
             or persisted_artwork != artwork_value
@@ -6162,7 +6155,7 @@ def update_active_care_home_stage_level(
     lifecycle_stage_value = normalize_lifecycle_stage(lifecycle_stage)
     communication_level_value = normalize_communication_level(communication_level)
     if communication_level_value == 5 and lifecycle_stage_value != 4:
-        return False, "Level 5 cannot be saved unless Current lifecycle stage is Stage 4.", {}
+        return False, "Archived care-home system flag cannot be saved unless the care-home situation is selected.", {}
     supabase, error = get_authed_supabase(access_token)
     if error:
         return False, error, {}
@@ -6230,10 +6223,10 @@ def update_active_care_home_stage_level(
             readback_stage == lifecycle_stage_value
             and readback_level == communication_level_value
         ):
-            return True, "Stage and communication level saved.", result
+            return True, "Situation saved.", result
         return (
             False,
-            "Stage/level update was sent, but Supabase readback did not match.",
+            "Current situation update was sent, but Supabase readback did not match.",
             result,
         )
     except Exception as exc:
@@ -6254,13 +6247,17 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
     )
     workspace_type_label = str(workspace_labels.get("workspace_type_label") or "Care Home system")
     if care_home_name:
-        safe_name = html.escape(care_home_name)
+        display_name = (
+            _family_display_name_without_legacy_circle(care_home_name)
+            if operating_mode == OPERATING_MODE_PERSONAL_USE or home_coordination_stage
+            else care_home_name
+        )
+        safe_name = html.escape(display_name)
         if operating_mode == OPERATING_MODE_PERSONAL_USE or home_coordination_stage:
             person_display = str(st.session_state.get("circle_person_display_name") or "").strip()
-            safe_person_display = html.escape(person_display) if person_display else ""
-            lines = [f"<strong>{safe_name}</strong>"]
-            if safe_person_display and safe_person_display.lower() != safe_name.lower():
-                lines.append(f"<div>{safe_person_display}</div>")
+            family_title = _family_title_from_person_display_name(person_display)
+            safe_family_title = html.escape(family_title) if family_title else safe_name
+            lines = [f"<strong>{safe_family_title}</strong>"]
             st.markdown(
                 (
                     '<div style="margin:6px 0 12px 0;padding:8px 10px;'
@@ -6288,6 +6285,9 @@ def render_care_home_identity_banner(access_token: str | None) -> None:
     if get_app_variant() in {VARIANT_OFFICE, VARIANT_MOBILE, VARIANT_FAMILY}:
         mode_text = workspace_type_label
         st.caption(f"Mode: {mode_text}")
+        message_check_note = str(care_home_profile.get("message_check_note") or "").strip()
+        if message_check_note:
+            st.caption(f"Message check note: {message_check_note}")
     if not bool(st.session_state.get("_care_home_custom_banner_rendered")):
         rendered = render_active_care_home_custom_banner(care_home_profile)
         st.session_state["_care_home_custom_banner_rendered"] = bool(rendered)
@@ -6316,11 +6316,10 @@ def render_active_care_home_name_caption() -> None:
     if care_home_name:
         if operating_mode == OPERATING_MODE_PERSONAL_USE or home_coordination_stage:
             person_display = str(st.session_state.get("circle_person_display_name") or "").strip()
-            safe_person_display = html.escape(person_display) if person_display else ""
-            safe_care_home_name = html.escape(care_home_name)
+            display_name = _family_display_name_without_legacy_circle(care_home_name)
+            family_title = _family_title_from_person_display_name(person_display)
+            safe_care_home_name = html.escape(family_title or display_name)
             lines = [f"<strong>{safe_care_home_name}</strong>"]
-            if safe_person_display and safe_person_display.lower() != safe_care_home_name.lower():
-                lines.append(f"<div>{safe_person_display}</div>")
             st.markdown(
                 '<div class="vm-care-home-banner">' + "".join(lines) + "</div>",
                 unsafe_allow_html=True,
@@ -6338,6 +6337,9 @@ def render_active_care_home_name_caption() -> None:
         st.session_state["_care_home_banner_rendered_in_header"] = True
     rendered = render_active_care_home_custom_banner(care_home_profile)
     st.session_state["_care_home_custom_banner_rendered"] = bool(rendered)
+    message_check_note = str(care_home_profile.get("message_check_note") or "").strip()
+    if message_check_note:
+        st.caption(f"Message check note: {message_check_note}")
 
 
 def render_active_care_home_custom_banner(care_home_profile: dict) -> bool:
@@ -6375,15 +6377,8 @@ def render_active_care_home_custom_banner(care_home_profile: dict) -> bool:
                 f'<div class="vm-care-home-custom-banner-text">{escaped_text}</div>',
                 unsafe_allow_html=True,
             )
-    if banner_artwork_url:
-        # Use browser-side rendering to avoid Streamlit server-side URL fetch limitations.
-        safe_artwork_url = html.escape(banner_artwork_url.replace(" ", "%20"), quote=True)
-        st.markdown(
-            f'<img src="{safe_artwork_url}" alt="Care home custom banner artwork" '
-            'style="display:block;max-width:100%;height:auto;border-radius:6px;margin:0 0 10px 0;" '
-            'onerror="this.style.display=\'none\';" />',
-            unsafe_allow_html=True,
-        )
+    # Artwork is intentionally not rendered during the familyupdates.care transition.
+    # The public/system model now lives in Markdown, not banner images.
     if has_copy:
         st.markdown("</div>", unsafe_allow_html=True)
     return True
@@ -6496,7 +6491,7 @@ def office_practical_target_label(message: dict | None, contacts: list[dict] | N
             return f"{family_contact_display_name(contact)} as intended responder"
         return "one named Family Member as intended responder"
     if target_type == OFFICE_PRACTICAL_TARGET_MOBILE:
-        return "Mobile / carer"
+        return "Mobile Support / carer"
     return "all Family Members"
 
 
@@ -7196,7 +7191,7 @@ def render_family_noticeboard_notes_for_staff(
     key_prefix: str,
 ) -> None:
     noticeboard_notes = fetch_family_noticeboard_notes(resident_id, access_token)
-    st.markdown("**Family noticeboard**")
+    st.markdown("**Family noticeboard: current practical notes from Family Members**")
     st.caption(
         "Current practical notes from Family Members. No chat, no threads, and no urgent or sensitive matters."
     )
@@ -7996,69 +7991,46 @@ def render_corner_logo() -> None:
 
 
 def render_logo_row() -> None:
-    logo_path = Path(__file__).resolve().parent / "assets" / "logo.png"
-    if not logo_path.exists():
-        st.write("Logo missing")
-        return
-    try:
-        logo_b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
-        st.markdown(
-            f"""
+    st.markdown(
+        """
 <style>
   .vm-logo-row {{
     display: flex;
     align-items: center;
-    gap: 12px;
-  }}
-  .vm-logo-row img {{
-    width: 70px;
-    height: auto;
+    min-height: 58px;
   }}
   .vm-logo-row .vm-logo-text {{
-    font-size: 0.9rem;
-    font-weight: 700;
+    font-size: 1.72rem;
+    font-weight: 800;
     line-height: 1.1;
-    margin-left: 8px;
+    letter-spacing: 0;
     white-space: nowrap;
+    color: #1f2937;
+  }}
+  .vm-logo-row .vm-logo-text span {{
+    color: #6b7280;
+    font-weight: 700;
   }}
   @media (max-width: 768px) {{
-    .vm-logo-row {{
-      gap: 8px;
-    }}
-    .vm-logo-row img {{
-      width: 56px;
-    }}
     .vm-logo-row .vm-logo-text {{
-      font-size: 0.78rem;
-      margin-left: 0;
+      font-size: 1.28rem;
     }}
   }}
 </style>
 <div class="vm-logo-row">
-  <img src="data:image/png;base64,{logo_b64}" alt="logo" />
-  <span class="vm-logo-text">familyupdates.care</span>
+  <span class="vm-logo-text">familyupdates<span>.care</span></span>
 </div>
 """,
-            unsafe_allow_html=True,
-        )
-    except OSError:
-        st.write("Logo missing")
+        unsafe_allow_html=True,
+    )
 
 
 def get_logo_data_uri() -> str:
-    logo_path = Path(__file__).resolve().parent / "assets" / "logo.png"
-    try:
-        logo_b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
-    except OSError:
-        return ""
-    return f"data:image/png;base64,{logo_b64}"
+    return ""
 
 
 def render_route_transition_loader(duration_ms: int = 700) -> None:
-    logo_data = get_logo_data_uri()
-    logo_html = (
-        f'<img class="vm-wait-logo" src="{logo_data}" alt="logo" />' if logo_data else ""
-    )
+    logo_html = '<div class="vm-wait-wordmark">familyupdates<span>.care</span></div>'
     st.markdown(
         f"""
 <style>
@@ -8072,11 +8044,16 @@ def render_route_transition_loader(duration_ms: int = 700) -> None:
     justify-content: center;
     padding: 12px;
   }}
-  .vm-wait-logo {{
-    width: 92px;
-    height: auto;
-    display: block;
+  .vm-wait-wordmark {{
+    color: #1f2937;
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: 0;
     animation: vm-logo-fade 2.4s ease-in-out infinite;
+  }}
+  .vm-wait-wordmark span {{
+    color: #6b7280;
+    font-weight: 700;
   }}
   @keyframes vm-logo-fade {{
     0%, 100% {{ opacity: 0.28; transform: scale(0.98); }}
@@ -8142,7 +8119,7 @@ def render_life_file_guide() -> None:
         )
         render_stage_level_status(
             lifecycle_policy,
-            context="Preparation sits outside the app stages.",
+            context="Preparation sits outside the app.",
         )
     st.markdown(
         "Use this guide to organise important information outside the app. "
@@ -8243,13 +8220,15 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("route", "/care-hub/operational-variables")
             if st.button("Account & Security", key=f"{menu_key}_security"):
                 clicked_action = ("route", "/care-hub/security")
-            if st.button("Subscription & Billing", key=f"{menu_key}_billing"):
-                clicked_action = ("route", "/billing")
 
             st.markdown("- Daily Use -")
-            handbook_label = "At-home guide" if at_home_lifecycle_stage else "Care Home handbook"
+            handbook_label = "How it works" if at_home_lifecycle_stage else "Care Home handbook"
             if st.button(handbook_label, key=f"{menu_key}_office_doc_handbook"):
-                clicked_action = ("doc", "docs/office/05_care_home_guide.md")
+                clicked_action = (
+                    ("route", "/public/how-it-works")
+                    if at_home_lifecycle_stage
+                    else ("doc", "docs/office/05_care_home_guide.md")
+                )
             if not at_home_lifecycle_stage and st.button(
                 "Handover checklist", key=f"{menu_key}_office_doc_handover"
             ):
@@ -8546,11 +8525,11 @@ def render_front_page_descriptor() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="front-page-info-box">familyupdates.care - for non-urgent updates, voice messages, and practical requests.</div>',
+        '<div class="front-page-info-box">familyupdates.care - for non-urgent updates, specific messages, practical requests, and noticeboard notes.</div>',
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="front-page-info-box">One message kept at a time in each direction (between each Family Member and each resident), with no threads.</div>',
+        '<div class="front-page-info-box">One current item is kept in each channel, with no threads.</div>',
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -8558,7 +8537,7 @@ def render_front_page_descriptor() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        '<div class="front-page-info-box">Not a live service. Messages are played when staff are available.</div>',
+        '<div class="front-page-info-box">Not a live service. Urgent and private matters stay outside the app.</div>',
         unsafe_allow_html=True,
     )
 
@@ -9145,9 +9124,14 @@ def render_home(active: str) -> None:
                 border-bottom: 1px solid rgba(31,31,31,0.08);
             }
             .public-header-title {
-                font-size: 24px;
+                font-size: 32px;
+                font-weight: 800;
+                letter-spacing: 0;
+                color: #1f2937;
+            }
+            .public-header-title span {
+                color: #6b7280;
                 font-weight: 700;
-                color: #708090;
             }
             .public-hero {
                 padding: 22px 6px 8px;
@@ -9302,20 +9286,11 @@ def render_home(active: str) -> None:
             unsafe_allow_html=True,
         )
         st.markdown('<div class="public-root"><div class="public-wrap">', unsafe_allow_html=True)
-        logo_data = get_logo_data_uri()
-        if logo_data:
-            header_html = (
-                f'<div class="public-header">'
-                f'<img src="{logo_data}" alt="logo" style="height:84px;width:auto;display:block;" />'
-                f'<div class="public-header-title">familyupdates.care</div>'
-                f"</div>"
-            )
-        else:
-            header_html = (
-                '<div class="public-header">'
-                '<div class="public-header-title">familyupdates.care</div>'
-                "</div>"
-            )
+        header_html = (
+            '<div class="public-header">'
+            '<div class="public-header-title">familyupdates<span>.care</span></div>'
+            "</div>"
+        )
         st.markdown(header_html, unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
@@ -9324,19 +9299,27 @@ def render_home(active: str) -> None:
             "A structured, non-urgent family communication system around care."
         )
         st.markdown(
-            "familyupdates.care separates emergency communication from everyday communication. "
-            "Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact."
+            """
+familyupdates.care separates emergency communication from everyday communication.
+
+There are three roles for the family to fill:
+
+1. Family Organiser.
+2. Person available for urgent/emergency phone contact and emergency protocol.
+3. Care support.
+
+familyupdates.care is for non-urgent communication only.
+"""
         )
         st.markdown(
-            "The app provides one current update to family, one current request, family messages, "
-            "and noticeboard-style information. The Family Organiser has full access to the family tools; "
+            "The app provides one current update to family, one current specific organiser message, "
+            "one current practical request, and noticeboard-style information. The Family Organiser has full access to the family tools; "
             "Family Members and carers can use their own enabled channels directly. One current item replaces the last, "
             "with no threads, no message build-up, and no pressure to reply instantly."
         )
         st.markdown(
             "Families use the app for everyday communication. Carers may use the app directly where enabled, or text the Family Organiser. "
-            "Care homes may email. The Family Organiser tells essential contacts how often messages are checked, "
-            "for example once or twice a day."
+            "The Family Organiser tells the family when and how frequently they will check messages."
         )
         st.markdown(
             "Emergencies follow the agreed protocol, otherwise all messages are treated as non-urgent."
@@ -9346,11 +9329,10 @@ def render_home(active: str) -> None:
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("## A simple way to explore the idea")
         st.markdown(
-            "familyupdates.care can be introduced through a one-to-one, activity-based session in the care home."
+            "familyupdates.care can be introduced through a simple one-to-one walkthrough."
         )
         st.markdown(
-            "The session uses printed artwork and conversation as a starting point. "
-            "A short voice message can be played as part of the interaction, introducing the idea in a natural way."
+            "The session uses a simple example family update, practical request, and noticeboard note, introducing the idea in a natural way."
         )
         st.markdown(
             "There is no obligation to adopt anything, simply an opportunity to see how this might help communication for you."
@@ -9360,16 +9342,17 @@ def render_home(active: str) -> None:
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("## Feedback welcome")
         st.markdown(
-            "We warmly welcome feedback from carers, residents (with support), and families to help us improve this service."
+            "We welcome feedback from Family Organisers, Family Members, carers, and helpers to help improve this service."
         )
         st.caption("Anonymous only. Please do not include names, emails, phone numbers, or medical details.")
         with st.form("public_feedback_form", clear_on_submit=True):
             audience_choice = st.selectbox(
                 "Who are you?",
                 options=[
-                    ("family", "Family"),
-                    ("resident_supported", "Resident (with support)"),
+                    ("family_organiser", "Family Organiser"),
+                    ("family_member", "Family Member"),
                     ("carer", "Carer"),
+                    ("helper", "Helper"),
                 ],
                 format_func=lambda item: item[1],
                 key="public_feedback_audience",
@@ -9387,7 +9370,7 @@ def render_home(active: str) -> None:
                 key="public_feedback_q2",
             )
             recommend_score = st.radio(
-                "3. Would you recommend this for care-home communication?",
+                "3. Would you recommend this for family coordination?",
                 options=[1, 2, 3, 4, 5],
                 horizontal=True,
                 key="public_feedback_q3",
@@ -9418,19 +9401,19 @@ def render_home(active: str) -> None:
         app_cols = st.columns(3, gap="small")
         app_entries = [
             (
+                VARIANT_OFFICE,
+                "Family Office",
+                "For the Family Organiser to coordinate updates, requests, family access, and boundaries.",
+            ),
+            (
                 VARIANT_FAMILY,
-                "Family",
-                "For families and friends to send and hear non-urgent messages.",
+                "Family Hub",
+                "For non-urgent family updates, practical requests, structured replies, and noticeboard notes.",
             ),
             (
                 VARIANT_MOBILE,
-                "Care Home Mobile",
-                "For care staff to play family messages and support resident recordings.",
-            ),
-            (
-                VARIANT_OFFICE,
-                "Care Home Office",
-                "For office oversight, one-way updates, and practical structured messages.",
+                "Mobile",
+                "For a carer, helper, supported person, or trusted family member using reduced tools.",
             ),
         ]
         for idx, (variant, label, summary) in enumerate(app_entries):
@@ -9452,13 +9435,23 @@ def render_home(active: str) -> None:
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
         st.markdown("<h2>How it works</h2>", unsafe_allow_html=True)
         st.markdown(
-            "familyupdates.care helps families structure non-urgent communication around care. "
-            "Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact."
+            """
+familyupdates.care helps structure communication when a family member needs support.
+
+There are three roles for the family to fill:
+
+1. Family Organiser.
+2. Person available for urgent/emergency phone contact and emergency protocol.
+3. Care support.
+
+familyupdates.care is for non-urgent communication only.
+"""
         )
         st.markdown("### Communication participants")
         st.markdown("- A person or couple being supported")
         st.markdown("- Registered Family Members")
-        st.markdown("- A Family Organiser, carer, helper, or care home where relevant")
+        st.markdown("- A Family Organiser")
+        st.markdown("- A carer, helper, supported person, or trusted family member using Mobile where relevant")
         st.markdown(
             "Each channel keeps only the latest message. A new message replaces the previous message in that channel."
         )
@@ -9474,19 +9467,19 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>Start with updates only</h3>
-              <div>Send one calm voice update to registered Family Members. There are no replies in this update channel, and the next update replaces the previous one.</div>
+              <div>Send one calm update to registered Family Members. There are no replies in this update channel, and the next update replaces the previous one.</div>
             </div>
             <div class="public-card">
-              <h3>Add family voice messages</h3>
-              <div>Each Family Member can send one latest voice message back. This keeps family contact predictable without live chat or message threads.</div>
+              <h3>Add specific organiser messages</h3>
+              <div>The Family Organiser and each Family Member can keep one current specific message, without live chat or message threads.</div>
             </div>
             <div class="public-card pink">
               <h3>Add practical requests</h3>
               <div>Use structured questions for non-urgent practical coordination, such as visits, appointments, collecting items, or household tasks.</div>
             </div>
             <div class="public-card">
-              <h3>Care home stage</h3>
-              <div>When a care home is involved, the care home runs its own separate system for updates, voice messages, and structured requests.</div>
+              <h3>Use Mobile from the start</h3>
+              <div>Mobile gives the carer, helper, supported person, or trusted family member a reduced-tool route so the Family Organiser is not expected to absorb caring work.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -9502,7 +9495,7 @@ def render_home(active: str) -> None:
               <div class="public-step">No archive</div>
               <div class="public-step">No scrolling threads</div>
               <div class="public-step">This is not live messaging</div>
-              <div class="public-step">Messages are played when staff are available and recorded when appropriate</div>
+              <div class="public-step">Urgent and private matters stay outside the app</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -9510,21 +9503,21 @@ def render_home(active: str) -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="public-section">', unsafe_allow_html=True)
-        st.markdown("<h2>Playback and privacy</h2>", unsafe_allow_html=True)
+        st.markdown("<h2>Boundaries and privacy</h2>", unsafe_allow_html=True)
         st.markdown(
             """
             <div class="public-roles">
               <div class="public-card">
                 <h3>Family privacy boundary</h3>
-                <div>Family members do not hear each other's Family -&gt; Resident messages. Each Family Member channel is separate.</div>
+                <div>Specific organiser messages are separate. Practical requests and noticeboard notes are visible to the family group.</div>
               </div>
               <div class="public-card pink">
-                <h3>Care Home playback</h3>
-                <div>Family messages are played to residents in Care Home Mobile and are operationally visible in Care Home Office.</div>
+                <h3>Family contact</h3>
+                <div>Family Members still phone the person being supported in the normal way. The app is for organising family communication, not replacing personal contact.</div>
               </div>
               <div class="public-card">
                 <h3>No live pressure</h3>
-                <div>No notifications, no delivery/read receipts, and no typing indicators. Message date is shown without time in Family and Care Home Mobile views.</div>
+                <div>No notifications, no delivery/read receipts, and no typing indicators.</div>
               </div>
             </div>
             """,
@@ -9537,9 +9530,9 @@ def render_home(active: str) -> None:
             """
             <div class="public-card">
               <h3>Roles and important boundaries</h3>
-              <div><strong>Family Members:</strong> Family Members receive updates and, where enabled, send one latest voice message back.</div>
-              <div><strong>Mobile:</strong> a simple phone view for listening and recording where it is useful.</div>
-              <div><strong>Care Home Office:</strong> the care-home workspace, used only when a care home is involved.</div>
+              <div><strong>Family Members:</strong> Family Members receive updates, respond to practical requests, and can pin one current noticeboard note.</div>
+              <div><strong>Family Organiser:</strong> the organiser keeps a small number of non-urgent family communication channels current.</div>
+              <div><strong>Person being supported:</strong> family contact by phone remains outside the app.</div>
               <div style="margin-top:8px;">This service is for non-urgent communication only. It is not for medical updates, safeguarding communication, financial decisions, legal matters, or emergencies. Use normal direct contact routes for those matters.</div>
             </div>
             """,
@@ -9581,13 +9574,22 @@ def render_home(active: str) -> None:
     if get_app_variant() == VARIANT_PUBLIC:
         st.markdown("Communication participants")
         st.markdown(
-            "familyupdates.care helps families structure non-urgent communication around care. "
-            "Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact."
+            """
+familyupdates.care helps structure communication when a family member needs support.
+
+There are three roles for the family to fill:
+
+1. Family Organiser.
+2. Person available for urgent/emergency phone contact and emergency protocol.
+3. Care support.
+
+familyupdates.care is for non-urgent communication only.
+"""
         )
         st.markdown(
-            "Person -> Family channels keep the latest shared message to the family group, and the latest direct message to a selected Family Member. "
+            "Family Organiser channels keep the latest shared update, latest specific organiser message, and latest practical request. "
             "The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly. "
-            "Each Family Member channel keeps only the latest message. "
+            "Each Family Member can keep one current noticeboard note. "
             "A new message replaces only the previous message in that channel. "
             "A care home could run its own completely separate Care Home system using the same model, but it does not connect to the Family Organiser's app."
         )
@@ -9595,13 +9597,13 @@ def render_home(active: str) -> None:
     current_variant = resolve_runtime_variant(route_hint=get_route())
     if current_variant == VARIANT_MOBILE:
         render_route_link(
-            "Back to Care Home Mobile",
+            "Back to Mobile",
             get_home_route(VARIANT_MOBILE),
             key="service_overview_back_mobile",
         )
     elif current_variant == VARIANT_OFFICE:
         render_route_link(
-            "Back to Care Home Office",
+            "Back to Family Office",
             get_office_home_route(bool(st.session_state.get("auth_uid"))),
             key="service_overview_back_office",
         )
@@ -9624,14 +9626,17 @@ def render_home(active: str) -> None:
     st.markdown(
         "familyupdates.care  \n"
         "Public guides.\n\n"
-        "Choose Family, Care Home Mobile, or Care Home Office to continue.  \n"
-        "This is not a live service. Messages are played when staff are available."
+        "Choose Family to continue.  \n"
+        "This is not a live service."
     )
 
-    button_cols = st.columns(3, gap="small")
-    render_public_app_buttons(button_cols)
+    button_cols = st.columns([1, 1, 1], gap="small")
+    with button_cols[1]:
+        if st.button("Open Family Hub", key="service_overview_open_family", use_container_width=True):
+            set_route(FAMILY_LOGIN_ROUTE)
+            st.stop()
 
-    # Homepage buttons are handled above (Family / Care Home Mobile / Care Home Office).
+    # Homepage buttons are handled above.
 
     st.markdown('<div style="margin-top:-8px;"></div>', unsafe_allow_html=True)
 
@@ -9724,28 +9729,28 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
         "/pr-home": "familyupdates.care - Simple updates and practical requests for families",
         "/public/how-it-works": "How familyupdates.care works",
         "/family/login": "Family Hub | familyupdates.care",
-        "/care-hub/mobile/login": "Care Home Mobile | familyupdates.care",
-        "/care-hub/login": "Care Home Office | familyupdates.care",
+        "/care-hub/mobile/login": "Mobile | familyupdates.care",
+        "/care-hub/login": "Family Office | familyupdates.care",
         "/public/privacy-notice": "Privacy Notice | familyupdates.care",
         "/public/family-terms-of-use": "Family Terms of Use | familyupdates.care",
         "/public/complaints-and-concerns": "Complaints and Concerns | familyupdates.care",
         "/public/safeguarding-and-consent": "Safeguarding and Consent | familyupdates.care",
-        "/public/faq": "Family and Care Home Q&A | familyupdates.care",
-        "/public/qa": "Family and Care Home Q&A | familyupdates.care",
+        "/public/faq": "Family Q&A | familyupdates.care",
+        "/public/qa": "Family Q&A | familyupdates.care",
         LIFE_FILE_GUIDE_ROUTE: "Life File Guide | familyupdates.care",
     }
     route_descriptions: dict[str, str] = {
-        "/pr-home": "familyupdates.care helps families structure non-urgent communication around care without live chat or message history.",
-        "/public/how-it-works": "How familyupdates.care works across stages, communication levels, updates, voice messages, and practical requests.",
-        "/family/login": "Family Hub access for non-urgent social voice messages. Not a live service.",
-        "/care-hub/mobile/login": "Care Home Mobile access for staff playback and resident recordings within care routines.",
-        "/care-hub/login": "Care Home Office access for oversight, family registration, and operational communication.",
+        "/pr-home": "familyupdates.care helps structure communication when a family member needs support, without live chat or message history.",
+        "/public/how-it-works": "How familyupdates.care works across situations, roles, updates, practical requests, and noticeboard notes.",
+        "/family/login": "Family Hub access for non-urgent family updates, practical requests, and noticeboard notes.",
+        "/care-hub/mobile/login": "Mobile access for a carer, helper, supported person, or trusted family member using reduced tools.",
+        "/care-hub/login": "Family Office access for setup, family registration, organiser updates, practical requests, and noticeboard oversight.",
         "/public/privacy-notice": "Privacy notice for familyupdates.care, including controller/processor roles and retention boundaries.",
         "/public/family-terms-of-use": "Family Terms of Use for familyupdates.care and non-urgent message boundaries.",
-        "/public/complaints-and-concerns": "How to raise platform concerns and where care-home responsibilities apply.",
-        "/public/safeguarding-and-consent": "Safeguarding and consent boundaries for familyupdates.care in care settings.",
-        "/public/faq": "Frequently asked questions for Family Hub and Care Home system usage.",
-        "/public/qa": "Frequently asked questions for Family Hub and Care Home system usage.",
+        "/public/complaints-and-concerns": "How to raise platform concerns and keep family, care, safeguarding, and support boundaries clear.",
+        "/public/safeguarding-and-consent": "Safeguarding and consent boundaries for familyupdates.care.",
+        "/public/faq": "Frequently asked questions for Family Office, Family Hub, and Mobile.",
+        "/public/qa": "Frequently asked questions for Family Office, Family Hub, and Mobile.",
         LIFE_FILE_GUIDE_ROUTE: "Guidance for external notebooks, folders, and Life Management Files.",
     }
     if normalized_route == "/public/service-overview":
@@ -9753,7 +9758,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
     title = route_titles.get(normalized_route, "familyupdates.care")
     description = route_descriptions.get(
         normalized_route,
-        "familyupdates.care for calm family updates, voice messages, and practical requests.",
+        "familyupdates.care for calm family updates, specific messages, practical requests, and noticeboard notes.",
     )
     return {"route": normalized_route, "title": title, "description": description}
 
@@ -9769,8 +9774,6 @@ def apply_seo_head_tags(route: str, app_variant: str) -> None:
     is_public_route = canonical_route.startswith("/public/") or canonical_route in {
         "/pr-home",
         "/family/login",
-        "/care-hub/login",
-        "/care-hub/mobile/login",
         "/service-overview",
     }
     should_index = is_canonical_host and is_public_route and app_variant in {VARIANT_PUBLIC, VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE}
@@ -10052,6 +10055,7 @@ VARIANT_CONFIG = {
             "/public-docs",
             "/public/service-overview",
             "/public/how-it-works",
+            "/public/infographic",
             "/public/resident-participation",
             "/public/family-guide",
             "/public/qa",
@@ -10066,7 +10070,7 @@ VARIANT_CONFIG = {
         },
     },
     VARIANT_MOBILE: {
-        "label": "Care Home Mobile",
+        "label": "Mobile",
         "default_route": MOBILE_LOGIN_ROUTE,
         "how_it_works_route": "/care-hub-mobile/how-it-works",
         "allowed_routes": {
@@ -10082,6 +10086,7 @@ VARIANT_CONFIG = {
             "/public-docs",
             "/public/service-overview",
             "/public/how-it-works",
+            "/public/infographic",
             "/public/resident-participation",
             "/public/family-guide",
             "/public/qa",
@@ -10096,7 +10101,7 @@ VARIANT_CONFIG = {
         },
     },
     VARIANT_OFFICE: {
-        "label": "Care Home Office",
+        "label": "Family Office",
         "default_route": OFFICE_LOGIN_ROUTE,
         "how_it_works_route": "/care-hub-office/how-it-works",
         "allowed_routes": {
@@ -10118,6 +10123,7 @@ VARIANT_CONFIG = {
             "/public-docs",
             "/public/service-overview",
             "/public/how-it-works",
+            "/public/infographic",
             "/public/resident-participation",
             "/public/family-guide",
             "/public/qa",
@@ -10141,6 +10147,7 @@ VARIANT_CONFIG = {
             "/public-docs",
             "/public/service-overview",
             "/public/how-it-works",
+            "/public/infographic",
             "/public/resident-participation",
             "/public/family-guide",
             "/public/qa",
@@ -10557,11 +10564,11 @@ def validate_supabase_config_for_variant(app_variant: str) -> None:
 
 def get_public_app_url(variant: str) -> str:
     if variant == VARIANT_FAMILY:
-        return os.getenv("FAMILY_APP_URL", "").strip()
+        return os.getenv("FAMILY_APP_URL", "").strip() or "/?route=%2Ffamily%2Flogin"
     if variant == VARIANT_MOBILE:
-        return os.getenv("CARE_MOBILE_APP_URL", "").strip()
+        return os.getenv("CARE_MOBILE_APP_URL", "").strip() or "/?route=%2Fcare-hub%2Fmobile%2Flogin"
     if variant == VARIANT_OFFICE:
-        return os.getenv("CARE_OFFICE_APP_URL", "").strip()
+        return os.getenv("CARE_OFFICE_APP_URL", "").strip() or "/?route=%2Fcare-hub%2Flogin"
     return ""
 
 
@@ -10585,15 +10592,15 @@ def get_expected_variants_for_route(route: str) -> list[str]:
 def get_care_hub_label() -> str:
     runtime_variant = resolve_runtime_variant(route_hint=get_route())
     if runtime_variant == VARIANT_MOBILE:
-        return "Care Home Mobile"
+        return "Mobile"
     if runtime_variant == VARIANT_OFFICE:
         return get_at_home_voicemail_label(st.session_state.get("access_token"))
     app_variant = get_app_variant()
     if app_variant == VARIANT_MOBILE:
-        return "Care Home Mobile"
+        return "Mobile"
     if app_variant == VARIANT_OFFICE:
         return get_at_home_voicemail_label(st.session_state.get("access_token"))
-    return "Care Home system"
+    return "Family system"
 
 
 def get_channel_label_and_icon(channel_role: str) -> tuple[str, str]:
@@ -10745,11 +10752,11 @@ def render_family_login_hub() -> None:
         unsafe_allow_html=True,
     )
     login_info_boxes = [
-        "Not a live service. Messages are played when staff are available.",
+        "Not a live service. Urgent and private matters stay outside the app.",
         "For security, Family sessions sign out after 30 minutes of inactivity.",
         "If you are signed out, request a new secure email link.",
-        "Plan your message first. Most messages only need a few seconds.",
-        "For urgent matters or safeguarding concerns, contact the care home directly.",
+        "Use Family Hub for current updates, practical requests, structured replies, and noticeboard notes.",
+        "familyupdates.care is for non-urgent communication only. Families still need a separate urgent/emergency phone contact and emergency protocol.",
     ]
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
 
@@ -10814,9 +10821,9 @@ def render_family_login() -> None:
                 )
             set_route(get_home_route(VARIANT_FAMILY))
         elif care_found:
-            st.error("Wrong app variant")
-            st.info("Your login details are for the Care Home system.")
-            if st.button("Log out", key="family_login_wrong_logout"):
+            st.error("This browser is signed in to Mobile or Family Office.")
+            st.info("Sign out before using Family Hub in this browser.")
+            if st.button("Sign out", key="family_login_wrong_logout"):
                 sign_out_user("family")
         else:
             if error:
@@ -10849,19 +10856,25 @@ def render_family_send() -> None:
     display: none !important;
   }}
   .vm-resident-card {{
-    border: 1px solid rgba(31,31,31,0.12);
-    border-radius: 12px;
-    padding: 12px;
-    margin: 12px 0;
-    background: {TOKENS["cream"]};
+    border: 5px solid #1f6f8b;
+    border-radius: 18px;
+    padding: 14px;
+    margin: 14px 0;
+    background: #eefbff;
   }}
   .vm-section-title {{
     font-weight: 700;
     margin: 8px 0 4px;
   }}
   .vm-muted-line {{
-    color: rgba(31,31,31,0.6);
-    font-size: 0.9rem;
+    color: rgba(31,31,31,0.72);
+    font-size: 0.92rem;
+    font-weight: 650;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(31,31,31,0.05);
+    border: 2px dashed rgba(31,31,31,0.18);
+    margin: 6px 0 10px;
   }}
   .vm-direction-chips {{
     display: flex;
@@ -10877,6 +10890,125 @@ def render_family_send() -> None:
     line-height: 1.4;
     background: rgba(255,255,255,0.6);
   }}
+  div[data-testid="stVerticalBlockBorderWrapper"] {{
+    border: 2px solid rgba(31,31,31,0.18) !important;
+    border-radius: 20px !important;
+    background: #ffffff !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"] > div {{
+    border-radius: 16px !important;
+    border: 0 !important;
+    background: transparent !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-flow-title.resident) {{
+    border-color: #0077b6 !important;
+    background: #f6fcff !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-channel-marker.resident) {{
+    border-color: #0077b6 !important;
+    background: #f6fcff !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-channel-marker.resident) > div {{
+    border-color: #0077b6 !important;
+    box-shadow: inset 8px 0 0 #0077b6 !important;
+    background: #e8f7ff !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-flow-title.inbound) {{
+    border-color: #d9dee3 !important;
+    background: #f7f0ff !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-channel-marker.inbound) {{
+    border-color: #d9dee3 !important;
+    background: #f7f0ff !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-channel-marker.inbound) > div {{
+    border-color: #d9dee3 !important;
+    box-shadow: inset 8px 0 0 #f8f2ff !important;
+    background: #f8f2ff !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-flow-title.office) {{
+    border-color: #d9dee3 !important;
+    background: #f0ffff !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-channel-marker.office) {{
+    border-color: #d9dee3 !important;
+    background: #f0ffff !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-channel-marker.office) > div {{
+    border-color: #d9dee3 !important;
+    box-shadow: inset 8px 0 0 #f4ffff !important;
+    background: #f4ffff !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-flow-title.practical) {{
+    border-color: #d9dee3 !important;
+    background: #fff7f3 !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-channel-marker.practical) {{
+    border-color: #d9dee3 !important;
+    background: #fff7f3 !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-channel-marker.practical) > div {{
+    border-color: #d9dee3 !important;
+    box-shadow: inset 8px 0 0 #fff8f5 !important;
+    background: #fff8f5 !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-flow-title.outbound) {{
+    border-color: #d9dee3 !important;
+    background: #ffffe6 !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-channel-marker.outbound) {{
+    border-color: #d9dee3 !important;
+    background: #ffffe6 !important;
+  }}
+  div[data-testid="stVerticalBlockBorderWrapper"]:has(.family-channel-marker.outbound) > div {{
+    border-color: #d9dee3 !important;
+    box-shadow: inset 8px 0 0 #ffffe8 !important;
+    background: #ffffe8 !important;
+  }}
+  .family-channel-marker {{
+    display: none;
+  }}
+  div[data-testid="stButton"] button {{
+    border-radius: 14px !important;
+    border: 3px solid #1f2937 !important;
+    font-weight: 800 !important;
+  }}
+  div[class*="st-key-family-channel-office"] {{
+    background: #f4ffff !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[class*="st-key-family-channel-office-message"] {{
+    background: #ffffe8 !important;
+    border: 6px solid #d9dee3 !important;
+  }}
+  div[class*="st-key-family-channel-office-message"] > div {{
+    background: #ffffe8 !important;
+  }}
+  div[class*="st-key-family-channel-practical"] {{
+    background: #fff8f5 !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[class*="st-key-family-channel-noticeboard"] {{
+    background: #f4faf3 !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[class*="st-key-family-channel-inbound"] {{
+    background: #f8f2ff !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
+  }}
 </style>
 """,
         unsafe_allow_html=True,
@@ -10886,14 +11018,6 @@ def render_family_send() -> None:
     render_how_it_works_button("family_send_how_it_works")
     family_display_name = st.session_state.get("family_display_name", "Family member")
     st.markdown(f"**Hello {family_display_name}**")
-    st.info(
-        "Everyday communication only. No threads, no history, no search. "
-        "Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact."
-    )
-    st.markdown(
-        "**Messages are for non-urgent, social contact only. This is not a messaging service to carers or the care home.**"
-    )
-    st.caption(SENSITIVE_DATA_BOUNDARY_WARNING)
 
     access_token = st.session_state.get("access_token")
     transcript_policy_mode = get_transcript_policy_mode(access_token)
@@ -10910,6 +11034,9 @@ def render_family_send() -> None:
     requests_enabled = bool(lifecycle_policy.get("enable_requests"))
     office_channel_enabled = bool(lifecycle_policy.get("enable_office_channel"))
     family_led_mode = operating_mode == OPERATING_MODE_PERSONAL_USE
+    voice_messaging_enabled = family_messaging_enabled and not (
+        family_led_mode or at_home_lifecycle_stage
+    )
     subject_singular = str(workspace_labels.get("subject_singular") or "person")
     subject_singular_title = str(workspace_labels.get("subject_singular_title") or "Person")
     subject_plural = str(workspace_labels.get("subject_plural") or "people")
@@ -10938,7 +11065,7 @@ def render_family_send() -> None:
             st.session_state.pop("circle_person_display_name", None)
     render_care_home_identity_banner(access_token)
     if not (family_messaging_enabled or office_channel_enabled or requests_enabled):
-        st.info("Communication is inactive for the current lifecycle stage.")
+        st.info("Communication is inactive for the current situation.")
 
     if not residents:
         st.info(f"No {subject_plural} are currently linked to your Family Member account.")
@@ -10969,46 +11096,56 @@ def render_family_send() -> None:
 <style>
 .family-flow-title {
   width: 100%;
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: 10px;
+  padding: 4px 0 6px 0;
   margin: 0 0 8px 0;
-  font-weight: 700;
+  font-weight: 750;
+  font-size: 1rem;
   line-height: 1.35;
+  border: 0;
+  box-shadow: none;
+  background: transparent !important;
 }
 .family-flow-title.resident {
-  background: rgba(47, 107, 79, 0.10);
-  border: 1px solid rgba(47, 107, 79, 0.24);
+  border-color: #0077b6;
+  color: #053047;
 }
 .family-flow-title.inbound {
-  background: rgba(44, 130, 201, 0.10);
-  border: 1px solid rgba(44, 130, 201, 0.24);
+  border-color: #7b2cbf;
+  color: #35105d;
 }
 .family-flow-title.office {
-  background: rgba(201, 122, 44, 0.10);
-  border: 1px solid rgba(201, 122, 44, 0.24);
+  border-color: #008c8c;
+  color: #004f4f;
 }
 .family-flow-title.practical {
-  background: rgba(229, 221, 199, 0.55);
-  border: 1px solid rgba(139, 126, 92, 0.24);
+  border-color: #c95f35;
+  color: #5b2410;
 }
 .family-flow-title.outbound {
-  background: rgba(46, 142, 117, 0.10);
-  border: 1px solid rgba(46, 142, 117, 0.24);
+  border-color: #b59b00;
+  color: #4f4300;
 }
 .family-channel-note {
-  color: rgba(31,31,31,0.62);
-  font-size: 0.88rem;
-  margin: -2px 0 10px 0;
+  color: rgba(31,31,31,0.78);
+  font-size: 0.94rem;
+  font-weight: 550;
+  margin: 0 0 12px 0;
+  padding: 9px 11px;
   line-height: 1.35;
+  border-radius: 14px;
+  border: 3px solid rgba(31,31,31,0.16);
+  background: #ffffff;
 }
 .family-flow-box {
-  border-radius: 10px;
-  padding: 10px 10px 2px 10px;
-  margin: 0 0 10px 0;
+  border-radius: 18px;
+  padding: 12px 12px 4px 12px;
+  margin: 0 0 12px 0;
+  border: 5px solid;
 }
 .family-flow-box.outbound {
-  background: rgba(46, 142, 117, 0.05);
-  border: 1px solid rgba(46, 142, 117, 0.22);
+  background: #ffffe8;
+  border-color: #b59b00;
 }
 </style>
 """,
@@ -11020,6 +11157,13 @@ def render_family_send() -> None:
         safe_tone = html.escape(tone)
         st.markdown(
             f"<div class='family-flow-title {safe_tone}'>{safe_text}</div>",
+            unsafe_allow_html=True,
+        )
+
+    def render_family_channel_marker(tone: str) -> None:
+        safe_tone = html.escape(tone)
+        st.markdown(
+            f"<div class='family-channel-marker {safe_tone}'></div>",
             unsafe_allow_html=True,
         )
 
@@ -11091,30 +11235,29 @@ def render_family_send() -> None:
         )
         family_display_name = str(st.session_state.get("family_display_name") or "Family member").strip()
 
-        with st.container(border=True):
-            if family_led_mode or at_home_lifecycle_stage:
-                render_family_flow_title(full_name, "resident")
-            else:
+        if not (family_led_mode or at_home_lifecycle_stage):
+            with st.container(border=True):
+                render_family_channel_marker("resident")
                 render_family_flow_title(
                     f"{subject_singular_title} ({full_name})",
                     "resident",
                 )
-            if not family_led_mode and not at_home_lifecycle_stage:
                 st.markdown(f"**{full_name}**")
-            if care_home_name:
-                if bool(workspace_labels.get("show_room")):
-                    st.markdown(
-                        f"{workspace_labels.get('organisation_label')}: {care_home_name}"
-                    )
-            if room_caption:
-                st.markdown(room_caption)
+                if care_home_name:
+                    if bool(workspace_labels.get("show_room")):
+                        st.markdown(
+                            f"{workspace_labels.get('organisation_label')}: {care_home_name}"
+                        )
+                if room_caption:
+                    st.markdown(room_caption)
 
-        if not family_messaging_enabled:
-            st.caption("Family messaging is inactive in this lifecycle stage.")
+        if not (voice_messaging_enabled or office_channel_enabled or requests_enabled):
+            st.caption("Family communication is inactive in this situation.")
             continue
 
-        if family_messaging_enabled:
-            with st.container(border=True):
+        if voice_messaging_enabled:
+            with st.container(border=True, key=f"family-channel-inbound-group-{resident_id}"):
+                render_family_channel_marker("inbound")
                 render_family_flow_title(
                     (
                         f"Latest message from {full_name} to family group"
@@ -11155,7 +11298,8 @@ def render_family_send() -> None:
                         care_home_id=resident.get("care_home_id"),
                         resident_id=resident_id,
                     )
-            with st.container(border=True):
+            with st.container(border=True, key=f"family-channel-inbound-direct-{resident_id}"):
+                render_family_channel_marker("inbound")
                 render_family_flow_title(
                     (
                         f"Latest message from {full_name} to you"
@@ -11204,7 +11348,8 @@ def render_family_send() -> None:
         outbound_section_slot = st.container()
 
         if office_channel_enabled:
-            with st.container(border=True):
+            with st.container(border=True, key=f"family-channel-office-update-{resident_id}"):
+                render_family_channel_marker("office")
                 office_update_title = (
                     "Shared update to Family"
                     if shared_coordination_stage
@@ -11216,20 +11361,16 @@ def render_family_send() -> None:
                 )
                 if family_led_mode:
                     if main_contact_name:
-                        office_update_title = f"Update from {main_contact_name}"
+                        office_update_title = (
+                            f"Update from Family Organiser {main_contact_name} "
+                            "to the family group"
+                        )
                     else:
-                        office_update_title = "Main contact update"
+                        office_update_title = "Update from Family Organiser to the family group"
                 render_family_flow_title(
                     office_update_title,
                     "office",
                 )
-                render_family_channel_note(
-                    "One current organiser update for the family group."
-                )
-                if family_led_mode and main_contact_name:
-                    st.caption(f"Family Organiser: {main_contact_name}")
-                update_subject = full_name if at_home_lifecycle_stage else f"this {subject_singular}"
-                st.caption(f"Latest update for {update_subject}.")
                 latest_office_update = fetch_latest_message(
                     resident_id,
                     "office_to_family",
@@ -11242,23 +11383,139 @@ def render_family_send() -> None:
                     pass
                 elif latest_office_update:
                     st.markdown(
-                        '<div class="vm-muted-line">Previous voice update hidden. A new text update will replace it.</div>',
+                        '<div class="vm-muted-line">No current text update yet.</div>',
                         unsafe_allow_html=True,
                     )
                 else:
                     st.markdown(
-                        '<div class="vm-muted-line">No updates yet.</div>',
+                        '<div class="vm-muted-line">No current text update yet.</div>',
                         unsafe_allow_html=True,
                     )
 
-        if requests_enabled:
-            with st.container(border=True):
+        if office_channel_enabled and (family_led_mode or at_home_lifecycle_stage):
+            with st.container(border=True, key=f"family-channel-office-message-{resident_id}"):
+                render_family_channel_marker("outbound")
                 render_family_flow_title(
-                    f"Request for family ({family_display_name})",
-                    "practical",
+                    f"Your message to Family Organiser ({family_display_name})",
+                    "outbound",
                 )
                 render_family_channel_note(
-                    "One current practical request with structured responses, not a discussion thread."
+                    "When you send your current message, it replaces your previous one. "
+                    "When the Family Organiser sends a new message, it replaces their previous one. "
+                    "So you both see current messages only. This is non-urgent and not live."
+                )
+                latest_organiser_message = fetch_latest_message(
+                    resident_id,
+                    "from_resident",
+                    access_token,
+                    contact_user_id=st.session_state.get("auth_uid"),
+                    channel="resident_family",
+                    include_audio=False,
+                )
+                st.markdown("**Current message from Family Organiser**")
+                if not render_text_update_message(latest_organiser_message):
+                    st.markdown(
+                        '<div class="vm-muted-line">No current organiser message.</div>',
+                        unsafe_allow_html=True,
+                    )
+                latest_family_message = fetch_latest_message(
+                    resident_id,
+                    "to_resident",
+                    access_token,
+                    contact_user_id=st.session_state.get("auth_uid"),
+                    channel="resident_family",
+                    include_audio=False,
+                )
+                st.markdown("**Your current message to Family Organiser**")
+                if not render_text_update_message(latest_family_message):
+                    st.markdown(
+                        '<div class="vm-muted-line">No current message from you.</div>',
+                        unsafe_allow_html=True,
+                    )
+                text_nonce = int(state.get("family_organiser_text_nonce", 0))
+                family_to_organiser_body = st.text_area(
+                    f"Type your message to Family Organiser ({family_display_name}) here:",
+                    key=f"family_to_organiser_text_{resident_id}_{text_nonce}",
+                    height=100,
+                    max_chars=1000,
+                )
+                family_to_organiser_can_send = bool(str(family_to_organiser_body or "").strip())
+                if st.button(
+                    "Click to send and replace your message",
+                    key=f"family_to_organiser_send_{resident_id}_{text_nonce}",
+                    disabled=not family_to_organiser_can_send,
+                    use_container_width=True,
+                ):
+                    if not family_to_organiser_can_send:
+                        st.info("Please write the current message first.")
+                    else:
+                        supabase, error = get_authed_supabase(access_token)
+                        if error:
+                            st.error(error)
+                        else:
+                            now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                            payload = {
+                                "resident_id": resident_id,
+                                "contact_user_id": st.session_state.get("auth_uid"),
+                                "family_id": resident.get("family_id") or resident_id,
+                                "channel": "resident_family",
+                                "direction": "to_resident",
+                                "audio_storage_path": "",
+                                "audio_mime_type": "text/plain",
+                                "audio_bytes": 0,
+                                "message_kind": "text",
+                                "text_title": None,
+                                "text_body": str(family_to_organiser_body or "").strip(),
+                                "recorded_at": now_iso,
+                            }
+                            resp, upsert_error = upsert_latest_message_with_fallback(
+                                supabase,
+                                payload,
+                                "resident_id,contact_user_id,direction,channel",
+                                {
+                                    "resident_id": resident_id,
+                                    "contact_user_id": st.session_state.get("auth_uid"),
+                                    "channel": "resident_family",
+                                    "direction": "to_resident",
+                                },
+                            )
+                            if upsert_error:
+                                st.error(upsert_error)
+                            else:
+                                message_id = (
+                                    (
+                                        resp.data[0].get("id")
+                                        if hasattr(resp, "data")
+                                        and isinstance(resp.data, list)
+                                        and resp.data
+                                        else None
+                                    )
+                                    if resp is not None
+                                    else None
+                                )
+                                log_audit_event(
+                                    "message_sent",
+                                    "family",
+                                    resident["care_home_id"],
+                                    message_id,
+                                    resident_id=resident_id,
+                                )
+                                bump_message_cache_epoch()
+                                state["family_organiser_text_nonce"] = text_nonce + 1
+                                st.success("Current message to Family Organiser replaced.")
+                                st.rerun()
+
+        if requests_enabled:
+            with st.container(border=True, key=f"family-channel-practical-request-{resident_id}"):
+                render_family_channel_marker("practical")
+                request_sender_label = (
+                    f"Family Organiser {main_contact_name}"
+                    if main_contact_name
+                    else "Family Organiser"
+                )
+                render_family_flow_title(
+                    f"Practical request from {request_sender_label} to Family Members",
+                    "practical",
                 )
                 practical_message = fetch_latest_open_office_practical_message(
                     resident_id, access_token, family_user_id=family_user_id
@@ -11275,17 +11532,12 @@ def render_family_send() -> None:
                         f"**{(practical_message.get('title') or 'Request').strip()}**"
                     )
                     st.markdown(str(practical_message.get("body") or "").strip())
-                    st.caption("Structured question with fixed structured responses.")
                     if practical_target_type == OFFICE_PRACTICAL_TARGET_DIRECTED_FAMILY:
                         request_contacts = fetch_family_users_for_resident(
                             resident_id, access_token
                         )
                         st.caption(
-                            f"Directed to: {office_practical_target_label(practical_message, request_contacts)}. All linked Family Members can see the request and any structured responses."
-                        )
-                    else:
-                        st.caption(
-                            "All linked Family Members can see the request and any structured responses."
+                            f"Directed to: {office_practical_target_label(practical_message, request_contacts)}."
                         )
                     if practical_context_type == OFFICE_PRACTICAL_CONTEXT_VISIT:
                         requested_date = str(practical_message.get("requested_date") or "").strip()
@@ -11294,11 +11546,6 @@ def render_family_send() -> None:
                             st.caption(f"Requested date: {requested_date}")
                         if requested_time:
                             st.caption(f"Requested time window: {requested_time}")
-                    if family_led_mode or at_home_lifecycle_stage:
-                        st.caption("For urgent or medical matters, use your normal direct contact route.")
-                    else:
-                        st.caption("For urgent or medical matters, please call the care home directly.")
-                    st.caption("Messages sent here are not monitored for emergencies.")
                     response_options = fetch_office_practical_message_options(
                         practical_message_id, access_token
                     )
@@ -11420,16 +11667,11 @@ def render_family_send() -> None:
                 else:
                     st.caption(f"No open requests for this {subject_singular}.")
 
-            with st.container(border=True):
+            with st.container(border=True, key=f"family-channel-noticeboard-{resident_id}"):
+                render_family_channel_marker("resident")
                 render_family_flow_title(
-                    f"Family noticeboard ({family_display_name})",
-                    "practical",
-                )
-                render_family_channel_note(
-                    "One current practical note from each Family Member. Visible to the family group."
-                )
-                st.caption(
-                    "Visible to linked Family Members. Use this for practical updates only, not private health, care, legal, financial, or urgent matters."
+                    "Family noticeboard: current practical notes from Family Members",
+                    "resident",
                 )
                 noticeboard_notes = fetch_family_noticeboard_notes(resident_id, access_token)
                 own_notice = next(
@@ -11496,10 +11738,11 @@ def render_family_send() -> None:
                 else:
                     st.caption("No other noticeboard notes yet.")
 
-        if not family_messaging_enabled:
+        if not voice_messaging_enabled:
             continue
 
         with outbound_section_slot.container(border=True):
+            render_family_channel_marker("outbound")
             render_family_flow_title(
                 f"Latest message from you ({family_display_name}) to resident ({full_name})",
                 "outbound",
@@ -11862,9 +12105,9 @@ def render_docs() -> None:
     if at_home_lifecycle_stage:
         docs = [
             {
-                "title": "At-home guide",
-                "path": "docs/office/05_care_home_guide.md",
-                "summary": "Simple message and coordination guidance for at-home stages.",
+                "title": "How it works",
+                "path": "docs/public/02_how_it_works.md",
+                "summary": "Current familyupdates.care guidance for family coordination.",
             },
             {
                 "title": "At-home responsibilities",
@@ -11969,7 +12212,39 @@ def render_document_content(
             content = re.sub(r"\A\s*#\s+.+?\n+", "", content, count=1)
         if include_logo:
             content = inject_logo_into_markdown(content)
-        st.markdown(content)
+        pending_lines: list[str] = []
+
+        def flush_pending() -> None:
+            if pending_lines:
+                st.markdown("\n".join(pending_lines).strip())
+                pending_lines.clear()
+
+        for line in content.splitlines():
+            image_match = re.fullmatch(r"\s*!\[([^\]]*)\]\(([^)]+)\)\s*", line)
+            if not image_match:
+                pending_lines.append(line)
+                continue
+            alt_text = image_match.group(1).strip()
+            image_ref = image_match.group(2).strip()
+            if not image_ref:
+                pending_lines.append(line)
+                continue
+            flush_pending()
+            if re.match(r"^[a-zA-Z]+://", image_ref):
+                try:
+                    st.image(image_ref, caption=alt_text or None, use_container_width=True)
+                except TypeError:
+                    st.image(image_ref, caption=alt_text or None, use_column_width=True)
+                continue
+            image_path = (Path(doc_path).parent / image_ref).resolve()
+            if image_path.exists():
+                try:
+                    st.image(str(image_path), caption=alt_text or None, use_container_width=True)
+                except TypeError:
+                    st.image(str(image_path), caption=alt_text or None, use_column_width=True)
+            else:
+                st.error(f"Image not found: {image_ref}")
+        flush_pending()
     except OSError:
         st.error("Document not found.")
 
@@ -12115,6 +12390,7 @@ def get_public_document_title(doc_path: str) -> str:
     mapping = {
         "03_service_overview.md": "Service overview",
         "02_how_it_works.md": "How it works",
+        "familyupdates_infographic.md": "familyupdates.care infographic",
         "07_resident_participation.md": "Resident participation",
         "06_family_guide.md": "Family guide",
         "10_faq.md": "Public Q&A",
@@ -12242,8 +12518,6 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
         return_route = ""
     if app_variant == VARIANT_PUBLIC:
         render_page_header(page_title, show_menu=False, show_variant_subheading=False)
-        if is_how_it_works_doc:
-            render_how_it_works_cartoon()
         render_route_link(
             "Back to familyupdates.care",
             back_route,
@@ -12257,13 +12531,16 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
             render_document_content(resolved_doc_path)
         if is_how_it_works_doc:
             render_how_it_works_tester_button("public_how_it_works_one_message")
+            render_route_link(
+                "Read the family system model",
+                "/public/infographic",
+                key="public_how_it_works_family_model_link",
+            )
         return
     if app_variant == VARIANT_FAMILY:
         family_back_route = return_route or get_home_route(VARIANT_FAMILY)
         family_back_label = "Back" if return_route else "Back to Family Hub"
         render_page_header(page_title, show_variant_subheading=False)
-        if is_how_it_works_doc:
-            render_how_it_works_cartoon()
         render_route_link(
             family_back_label,
             family_back_route,
@@ -12283,8 +12560,6 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
         office_home_route = return_route or get_office_home_route(is_authed)
         office_back_label = "Back" if return_route else "Back to dashboard"
         render_page_header(page_title, show_variant_subheading=False)
-        if is_how_it_works_doc:
-            render_how_it_works_cartoon()
         render_route_link(
             office_back_label,
             office_home_route,
@@ -12307,8 +12582,6 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
     if app_variant == VARIANT_MOBILE:
         mobile_back_route = return_route or get_home_route(app_variant)
         render_page_header(page_title)
-        if is_how_it_works_doc:
-            render_how_it_works_cartoon()
         render_route_link(
             "Back",
             mobile_back_route,
@@ -12324,8 +12597,6 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
             render_how_it_works_tester_button("mobile_how_it_works_one_message")
         return
     render_page_header(page_title, show_menu=False, show_variant_subheading=False)
-    if is_how_it_works_doc:
-        render_how_it_works_cartoon()
     if use_qa_search:
         render_qa_document(resolved_doc_path, search_key="fallback_faq_search")
     elif use_boxes:
@@ -12335,6 +12606,10 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
     if is_how_it_works_doc:
         render_how_it_works_tester_button("fallback_how_it_works_one_message")
     render_public_landing_button("Back to hub selection")
+
+
+def render_public_infographic() -> None:
+    render_public_document("docs/public/familyupdates_infographic.md", back_route="/public/how-it-works")
 
 
 def render_public_docs() -> None:
@@ -12375,13 +12650,13 @@ def render_public_docs() -> None:
     if app_variant == VARIANT_OFFICE:
         is_authed = bool(st.session_state.get("auth_uid"))
         render_route_link(
-            "Back to Care Home Office",
+            "Back to Family Office",
             get_office_home_route(is_authed),
             key="public_docs_back_office_link",
         )
     elif app_variant == VARIANT_MOBILE:
         render_route_link(
-            "Back to Care Home Mobile",
+            "Back to Mobile",
             get_home_route(app_variant),
             key="public_docs_back_mobile_link",
         )
@@ -12394,6 +12669,16 @@ def render_public_page(page_title: str, heading: str) -> None:
         st.error("Content not available.")
         return
     st.markdown(content)
+
+
+def render_familyupdates_infographic_image() -> None:
+    image_path = Path(__file__).resolve().parent / "assets" / "infographic.jpg"
+    if not image_path.exists():
+        return
+    try:
+        st.image(str(image_path), use_container_width=True)
+    except TypeError:
+        st.image(str(image_path), use_column_width=True)
 
 
 def render_pr_homepage() -> None:
@@ -12413,23 +12698,27 @@ def render_pr_homepage() -> None:
         }
         .vm-home-brand {
             margin: 0 0 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.25rem;
-            font-weight: 700;
+            font-size: 1.55rem;
+            font-weight: 800;
             color: #1f1f1f;
             line-height: 1.2;
+            letter-spacing: 0;
         }
-        .vm-home-brand img {
-            width: 44px;
-            height: auto;
-            display: block;
+        .vm-home-brand span {
+            color: #6b7280;
+            font-weight: 700;
         }
         .vm-home-caption {
             margin: 8px 0 0 0;
             color: #4b5563;
             font-size: 0.93rem;
+        }
+        .vm-home-infographic {
+            margin: 14px 0 12px;
+            border: 6px solid #d9dee3;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #ffffff;
         }
         </style>
         """,
@@ -12438,39 +12727,32 @@ def render_pr_homepage() -> None:
 
     st.markdown('<div class="vm-home-shell">', unsafe_allow_html=True)
     st.markdown('<div class="vm-home-card">', unsafe_allow_html=True)
-    logo_data = get_logo_data_uri()
-    logo_html = f'<img src="{logo_data}" alt="familyupdates.care logo" />' if logo_data else ""
     st.markdown(
-        f'<h1 class="vm-home-brand">{logo_html}<span>familyupdates.care</span></h1>',
+        '<h1 class="vm-home-brand">familyupdates<span>.care</span></h1>',
         unsafe_allow_html=True,
     )
     st.markdown(
-        "Structured, non-urgent family communication around care: one current message, no threads, no pressure.",
+        "familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.",
     )
-    cartoon_path = resolve_cartoon_asset()
-    if cartoon_path is not None:
-        st.image(str(cartoon_path), use_container_width=True)
-    else:
-        st.caption(
-            "Landing artwork missing: add infographic.png in assets/."
-        )
-
+    st.markdown('<div class="vm-home-infographic">', unsafe_allow_html=True)
+    render_familyupdates_infographic_image()
+    st.markdown("</div>", unsafe_allow_html=True)
     if st.button("How it works", key="pr_entry_how_it_works", use_container_width=True):
         set_route("/public/how-it-works")
         st.stop()
 
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
-        if st.button("Family", key="pr_entry_family", use_container_width=True):
-            set_route(FAMILY_LOGIN_ROUTE)
+        if st.button("Family Office", key="pr_entry_office", use_container_width=True):
+            set_route(OFFICE_LOGIN_ROUTE)
             st.stop()
     with action_cols[1]:
-        if st.button("Care Home Mobile", key="pr_entry_mobile", use_container_width=True):
-            set_route(MOBILE_LOGIN_ROUTE)
+        if st.button("Family Hub", key="pr_entry_family", use_container_width=True):
+            set_route(FAMILY_LOGIN_ROUTE)
             st.stop()
     with action_cols[2]:
-        if st.button("Care Home Office", key="pr_entry_office", use_container_width=True):
-            set_route(OFFICE_LOGIN_ROUTE)
+        if st.button("Mobile", key="pr_entry_mobile", use_container_width=True):
+            set_route(MOBILE_LOGIN_ROUTE)
             st.stop()
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -12479,7 +12761,7 @@ def render_pr_homepage() -> None:
 def render_care_hub_banner_settings() -> None:
     require_care_access()
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
-        render_wrong_variant("Operational variables are only available in Care Home Office.")
+        render_wrong_variant("Operational variables are only available in Family Office.")
         return
     save_notice_state_key = "office_operational_save_notice"
     render_page_header("Operational Variables")
@@ -12514,14 +12796,10 @@ def render_care_hub_banner_settings() -> None:
         st.success(save_notice)
     st.markdown("### Operational setup variables")
     st.markdown(
-        "- Current lifecycle stage\n"
-        "- Communication level\n"
+        "- Current situation\n"
         "- Setup name\n"
-        "- Person 1 / Person 2 names for at-home stages\n"
+        "- Person 1 / Person 2 names for at-home setup\n"
         "- Main supporter / organiser\n"
-        "- Business banner heading (optional)\n"
-        "- Business banner message (optional)\n"
-        "- Business banner image URL (optional)\n"
         f"- Idle sign-out time for {current_workspace_type_label} sessions"
     )
     st.caption(
@@ -12621,23 +12899,17 @@ def render_care_hub_banner_settings() -> None:
         st.caption(f"No {subject_plural_title.lower()} available for message list reset.")
     st.markdown("**Issues**")
     st.checkbox("Log / escalate incidents", key="office_checks_issues_log_escalate")
-    st.markdown("### Office shared banner")
-    st.caption(f"Add your logo or your own banner design for {current_office_label} and Family views.")
     st.markdown("### Operational settings")
     st.caption(
         f"Choose how long the active {current_workspace_type_label} can stay idle before it signs out. "
         f"This applies to {current_office_label} and {current_mobile_label}."
     )
     st.caption(
-        "Transcript policy controls safety/accessibility behavior for the active "
-        f"{current_workspace_type_label} playback (voice remains source of truth)."
-    )
-    st.caption(
-        "Lifecycle stage controls which tools are available. It does not assign fixed roles to people."
+        "Current situation controls the family-side wording. It does not assign fixed roles to people."
     )
     if st.session_state.get("_care_homes_missing_lifecycle_stage"):
         st.warning(
-            "Lifecycle stage changes cannot be saved until migration "
+            "Current situation changes cannot be saved until migration "
             "0029_care_homes_lifecycle_stage.sql is applied in Supabase."
         )
 
@@ -12675,23 +12947,20 @@ def render_care_hub_banner_settings() -> None:
     current_lifecycle_stage = normalize_lifecycle_stage(
         care_home_profile.get("lifecycle_stage")
     )
-    current_communication_level = normalize_communication_level(
-        care_home_profile.get("communication_level")
-    )
+    current_communication_level = DEFAULT_COMMUNICATION_LEVEL
     active_care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
     with st.expander("Technical diagnostics", expanded=False):
         st.markdown(f"- Active care home id: `{active_care_home_id or 'missing'}`")
         st.markdown(f"- Profile mode (raw): `{str(care_home_profile.get('operating_mode') or '') or 'missing'}`")
         st.markdown(f"- Profile mode (normalized): `{current_operating_mode}`")
         st.markdown(f"- Runtime mode (resolved): `{mode_value}`")
-        st.markdown(f"- Profile lifecycle stage: `{current_lifecycle_stage}`")
-        st.markdown(f"- Profile communication level: `{current_communication_level}`")
+        st.markdown(f"- Profile situation value: `{current_lifecycle_stage}`")
         stage_policy = get_lifecycle_policy(
             current_lifecycle_stage,
             current_operating_mode,
             current_communication_level,
         )
-        st.markdown(f"- Lifecycle label: `{stage_policy.get('lifecycle_stage_label', '')}`")
+        st.markdown(f"- Situation label: `{stage_policy.get('lifecycle_stage_label', '')}`")
         st.markdown(
             "- Lifecycle policy snapshot: "
             f"`requests={bool(stage_policy.get('enable_requests'))}`, "
@@ -12700,7 +12969,7 @@ def render_care_hub_banner_settings() -> None:
             f"`second_office={bool(stage_policy.get('enable_second_office'))}`"
         )
         if bool(stage_policy.get("enable_second_office")):
-            st.caption("Second office is a planning flag. Separate Stage 4 office screens are not implemented yet.")
+            st.caption("Second office is an archived care-home planning flag. Separate care-home office screens are not implemented yet.")
         if current_operating_mode != mode_value:
             st.warning("Profile mode and runtime mode differ. Refresh and check save/update permissions.")
         if mode_value == OPERATING_MODE_PERSONAL_USE:
@@ -12712,51 +12981,28 @@ def render_care_hub_banner_settings() -> None:
         st.session_state[controls_nonce_key] = int(st.session_state.get(controls_nonce_key, 0)) + 1
     controls_nonce = int(st.session_state.get(controls_nonce_key, 0) or 0)
     lifecycle_widget_key = f"office_lifecycle_stage_page_{active_care_home_id}_{controls_nonce}"
-    level_widget_key = f"office_communication_level_page_{active_care_home_id}_{controls_nonce}"
-    lifecycle_stage_options = [1, 2, 3, 4]
+    lifecycle_stage_options = [1, 4]
     lifecycle_stage_labels = {
         stage: get_lifecycle_stage_label(stage) for stage in lifecycle_stage_options
     }
-    communication_level_options = [1, 2, 3, 4, 5]
-    communication_level_labels = {
-        level: get_communication_level_label(level) for level in communication_level_options
-    }
     with st.form(f"office_stage_level_form_{active_care_home_id}_{controls_nonce}"):
         selected_lifecycle_stage = st.selectbox(
-            "Current lifecycle stage",
+            "Current situation",
             options=lifecycle_stage_options,
             index=(
                 lifecycle_stage_options.index(current_lifecycle_stage)
                 if current_lifecycle_stage in lifecycle_stage_options
-                else lifecycle_stage_options.index(DEFAULT_LIFECYCLE_STAGE)
+                else lifecycle_stage_options.index(1)
             ),
-            format_func=lambda value: lifecycle_stage_labels.get(value, f"Stage {value}"),
+            format_func=lambda value: lifecycle_stage_labels.get(value, "At home"),
             key=lifecycle_widget_key,
             help="Controls which tools are available for this setup.",
         )
         selected_lifecycle_note = get_lifecycle_stage_setup_note(selected_lifecycle_stage)
         if selected_lifecycle_note:
             st.caption(selected_lifecycle_note)
-        selected_communication_level = st.selectbox(
-            "Communication level (not the life stage)",
-            options=communication_level_options,
-            index=(
-                communication_level_options.index(current_communication_level)
-                if current_communication_level in communication_level_options
-                else communication_level_options.index(DEFAULT_COMMUNICATION_LEVEL)
-            ),
-            format_func=lambda value: communication_level_labels.get(value, f"Level {value}"),
-            key=level_widget_key,
-            help="Controls how much of the system is switched on.",
-        )
-        st.caption("Communication level describes how much of the system is switched on.")
-        if int(selected_communication_level) == 5 and normalize_lifecycle_stage(selected_lifecycle_stage) != 4:
-            st.warning(
-                "Level 5 only applies when the life stage is Stage 4. "
-                "To use Level 5, set Current lifecycle stage to Stage 4 - Care Home."
-            )
         save_stage_level = st.form_submit_button(
-            "Save stage and communication level",
+            "Save situation",
             use_container_width=True,
         )
     stage_level_notice = str(
@@ -12771,9 +13017,9 @@ def render_care_hub_banner_settings() -> None:
     )
     if save_stage_level:
         requested_lifecycle_stage = normalize_lifecycle_stage(selected_lifecycle_stage)
-        requested_communication_level = normalize_communication_level(selected_communication_level)
+        requested_communication_level = DEFAULT_COMMUNICATION_LEVEL
         if requested_communication_level == 5 and requested_lifecycle_stage != 4:
-            st.error("Level 5 cannot be saved unless Current lifecycle stage is Stage 4.")
+            st.error("Archived care-home system flag cannot be saved unless the care-home situation is selected.")
         else:
             saved, message, readback = update_active_care_home_stage_level(
                 access_token,
@@ -12792,27 +13038,7 @@ def render_care_hub_banner_settings() -> None:
                 st.error(message)
                 if readback:
                     st.json(readback)
-    last_stage_level_readback = st.session_state.get("office_stage_level_last_readback")
-    if isinstance(last_stage_level_readback, dict) and last_stage_level_readback:
-        st.markdown("### Last stage/level save check")
-        st.caption("Temporary diagnostic while we fix the level save.")
-        st.write(
-            "Level you tried to save:",
-            last_stage_level_readback.get("requested_communication_level", "missing"),
-        )
-        st.write(
-            "Did Supabase return an updated row:",
-            last_stage_level_readback.get("updated_row_returned", "missing"),
-        )
-        st.write(
-            "Level Supabase returned after save:",
-            last_stage_level_readback.get("readback_communication_level", "missing"),
-        )
-        st.write(
-            "Setup ID used:",
-            last_stage_level_readback.get("care_home_id", "missing"),
-        )
-    st.caption("Use this button to change the life stage or communication level. The form below saves names, banner, and session settings.")
+    st.caption("Use this button to change the situation. The form below saves names, banner, and session settings.")
     selected_workspace_labels = get_workspace_labels_for_lifecycle_stage(
         selected_lifecycle_stage,
         setup_name=str(care_home_profile.get("name") or ""),
@@ -12826,9 +13052,9 @@ def render_care_hub_banner_settings() -> None:
     st.caption(f"Setup context: {setup_context_label}.")
     if normalize_lifecycle_stage(selected_lifecycle_stage) == 4:
         st.caption(
-            "This page configures the Care Home Office. Use the actual care home name here. "
-            "The separate Family system will have its own Organiser/family workspace name "
-            "and will not connect to this workspace."
+            "This page configures the family-side care-home situation. Use a Family Organiser workspace name, "
+            "not the care home's operational system name. The care home remains responsible for its own "
+            "direct care, safeguarding, and operational communication."
         )
     setup_people = fetch_care_home_residents(access_token or "")
     setup_people = [
@@ -12868,6 +13094,17 @@ def render_care_hub_banner_settings() -> None:
             max_chars=120,
             key="office_main_contact_name_page",
         )
+        message_check_note_value = st.text_area(
+            "Message check note (optional)",
+            value=str(care_home_profile.get("message_check_note") or ""),
+            height=90,
+            max_chars=500,
+            key="office_message_check_note_page",
+            help=(
+                "Optional note for when and how frequently the Family Organiser expects to check "
+                "non-urgent messages. This is not for urgent or emergency contact."
+            ),
+        )
         banner_title_value = st.text_input(
             "Banner heading (optional)",
             value=str(care_home_profile.get("branding_banner_title") or ""),
@@ -12904,25 +13141,18 @@ def render_care_hub_banner_settings() -> None:
             key="office_care_hub_idle_timeout_seconds",
             help="If no activity is detected for this period, the app signs out for security.",
         )
-        selected_transcript_policy = st.selectbox(
-            "Transcript policy mode",
-            options=transcript_policy_options,
-            index=transcript_policy_index,
-            format_func=lambda value: transcript_policy_labels.get(value, value),
-            key="office_transcript_policy_mode",
-            help=f"Precheck requires transcript review before playback in the {selected_workspace_type_label}.",
-        )
+        selected_transcript_policy = current_transcript_policy
         save_banner = st.form_submit_button("Save names, banner, and session settings")
     if save_banner:
         requested_lifecycle_stage = current_lifecycle_stage
-        requested_communication_level = current_communication_level
+        requested_communication_level = min(current_communication_level, 4)
         requested_at_home_stage = requested_lifecycle_stage in {1, 2, 3}
         requested_operating_mode = get_operating_mode_for_lifecycle_stage(
             requested_lifecycle_stage,
             current_operating_mode,
         )
         if requested_communication_level == 5 and requested_lifecycle_stage != 4:
-            st.error("Level 5 cannot be saved unless Current lifecycle stage is Stage 4.")
+            st.error("Archived care-home system flag cannot be saved unless the care-home situation is selected.")
         else:
             saved, message = update_active_care_home_branding(
                 access_token,
@@ -12931,6 +13161,7 @@ def render_care_hub_banner_settings() -> None:
                 lifecycle_stage=requested_lifecycle_stage,
                 communication_level=requested_communication_level,
                 main_contact_name=main_contact_name_value,
+                message_check_note=message_check_note_value,
                 banner_title=banner_title_value,
                 banner_text=banner_text_value,
                 banner_artwork_url=banner_artwork_value,
@@ -12967,7 +13198,7 @@ def render_care_hub_banner_settings() -> None:
 def render_care_hub_security() -> None:
     require_care_access()
     if resolve_runtime_variant(route_hint=get_route()) != VARIANT_OFFICE:
-        render_wrong_variant("Security settings are only available in Care Home Office.")
+        render_wrong_variant("Security settings are only available in Family Office.")
         return
     render_page_header("Account & Security")
     access_token = st.session_state.get("access_token")
@@ -12986,15 +13217,15 @@ def render_care_hub_security() -> None:
         key="office_security_open_operational_variables",
     )
 
-    st.markdown("### Mobile staff PIN management")
+    st.markdown("### Mobile PIN management")
     st.caption(
-        "Each staff member has their own Mobile PIN. Reset clears a selected staff PIN; they will set a new PIN at next Mobile login."
+        "Each Mobile Support user has their own Mobile PIN. Reset clears a selected Mobile PIN; they will set a new PIN at next Mobile login."
     )
     staff_rows, staff_rows_error = fetch_care_home_staff_mobile_pin_status(access_token)
     if staff_rows_error:
         st.error(staff_rows_error)
     elif not staff_rows:
-        st.info("No staff accounts found for this care home.")
+        st.info("No Mobile Support users found for this workspace.")
     else:
         current_auth_uid = str(st.session_state.get("auth_uid") or "").strip()
         selectable_staff_ids = []
@@ -13011,22 +13242,22 @@ def render_care_hub_security() -> None:
             staff_label_by_id[staff_auth_user_id] = f"{staff_email} | {pin_label}{current_label}"
         if selectable_staff_ids:
             selected_staff_auth_user_id = st.selectbox(
-                "Staff account",
+                "Mobile Support user",
                 options=selectable_staff_ids,
                 format_func=lambda value: staff_label_by_id.get(value, value),
                 key="office_mobile_pin_reset_target",
             )
             confirm_staff_pin_reset = st.checkbox(
-                "I confirm I want to reset this staff Mobile PIN.",
+                "I confirm I want to reset this Mobile PIN.",
                 key="office_mobile_pin_reset_confirm",
             )
             if st.button(
-                "Reset selected staff Mobile PIN",
+                "Reset selected Mobile PIN",
                 key="office_mobile_pin_reset_button",
                 use_container_width=True,
             ):
                 if not confirm_staff_pin_reset:
-                    st.error("Please confirm before resetting the staff PIN.")
+                    st.error("Please confirm before resetting the Mobile PIN.")
                 else:
                     ok, reset_message = reset_care_home_staff_mobile_pin(
                         access_token, selected_staff_auth_user_id
@@ -13041,7 +13272,7 @@ def render_care_hub_security() -> None:
     if enabled:
         st.success("Two-factor authentication is enabled.")
         if mfa_required:
-            st.caption("2FA is required for Care Home Office and cannot be disabled.")
+            st.caption("2FA is required for Family Office and cannot be disabled.")
         elif st.button("Disable 2FA", key="mfa_disable"):
             totp_secret = record.get("totp_secret") or pyotp.random_base32()
             ok = upsert_care_hub_mfa(access_token, auth_uid, totp_secret, [], False)
@@ -13054,9 +13285,9 @@ def render_care_hub_security() -> None:
         st.markdown("Recovery codes are shown once at enrolment. Keep them safe.")
     else:
         if mfa_required:
-            st.info("2FA is required for Care Home Office. Set up your authenticator app now.")
+            st.info("2FA is required for Family Office. Set up your authenticator app now.")
         else:
-            st.info("2FA is optional but recommended for Care Home Office.")
+            st.info("2FA is optional but recommended for Family Office.")
         if st.button("Start 2FA setup", key="mfa_start"):
             st.session_state["mfa_enroll_secret"] = pyotp.random_base32()
             st.session_state["mfa_enroll_codes"] = generate_recovery_codes()
@@ -13103,7 +13334,7 @@ def render_care_hub_security() -> None:
                 st.session_state.pop("mfa_show_codes", None)
 
     render_route_link(
-        "Back to Care Home Office",
+        "Back to Family Office",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="mfa_back_office_link",
     )
@@ -13119,14 +13350,14 @@ def render_care_hub_mfa() -> None:
     )
     if not auth_uid:
         render_access_gate(
-            "Please sign in to access Care Home Office.",
+            "Please sign in to access Family Office.",
             get_login_route(VARIANT_OFFICE),
             "care_hub",
         )
         return
     get_mapping_status()
     if not current_user_can_access_office():
-        render_wrong_variant("This account has Mobile-only access and cannot use Office two-factor verification.")
+        render_wrong_variant("This account has Mobile access and cannot use Family Office two-factor verification.")
         return
     record = get_care_hub_mfa_record(access_token, auth_uid)
     if not record or not record.get("enabled"):
@@ -13136,7 +13367,7 @@ def render_care_hub_mfa() -> None:
                 set_route(get_home_route(VARIANT_OFFICE))
                 st.rerun()
             return
-        st.info("Two-factor authentication is required for Care Home Office.")
+        st.info("Two-factor authentication is required for Family Office.")
         st.write("Set up your authenticator app to continue.")
         if st.button("Start 2FA setup", key="mfa_login_start_setup"):
             st.session_state["mfa_enroll_secret"] = pyotp.random_base32()
@@ -13293,7 +13524,7 @@ def render_contracts() -> None:
             st.session_state["contracts_active"] = ""
 
     render_route_link(
-        "Back to Care Home Office",
+        "Back to Family Office",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="contracts_home_link",
     )
@@ -13356,7 +13587,7 @@ def render_subscription_billing() -> None:
     billing_box("Invoice download functionality will be available here.")
 
     render_route_link(
-        "Back to Care Home Office",
+        "Back to Family Office",
         get_office_home_route(bool(st.session_state.get("auth_uid"))),
         key="billing_home_link",
     )
@@ -13384,7 +13615,7 @@ def render_care_login() -> None:
         unsafe_allow_html=True,
     )
     app_variant = resolve_runtime_variant(route_hint=get_route())
-    login_title = "Care Home Mobile" if app_variant == VARIANT_MOBILE else "Care Home Office"
+    login_title = "Mobile" if app_variant == VARIANT_MOBILE else "Family Office"
     render_page_header(
         login_title,
         brand_title="familyupdates.care",
@@ -13394,13 +13625,11 @@ def render_care_login() -> None:
     timeout_notice = str(st.session_state.pop("session_timeout_notice", "") or "").strip()
     if timeout_notice:
         st.warning(timeout_notice)
-    mobile_login_boxes = []
     if app_variant == VARIANT_MOBILE:
         mobile_login_boxes = [
-            "Care Home Mobile supports non-urgent social voice messages between residents and families.",
-            "Not a live service. Messages are played when staff are available.",
-            "Mobile access uses an individual staff PIN for day-to-day use.",
-            "Use email secure link only for first sign-in or when session access has expired.",
+            "Mobile is the reduced-tool route for a carer, helper, supported person, or trusted family member.",
+            "It helps keep practical support separate from Family Office so the Family Organiser is not expected to absorb caring work.",
+            "Use Mobile only for non-urgent family coordination. Urgent, medical, safeguarding, or private matters stay outside the app.",
         ]
         st.markdown(
             """
@@ -13419,6 +13648,8 @@ def render_care_login() -> None:
 """,
             unsafe_allow_html=True,
         )
+        for info in mobile_login_boxes:
+            st.markdown(f'<div class="care-login-box">{html.escape(info)}</div>', unsafe_allow_html=True)
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
     office_requires_explicit_login = (
         app_variant == VARIANT_OFFICE
@@ -13444,8 +13675,8 @@ def render_care_login() -> None:
                     care_record.get("care_access_level")
                 )
             if app_variant == VARIANT_OFFICE and not current_user_can_access_office():
-                st.error("This account has Mobile-only access.")
-                st.info("Mobile-only carers cannot use Office setup, registration, operational variables, security, or billing.")
+                st.error("This account has Mobile access.")
+                st.info("Mobile Support users cannot use Family Office setup, registration, setup variables, or Account & Security.")
                 if st.button("Go to Mobile login", key="care_login_mobile_only_go_mobile"):
                     set_route(get_login_route(VARIANT_MOBILE))
                 if st.button("Sign out", key="care_login_mobile_only_sign_out"):
@@ -13461,9 +13692,9 @@ def render_care_login() -> None:
             else:
                 set_route(get_home_route(app_variant))
         elif family_found:
-            st.error("Wrong app variant")
-            st.info("Your login details are for Family.")
-            if st.button("Log out", key="care_login_wrong_logout"):
+            st.error("This browser is signed in to Family Hub.")
+            st.info("Sign out of Family Hub before using Mobile or Family Office in this browser.")
+            if st.button("Sign out of Family Hub", key="care_login_wrong_logout"):
                 sign_out_user("care_hub")
         else:
             if error:
@@ -13485,10 +13716,10 @@ def render_care_login() -> None:
             return
 
     if app_variant == VARIANT_MOBILE:
-        email = st.text_input("Staff email", key="care_mobile_login_email")
+        email = st.text_input("Mobile user email", key="care_mobile_login_email")
         normalized_email = email.strip().lower()
         st.caption(
-            "For first sign-in (or expired session), enter your staff email and request a secure link."
+            "For first sign-in (or expired session), enter your Mobile Support email and request a secure link."
         )
         action_cols = st.columns(2, gap="small")
         with action_cols[0]:
@@ -13509,21 +13740,19 @@ def render_care_login() -> None:
                 st.success(message)
             else:
                 st.error(message)
-        for box in mobile_login_boxes:
-            st.markdown(f'<div class="care-login-box">{box}</div>', unsafe_allow_html=True)
         render_public_landing_link(
             "Back to hub selection",
             key=f"care_login_back_public_{app_variant}",
         )
         return
 
-    email = st.text_input("Staff/admin email", key="care_login_email")
+    email = st.text_input("Family Office email", key="care_login_email")
     password = st.text_input(
         "Office password", type="password", key="care_login_password"
     )
     normalized_email = email.strip().lower()
     normalized_password = password.strip()
-    st.caption("Office uses staff/admin credentials. This is separate from Family and Mobile PIN access.")
+    st.caption("Family Office uses organiser credentials. This is separate from Family Hub and Mobile PIN access.")
 
     st.markdown('<div id="vm-login-actions"></div>', unsafe_allow_html=True)
     show_sign_out = st.session_state.get("auth_uid")
@@ -13572,8 +13801,8 @@ def render_care_login() -> None:
                                 care_record.get("care_access_level")
                             )
                         if app_variant == VARIANT_OFFICE and not current_user_can_access_office():
-                            st.error("This account has Mobile-only access.")
-                            st.info("Mobile-only carers cannot use Office setup, registration, operational variables, security, or billing.")
+                            st.error("This account has Mobile access.")
+                            st.info("Mobile Support users cannot use Family Office setup, registration, setup variables, or Account & Security.")
                             return
                         if app_variant == VARIANT_OFFICE:
                             st.session_state["office_login_explicit"] = True
@@ -13588,8 +13817,8 @@ def render_care_login() -> None:
                         else:
                             set_route(get_home_route(VARIANT_OFFICE))
                     elif family_found:
-                        st.error("Wrong app variant")
-                        st.info("Your login details are for Family.")
+                        st.error("This account is registered for Family Hub.")
+                        st.info("Use a Mobile Support or Family Office account for this route.")
                     else:
                         if mapping_error:
                             st.error(mapping_error)
@@ -13678,20 +13907,20 @@ def render_care_hub() -> None:
     border: 1px solid rgba(47, 107, 79, 0.24);
   }}
   .care-flow-title.inbound {{
-    background: rgba(44, 130, 201, 0.10);
-    border: 1px solid rgba(44, 130, 201, 0.24);
+    background: #f7f0ff;
+    border: 1px solid rgba(123, 44, 191, 0.32);
   }}
   .care-flow-title.office {{
-    background: rgba(201, 122, 44, 0.10);
-    border: 1px solid rgba(201, 122, 44, 0.24);
+    background: #f0ffff;
+    border: 1px solid rgba(0, 140, 140, 0.32);
   }}
   .care-flow-title.practical {{
-    background: rgba(229, 221, 199, 0.55);
-    border: 1px solid rgba(139, 126, 92, 0.24);
+    background: #fff7f3;
+    border: 1px solid rgba(201, 95, 53, 0.32);
   }}
   .care-flow-title.outbound {{
-    background: rgba(46, 142, 117, 0.10);
-    border: 1px solid rgba(46, 142, 117, 0.24);
+    background: #ffffe6;
+    border: 1px solid rgba(181, 155, 0, 0.32);
   }}
   .care-channel-note {{
     color: rgba(31,31,31,0.62);
@@ -13709,20 +13938,74 @@ def render_care_hub() -> None:
     border: 1px solid rgba(47, 107, 79, 0.22);
   }}
   .care-flow-box.inbound {{
-    background: rgba(44, 130, 201, 0.05);
-    border: 1px solid rgba(44, 130, 201, 0.22);
+    background: #f8f2ff;
+    border: 1px solid rgba(123, 44, 191, 0.28);
   }}
   .care-flow-box.office {{
-    background: rgba(201, 122, 44, 0.05);
-    border: 1px solid rgba(201, 122, 44, 0.22);
+    background: #f4ffff;
+    border: 1px solid rgba(0, 140, 140, 0.28);
   }}
   .care-flow-box.practical {{
-    background: rgba(238, 246, 232, 0.70);
-    border: 1px solid rgba(111, 137, 93, 0.22);
+    background: #fff8f5;
+    border: 1px solid rgba(201, 95, 53, 0.28);
   }}
   .care-flow-box.outbound {{
-    background: rgba(46, 142, 117, 0.05);
-    border: 1px solid rgba(46, 142, 117, 0.22);
+    background: #ffffe8;
+    border: 1px solid rgba(181, 155, 0, 0.28);
+  }}
+  div[class*="st-key-office-channel-family-messages"] {{
+    background: #f8f2ff !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[class*="st-key-office-channel-mobile-message"] {{
+    background: #f8f2ff !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[class*="st-key-mobile-channel-office-message"] {{
+    background: #ffffe8 !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[class*="st-key-office-channel-family-message"] {{
+    background: #ffffe8 !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[class*="st-key-office-channel-family-messages"] {{
+    background: #f8f2ff !important;
+    border: 6px solid #d9dee3 !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[class*="st-key-office-channel-family-update"] {{
+    background: #f4ffff !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[class*="st-key-office-channel-practical-request"] {{
+    background: #fff8f5 !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
+  }}
+  div[class*="st-key-office-channel-noticeboard"] {{
+    background: #f4faf3 !important;
+    border: 6px solid #d9dee3 !important;
+    border-radius: 18px !important;
+    padding: 14px 14px 8px 18px !important;
+    margin: 12px 0 18px !important;
   }}
 </style>
 """,
@@ -13742,13 +14025,9 @@ def render_care_hub() -> None:
             unsafe_allow_html=True,
         )
     access_token = st.session_state.get("access_token")
-    page_title = "Care Home Mobile" if runtime_variant == VARIANT_MOBILE else get_at_home_voicemail_label(access_token)
+    page_title = "Mobile" if runtime_variant == VARIANT_MOBILE else get_at_home_voicemail_label(access_token)
     render_page_header(page_title)
     render_dev_stage_level_status(access_token)
-    st.info(
-        "Everyday communication only. No threads, no history, no search. "
-        "Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact."
-    )
     if runtime_variant == VARIANT_MOBILE:
         render_public_landing_button("Back to hub selection")
     elif runtime_variant == VARIANT_OFFICE:
@@ -13779,6 +14058,9 @@ def render_care_hub() -> None:
     office_channel_enabled = bool(lifecycle_policy.get("enable_office_channel"))
     mobile_channel_enabled = bool(lifecycle_policy.get("enable_mobile_channel"))
     family_led_mode = operating_mode == OPERATING_MODE_PERSONAL_USE
+    voice_messaging_enabled = family_messaging_enabled and not (
+        family_led_mode or at_home_lifecycle_stage
+    )
     main_contact_name = get_main_contact_name(access_token)
     subject_singular = str(workspace_labels.get("subject_singular") or "resident")
     subject_singular_title = str(workspace_labels.get("subject_singular_title") or "Resident")
@@ -13802,18 +14084,13 @@ def render_care_hub() -> None:
         else:
             st.session_state.pop("circle_person_display_name", None)
     render_care_home_identity_banner(access_token)
-    if runtime_variant == VARIANT_OFFICE and family_led_mode and main_contact_name:
-        st.caption(
-            "If you hold LPA or similar authority, you may be able to act depending on your arrangement. "
-            "It is worth checking your documents."
-        )
     channel_enabled_for_variant = (
         mobile_channel_enabled if runtime_variant == VARIANT_MOBILE else office_channel_enabled
     )
     if not channel_enabled_for_variant:
-        st.info("This channel is inactive for the current lifecycle stage.")
-    elif not family_messaging_enabled:
-        st.info("Messaging is inactive for the current lifecycle stage.")
+        st.info("This channel is inactive for the current situation.")
+    elif not (voice_messaging_enabled or office_channel_enabled or requests_enabled):
+        st.info("Messaging is inactive for the current situation.")
     is_care_queue_variant_screen = runtime_variant in {VARIANT_MOBILE, VARIANT_OFFICE}
     include_care_home_in_resident_labels = (
         runtime_variant == VARIANT_MOBILE and not family_led_mode and not at_home_lifecycle_stage
@@ -14016,12 +14293,12 @@ def render_care_hub() -> None:
             mobile_channel_enabled if runtime_variant == VARIANT_MOBILE else office_channel_enabled
         )
         communication_enabled = channel_enabled_for_current_variant and (
-            office_channel_enabled or family_messaging_enabled or requests_enabled
+            office_channel_enabled or voice_messaging_enabled or requests_enabled
         )
         if not communication_enabled:
             if not channel_enabled_for_current_variant:
                 channel_name = "Mobile Channel" if runtime_variant == VARIANT_MOBILE else "Office Channel"
-                st.caption(f"{channel_name} is inactive in this lifecycle stage.")
+                st.caption(f"{channel_name} is inactive in this situation.")
             continue
 
         contacts = contacts_by_resident.get(resident_id)
@@ -14052,12 +14329,13 @@ def render_care_hub() -> None:
         is_mobile_variant = runtime_variant == VARIANT_MOBILE
         is_office_variant = runtime_variant == VARIANT_OFFICE
         is_queue_playback_variant = is_mobile_variant
+        send_guard_scope = f"care_send_{resident_id}"
         manual_selection_key = f"care_manual_selected_{resident_id}"
         manual_selected_active = bool(st.session_state.get(manual_selection_key, False))
         queue_unread_count = 0
         queue_next_contact = None
         queue_unread_contacts: list[dict] = []
-        if contacts and (is_mobile_variant or is_office_variant):
+        if voice_messaging_enabled and contacts and (is_mobile_variant or is_office_variant):
             (
                 queue_unread_count,
                 queue_next_contact,
@@ -14281,11 +14559,18 @@ def render_care_hub() -> None:
         mobile_play_requested_key = f"care_mobile_play_requested_{resident_id}"
         mobile_advance_pointer_key = f"care_mobile_advance_pointer_{resident_id}"
         family_message_panel = (
-            st.container(border=True)
-            if family_messaging_enabled and contacts and (is_mobile_variant or is_office_variant)
+            st.container(
+                border=True,
+                key=(
+                    f"mobile-channel-family-messages-{resident_id}"
+                    if is_mobile_variant
+                    else f"office-channel-family-messages-{resident_id}"
+                ),
+            )
+            if voice_messaging_enabled and contacts and (is_mobile_variant or is_office_variant)
             else None
         )
-        if family_messaging_enabled and contacts and (is_mobile_variant or is_office_variant):
+        if voice_messaging_enabled and contacts and (is_mobile_variant or is_office_variant):
             if is_mobile_variant:
                 with family_message_panel:
                     render_care_flow_title("Family messages", "inbound")
@@ -14411,7 +14696,7 @@ def render_care_hub() -> None:
                             )
                             st.session_state[mobile_play_requested_key] = False
                             st.session_state[mobile_advance_pointer_key] = False
-        if family_messaging_enabled and (is_mobile_variant or is_office_variant):
+        if voice_messaging_enabled and (is_mobile_variant or is_office_variant):
             if latest is None:
                 if selected_contact is not None:
                     latest = fetch_latest_message_for_contact_with_mapping_repair(
@@ -14708,7 +14993,7 @@ def render_care_hub() -> None:
                 selected_contact_position = queue_position_by_contact_id.get(selected_contact_id)
                 if is_queue_playback_variant and queue_mode_label:
                     st.caption(f"Queue mode: {queue_mode_label}")
-        if family_messaging_enabled:
+        if voice_messaging_enabled:
             with st.container(border=True):
                 selected_recipient_user_id = str(
                     (selected_contact or {}).get("auth_user_id")
@@ -15179,35 +15464,397 @@ def render_care_hub() -> None:
                     elif last_sent and last_sent.get("resident_id") == resident_id:
                         st.success(last_sent.get("message", "Message sent."))
     
-        allow_mobile_extended_actions = family_led_mode or (
-            runtime_variant == VARIANT_MOBILE
-            and shared_coordination_stage
-        )
         show_update_box = (
             runtime_variant == VARIANT_OFFICE
             and (shared_coordination_stage or normalize_lifecycle_stage(lifecycle_stage) == 4)
-        ) or (
-            runtime_variant == VARIANT_MOBILE and allow_mobile_extended_actions
         )
         show_practical_box = requests_enabled and (
-            runtime_variant == VARIANT_OFFICE or (
-            runtime_variant == VARIANT_MOBILE and allow_mobile_extended_actions
-            )
+            runtime_variant == VARIANT_OFFICE
+            or (runtime_variant == VARIANT_MOBILE and mobile_channel_enabled)
         )
 
+        mobile_office_message_enabled = (
+            mobile_channel_enabled
+            and office_channel_enabled
+            and (family_led_mode or at_home_lifecycle_stage)
+            and runtime_variant in {VARIANT_MOBILE, VARIANT_OFFICE}
+        )
+
+        if mobile_office_message_enabled:
+            mobile_office_container_key = (
+                f"mobile-channel-office-message-{resident_id}"
+                if runtime_variant == VARIANT_MOBILE
+                else f"office-channel-mobile-message-{resident_id}"
+            )
+            with st.container(border=True, key=mobile_office_container_key):
+                if runtime_variant == VARIANT_MOBILE:
+                    render_care_flow_title(
+                        f"Message with Family Office ({full_name})",
+                        "office",
+                    )
+                    render_care_channel_note(
+                        "When you send your current message, it replaces your previous one. "
+                        "When the Family Organiser sends a new message, it replaces their previous one. "
+                        "So you both see current messages only. This is non-urgent and not live."
+                    )
+                    latest_from_office = fetch_latest_message(
+                        resident_id,
+                        "office_to_mobile",
+                        access_token,
+                        channel="mobile_office",
+                        include_audio=False,
+                    )
+                    latest_to_office = fetch_latest_message(
+                        resident_id,
+                        "mobile_to_office",
+                        access_token,
+                        channel="mobile_office",
+                        include_audio=False,
+                    )
+                    st.markdown("**Current message from Family Office**")
+                    if not render_text_update_message(latest_from_office):
+                        st.markdown(
+                            '<div class="vm-muted-line">No current message from Family Office.</div>',
+                            unsafe_allow_html=True,
+                        )
+                    st.markdown("**Current message to Family Office**")
+                    if not render_text_update_message(latest_to_office):
+                        st.markdown(
+                            '<div class="vm-muted-line">No current message to Family Office.</div>',
+                            unsafe_allow_html=True,
+                        )
+                    text_nonce = int(state.get("mobile_office_text_nonce", 0))
+                    mobile_to_office_body = st.text_area(
+                        "Type your message to Family Office here:",
+                        key=f"mobile_to_office_text_{resident_id}_{text_nonce}",
+                        height=100,
+                        max_chars=1000,
+                    )
+                    mobile_to_office_can_send = bool(str(mobile_to_office_body or "").strip())
+                    if st.button(
+                        "Click to send and replace your message",
+                        key=f"mobile_to_office_send_{resident_id}_{text_nonce}",
+                        use_container_width=True,
+                    ):
+                        if not mobile_to_office_can_send:
+                            st.info("Please write the current message first.")
+                        else:
+                            supabase, error = get_authed_supabase(access_token)
+                            if error:
+                                st.error(error)
+                            else:
+                                now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                                payload = {
+                                    "resident_id": resident_id,
+                                    "family_id": resident.get("family_id") or resident_id,
+                                    "channel": "mobile_office",
+                                    "direction": "mobile_to_office",
+                                    "audio_storage_path": "",
+                                    "audio_mime_type": "text/plain",
+                                    "audio_bytes": 0,
+                                    "message_kind": "text",
+                                    "text_title": None,
+                                    "text_body": str(mobile_to_office_body or "").strip(),
+                                    "recorded_at": now_iso,
+                                }
+                                resp, upsert_error = upsert_latest_message_with_fallback(
+                                    supabase,
+                                    payload,
+                                    "resident_id,direction,channel",
+                                    {
+                                        "resident_id": resident_id,
+                                        "channel": "mobile_office",
+                                        "direction": "mobile_to_office",
+                                    },
+                                )
+                                if upsert_error:
+                                    st.error(upsert_error)
+                                else:
+                                    message_id = (
+                                        (
+                                            resp.data[0].get("id")
+                                            if hasattr(resp, "data")
+                                            and isinstance(resp.data, list)
+                                            and resp.data
+                                            else None
+                                        )
+                                        if resp is not None
+                                        else None
+                                    )
+                                    log_audit_event(
+                                        "message_sent",
+                                        "care_hub",
+                                        resident["care_home_id"],
+                                        message_id,
+                                        resident_id=resident_id,
+                                    )
+                                    bump_message_cache_epoch()
+                                    state["mobile_office_text_nonce"] = text_nonce + 1
+                                    st.success("Current message to Family Office replaced.")
+                                    st.rerun()
+                else:
+                    mobile_support_label = "Mobile Support / carer"
+                    render_care_flow_title(
+                        f"Message with {mobile_support_label} ({full_name})",
+                        "office",
+                    )
+                    render_care_channel_note(
+                        "When you send your current message, it replaces your previous one. "
+                        "When Mobile Support sends a new message, it replaces their previous one. "
+                        "So you both see current messages only. This is non-urgent and not live."
+                    )
+                    latest_from_mobile = fetch_latest_message(
+                        resident_id,
+                        "mobile_to_office",
+                        access_token,
+                        channel="mobile_office",
+                        include_audio=False,
+                    )
+                    latest_to_mobile = fetch_latest_message(
+                        resident_id,
+                        "office_to_mobile",
+                        access_token,
+                        channel="mobile_office",
+                        include_audio=False,
+                    )
+                    st.markdown(f"**Current message from {mobile_support_label}**")
+                    if not render_text_update_message(latest_from_mobile):
+                        st.markdown(
+                            f'<div class="vm-muted-line">No current message from {html.escape(mobile_support_label)}.</div>',
+                            unsafe_allow_html=True,
+                        )
+                    st.markdown(f"**Current message to {mobile_support_label}**")
+                    if not render_text_update_message(latest_to_mobile):
+                        st.markdown(
+                            f'<div class="vm-muted-line">No current message to {html.escape(mobile_support_label)}.</div>',
+                            unsafe_allow_html=True,
+                        )
+                    text_nonce = int(state.get("office_mobile_text_nonce", 0))
+                    office_to_mobile_body = st.text_area(
+                        f"Type your message to {mobile_support_label} here:",
+                        key=f"office_to_mobile_text_{resident_id}_{text_nonce}",
+                        height=100,
+                        max_chars=1000,
+                    )
+                    office_to_mobile_can_send = bool(str(office_to_mobile_body or "").strip())
+                    if st.button(
+                        "Click to send and replace your message",
+                        key=f"office_to_mobile_send_{resident_id}_{text_nonce}",
+                        use_container_width=True,
+                    ):
+                        if not office_to_mobile_can_send:
+                            st.info("Please write the current message first.")
+                        else:
+                            supabase, error = get_authed_supabase(access_token)
+                            if error:
+                                st.error(error)
+                            else:
+                                now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                                payload = {
+                                    "resident_id": resident_id,
+                                    "family_id": resident.get("family_id") or resident_id,
+                                    "channel": "mobile_office",
+                                    "direction": "office_to_mobile",
+                                    "audio_storage_path": "",
+                                    "audio_mime_type": "text/plain",
+                                    "audio_bytes": 0,
+                                    "message_kind": "text",
+                                    "text_title": None,
+                                    "text_body": str(office_to_mobile_body or "").strip(),
+                                    "recorded_at": now_iso,
+                                }
+                                resp, upsert_error = upsert_latest_message_with_fallback(
+                                    supabase,
+                                    payload,
+                                    "resident_id,direction,channel",
+                                    {
+                                        "resident_id": resident_id,
+                                        "channel": "mobile_office",
+                                        "direction": "office_to_mobile",
+                                    },
+                                )
+                                if upsert_error:
+                                    st.error(upsert_error)
+                                else:
+                                    message_id = (
+                                        (
+                                            resp.data[0].get("id")
+                                            if hasattr(resp, "data")
+                                            and isinstance(resp.data, list)
+                                            and resp.data
+                                            else None
+                                        )
+                                        if resp is not None
+                                        else None
+                                    )
+                                    log_audit_event(
+                                        "message_sent",
+                                        "care_hub",
+                                        resident["care_home_id"],
+                                        message_id,
+                                        resident_id=resident_id,
+                                    )
+                                    bump_message_cache_epoch()
+                                    state["office_mobile_text_nonce"] = text_nonce + 1
+                                    st.success(f"Current message to {mobile_support_label} replaced.")
+                                    st.rerun()
+
+        if (
+            runtime_variant == VARIANT_OFFICE
+            and office_channel_enabled
+            and contacts
+            and (family_led_mode or at_home_lifecycle_stage)
+        ):
+            with st.container(
+                border=True,
+                key=f"office-channel-family-message-{resident_id}",
+            ):
+                render_care_flow_title(
+                    "Your message to a selected Family Member",
+                    "office",
+                )
+                render_care_channel_note(
+                    "When you send your current message, it replaces your previous one. "
+                    "When the selected Family Member sends a new message, it replaces their previous one. "
+                    "So you both see current messages only. This is non-urgent and not live."
+                )
+                contact_options = sort_contacts_for_playback(contacts)
+                selected_specific_contact = st.selectbox(
+                    "Family Member",
+                    options=contact_options,
+                    format_func=lambda contact: family_contact_display_name(contact),
+                    key=f"office_specific_family_contact_{resident_id}",
+                )
+                selected_specific_contact_user_id = str(
+                    (selected_specific_contact or {}).get("auth_user_id") or ""
+                ).strip()
+                selected_specific_contact_name = family_contact_display_name(
+                    selected_specific_contact
+                )
+                if not selected_specific_contact_user_id:
+                    st.caption("This Family Member does not yet have linked app access.")
+                else:
+                    latest_from_family = fetch_latest_message(
+                        resident_id,
+                        "to_resident",
+                        access_token,
+                        contact_user_id=selected_specific_contact_user_id,
+                        channel="resident_family",
+                        include_audio=False,
+                    )
+                    st.markdown(f"**Current message from {selected_specific_contact_name}**")
+                    if not render_text_update_message(latest_from_family):
+                        st.markdown(
+                            '<div class="vm-muted-line">No current message from this Family Member.</div>',
+                            unsafe_allow_html=True,
+                        )
+                    latest_to_family = fetch_latest_message(
+                        resident_id,
+                        "from_resident",
+                        access_token,
+                        contact_user_id=selected_specific_contact_user_id,
+                        channel="resident_family",
+                        include_audio=False,
+                    )
+                    st.markdown(f"**Current message to {selected_specific_contact_name}**")
+                    if not render_text_update_message(latest_to_family):
+                        st.markdown(
+                            '<div class="vm-muted-line">No current message to this Family Member.</div>',
+                            unsafe_allow_html=True,
+                        )
+                    text_nonce = int(state.get("office_specific_family_text_nonce", 0))
+                    office_to_family_body = st.text_area(
+                        f"Type your message to {selected_specific_contact_name} here:",
+                        key=f"office_specific_family_text_{resident_id}_{selected_specific_contact_user_id}_{text_nonce}",
+                        height=100,
+                        max_chars=1000,
+                    )
+                    office_to_family_can_send = bool(str(office_to_family_body or "").strip())
+                    if st.button(
+                        "Click to send and replace your message",
+                        key=f"office_specific_family_send_{resident_id}_{selected_specific_contact_user_id}_{text_nonce}",
+                        use_container_width=True,
+                    ):
+                        if not office_to_family_can_send:
+                            st.info("Please write the current message first.")
+                        else:
+                            supabase, error = get_authed_supabase(access_token)
+                            if error:
+                                st.error(error)
+                            else:
+                                now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                                payload = {
+                                    "resident_id": resident_id,
+                                    "contact_user_id": selected_specific_contact_user_id,
+                                    "family_id": resident.get("family_id") or resident_id,
+                                    "channel": "resident_family",
+                                    "direction": "from_resident",
+                                    "audio_storage_path": "",
+                                    "audio_mime_type": "text/plain",
+                                    "audio_bytes": 0,
+                                    "message_kind": "text",
+                                    "text_title": None,
+                                    "text_body": str(office_to_family_body or "").strip(),
+                                    "recorded_at": now_iso,
+                                }
+                                resp, upsert_error = upsert_latest_message_with_fallback(
+                                    supabase,
+                                    payload,
+                                    "resident_id,contact_user_id,direction,channel",
+                                    {
+                                        "resident_id": resident_id,
+                                        "contact_user_id": selected_specific_contact_user_id,
+                                        "channel": "resident_family",
+                                        "direction": "from_resident",
+                                    },
+                                )
+                                if upsert_error:
+                                    st.error(upsert_error)
+                                else:
+                                    message_id = (
+                                        (
+                                            resp.data[0].get("id")
+                                            if hasattr(resp, "data")
+                                            and isinstance(resp.data, list)
+                                            and resp.data
+                                            else None
+                                        )
+                                        if resp is not None
+                                        else None
+                                    )
+                                    log_audit_event(
+                                        "message_sent",
+                                        "care_hub",
+                                        resident["care_home_id"],
+                                        message_id,
+                                        resident_id=resident_id,
+                                    )
+                                    bump_message_cache_epoch()
+                                    state["office_specific_family_text_nonce"] = text_nonce + 1
+                                    st.success(
+                                        f"Current message to {selected_specific_contact_name} replaced."
+                                    )
+                                    st.rerun()
+
         if show_update_box:
-            with st.container(border=True):
+            with st.container(
+                border=True,
+                key=f"office-channel-family-update-{resident_id}",
+            ):
                 update_subject = full_name if at_home_lifecycle_stage else full_name
                 office_update_title = (
-                    f"Shared update to all Family re: {update_subject}"
+                    f"Update from Family Organiser to the family group ({update_subject})"
                     if shared_coordination_stage
                     else f"Care Home update to all Family re: {update_subject}"
                 )
                 if family_led_mode:
                     if main_contact_name:
-                        office_update_title = f"Update from {main_contact_name} re: {update_subject}"
+                        office_update_title = (
+                            f"Update from Family Organiser {main_contact_name} "
+                            f"to the family group"
+                        )
                     else:
-                        office_update_title = f"Main contact update re: {update_subject}"
+                        office_update_title = "Update from Family Organiser to the family group"
                 render_care_flow_title(
                     office_update_title,
                     "office",
@@ -15226,12 +15873,12 @@ def render_care_hub() -> None:
                     pass
                 elif latest_office_update:
                     st.markdown(
-                        '<div class="vm-muted-line">Previous voice update hidden. Send a text update to replace it.</div>',
+                        '<div class="vm-muted-line">No current text update yet.</div>',
                         unsafe_allow_html=True,
                     )
                 else:
                     st.markdown(
-                        '<div class="vm-muted-line">No updates yet.</div>',
+                        '<div class="vm-muted-line">No current text update yet.</div>',
                         unsafe_allow_html=True,
                     )
                 office_update_phrase = (
@@ -15278,16 +15925,15 @@ def render_care_hub() -> None:
                         key=f"care_office_text_update_title_{resident_id}_{text_nonce}",
                     )
                     text_body = st.text_area(
-                        "Text update",
+                        "Type update to family group here:",
                         key=f"care_office_text_update_body_{resident_id}_{text_nonce}",
                         height=110,
                         max_chars=1200,
                     )
                     text_can_send = bool(str(text_body or "").strip())
                     if st.button(
-                        f"Send text {office_update_phrase} for {full_name}",
+                        "Click to send and replace family group update",
                         key=f"care_send_office_text_update_{resident_id}_{text_nonce}",
-                        disabled=not text_can_send,
                     ):
                         if not text_can_send:
                             st.info("Please write the text update before sending.")
@@ -15376,7 +16022,10 @@ def render_care_hub() -> None:
                     st.success(state.get("office_last_sent_label"))
 
             if show_practical_box and runtime_variant == VARIANT_MOBILE:
-                with st.container(border=True):
+                with st.container(
+                    border=True,
+                    key=f"mobile-channel-practical-request-{resident_id}",
+                ):
                     render_care_flow_title(
                         f"Request from Office ({full_name})",
                         "practical",
@@ -15502,179 +16151,17 @@ def render_care_hub() -> None:
                                 f"Current Mobile response: {mobile_response_choice.title()}"
                             )
                     else:
-                        st.caption("No open Office requests for Mobile.")
-
-                with st.container(border=True):
-                    render_care_flow_title(
-                        f"Request to family from Mobile ({full_name})",
-                        "practical",
-                    )
-                    st.markdown("**Request to family (structured question and fixed responses)**")
-                    st.caption(
-                        "Use this for non-urgent coordination only. Replies use structured choices, optional tick-boxes, and an optional short context note."
-                    )
-                    st.caption("For urgent or medical matters, use your normal direct contact route.")
-                    mobile_family_title = st.text_input(
-                        "Request title",
-                        key=f"mobile_family_practical_title_{resident_id}",
-                        placeholder="Example: Prescription collection",
-                    )
-                    mobile_family_body = st.text_area(
-                        "Structured question",
-                        key=f"mobile_family_practical_body_{resident_id}",
-                        placeholder="Example: Can someone pick up the prescription this week?",
-                        max_chars=800,
-                    )
-                    mobile_family_allow_note = st.checkbox(
-                        "Allow optional short context note (not a discussion)",
-                        value=True,
-                        key=f"mobile_family_practical_allow_note_{resident_id}",
-                    )
-                    mobile_family_is_visit = st.checkbox(
-                        "This is a visit coordination message",
-                        value=False,
-                        key=f"mobile_family_practical_is_visit_{resident_id}",
-                    )
-                    mobile_family_requested_date_iso = ""
-                    mobile_family_requested_time_window = ""
-                    if mobile_family_is_visit:
-                        mobile_family_requested_date_iso = st.text_input(
-                            "Requested date (optional)",
-                            key=f"mobile_family_practical_requested_date_{resident_id}",
-                            placeholder="Example: 2026-04-21",
-                        ).strip()
-                        mobile_family_requested_time_window = st.text_input(
-                            "Requested time window (optional)",
-                            key=f"mobile_family_practical_requested_time_window_{resident_id}",
-                            placeholder="Example: Morning, around 11am",
-                        )
-                    mobile_family_checkboxes = []
-                    with st.expander("Optional structured reply choices", expanded=False):
-                        mobile_family_checkboxes = st.multiselect(
-                            "Add optional tick-box choices",
-                            options=[
-                                normalize_practical_option_label_for_mode(
-                                    option,
-                                    OPERATING_MODE_PERSONAL_USE
-                                    if at_home_lifecycle_stage
-                                    else operating_mode,
-                                    person_first_name=person_first_name,
-                                )
-                                for option in practical_checkbox_options(
-                                    OPERATING_MODE_PERSONAL_USE
-                                    if at_home_lifecycle_stage
-                                    else operating_mode
-                                )
-                            ],
-                            default=[],
-                            key=f"mobile_family_practical_options_{resident_id}",
-                        )
-                    if st.button(
-                        "Publish request to Family Members",
-                        key=f"mobile_family_practical_publish_{resident_id}",
-                        use_container_width=True,
-                    ):
-                        st.session_state["mobile_status_message"] = (
-                            "Publishing Mobile request to Family Members..."
-                        )
-                        with st.spinner("Publishing request..."):
-                            ok, practical_message_id, practical_message = create_office_practical_message(
-                                resident_id,
-                                resident["care_home_id"],
-                                mobile_family_title,
-                                mobile_family_body,
-                                mobile_family_allow_note,
-                                mobile_family_checkboxes,
-                                (
-                                    OFFICE_PRACTICAL_CONTEXT_VISIT
-                                    if mobile_family_is_visit
-                                    else OFFICE_PRACTICAL_CONTEXT_GENERAL
-                                ),
-                                mobile_family_requested_date_iso,
-                                mobile_family_requested_time_window,
-                                OFFICE_PRACTICAL_TARGET_ALL_FAMILY,
-                                None,
-                                access_token,
-                            )
-                        if ok:
-                            st.session_state["mobile_status_message"] = practical_message
-                            st.success(practical_message)
-                        else:
-                            st.session_state.pop("mobile_status_message", None)
-                            st.error(practical_message)
-
-                    active_mobile_family_practical = fetch_latest_open_office_practical_message(
-                        resident_id, access_token
-                    )
-                    if active_mobile_family_practical:
-                        active_mobile_family_id = str(
-                            active_mobile_family_practical.get("id") or ""
-                        ).strip()
-                        active_mobile_family_target = normalize_office_practical_target_type(
-                            active_mobile_family_practical.get("target_type")
-                        )
-                        if active_mobile_family_target != OFFICE_PRACTICAL_TARGET_MOBILE:
-                            st.markdown("**Current family request responses**")
-                            st.caption(
-                                f"Request: {str(active_mobile_family_practical.get('title') or 'Request').strip()}"
-                            )
-                            mobile_family_summary = fetch_office_practical_response_summary(
-                                active_mobile_family_id, access_token
-                            )
-                            st.caption(
-                                "Structured responses: "
-                                f"Yes {mobile_family_summary['choice_counts'].get('yes', 0)} | "
-                                f"No {mobile_family_summary['choice_counts'].get('no', 0)} | "
-                                f"Maybe {mobile_family_summary['choice_counts'].get('maybe', 0)} | "
-                                f"Total {mobile_family_summary.get('total', 0)}"
-                            )
-                            option_counts = mobile_family_summary.get("option_counts") or {}
-                            if option_counts:
-                                st.caption("Tick-box selections:")
-                                for option_label, option_count in option_counts.items():
-                                    display_label = normalize_practical_option_label_for_mode(
-                                        str(option_label or "").strip(),
-                                        OPERATING_MODE_PERSONAL_USE
-                                        if at_home_lifecycle_stage
-                                        else operating_mode,
-                                        person_first_name=person_first_name,
-                                    )
-                                    st.markdown(f"- {display_label}: {option_count}")
-                            responses = mobile_family_summary.get("responses") or []
-                            if responses:
-                                st.caption("Family structured responses:")
-                                for response in responses:
-                                    contact_name = str(response.get("contact_name") or "Family Member")
-                                    choice_label = str(response.get("primary_choice") or "").strip().title()
-                                    st.markdown(f"- {contact_name}: {choice_label}")
-                                    selected_labels = response.get("selected_labels") or []
-                                    if selected_labels:
-                                        display_selected_labels = [
-                                            normalize_practical_option_label_for_mode(
-                                                str(label or "").strip(),
-                                                OPERATING_MODE_PERSONAL_USE
-                                                if at_home_lifecycle_stage
-                                                else operating_mode,
-                                                person_first_name=person_first_name,
-                                            )
-                                            for label in selected_labels
-                                        ]
-                                        st.caption("Selections: " + ", ".join(display_selected_labels))
-                                    planned_visit = str(response.get("planned_visit_time") or "").strip()
-                                    if planned_visit:
-                                        st.caption(f"Planned visit: {planned_visit}")
-                                    note_value = str(response.get("note") or "").strip()
-                                    if note_value:
-                                        st.caption(f"Note: {note_value}")
-                            else:
-                                st.caption("No family structured responses yet.")
+                        st.caption("No current practical request from Family Office.")
 
             elif show_practical_box:
-                with st.container(border=True):
+                with st.container(
+                    border=True,
+                    key=f"office-channel-practical-request-{resident_id}",
+                ):
                     request_title = (
-                        f"Shared request ({full_name})"
+                        f"Practical request from Family Organiser to Family Members ({full_name})"
                         if shared_coordination_stage
-                        else f"Request to family ({full_name})"
+                        else f"Practical request to Family Members ({full_name})"
                     )
                     render_care_flow_title(
                         request_title,
@@ -15712,7 +16199,7 @@ def render_care_hub() -> None:
                             {
                                 "id": "",
                                 "target_type": OFFICE_PRACTICAL_TARGET_MOBILE,
-                                "label": "Mobile / carer",
+                                "label": "Mobile Support / carer",
                             }
                         )
                     selected_request_target = st.selectbox(
@@ -15730,7 +16217,7 @@ def render_care_hub() -> None:
                         )
                     elif selected_target_type == OFFICE_PRACTICAL_TARGET_MOBILE:
                         st.caption(
-                            "This is for Mobile / carer and is not shown in Family Hub."
+                            "This is for Mobile Support / carer and is not shown in Family Hub."
                         )
                     practical_title = st.text_input(
                         "Request title",
@@ -15989,6 +16476,10 @@ def render_care_hub() -> None:
                             else:
                                 st.error(close_message)
 
+                with st.container(
+                    border=True,
+                    key=f"office-channel-noticeboard-{resident_id}",
+                ):
                     render_family_noticeboard_notes_for_staff(
                         resident_id,
                         access_token,
@@ -16098,11 +16589,11 @@ def invite_mobile_carer(
                 raise
             return (
                 False,
-                "The database is missing care_home_users.care_access_level. Apply migration 0039 before adding Mobile-only carers.",
+                "The database is missing care_home_users.care_access_level. Apply migration 0039 before adding Mobile Support users.",
             )
         if invited:
-            return True, "Mobile carer invited. They will set their Mobile PIN at first Mobile login."
-        return True, "Existing user linked as Mobile-only carer. They can use Mobile login."
+            return True, "Mobile Support user invited. They will set their Mobile PIN at first Mobile login."
+        return True, "Existing user linked as Mobile Support. They can use Mobile login."
     except Exception as exc:
         return False, str(exc)
 
@@ -16163,7 +16654,7 @@ def render_family_system_setup() -> None:
         render_wrong_variant("Setup is only available in Office.")
         return
     if not current_user_can_access_office():
-        render_wrong_variant("Mobile-only carers cannot use setup.")
+        render_wrong_variant("Mobile Support users cannot use setup.")
         return
     access_token = st.session_state.get("access_token")
     render_page_header("Setup family system", show_menu=False)
@@ -16240,6 +16731,7 @@ def render_family_system_setup() -> None:
             lifecycle_stage=get_lifecycle_stage(access_token),
             communication_level=get_communication_level(access_token),
             main_contact_name=organiser_name,
+            message_check_note=str(profile.get("message_check_note") or ""),
             banner_title=str(profile.get("branding_banner_title") or ""),
             banner_text=str(profile.get("branding_banner_text") or ""),
             banner_artwork_url=str(profile.get("branding_banner_artwork_url") or ""),
@@ -16251,11 +16743,11 @@ def render_family_system_setup() -> None:
         else:
             st.error(message)
 
-    st.markdown("### Mobile-only carer")
-    st.caption("Mobile-only carers can use Mobile to support playback/recording. They cannot register people, change operational variables, open security settings, or view billing.")
+    st.markdown("### Mobile Support")
+    st.caption("Mobile Support users can use Mobile for practical support tasks. They cannot register people, change setup variables, or open Account & Security.")
     with st.form("family_setup_mobile_carer_form"):
-        carer_email = st.text_input("Carer email", key="family_setup_carer_email")
-        invite_carer = st.form_submit_button("Invite Mobile-only carer")
+        carer_email = st.text_input("Mobile Support email", key="family_setup_carer_email")
+        invite_carer = st.form_submit_button("Invite Mobile Support")
     if invite_carer:
         ok, message = invite_mobile_carer(email=carer_email)
         if ok:
@@ -16263,11 +16755,11 @@ def render_family_system_setup() -> None:
         else:
             st.error(message)
 
-    st.markdown("### Office users")
-    st.caption("Office users have full access to the family setup, including registration, setup variables, security, and billing. Use this only for trusted people such as a co-organiser or LPA/finance sibling.")
+    st.markdown("### Family Office users")
+    st.caption("Family Office users have full access to the family setup, including registration, setup variables, and Account & Security. Use this only for trusted people such as a co-organiser or LPA/finance sibling.")
     with st.form("family_setup_office_user_form"):
-        office_user_email = st.text_input("Office user email", key="family_setup_office_user_email")
-        invite_office = st.form_submit_button("Invite Office user")
+        office_user_email = st.text_input("Family Office user email", key="family_setup_office_user_email")
+        invite_office = st.form_submit_button("Invite Family Office user")
     if invite_office:
         ok, message = invite_office_user(email=office_user_email)
         if ok:
@@ -16375,6 +16867,7 @@ def main() -> None:
         "/public-docs": "/pr-home",
         "/public/service-overview": "/pr-home",
         "/public/resident-participation": "/pr-home",
+        "/public/family-guide": "/public/qa",
     }
     early_public_target = early_public_route_redirects.get(route)
     if early_public_target:
@@ -16692,6 +17185,8 @@ def main() -> None:
         set_route("/pr-home")
     elif route == "/public/how-it-works":
         render_public_document("docs/public/02_how_it_works.md", back_route="/pr-home")
+    elif route == "/public/infographic":
+        render_public_infographic()
     elif route == "/public/resident-participation":
         set_route("/pr-home")
     elif route == "/public/family-guide":
@@ -16719,7 +17214,7 @@ def main() -> None:
     elif route == "/contracts":
         render_contracts()
     elif route == "/billing":
-        render_subscription_billing()
+        set_route(get_home_route(VARIANT_OFFICE))
     elif route == "/care-hub/mfa":
         render_care_hub_mfa()
     else:

@@ -1,11 +1,23 @@
-baseline before cleanup
-
 # familyupdates.care
 
-Calm, non-urgent voice messaging between residents and authorised contacts. One message in, one message out.
+Calm, non-urgent family coordination around care. One current item replaces the previous item in that channel.
 
-Optional transcript assist is supported across Family, Care Hub – Mobile, and Care Hub – Office.
-When requested, transcript text can be shown for the current message, but voice remains the source of truth.
+The live direction is the family-side coordination system:
+
+- Family Office for the Family Organiser.
+- Family Hub for wider Family Members.
+- Mobile access for a carer, helper, supported person, or trusted family member.
+
+Mobile is part of the starting model. If a Family Organiser is needed, the system should also make room for support from a carer/helper/professional where appropriate, rather than pushing caring work onto the organiser.
+
+The active situations are:
+
+- At home with Family Organiser + Mobile Support.
+- Care home with Family Organiser + Mobile Support.
+
+There is no active "managing independently" app situation. If ordinary direct communication is enough, the person or couple may not need familyupdates.care.
+
+The earlier care-home/voice-message product code is preserved for possible later use, but it should not drive the current public app or onboarding.
 
 ## Install
 
@@ -15,13 +27,31 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-## Run (single app)
+## Run
+
+Single app:
 
 ```bat
 streamlit run app.py
 ```
 
-## Single-service variant routing
+Variant launchers:
+
+```bat
+.\run_family.cmd
+.\run_care_hub_phone.cmd
+.\run_care_hub_office.cmd
+```
+
+Local ports:
+
+- Family Hub: http://localhost:8501
+- Mobile: http://localhost:8502
+- Family Office: http://localhost:8503
+
+The launcher names still use some older care-home wording because the stable code and route structure are being reused during the transition.
+
+## Routing
 
 Runtime resolves app variant from request path first:
 
@@ -32,49 +62,15 @@ Runtime resolves app variant from request path first:
 
 `APP_VARIANT` remains as fallback for local/dev or unmapped paths.
 
-## Deployment topology (current live)
+## Local Backend Development
 
-- Live Render service: `voicemailcare-main`
-- Primary domain (indexed): `https://familyupdates.care`
-- Media domain: `https://media.familyupdates.care`
-
-### Legacy infrastructure status
-
-- Any previous Render project names and auth-cookie env groups that now use an `old-` prefix are legacy.
-- Legacy `old-*` Render resources are not part of active runtime documentation for this service.
-- Legacy preview/host URLs are redirected to the canonical domain where configured.
-
-## Run by variant
-
-```bat
-.\run_family.cmd
-.\run_care_hub_phone.cmd
-.\run_care_hub_office.cmd
-```
-
-Ports:
-- Family: http://localhost:8501
-- Care Hub – Mobile: http://localhost:8502
-- Care Hub – Office: http://localhost:8503
-
-## Local backend development without login
-
-For local backend work only, set the service-role key in the same terminal, then
-use a dev launcher.
+For local backend work only, set the service-role key in the same terminal, then use a dev launcher.
 
 PowerShell:
 
 ```powershell
 $env:SUPABASE_URL="https://your-project.supabase.co"
 $env:SUPABASE_SECRET_KEY="your_secret_key"
-.\run_dev_care_hub_office.cmd
-```
-
-Command Prompt:
-
-```bat
-set SUPABASE_URL=https://your-project.supabase.co
-set SUPABASE_SECRET_KEY=your_secret_key
 .\run_dev_care_hub_office.cmd
 ```
 
@@ -85,27 +81,25 @@ $env:DEV_AUTH_BYPASS_CARE_HOME_ID="care_home_uuid"
 $env:DEV_AUTH_BYPASS_AUTH_UID="auth_user_uuid"
 ```
 
-The shortcut only activates on localhost/127.0.0.1/::1, keeps the selected
-Family/Mobile/Office variant locked, and uses the first active mapping row when
-no selector is provided.
+The shortcut only activates on localhost/127.0.0.1/::1, keeps the selected Family/Mobile/Office variant locked, and uses the first active mapping row when no selector is provided.
 
-## Supabase auth setup (role-based)
+## Supabase Auth Setup
 
-- Family: email magic-link auth (email only). Set `FAMILY_MAGIC_LINK_REDIRECT_URL`.
-- Care Hub – Mobile: individual staff PIN for day-to-day access, with email secure link only for first sign-in / recovery (`CARE_MOBILE_MAGIC_LINK_REDIRECT_URL`).
-- Care Hub – Office: separate staff/admin login path (email + password), with Office MFA available if enabled.
-- In Supabase Dashboard, add Family/Mobile magic-link redirect URLs to Auth -> URL Configuration -> Redirect URLs.
+- Family Hub: email magic-link auth. Set `FAMILY_MAGIC_LINK_REDIRECT_URL`.
+- Mobile: individual PIN for day-to-day access, with email secure link for first sign-in or recovery. Set `CARE_MOBILE_MAGIC_LINK_REDIRECT_URL`.
+- Family Office: separate organiser/admin login path with Office MFA available if enabled.
 
 ## Documentation
 
-- `docs/SYSTEM_OVERVIEW.md`
-- `docs/VOICE_MESSAGE_MASTER_PLAN.md`
+- `AGENTS.md`
+- `PLANS.md`
+- `docs/internal/product_direction_note.md`
+- `docs/internal/documentation_split_plan.md`
 - `docs/security/SECURITY_MODEL.md`
 - `docs/registration/FAMILY_REGISTRATION.md`
 
-## Cloudflare media (R2)
+## Media
 
-- Media base URL: `https://media.familyupdates.care`
-- Media bucket name (ops reference): `familyupdates-media`
-- App uses Supabase Storage for message audio playback.
-- Keep public walkthrough videos out of the app.
+- Primary domain: `https://familyupdates.care`
+- Media domain: `https://media.familyupdates.care`
+- App audio/media currently uses Supabase Storage where enabled.

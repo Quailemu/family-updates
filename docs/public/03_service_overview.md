@@ -1,51 +1,47 @@
-﻿![logo](../../assets/logo.png)
+![logo](../../assets/logo.png)
 
 # Service overview
 
-Communication participants: the person being supported, Family Members, the Family Organiser, and optional carers.
+Communication participants: the person being supported, Family Members, the Family Organiser, and Mobile Support.
 
-familyupdates.care helps families structure non-urgent communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
+familyupdates.care helps structure communication when a family member needs support.
+
+There are three roles for the family to fill:
+
+1. Family Organiser.
+2. Person available for urgent/emergency phone contact and emergency protocol.
+3. Care support.
+
+familyupdates.care is for non-urgent communication only.
 
 ## Purpose
 
-familyupdates.care is a simple system for everyday communication, reassurance, structured requests, noticeboard-style information, and family messages.
+familyupdates.care is a simple system for everyday family updates, specific organiser messages, structured requests, and noticeboard-style information.
 
 - one current update to family
+- one current specific organiser message
 - one current request with structured replies
-- one current message per person
 - one current noticeboard note per Family Member
 
-A care home could run its own completely separate Care Home system using the same model, but it does not connect to the Family Organiser's app. There is no planned direct connection between the two systems at this stage.
+The same family-side system can continue if the person later moves into a care home. The care home handles care operations separately; familyupdates.care remains for family organisation.
 
 ## Core message model
 
 - Each channel keeps only the latest message.
 - A new message replaces the previous message in that channel.
 - No archive, no scrolling thread, no live chat.
-- Message date is shown in Family Hub and Care Home Mobile (date only, no time).
-
-The Family Organiser tells essential contacts how often messages are checked, for example once or twice a day. Messages inside the app are treated as non-urgent.
-
-## Transcript assist (optional)
-
-- A transcript can be requested when recording in Family Hub, Care Home Mobile, and Care Home Office.
-- When available, transcript text is shown under "Transcript assist" for the current message.
-- Transcript text may contain errors; voice playback remains the source of truth.
+The Family Organiser tells the family when and how frequently they will check messages. Messages inside the app are treated as non-urgent.
 
 ## Main flows
-
-### Family Member -> person being supported
-
-Each Family Member channel keeps only the latest Family Member -> person message.
-
-### Person being supported -> Family
-
-Person -> Family channels keep only the latest shared message to the family group, and the latest direct message to a selected Family Member.
 
 ### Family Organiser -> Family (general update)
 
 One current update to all Family Members for non-urgent, non-medical information and reassurance.
 General updates do not accept replies in the update channel.
+
+### Family Organiser <-> Family Member (specific message)
+
+The Family Organiser and each Family Member can keep one current specific message. This is not a live chat and does not create a thread.
 
 ### Family Organiser practical request (structured reply)
 
@@ -57,6 +53,10 @@ Each Family Member can submit:
 - Optional short context note
 
 This is not a live conversation and is not monitored for emergencies.
+
+### Family noticeboard
+
+Each Family Member can keep one current noticeboard note visible to linked Family Members and the Office workspace.
 
 ## Boundaries
 

@@ -2,6 +2,33 @@
 
 Reference: `docs/security/SECURITY_MODEL.md` (final security/login model)
 
+## Current product direction - streamlined Family version
+
+familyupdates.care is now focused on the family-side coordination system: Family Office, Family Hub, and Mobile Support.
+
+Current active situations:
+
+1. At home with Family Organiser + Mobile Support.
+2. Care home with Family Organiser + Mobile Support.
+
+There is no active "managing independently" app situation. familyupdates.care is for situations where family coordination is needed. It is not offered as a system for people or couples who are managing communication and support arrangements themselves.
+
+The Family Organiser role is a coordination role, not a default unpaid caring role. If a Family Organiser is needed, the system should also make the practical support role visible through Mobile Support. Mobile Support may be a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper. If a family member uses Mobile, they are acting in a distinct support role, not simply as a Family Member.
+
+In the care-home situation, familyupdates.care remains family-side. The care home handles direct care, safeguarding, and operational communication. The family still coordinates visits, outside appointments, belongings, questions, birthdays, Christmas, Easter, other occasions, outings, meeting friends, social contact, and family updates.
+
+The live product offer is:
+- one current family update
+- one current specific Family Organiser message
+- one current practical request with structured replies
+- one current noticeboard note per Family Member
+- no threads, no archive, no live chat
+- no family-to-dependent voice messages
+- no dependent-to-family voice messages
+- no care-home mobile/playback workflow
+
+The earlier care-home/voice-message system is archived as a possible later product and should not drive the public app, onboarding, or at-home Family user interface.
+
 ## Homepage banner (public)
 familyupdates.care
 One message in. One message out.
@@ -9,15 +36,13 @@ One message in. One message out.
 
 Homepage buttons (only):
 - Family
-- Care Home Mobile
-- Care Home Office
 
 Canonical interface sentence:
-The platform has three app interfaces: Family Hub, Care Home Mobile, and Care Home Office.
-The Family system may continue in Stage 4 when a person is living in a care home. A care home could choose to run its own completely separate Care Home system using the same model, but it does not connect to the Family Organiser's app. There is no planned direct connection between the two systems at this stage.
+The platform has three active family interfaces: Family Office, Family Hub, and Mobile Support.
+The Family system may continue when a person is living in a care home, but it remains a family-side coordination system. It does not connect to a care home.
 
 Architecture decision:
-The Family system and Care Home system should be functionally identical wherever possible. Build one shared communication engine and duplicate the existing workspace pattern for the second system, with naming and context controlled by Operational Variables. Changes to core communication behaviour should apply to both systems unless deliberately switched off by settings. Do not build a separate reduced Family-system code path.
+Build the streamlined Family system first. The archived care-home/voice-message system must not add visible complexity to the Family product.
 
 User-facing help rule:
 Use short, plain-language, outcome-led explanations. Do not show system diagrams, walkthrough videos, or screen recordings in the app. Diagrams and recordings may be kept as internal product/design references only.
@@ -26,18 +51,26 @@ Homepage public info copy (before feedback section):
 ## Familiar voices
 A structured, non-urgent family communication system around care.
 
-familyupdates.care separates emergency communication from everyday communication. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
+familyupdates.care separates emergency communication from everyday communication.
 
-The app provides one current update to family, one current request, family messages, and noticeboard-style information. The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly. One current item replaces the last, with no threads, no message build-up, and no pressure to reply instantly.
+There are three roles for the family to fill:
 
-Families use the app for everyday communication. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser tells essential contacts how often messages are checked, for example once or twice a day.
+1. Family Organiser.
+2. Person available for urgent/emergency phone contact and emergency protocol.
+3. Care support.
+
+familyupdates.care is for non-urgent communication only.
+
+The app provides one current update to family, one current specific organiser message, one current practical request, and noticeboard-style information. The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly. One current item replaces the last, with no threads and no pressure to reply instantly.
+
+Families use the app for everyday communication. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser tells the family when and how frequently they will check messages.
 
 Emergencies follow the agreed protocol, otherwise all messages are treated as non-urgent.
 
 ## A simple way to explore the idea
-familyupdates.care can be introduced through a one-to-one, activity-based session in the care home.
+familyupdates.care can be introduced through a simple one-to-one walkthrough.
 
-The session uses printed artwork and conversation as a starting point. A short voice message can be played as part of the interaction, introducing the idea in a natural way.
+The session uses a simple example family update, practical request, and noticeboard note, introducing the idea in a natural way.
 
 There is no obligation to adopt anything, simply an opportunity to see how this might help communication for you.
 
@@ -48,40 +81,37 @@ Family security session statement (family-facing, short):
 For security, Family sessions sign out after 30 minutes of inactivity. If signed out, request a new secure email link.
 
 Family preparation statement (family-facing, short):
-Plan your message before recording. Most messages only need a few seconds.
+Keep updates short, practical, and non-urgent.
 
 No notifications / date-only statement (family-facing, short):
 The service does not send live notifications. Main care communication views show message date only (no clock time).
 
-Transcript assist statement (all interfaces, short):
-Transcripts can be requested when recording in Family Hub, Care Home Mobile, and Care Home Office.
-When available, the transcript appears under â€œTranscript assistâ€.
-Transcripts may contain errors, and voice remains the source of truth.
-If transcript is unavailable or not requested, voice playback still operates (unless a care-home precheck policy is enabled).
+Transcript assist statement:
+Transcript assist belongs to the archived care-home/voice-message product. It should not drive the current familyupdates.care public app.
 
-Role-based access (Family vs Care Home system):
-Family and Care Home system are separate, role-based experiences.
+Role-based access:
+Family Office, Family Hub, and Mobile Support are separate, role-based experiences.
 
 Playback and control statement:
-All current messages for that resident may be played by users designated by the care home across Mobile, Office, and Family, but no group can alter another group's message. Each message may only be replaced by the interface that created it.
+Each role sees only the channels intended for that role. Each current item may only be replaced from the interface that created it.
 
 Office update statement:
-General updates are sent from the care home to keep families informed about day-to-day events. General updates are one-way and are for non-urgent, non-medical information only.
+Family updates are sent from Family Office to keep the wider family informed. Updates are one-way and are for non-urgent, non-medical information only.
 
-Office practical messages are optional structured requests linked to a specific resident (for example visits, attendance, reminders, or item requests). Family members, friends, or other individuals designated by the care home can reply with a minimal structured response (Yes / No / Maybe), optional fixed tick-box options, and an optional short context note. This is still non-urgent and not live messaging.
+Office practical messages are optional structured requests linked to the person being supported (for example visits, attendance, reminders, belongings, outside appointments, or item requests). Family Members and Mobile Support can reply where enabled with a minimal structured response (Yes / No / Maybe), optional fixed tick-box options, and an optional short context note. This is still non-urgent and not live messaging.
 
-Family noticeboard notes are optional practical notes from Family Members, visible to all linked Family Members and to the relevant Office workspace. Each Family Member has one current noticeboard note per person/resident. A new note replaces that Family Member's previous note, and the note may be cleared when no longer useful. Noticeboard notes are for practical coordination only, not private health, care, legal, financial, safeguarding, or urgent matters.
+Family noticeboard notes are optional practical notes from Family Members, visible to all linked Family Members and to the relevant Office workspace. Each Family Member has one current noticeboard note per person. A new note replaces that Family Member's previous note, and the note may be cleared when no longer useful. Noticeboard notes are for practical coordination only, not private health, care, legal, financial, safeguarding, or urgent matters.
 
-For urgent, medical, safeguarding, or other time-sensitive matters, families must contact the care home directly through normal channels.
+For urgent, medical, safeguarding, or other time-sensitive matters, families must use normal direct communication outside familyupdates.care.
 
 Service overview purpose statement:
-familyupdates.care is a simple tool for exchanging non-urgent social voice messages between residents in care homes and their family members, friends, or other individuals designated by the care home. The care home office may also send non-urgent general updates about daily life in the home to family members, friends, or other individuals designated by the care home.
+familyupdates.care is a simple family coordination system for Family Office, Family Hub, and Mobile Support. It helps a Family Organiser keep one current family update, specific organiser messages, practical requests, and noticeboard notes current without creating live chat or long threads.
 
-Office general updates are one-way informational messages.
+Family Office updates are one-way informational messages.
 
-The care home may also publish an Office practical message that allows each registered Family Member to send a structured non-urgent reply (Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
+Family Office may also publish a practical message that allows each registered Family Member or Mobile Support user, where enabled, to send a structured non-urgent reply (Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
 
-Where enabled, Family Members may also add one current family noticeboard note for practical coordination. Noticeboard notes are visible to linked Family Members and the relevant Office workspace, and are not private messages.
+Where enabled, Family Members may also add one current family noticeboard note for practical coordination. Noticeboard notes are visible to linked Family Members and the relevant Family Office workspace, and are not private messages.
 
 The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
 
@@ -111,15 +141,19 @@ Essential platform data only:
 
 ## How familyupdates.care Works
 
-familyupdates.care helps structure non-urgent family communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
+familyupdates.care helps structure communication when a family member needs support.
 
-Everyday communication only. No threads, no history, no search. If something needs to be kept, make a note of it outside the app.
+There are three roles for the family to fill:
 
-familyupdates.care deliberately limits communication so it stays workable. It keeps communication current and bounded, rather than complete and searchable.
+1. Family Organiser.
+2. Person available for urgent/emergency phone contact and emergency protocol.
+3. Care support.
 
-Families use the app for everyday communication, reassurance, structured requests, noticeboard-style information, and family messages. The Family Organiser tells essential contacts how often messages are checked, for example once or twice a day.
+familyupdates.care is for non-urgent communication only.
 
-familyupdates.care helps the Family Organiser keep family communication more structured, while giving the person being supported a realistic, supported way to keep in touch. It creates clear boundaries: one current update, one current request, and one current message per person. No threads, no message build-up, and no expectation of instant replies.
+familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
+
+Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser tells the family when and how frequently they will check messages.
 
 familyupdates.care does not remove the need for care, support, or professional help. But where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded.
 
@@ -130,62 +164,44 @@ Emergencies follow the agreed protocol, otherwise all messages are treated as no
 
 Families use the app for everyday communication. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly.
 
+All messages shown in the app are current messages.
+
 What the app does:
 - One current update from the Family Organiser to the family group.
-- One current voice message from each Family Member to the person.
-- One current voice message from the person to the family group, or one current direct voice message to the Family Organiser or selected Family Member.
+- One current specific message each way between the Family Organiser and each Family Member.
+- One current update/request each way between the Family Organiser and Mobile Support, if required.
 - One practical request from the Family Organiser, with structured responses from Family Members.
 - One current noticeboard note from each Family Member, visible to the family group.
 
-Each new item replaces the previous one in that channel. There are no threads, no archive, and no live chat.
+Each person's new message replaces their own previous message in that channel. One sender does not overwrite another sender's message. There are no threads, no archive, and no live chat.
 
 Family Organiser role boundary:
 The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current.
 
-familyupdates.care can be used in levels, so you do not have to use the whole system at once. You can use the full system, or start with simple updates and add more when needed.
+familyupdates.care is a simple Family system. It has the core tools needed for essential support management: updates, specific organiser messages, practical requests, noticeboard-style information, and Mobile Support.
 
-The table below gives a quick overview of what becomes available at each stage. It is not a full description of every detail.
+### Where the app may be used
 
-| Level | Outcome / capability                                     | Stage 1: Person/Couple | Stage 2: + Family Organiser | Stage 3: + Carer | Stage 4: Care home + Family Organiser |
-| ----- | -------------------------------------------------------- | ---------------------- | ----------------------------- | ---------------- | --------------------------------------- |
-| 1     | Single update to family group                            | âœ“                      | âœ“                             | âœ“                | âœ“                                      |
-| 2     | Individual voice messages from family members            | âœ“                      | âœ“                             | âœ“                | âœ“                                      |
-| 3     | Practical requests, noticeboard notes, and structured replies | âœ“                      | âœ“                             | âœ“                | âœ“                                      |
-| 4     | Option: Mobile additional channel*                       | âœ“                      | âœ“                             | âœ“                | âœ“                                      |
-| 5     | Optional separate Care Home system**                     | â€”                      | â€”                             | â€”                | Optional - care home adopted only        |
+There are two settings: at home, and care home.
 
-### Stage explanations
-
-* **Stage 1: Person/Couple** â€” An individual person or a couple living at home and managing their own day-to-day communication.
-* **Stage 2: + Family Organiser** â€” The person/couple plus a Family Organiser. A Family Organiser is a family member who helps organise communication and practical requests.
-* **Stage 3: + Carer** â€” The person/couple plus a Family Organiser and a paid carer.
-* **Stage 4: Care home + Family Organiser** - The person/couple moves into a care home.
-
-In Stage 4, the Family system may continue for family-side updates and coordination. A care home could choose to run its own completely separate Care Home system using the same model, but it does not connect to the Family Organiser's app. There is no planned direct connection between the two systems at this stage.
+* **At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
+* **Care home with Family Organiser + Mobile Support** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
 
 ### Notes
 
-*Additional mobile channel: a separate mobile channel that can send a single voice message to the family group, receive family voice messages, and send requests with structured replies.*
-
-**Level 5: Optional separate Care Home system: possible later as a completely separate care-home-run system using the same model. The Family system can be tested and used without care home involvement. If a Care Home system is adopted, it remains separate from the Family system and does not connect to the Family Organiser's app.**
-
-## How the levels work
-
-Each level includes everything from the previous levels, with additional features added.
-
-You can start at Level 1 and move up through the levels as more support is needed.
+*Mobile Support: a distinct practical support role. It may be paid or unpaid, but it is separate from the Family Organiser role and from ordinary Family Member access.*
 
 ## Starting simply
 
-The external filing system should be organised first, before starting updates, using your own external file management and storage system for data security. The information should be organised, separated, and accessible to the right person when needed. The six files we recommend that you prepare are:
+In preparation for using the app, your external filing system should be organised and for data security use your own secure file management and storage system. The information should be organised, separated, and accessible to the right person when needed. The six files we recommend that you prepare are:
 
 Once the external filing system is in place, start small: one calm update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.
 
-Then add only the communication tools that are useful: family voice messages, text updates, practical requests, family noticeboard notes, and structured replies. One item replaces the last item in each channel.
+Then add only the communication tools that are useful: specific organiser messages to individual Family Members, practical requests, family noticeboard notes, and structured replies.
 
 Where family noticeboard notes are enabled, each Family Member may keep one current practical note visible to the family group. This is for simple coordination, such as visits or items to bring. It is not a private notes area and must not be used for sensitive health, care, legal, financial, safeguarding, or urgent matters.
 
-The life stage describes who is involved: from managing independently at Stage 1, to help from a family member (Family Organiser) at Stage 2, to having a paid carer at Stage 3, and finally to a care home plus Family Organiser at Stage 4. The communication level describes how much of the system is switched on.
+There are two settings: at home, and care home.
 
 Targeted request boundary:
 Requests and structured replies are for non-urgent, non-essential coordination only. Family requests remain visible to all linked Family Members and may name an intended responder, such as Sarah, Tom, or Coordinator. Office-to-Mobile/carer requests are a separate working channel where enabled. Replies use fixed structured choices, optional fixed tick-boxes, and an optional short context note only: no private chat, no threads, and no back-and-forth conversation. Essential, urgent, sensitive, or time-critical matters should use normal direct communication outside familyupdates.care, such as phone, text, WhatsApp, email, or existing care-home channels.
@@ -194,20 +210,18 @@ Family noticeboard boundary:
 Noticeboard notes are transparent practical notes, visible to linked Family Members and the relevant Office workspace. Each Family Member has one current note per person/resident. Noticeboard notes must not be used for private health, care, legal, financial, safeguarding, or urgent matters.
 
 Lifecycle model:
-The app uses four active lifecycle stages to describe the real-life situation. Stage policy controls capabilities; it must not assign fixed role ownership.
-The user should choose the lifecycle stage, not a separate organisation mode. Preparation of documents and information sits outside the app. It is not an active app communication stage. Planning & Organisation guidance belongs in the Life File Guide and other help areas only.
+The app uses two active situations to describe the real-life setting. Situation policy controls visible framing; it must not assign fixed role ownership.
+The user should choose the situation, not a separate organisation mode. Preparation of documents and information sits outside the app. It is not an active app communication situation. Planning & Organisation guidance belongs in the Life File Guide and other help areas only.
 
-- Preparation of documents: this is not an active app communication stage. It is the external filing system step: Life Log, Contacts, Admin and Key Documents, Private Finance, Private Health Notes, and Carer and Housekeeping Notes. The files remain outside familyupdates.care.
+- Preparation of documents: this is not an active app communication situation. It is the external filing system step: Life Log, Contacts, Admin and Key Documents, Private Finance, Private Health Notes, and Carer and Housekeeping Notes. The files remain outside familyupdates.care.
 
-Stages 1-3 use the same at-home Family system principles: one current message, no threads, no live chat, and practical structured replies where helpful. Stage 1 uses [Surname] Family Office, Family Mobile, and Family Hub. Family Mobile lets the person or couple hear family voice messages and send one current shared voice message to the family group, or one current direct voice message to a selected Family Member. From Stage 2, Family Mobile also gives the person or couple and the family member separate ways to send messages and keep independence. In Stage 3, Family Mobile helps a carer or supporter work separately from the family member.
+Both situations use the same Family system principles: one current message, no threads, no live chat, and practical structured replies where helpful. Family Office coordinates the family-side work. Mobile Support is the distinct practical support role and may be used by a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper.
 
-- Stage 1 - Individual or Couple at Home: this stage is for an individual or couple still mainly managing at home. Family contact may be increasing, and repeated calls or scattered messages can become tiring. familyupdates.care helps them share one calm family voice update and receive family messages when useful, without creating a live chat or long message thread.
-- Stage 2 - Support from a Family Member: this stage is for when one family member starts helping organise things. The family member may help share updates, ask practical questions, and reduce repeated conversations across the family. Mobile gives the person or couple and the family member separate ways to send messages. The aim is to make the coordination role manageable without taking over the person's life.
-- Stage 3 - Family Support plus Carer: this stage is for when support from a family member continues and a carer, supporter, or regular helper is involved at home. The same shared system helps the person or couple, family member, and helper keep practical communication clear. It avoids creating separate message streams for everyone.
-- Stage 4 - Care Home: this stage is for when the person is living in a care home, with external and separate support from a family member. The care home uses its own separate workspace for updates, family messages, and practical requests. Family support may still happen, but it must stay separate from the care home's responsibilities and systems.
+- At home with Family Organiser + Mobile Support: this is for when the person is at home and family coordination has become necessary. It is not offered as a system for people or couples who are managing communication and support arrangements themselves. The Family Organiser coordinates communication; Mobile Support is used by the person providing practical support.
+- Care home with Family Organiser + Mobile Support: this is for when the person is living in a care home, but family organisation continues. The care home handles care operations, safeguarding, and direct care communication. familyupdates.care handles family-side non-urgent focussed communications where needed.
 
-Stage 4 separation rule:
-The Care Home Office and Family Organiser Office are separate workspaces. They may relate to the same real-life person, but they do not connect inside the app.
+Care-home separation rule:
+The care home and Family Organiser remain separate. They may relate to the same real-life person, but care-home operational systems do not connect to the familyupdates.care Family Office.
 
 This means:
 - No shared inbox between the two offices.
@@ -219,38 +233,37 @@ This means:
 - No Family Organiser Office data visible in the Care Home Office.
 - No handover workflow or internal linking between them.
 
-The Care Home Office belongs to the care organisation and its operational responsibilities. The Family Organiser Office belongs to family-side coordination only.
+The care home belongs to the care organisation and its operational responsibilities. The Family Organiser Office belongs to family-side coordination only.
 
-Stage 4 Care Home Office wording:
-The Care Home Office should use care-home wording and the actual care home name. Do not label the care home workspace as the person's home.
+Care-home wording:
+Care-home operational systems should use care-home wording and the actual care home name. Do not label care-home operations as the person's family workspace.
 
 The Family Organiser Office should use its own separate Organiser/family workspace name, for example "Hill family coordination" or "David's family coordination". It should not use the care home name, and it should not use the person's home name. It is for the organiser and family, not for the care home, and it must not connect to the Care Home Office.
 
-Stage 4 mobile separation:
-- Care Home Mobile stays operational. It supports care-home/resident voice workflows and does not create structured requests.
-- Family Organiser Mobile may exist later. It belongs to the family-side workspace, not the care-home workspace.
-- Family Organiser Mobile may support quick family updates, visit updates, and simple family coordination requests.
-- Family Organiser Mobile must not connect to Care Home Mobile, Care Home Office, or care-home operational data.
-- Care-home tools and family-organiser tools may use similar UI patterns, but they are separate products/workspaces in Stage 4.
+Care-home situation mobile separation:
+- Mobile Support belongs to the family-side workspace, not the care-home workspace.
+- Mobile Support may support quick family updates, visit updates, and simple family coordination requests.
+- Mobile Support must not connect to care-home operational data.
+- Care-home tools and family-organiser tools may use similar UI patterns, but they are separate products/workspaces.
 
-Stage 4 family-side purpose:
-The Family Organiser Office and future Family Organiser Mobile exist to help the wider family help out. They should make it easy to share one update with everyone, coordinate visits or practical help, and reduce pressure on one overloaded organiser. They must not duplicate care-home operations.
+Care-home situation family-side purpose:
+The Family Organiser Office and Mobile Support exist to help the wider family help out. They should make it easy to share one update with everyone, coordinate visits or practical help, and reduce pressure on one overloaded organiser. They must not duplicate care-home operations.
 
-Stage 4 Family Organiser workspace planned architecture:
-This is planned separately and should not be built by extending the Care Home Office tables/workflow unless there is a deliberate separation layer.
+Family Organiser workspace architecture:
+This should not be built by extending care-home operational tables/workflow unless there is a deliberate separation layer.
 
 Purpose:
 The Family Organiser workspace helps the family coordinate around someone now living in a care home. It is not a care-home tool and is not connected to the Care Home Office.
 
 Planned interfaces:
 - Family Organiser Office: used by the main organiser or family admin person. It may send family updates, create simple family coordination requests, review structured replies, and manage family-side contacts.
-- Family Organiser Mobile: may exist later for quick family-side updates during visits, errands, or conversations. It may help a visiting family member record an update or help the person record a family-side message.
-- Family Hub: family members receive/listen/respond using the same calm, non-live, latest-message-only model.
+- Mobile Support: used by the person providing practical support, paid or unpaid, for quick family-side updates during visits, errands, or conversations.
+- Family Hub: family members receive and respond where enabled using the same calm, non-live, latest-message-only model.
 
 Possible family-side channels:
 - Organiser/family update to all family.
 - Visiting family/mobile update to all family.
-- Person/family-side voice message to all family.
+- Mobile Support update to all family.
 - Simple family coordination request.
 - Structured replies visible to the Organiser/family workspace.
 
@@ -265,46 +278,53 @@ Hard boundaries:
 - No shared requests, updates, or messages with the Care Home Office.
 
 Preferred data direction:
-Duplicate the existing workspace pattern rather than creating a reduced family-only system. The Family system and Care Home system should be functionally identical, with the same communication engine and the same core tables/patterns duplicated or scoped by workspace. Naming, labels, and optional feature switches should come from Operational Variables. The two systems remain separate in Stage 4 and must not share inboxes, requests, updates, settings, contacts, people/residents, or operational data.
+Reuse stable workspace patterns where practical rather than creating a reduced family-only system. The Family system and any archived/future care-home system must remain separate and must not share inboxes, requests, updates, settings, contacts, people/residents, or operational data.
 
 Workspace label policy:
 - Every workspace should resolve to one workspace type: Family system or Care Home system.
-- Family system labels: Family Office, Family Mobile, Family Hub, person/people, Family Organiser, no room field.
+- Family system labels: Family Office, Mobile Support, Family Hub, person/people, Family Organiser, no room field.
 - Care Home system labels: Care Home Office, Care Home Mobile, Care Home Family Hub, resident/residents, care home coordinator, room field visible.
 - Product behaviour should stay functionally identical unless an Operational Variable deliberately switches a feature off.
 - Avoid scattered wording conditionals. Use one central workspace-label policy so the same feature can render correctly in either system.
 
 Mobile channel principle:
-Mobile is not the carer app. Mobile is the simple in-the-moment channel. In Stage 1, Mobile lets the person or couple hear family voice messages and send one current shared voice message to the family group, or one current direct voice message to a selected Family Member. In Stages 2-3, Mobile may be used by the person, a family member, a supporter, or a carer depending on how the household works.
-In Stages 2-3, Mobile may send shared updates and structured practical requests where enabled. This is useful when the person present in the home can ask the wider family for practical help without routing every request through the coordinator.
-In Stage 4 care-home mode, Care Home Mobile remains voice playback/recording only. Structured requests stay with Care Home Office.
+Mobile Support is the simple in-the-moment channel for the distinct practical support role. It may be used by a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper. If a family member uses Mobile Support, they are acting in that distinct support role rather than ordinary Family Member access.
+Mobile Support may send shared updates and structured practical requests where enabled. This is useful when the person providing practical support can ask the wider family for help without routing every request through the Family Organiser.
 
 At-home setup model:
-For Stage 1, Stage 2, and Stage 3, the visible setup should be a home/person setup, not a care-home setup. Reuse existing backend tables where practical, but label the UI as Setup name, Person 1, Person 2 optional, and Main supporter / organiser.
+For the at-home situation, the visible setup should be a home/person setup, not a care-home setup. Reuse existing backend tables where practical, but label the UI as Setup name, Person 1, Person 2 optional, and Main supporter / organiser.
 
-Stage 1/2/3 wording:
-When Stage 1, Stage 2, or Stage 3 is active, avoid visible "Care organisation", "Care Home", and "Resident" framing where the context is at-home coordination. Prefer "shared at-home coordination" and "person/people" wording while keeping the existing backend routing intact.
+Situation wording:
+When the at-home situation is active, avoid visible "Care organisation", "Care Home", and "Resident" framing where the context is at-home coordination. Prefer "shared at-home coordination" and "person/people" wording while keeping the existing backend routing intact.
 Prefer "shared update", "shared request", "shared coordination", and "[Surname] Family Office" wording over care-home Office wording where the user is doing routine at-home coordination.
 
 At-home How it works copy:
-familyupdates.care helps families structure non-urgent communication around care. Emergencies stay outside the app: follow the agreed emergency protocol, then phone the agreed emergency contact.
+familyupdates.care helps structure communication when a family member needs support.
+
+There are three roles for the family to fill:
+
+1. Family Organiser.
+2. Person available for urgent/emergency phone contact and emergency protocol.
+3. Care support.
+
+familyupdates.care is for non-urgent communication only.
 
 The external filing system should be organised first, before starting updates. familyupdates.care does not store those files.
 
 Once the external filing system is in place, users can start with one calm voice update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.
 
-Add only the communication tools that are useful: family voice messages, practical requests, and structured replies. Mobile is added only where useful from Stage 2 onward. One voice message replaces the last voice message in that channel.
+Add only the communication tools that are useful: family updates, specific organiser messages, practical requests, noticeboard notes, structured replies, and Mobile Support where a practical support role is involved. One message replaces the last message in that channel.
 
-Stage 1 uses [Surname] Family Office, Mobile, and Family Hub. Mobile lets the person or couple hear family voice messages and send one current shared voice message to the family group, or one current direct voice message to a selected Family Member. From Stage 2, Mobile also gives the person or couple and the family member separate ways to send messages and keep independence. In Stage 3, Mobile helps a carer or supporter work separately from the family member. What changes is who is involved, not a new technical system.
+At home uses [Surname] Family Office, Mobile Support, and Family Hub. Mobile Support makes the practical support role visible from the start of the app model. What changes over time is the setting, not a new technical system.
 
 Private notes and records stay outside familyupdates.care, in the person's or Family Organiser's own filing system.
 
-Use "[Surname] Family Office" for the main at-home message area when a surname is available, for example "Hill Family Office". Use "Family Office" as the fallback. Use "Care Home Office" for the Stage 4 care-home workspace.
+Use "[Surname] Family Office" for the main at-home message area when a surname is available, for example "Hill Family Office". Use "Family Office" as the fallback.
 
 Documentation boundary:
-The original care-home documentation remains the Stage 4 Care Home documentation set. Do not dilute it into at-home wording. Stage 4 Care Home Office/Mobile/Family should continue to use the full care-home governance, resident, room/reference, staff, safeguarding, consent, and responsibility wording.
+The original care-home documentation is archived as possible later product material. Do not dilute it into at-home wording and do not let it drive the current public app.
 
-Stage 1, Stage 2, and Stage 3 need a smaller separate at-home help set. Do not show the full care-home Office documentation pack in at-home stages unless a page has been rewritten for at-home use. At-home guidance should focus on simple messages, shared coordination, registering family/contact access, Life File Guide, and practical requests where enabled.
+The active Family product needs a smaller separate help set. Do not show the full care-home Office documentation pack unless a page has been rewritten for familyupdates.care. Family guidance should focus on simple messages, shared coordination, registering family/contact access, Life File Guide, practical requests, and Mobile Support where enabled.
 
 Office model shorthand:
 Single -> Shared -> Split.

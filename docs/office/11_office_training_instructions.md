@@ -32,7 +32,7 @@ This guide is for office and admin staff using Care Home Office.
 
 ## Message flow and control
 
-All current messages may be played by users in the resident's care circle according to care-home registration settings.
+Current family-side information is available only to users with the relevant workspace access.
 No role can directly replace another role's message.
 
 Transcript assist can be requested when recording in Family, Mobile, and Office.

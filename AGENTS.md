@@ -1,67 +1,84 @@
-# voice-message.com — AGENTS.md (persistent instructions for Codex)
+# familyupdates.care - AGENTS.md
 
-## Product identity (locked)
-- Brand line: **voice-message.com — One message in. One message out.**
-- Core rule: Only the most recent message from each sender is retained. A new message replaces the previous message from that sender. No message history / archive.
+## Product Direction
 
-## Non-real-time (critical)
-- This is NOT a real-time conversation product.
-- NO push or instant reply notifications.
-- NO delivery confirmations, read receipts, typing indicators, live status.
-- Families must not expect replies; care home fits playback/recording around routines.
+familyupdates.care is now the active product direction.
 
-## No visible timestamps (critical)
-- Do NOT show system-generated timestamps in the Family app.
-- Do NOT show system-generated timestamps in Care Hub – Mobile.
-- Internal audit timestamps may exist for security/compliance but must not become “performance metrics”.
+The live app should focus on a family-side coordination system, centred on a Family Organiser / Family Office. It begins when ordinary direct family communication is no longer enough.
 
-## Role separation (hard rule)
-Single codebase with three hard-locked variants only:
-- Family
-- Care Hub – Mobile
-- Care Hub – Office
-No cross-access. No fallback routes. No “mixed” UI.
+The original care-home and voice-message system must be preserved where useful, but it should not shape the public product, onboarding, default routes, or family-facing copy unless a care-home-specific mode is deliberately being worked on.
 
-## Governance boundaries (must be reflected in docs + UX)
-- Care home is responsible for: safeguarding, consent/capacity suitability, regulatory compliance, staff supervision, content management (including inappropriate family messages), device security, operational decisions.
-- Platform provides communication infrastructure only.
-- Platform is not monitored in real time and does not moderate/screen/approve message content.
+See `docs/internal/product_direction_note.md` for the transition note.
 
-## Public pages and documents (must stay consistent)
-Homepage banner: 
-- voice-message.com
-- One message in. One message out.
-Optional small line: No threads. No pressure.
-Homepage buttons (only):
-- Family
-- Care Hub – Mobile
-- Care Hub – Office
+## Core Product Rules
 
-## Pricing (public)
-- Pilot: £75 + VAT (one-time), credited against first month if continuing
-- Monthly subscription: flat per care home
-  - Up to 50 residents: £195 + VAT / month
-  - 51+ residents: £295 + VAT / month
-- Invoiced monthly in advance
-- Activation only after payment received
+- One current item replaces the previous item in that channel.
+- No threads.
+- No archive.
+- No live chat.
+- No response-time pressure.
+- No push or instant reply notifications.
+- No delivery confirmations, read receipts, typing indicators, or live status.
+- No system-generated timestamps in Family-facing or Mobile-facing communication views.
 
-## Contract model (care home is customer)
-- 30-day pilot
-- Converts to monthly subscription
-- Minimum 3 months post-pilot
-- Suspension clause: provider may suspend immediately where reasonably necessary for security/legal compliance/serious misuse/safeguarding or reputational risk.
-- Data: UK hosting, controller=care home, processor=platform
-- Data deletion: delete personal data within 30 days after termination (align backups/rotation accordingly)
+Internal audit timestamps may exist for security/compliance but must not become visible performance metrics.
 
-## UX copy requirements (important)
-- Family UI must clearly state: “Not a live service. Messages are played when staff are available.”
-- Avoid any copy implying response time guarantees.
-- Avoid anything that encourages urgency or monitoring behaviour.
+## Active Family Model
 
-## Implementation approach
+The main live model is:
+
+- Family Office: used mainly by the Family Organiser.
+- Family Hub: used by wider Family Members.
+- Mobile: reduced-tool interface for a carer, helper, supported person, or trusted family member.
+
+The Family Organiser uses Office tools to keep current updates, requests, noticeboard information, and simple one-current-message channels manageable.
+
+Mobile is part of the starting family model. If a Family Organiser is needed, the app should make room for a carer/helper/professional support role where appropriate, rather than implying the organiser should absorb caring work.
+
+Mobile may reuse stable Care Hub Mobile code, but public/user-facing wording should fit the at-home family context unless explicitly working on the archived care-home product.
+
+The active family situations are:
+
+1. At home with Family Organiser + Mobile Support.
+2. Care home with Family Organiser + Mobile Support.
+
+There is no active "managing independently" app situation. In the care-home situation, familyupdates.care remains family-side and does not become the care home's operational system.
+
+## Care-Home Code
+
+Do not delete stable care-home code just because the public product has moved.
+
+Care-home functionality may be useful later and should be archived, hidden, locked, or left internal/dev-only where appropriate. Prefer low-risk relabelling and routing changes over broad rewrites.
+
+Internal identifiers such as `care_home`, `resident`, `office`, `mobile`, or older table names may remain if changing them would create risk without user-facing benefit.
+
+## Public Pages and Documents
+
+Canonical public copy comes from `PLANS.md`.
+
+If public or in-app help copy needs changing, update `PLANS.md` first, then implement.
+
+Public pages should present familyupdates.care as a Family Organiser / family coordination product, not as a care-home voice-message service.
+
+## Governance and Boundaries
+
+Keep the product calm, minimal, and non-urgent.
+
+The app must not imply:
+
+- emergency use
+- live monitoring
+- guaranteed reply times
+- staff performance monitoring
+- clinical/care record management
+- safeguarding or complaint handling inside the app
+
+Urgent, medical, safeguarding, legal, financial, private, or time-critical matters must stay outside the app and use normal direct contact routes.
+
+## Implementation Approach
+
 - Prefer small, high-confidence changes.
-- Keep features calm, minimal, and governance-safe.
-- Do not introduce “engagement” features that add pressure (notifications, receipts, timestamps, analytics).
-
-## Canonical copy
-When building public pages or in-app help text, use the exact wording in PLANS.md as the source of truth. If copy must be changed, update PLANS.md first, then implement.
+- Reuse stable code where it fits the Family Office / Family Hub / Mobile model.
+- Hide or lock old care-home public surfaces before rewriting internals.
+- Avoid risky database/code renames unless there is a clear user-facing or operational need.
+- Keep features bounded; do not introduce engagement features that create pressure.

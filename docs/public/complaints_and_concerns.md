@@ -2,11 +2,11 @@
 
 We take concerns seriously and respond in line with role boundaries.
 
-## Care-related concerns
+## Care, support, or family-use concerns
 
-If your concern is about resident care, safeguarding, staff conduct, or local use of the service, contact the care home first.
+If your concern is about care, support, safeguarding, family arrangements, or how the service is being used within a family workspace, use the agreed direct contact route first.
 
-The care home is responsible for care delivery, safeguarding, and operational decisions.
+familyupdates.care provides technical infrastructure only. It does not provide care, make care decisions, supervise carers/helpers, or monitor family arrangements.
 
 ## Platform-related concerns
 
@@ -26,13 +26,13 @@ If more time is needed, we explain why.
 
 ## Clarification
 
-familyupdates.care does not provide care services, supervise care home staff, or replace care home complaints procedures.
+familyupdates.care does not provide care services, supervise carers/helpers, or replace normal family, care, safeguarding, or complaints routes.
 
 ## Service rules reference
 
 When reviewing concerns about expected behaviour, apply these service rules:
 
-- Not a live service. Messages are played and recorded when staff are available.
+- Not a live service. Messages are checked at agreed intervals.
 - Each channel keeps only the latest message. A new message replaces the previous message in that channel.
 - No message history and no archive are provided.
-- Message date is shown in Family Hub and Care Home Mobile (date only, no time).
+- No delivery confirmations, read receipts, typing indicators, or live status are provided.

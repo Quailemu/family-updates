@@ -1,41 +1,14 @@
-﻿![logo](../../assets/logo.png)
+# Family Hub Instructions
 
-# Family Hub training and instructions
+Family Hub is for wider Family Members.
 
-## Who this is for
+Use Family Hub to:
 
-This guide is for Family Hub users (Family Members granted by the care home), including family members, friends, and other individuals granted access by the care home.
+- receive current Family Office updates
+- respond to practical requests where offered
+- add one current noticeboard note
+- keep communication non-urgent and bounded
 
-## What this app is for
+Family Hub is not live chat. There are no threads, no archive, no read receipts, and no response-time expectations.
 
-- Non-urgent social voice messaging only
-- One message in. One message out.
-- Not live messaging
-
-## How messages work
-
-- Family -> Resident: your latest message replaces your previous one.
-- Resident -> Family: the latest resident-to-family message replaces the previous one.
-- Office general update -> Family: one-way non-urgent informational update.
-- Office practical message -> Family: structured non-urgent response (Yes/No/Maybe, optional fixed tick-boxes, and an optional short context note).
-- There is no thread and no message history.
-
-## Transcript assist (optional)
-
-- When recording, you can request transcript assist.
-- If transcript text is available, it appears under "Transcript assist" for the current message.
-- Transcript text may contain errors; voice remains the source of truth.
-
-## What to do
-
-1. Open the Family Hub and sign in.
-2. Check the latest playable messages shown for your resident.
-3. Record your new social message.
-4. Listen back before sending.
-5. Send.
-
-## Important boundaries
-
-- This is not an emergency or urgent service.
-- Messages are played by staff when available within normal care routines.
-- For urgent, clinical, medication, appointment, or safeguarding matters, contact the care home directly.
+Urgent, medical, safeguarding, legal, financial, private, or time-critical matters must use the agreed direct contact route outside the app.
