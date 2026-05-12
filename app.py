@@ -8013,7 +8013,7 @@ def render_logo_row() -> None:
   }}
   @media (max-width: 768px) {{
     .vm-logo-row .vm-logo-text {{
-      font-size: 1.28rem;
+      font-size: 0.96rem;
     }}
   }}
 </style>
@@ -9133,6 +9133,12 @@ def render_home(active: str) -> None:
                 color: #6b7280;
                 font-weight: 700;
             }
+            @media (max-width: 768px) {
+                .public-header-title {
+                    font-size: 1.08rem;
+                    white-space: nowrap;
+                }
+            }
             .public-hero {
                 padding: 22px 6px 8px;
             }
@@ -9479,7 +9485,7 @@ familyupdates.care is for non-urgent communication only.
             </div>
             <div class="public-card">
               <h3>Use Mobile from the start</h3>
-              <div>Mobile gives the carer, helper, supported person, or trusted family member a reduced-tool route so the Family Organiser is not expected to absorb caring work.</div>
+              <div>Mobile is for an additional person who helps provide care support.</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -10974,6 +10980,9 @@ def render_family_send() -> None:
     border: 3px solid #1f2937 !important;
     font-weight: 800 !important;
   }}
+  div[class*="st-key-family-channel"] div[data-testid="InputInstructions"] {{
+    display: none !important;
+  }}
   div[class*="st-key-family-channel-office"] {{
     background: #f4ffff !important;
     border: 6px solid #d9dee3 !important;
@@ -11433,19 +11442,22 @@ def render_family_send() -> None:
                         unsafe_allow_html=True,
                     )
                 text_nonce = int(state.get("family_organiser_text_nonce", 0))
-                family_to_organiser_body = st.text_area(
-                    f"Type your message to Family Organiser ({family_display_name}) here:",
-                    key=f"family_to_organiser_text_{resident_id}_{text_nonce}",
-                    height=100,
-                    max_chars=1000,
-                )
-                family_to_organiser_can_send = bool(str(family_to_organiser_body or "").strip())
-                if st.button(
-                    "Click to send and replace your message",
-                    key=f"family_to_organiser_send_{resident_id}_{text_nonce}",
-                    disabled=not family_to_organiser_can_send,
-                    use_container_width=True,
+                with st.form(
+                    f"family_to_organiser_form_{resident_id}_{text_nonce}",
+                    clear_on_submit=False,
                 ):
+                    family_to_organiser_body = st.text_area(
+                        f"Type your message to Family Organiser ({family_display_name}) here:",
+                        key=f"family_to_organiser_text_{resident_id}_{text_nonce}",
+                        height=100,
+                        max_chars=1000,
+                    )
+                    family_to_organiser_submitted = st.form_submit_button(
+                        "Click to send and replace your message",
+                        use_container_width=True,
+                    )
+                family_to_organiser_can_send = bool(str(family_to_organiser_body or "").strip())
+                if family_to_organiser_submitted:
                     if not family_to_organiser_can_send:
                         st.info("Please write the current message first.")
                     else:
@@ -11564,18 +11576,13 @@ def render_family_send() -> None:
                         if response_choice in {"yes", "no", "maybe"}
                         else 0
                     )
-                    selected_choice_label = st.radio(
-                        "Your structured response",
-                        options=choice_labels,
-                        index=default_choice_index,
-                        horizontal=True,
-                        key=f"family_practical_choice_{resident_id}_{practical_message_id}",
-                    )
                     selected_option_ids: list[str] = []
                     existing_selected_option_ids = set(
                         (existing_response or {}).get("selected_option_ids") or []
                     )
                     primary_choice_option_labels = {"yes", "no", "maybe", "not sure"}
+                    practical_option_labels_by_id: dict[str, str] = {}
+                    practical_extra_options: list[tuple[str, str]] = []
                     for option in response_options:
                         option_id = str(option.get("id") or "").strip()
                         option_label = normalize_practical_option_label_for_mode(
@@ -11589,36 +11596,51 @@ def render_family_send() -> None:
                         )
                         if not option_id or not option_label:
                             continue
+                        practical_option_labels_by_id[option_id] = option_label
                         if option_label.strip().lower() in primary_choice_option_labels:
                             continue
-                        checked = st.checkbox(
-                            option_label,
-                            value=option_id in existing_selected_option_ids,
-                            key=f"family_practical_check_{resident_id}_{practical_message_id}_{option_id}",
-                        )
-                        if checked:
-                            selected_option_ids.append(option_id)
+                        practical_extra_options.append((option_id, option_label))
                     note_value = ""
-                    if bool(practical_message.get("allow_note", True)):
-                        note_value = st.text_area(
-                            "Optional short context note (not a discussion).",
-                            value=str((existing_response or {}).get("note") or ""),
-                            key=f"family_practical_note_{resident_id}_{practical_message_id}",
-                            max_chars=500,
-                        )
                     planned_visit_time_value = ""
-                    if practical_context_type == OFFICE_PRACTICAL_CONTEXT_VISIT:
-                        planned_visit_time_value = st.text_input(
-                            "Planned visit time (optional)",
-                            value=str((existing_response or {}).get("planned_visit_time") or ""),
-                            key=f"family_practical_planned_visit_time_{resident_id}_{practical_message_id}",
-                            placeholder="Example: Saturday about 11am",
+                    with st.form(
+                        f"family_practical_response_form_{resident_id}_{practical_message_id}",
+                        clear_on_submit=False,
+                    ):
+                        selected_choice_label = st.radio(
+                            "Your structured response",
+                            options=choice_labels,
+                            index=default_choice_index,
+                            horizontal=True,
+                            key=f"family_practical_choice_{resident_id}_{practical_message_id}",
+                        )
+                        for option_id, option_label in practical_extra_options:
+                            checked = st.checkbox(
+                                option_label,
+                                value=option_id in existing_selected_option_ids,
+                                key=f"family_practical_check_{resident_id}_{practical_message_id}_{option_id}",
+                            )
+                            if checked:
+                                selected_option_ids.append(option_id)
+                        if bool(practical_message.get("allow_note", True)):
+                            note_value = st.text_area(
+                                "Optional short context note (not a discussion).",
+                                value=str((existing_response or {}).get("note") or ""),
+                                key=f"family_practical_note_{resident_id}_{practical_message_id}",
+                                max_chars=500,
+                            )
+                        if practical_context_type == OFFICE_PRACTICAL_CONTEXT_VISIT:
+                            planned_visit_time_value = st.text_input(
+                                "Planned visit time (optional)",
+                                value=str((existing_response or {}).get("planned_visit_time") or ""),
+                                key=f"family_practical_planned_visit_time_{resident_id}_{practical_message_id}",
+                                placeholder="Example: Saturday about 11am",
+                            )
+                        family_practical_submitted = st.form_submit_button(
+                            "Send structured response",
+                            use_container_width=True,
                         )
                     share_with_family_value = True
-                    if st.button(
-                        "Send structured response",
-                        key=f"family_practical_submit_{resident_id}_{practical_message_id}",
-                    ):
+                    if family_practical_submitted:
                         if not family_user_id:
                             st.error("Your Family Member mapping could not be found. Please sign in again.")
                         else:
@@ -11634,6 +11656,7 @@ def render_family_send() -> None:
                             )
                             if ok:
                                 st.success("Structured response received.")
+                                st.rerun()
                             else:
                                 st.error(message)
                     existing_response = fetch_family_practical_response(
@@ -11649,7 +11672,21 @@ def render_family_send() -> None:
                     if existing_response:
                         own_choice = str(existing_response.get("primary_choice") or "").strip().title()
                         if own_choice:
-                            st.caption(f"Your current structured response: {own_choice}")
+                            st.markdown("**Your current structured response**")
+                            st.markdown(f"- Response: {own_choice}")
+                        own_selected_labels = [
+                            practical_option_labels_by_id.get(str(option_id or "").strip(), "")
+                            for option_id in (existing_response.get("selected_option_ids") or [])
+                        ]
+                        own_selected_labels = [label for label in own_selected_labels if label]
+                        for label in own_selected_labels:
+                            st.markdown(f"- {label}")
+                        own_note = str(existing_response.get("note") or "").strip()
+                        if own_note:
+                            st.markdown(f"- Note: {own_note}")
+                        own_planned_visit = str(existing_response.get("planned_visit_time") or "").strip()
+                        if own_planned_visit:
+                            st.markdown(f"- Planned visit: {own_planned_visit}")
                     st.caption("Structured responses from other Family Members:")
                     if shared_responses:
                         for shared_response in shared_responses:
@@ -12531,11 +12568,6 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
             render_document_content(resolved_doc_path)
         if is_how_it_works_doc:
             render_how_it_works_tester_button("public_how_it_works_one_message")
-            render_route_link(
-                "Read the family system model",
-                "/public/infographic",
-                key="public_how_it_works_family_model_link",
-            )
         return
     if app_variant == VARIANT_FAMILY:
         family_back_route = return_route or get_home_route(VARIANT_FAMILY)
@@ -12703,6 +12735,7 @@ def render_pr_homepage() -> None:
             color: #1f1f1f;
             line-height: 1.2;
             letter-spacing: 0;
+            white-space: nowrap;
         }
         .vm-home-brand span {
             color: #6b7280;
@@ -12712,6 +12745,16 @@ def render_pr_homepage() -> None:
             margin: 8px 0 0 0;
             color: #4b5563;
             font-size: 0.93rem;
+        }
+        @media (max-width: 390px) {
+            .vm-home-brand {
+                font-size: 1.08rem;
+            }
+        }
+        @media (max-width: 360px) {
+            .vm-home-brand {
+                font-size: 0.98rem;
+            }
         }
         .vm-home-infographic {
             margin: 14px 0 12px;
@@ -13628,7 +13671,7 @@ def render_care_login() -> None:
     if app_variant == VARIANT_MOBILE:
         mobile_login_boxes = [
             "Mobile is the reduced-tool route for a carer, helper, supported person, or trusted family member.",
-            "It helps keep practical support separate from Family Office so the Family Organiser is not expected to absorb caring work.",
+            "Mobile is for an additional person who helps provide care support.",
             "Use Mobile only for non-urgent family coordination. Urgent, medical, safeguarding, or private matters stay outside the app.",
         ]
         st.markdown(

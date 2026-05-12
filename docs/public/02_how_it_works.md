@@ -1,7 +1,5 @@
 ﻿![logo](../../assets/logo.png)
 
-# How familyupdates.care works
-
 ![familyupdates.care infographic](../../assets/infographic.jpg)
 
 familyupdates.care helps structure communication when a family member needs support.
