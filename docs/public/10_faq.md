@@ -36,7 +36,7 @@ A one-way Office message broadcast to all Family Members for non-urgent general 
 
 ## Can family reply to Office messages?
 
-Family can reply to an Office practical message using a structured response form (Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
+Family can reply to an Office practical message using a structured response form (No response / Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
 
 ## Is an Office practical message a chat thread?
 

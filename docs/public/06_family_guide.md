@@ -57,7 +57,7 @@ Used for non-urgent general information and reassurance.
 A practical non-urgent Office request linked to a resident (for example visits, attendance, reminders, item requests).
 You can reply with:
 
-- Yes / No / Maybe
+- No response / Yes / No / Maybe
 - Optional tick-box selections
 - Optional short context note
 

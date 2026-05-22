@@ -48,7 +48,7 @@ The Family Organiser and each Family Member can keep one current specific messag
 The Family Organiser can publish a practical request (for example visits, attendance, reminders, item requests).
 Each Family Member can submit:
 
-- Yes / No / Maybe
+- No response / Yes / No / Maybe
 - Optional tick-box selections
 - Optional short context note
 

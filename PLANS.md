@@ -98,7 +98,7 @@ Each role sees only the channels intended for that role. Each current item may o
 Office update statement:
 Family updates are sent from Family Office to keep the wider family informed. Updates are one-way and are for non-urgent, non-medical information only.
 
-Office practical messages are optional structured requests linked to the person being supported (for example visits, attendance, reminders, belongings, outside appointments, or item requests). Family Members and Mobile Support can reply where enabled with a minimal structured response (Yes / No / Maybe), optional fixed tick-box options, and an optional short context note. This is still non-urgent and not live messaging.
+Office practical messages are optional structured requests linked to the person being supported (for example visits, attendance, reminders, belongings, outside appointments, or item requests). Family Members and Mobile Support can reply where enabled with a minimal structured response (No response / Yes / No / Maybe), optional fixed tick-box options, and an optional short context note. This is still non-urgent and not live messaging.
 
 Family noticeboard notes are optional practical notes from Family Members, visible to all linked Family Members and to the relevant Office workspace. Each Family Member has one current noticeboard note per person. A new note replaces that Family Member's previous note, and the note may be cleared when no longer useful. Noticeboard notes are for practical coordination only, not private health, care, legal, financial, safeguarding, or urgent matters.
 
@@ -109,7 +109,7 @@ familyupdates.care is a simple family coordination system for Family Office, Fam
 
 Family Office updates are one-way informational messages.
 
-Family Office may also publish a practical message that allows each registered Family Member or Mobile Support user, where enabled, to send a structured non-urgent reply (Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
+Family Office may also publish a practical message that allows each registered Family Member or Mobile Support user, where enabled, to send a structured non-urgent reply (No response / Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
 
 Where enabled, Family Members may also add one current family noticeboard note for practical coordination. Noticeboard notes are visible to linked Family Members and the relevant Family Office workspace, and are not private messages.
 

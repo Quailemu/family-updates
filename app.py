@@ -148,6 +148,16 @@ OFFICE_PRACTICAL_CONTEXT_VISIT = "visit"
 OFFICE_PRACTICAL_TARGET_ALL_FAMILY = "all_family"
 OFFICE_PRACTICAL_TARGET_DIRECTED_FAMILY = "directed_family"
 OFFICE_PRACTICAL_TARGET_MOBILE = "mobile"
+STRUCTURED_RESPONSE_CHOICES = ("no_response", "yes", "no", "maybe")
+STRUCTURED_RESPONSE_LABELS = {
+    "no_response": "No response",
+    "yes": "Yes",
+    "no": "No",
+    "maybe": "Maybe",
+}
+STRUCTURED_RESPONSE_VALUES_BY_LABEL = {
+    label: value for value, label in STRUCTURED_RESPONSE_LABELS.items()
+}
 SENSITIVE_DATA_BOUNDARY_WARNING = (
     "Keep sensitive records outside the app. Use this only for simple communication and coordination."
 )
@@ -5564,6 +5574,11 @@ def normalize_practical_option_label_for_mode(
     return label
 
 
+def format_structured_response_choice(value: object) -> str:
+    choice = str(value or "").strip().lower()
+    return STRUCTURED_RESPONSE_LABELS.get(choice, "")
+
+
 def validate_personal_mode_runtime(operating_mode: object) -> tuple[bool, list[str]]:
     mode_value = normalize_operating_mode(operating_mode)
     if mode_value != OPERATING_MODE_PERSONAL_USE:
@@ -7232,8 +7247,8 @@ def upsert_family_practical_response(
     supabase, error = get_authed_supabase(access_token)
     if error:
         return False, error
-    if primary_choice not in {"yes", "no", "maybe"}:
-        return False, "Please choose Yes, No, or Maybe."
+    if primary_choice not in STRUCTURED_RESPONSE_CHOICES:
+        return False, "Please choose No response, Yes, No, or Maybe."
     family_col = _office_practical_family_user_column(supabase)
     try:
         message_resp = (
@@ -7372,8 +7387,8 @@ def upsert_mobile_practical_response(
     supabase, error = get_authed_supabase(access_token)
     if error:
         return False, error
-    if primary_choice not in {"yes", "no", "maybe"}:
-        return False, "Please choose Yes, No, or Maybe."
+    if primary_choice not in STRUCTURED_RESPONSE_CHOICES:
+        return False, "Please choose No response, Yes, No, or Maybe."
     try:
         message_resp = (
             supabase.table("office_practical_messages")
@@ -7631,7 +7646,7 @@ def fetch_office_practical_response_summary(
 ) -> dict:
     summary = {
         "responses": [],
-        "choice_counts": {"yes": 0, "no": 0, "maybe": 0},
+        "choice_counts": {choice: 0 for choice in STRUCTURED_RESPONSE_CHOICES},
         "option_counts": {},
         "total": 0,
     }
@@ -11569,18 +11584,26 @@ def render_family_send() -> None:
                     response_choice = (
                         str((existing_response or {}).get("primary_choice") or "").strip().lower()
                     )
-                    choice_labels = ["Yes", "No", "Maybe"]
-                    choice_to_value = {"Yes": "yes", "No": "no", "Maybe": "maybe"}
+                    choice_labels = list(STRUCTURED_RESPONSE_VALUES_BY_LABEL.keys())
+                    choice_to_value = STRUCTURED_RESPONSE_VALUES_BY_LABEL
+                    default_choice_label = format_structured_response_choice(response_choice)
                     default_choice_index = (
-                        choice_labels.index(response_choice.title())
-                        if response_choice in {"yes", "no", "maybe"}
+                        choice_labels.index(default_choice_label)
+                        if default_choice_label in choice_labels
                         else 0
                     )
                     selected_option_ids: list[str] = []
                     existing_selected_option_ids = set(
                         (existing_response or {}).get("selected_option_ids") or []
                     )
-                    primary_choice_option_labels = {"yes", "no", "maybe", "not sure"}
+                    primary_choice_option_labels = {
+                        "yes",
+                        "no",
+                        "maybe",
+                        "no response",
+                        "no_response",
+                        "not sure",
+                    }
                     practical_option_labels_by_id: dict[str, str] = {}
                     practical_extra_options: list[tuple[str, str]] = []
                     for option in response_options:
@@ -11647,7 +11670,7 @@ def render_family_send() -> None:
                             ok, message = upsert_family_practical_response(
                                 practical_message_id,
                                 family_user_id,
-                                choice_to_value.get(selected_choice_label, "maybe"),
+                                choice_to_value.get(selected_choice_label, "no_response"),
                                 note_value,
                                 selected_option_ids,
                                 planned_visit_time_value,
@@ -11670,7 +11693,9 @@ def render_family_send() -> None:
                         access_token,
                     )
                     if existing_response:
-                        own_choice = str(existing_response.get("primary_choice") or "").strip().title()
+                        own_choice = format_structured_response_choice(
+                            existing_response.get("primary_choice")
+                        )
                         if own_choice:
                             st.markdown("**Your current structured response**")
                             st.markdown(f"- Response: {own_choice}")
@@ -11691,7 +11716,9 @@ def render_family_send() -> None:
                     if shared_responses:
                         for shared_response in shared_responses:
                             contact_name = str(shared_response.get("contact_name") or "Family Member")
-                            choice_label = str(shared_response.get("primary_choice") or "").strip().title()
+                            choice_label = format_structured_response_choice(
+                                shared_response.get("primary_choice")
+                            )
                             st.markdown(f"- {contact_name}: {choice_label}")
                             shared_visit = str(shared_response.get("planned_visit_time") or "").strip()
                             if shared_visit:
@@ -12093,7 +12120,7 @@ def render_family_sent() -> None:
     )
     render_page_header("Message sent")
     render_care_home_identity_banner(st.session_state.get("access_token"))
-    st.write("Your voice-message has been sent.")
+    st.write("Your message has been sent.")
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
         render_route_link("Back", get_home_route(VARIANT_FAMILY), key="family_sent_back_link")
@@ -12848,7 +12875,7 @@ def render_care_hub_banner_settings() -> None:
     st.caption(
         "Review and confirm these settings during setup so day-to-day use is consistent from launch."
     )
-    st.markdown("### Voice Message - Office Checks")
+    st.markdown("### Family Office checks")
     st.markdown("**Daily**")
     st.checkbox("Login", key="office_checks_daily_login")
     st.checkbox("Send & playback test message", key="office_checks_daily_send_playback")
@@ -16105,11 +16132,14 @@ def render_care_hub() -> None:
                             mobile_response_choice = str(
                                 existing_mobile_response.get("primary_choice") or ""
                             ).strip().lower()
-                        choice_labels = ["Yes", "No", "Maybe"]
-                        choice_to_value = {"Yes": "yes", "No": "no", "Maybe": "maybe"}
+                        choice_labels = list(STRUCTURED_RESPONSE_VALUES_BY_LABEL.keys())
+                        choice_to_value = STRUCTURED_RESPONSE_VALUES_BY_LABEL
+                        default_choice_label = format_structured_response_choice(
+                            mobile_response_choice
+                        )
                         default_choice_index = (
-                            choice_labels.index(mobile_response_choice.title())
-                            if mobile_response_choice in {"yes", "no", "maybe"}
+                            choice_labels.index(default_choice_label)
+                            if default_choice_label in choice_labels
                             else 0
                         )
                         selected_choice_label = st.radio(
@@ -16132,7 +16162,14 @@ def render_care_hub() -> None:
                             if str(option_id or "").strip()
                         )
                         selected_mobile_option_ids: list[str] = []
-                        primary_choice_option_labels = {"yes", "no", "maybe", "not sure"}
+                        primary_choice_option_labels = {
+                            "yes",
+                            "no",
+                            "maybe",
+                            "no response",
+                            "no_response",
+                            "not sure",
+                        }
                         for option_row in option_rows:
                             option_id = str(option_row.get("id") or "").strip()
                             option_label = normalize_practical_option_label_for_mode(
@@ -16176,7 +16213,7 @@ def render_care_hub() -> None:
                             with st.spinner("Saving Mobile structured response..."):
                                 ok, mobile_message = upsert_mobile_practical_response(
                                     mobile_practical_id,
-                                    choice_to_value.get(selected_choice_label, "maybe"),
+                                    choice_to_value.get(selected_choice_label, "no_response"),
                                     mobile_note_value,
                                     selected_mobile_option_ids,
                                     access_token,
@@ -16186,12 +16223,14 @@ def render_care_hub() -> None:
                                     "Mobile structured response received."
                                 )
                                 st.success("Mobile structured response received.")
+                                st.rerun()
                             else:
                                 st.session_state.pop("mobile_status_message", None)
                                 st.error(mobile_message)
                         if mobile_response_choice:
                             st.caption(
-                                f"Current Mobile response: {mobile_response_choice.title()}"
+                                "Current Mobile response: "
+                                f"{format_structured_response_choice(mobile_response_choice)}"
                             )
                     else:
                         st.caption("No current practical request from Family Office.")
@@ -16419,9 +16458,12 @@ def render_care_hub() -> None:
                                 (mobile_response or {}).get("primary_choice")
                                 or active_practical.get("mobile_response_choice")
                                 or ""
-                            ).strip().title()
+                            ).strip().lower()
                             if mobile_choice:
-                                st.caption(f"Mobile structured response: {mobile_choice}")
+                                st.caption(
+                                    "Mobile structured response: "
+                                    f"{format_structured_response_choice(mobile_choice)}"
+                                )
                                 selected_mobile_ids = set(
                                     str(option_id or "").strip()
                                     for option_id in (
@@ -16462,6 +16504,7 @@ def render_care_hub() -> None:
                             )
                             st.caption(
                                 "Structured responses: "
+                                f"No response {summary['choice_counts'].get('no_response', 0)} | "
                                 f"Yes {summary['choice_counts'].get('yes', 0)} | "
                                 f"No {summary['choice_counts'].get('no', 0)} | "
                                 f"Maybe {summary['choice_counts'].get('maybe', 0)} | "
@@ -16482,7 +16525,9 @@ def render_care_hub() -> None:
                                 st.caption("Family structured responses:")
                                 for response in responses:
                                     contact_name = str(response.get("contact_name") or "Family Member")
-                                    choice_label = str(response.get("primary_choice") or "").strip().title()
+                                    choice_label = format_structured_response_choice(
+                                        response.get("primary_choice")
+                                    )
                                     st.markdown(f"- {contact_name}: {choice_label}")
                                     selected_labels = response.get("selected_labels") or []
                                     if selected_labels:
