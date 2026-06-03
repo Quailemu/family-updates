@@ -3,7 +3,7 @@
 Communication participants: the person being supported, registered Family Members, the Family Organiser, and any supporter when Mobile Support is used.
 
 Q: What is familyupdates.care for?
-A: It supports simple, non-urgent family coordination when someone needs support and one family member or trusted friend has become the organiser. The organiser can share one current update and simple current messages without creating live chat or a communication archive.
+A: It supports simple, non-urgent family coordination when someone needs support and one family member or trusted friend has become the organiser. It keeps essential family coordination separate from chat without creating live chat or a communication archive.
 
 Q: Is this for urgent messages?
 A: No. This service is for non-urgent coordination only.

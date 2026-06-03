@@ -5338,7 +5338,7 @@ Each person's new message replaces their own previous message in that channel. O
 
 The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current. The general update is not a discussion thread and does not take direct replies.
 
-familyupdates.care is for situations where family coordination is needed. It is not offered as a system for people or couples who are managing communication and support arrangements themselves.
+familyupdates.care is for situations where family coordination is needed because essential information is getting lost in chat.
 
 #### Where the app may be used
 
@@ -9750,7 +9750,7 @@ def _get_canonical_hosts() -> set[str]:
 def _build_seo_metadata(route: str) -> dict[str, str]:
     normalized_route = normalize_route(route) or PUBLIC_HOME_ROUTE
     route_titles: dict[str, str] = {
-        "/pr-home": "familyupdates.care - Current family updates without chat pressure",
+        "/pr-home": "familyupdates.care - Essential family coordination, separate from chat",
         "/public/how-it-works": "How familyupdates.care works",
         "/family/login": "Family Hub | familyupdates.care",
         "/care-hub/mobile/login": "Mobile | familyupdates.care",
@@ -9764,7 +9764,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
         LIFE_FILE_GUIDE_ROUTE: "Life File Guide | familyupdates.care",
     }
     route_descriptions: dict[str, str] = {
-        "/pr-home": "familyupdates.care helps a Family Organiser share one current update, reduce repeated messages, and coordinate non-urgent support without threads or archives.",
+        "/pr-home": "familyupdates.care helps a Family Organiser coordinate non-urgent family support without chat pressure, threads, or archives.",
         "/public/how-it-works": "How familyupdates.care works across situations, roles, updates, practical requests, and noticeboard notes.",
         "/family/login": "Family Hub access for current organiser updates, practical requests, and noticeboard notes.",
         "/care-hub/mobile/login": "Mobile access for a carer, helper, supported person, or trusted family member using reduced tools.",
@@ -9782,7 +9782,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
     title = route_titles.get(normalized_route, "familyupdates.care")
     description = route_descriptions.get(
         normalized_route,
-        "familyupdates.care for one current family update, specific messages, practical requests, and noticeboard notes without chat pressure.",
+        "familyupdates.care keeps essential family coordination separate from chat.",
     )
     return {"route": normalized_route, "title": title, "description": description}
 
@@ -12734,7 +12734,7 @@ def render_public_page(page_title: str, heading: str) -> None:
 
 
 def render_familyupdates_infographic_image() -> None:
-    image_path = Path(__file__).resolve().parent / "assets" / "infographic-v3.png"
+    image_path = Path(__file__).resolve().parent / "assets" / "infographic-v4.png"
     if not image_path.exists():
         return
     try:
@@ -12805,7 +12805,7 @@ def render_pr_homepage() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        "For the person who has become the family organiser: share one current update, replace it when things change, and avoid becoming the family message archive.",
+        "familyupdates.care keeps essential family coordination separate from chat.",
     )
     st.markdown('<div class="vm-home-infographic">', unsafe_allow_html=True)
     render_familyupdates_infographic_image()
@@ -16869,7 +16869,7 @@ def render_family_system_setup() -> None:
 
 def main() -> None:
     st.set_page_config(
-        page_title="familyupdates.care - Current family updates without chat pressure",
+        page_title="familyupdates.care - Essential family coordination, separate from chat",
         page_icon="ðŸ—£ï¸",
         layout="centered",
         initial_sidebar_state="collapsed",

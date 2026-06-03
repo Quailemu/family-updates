@@ -1,6 +1,6 @@
 ﻿# familyupdates.care product overview
 
-familyupdates.care helps structure communication when a family member needs support.
+familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
 
 There are three roles for the family to fill:
 
@@ -12,7 +12,7 @@ familyupdates.care keeps communication current, and as in real life conversation
 
 Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser tells the family when and how frequently they will check messages.
 
-familyupdates.care does not remove the need for care, support, or professional help. But where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded.
+familyupdates.care keeps essential family coordination separate from chat. It does not remove the need for care, support, or professional help, but where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded.
 
 ## Emergency and everyday communication
 
@@ -34,7 +34,7 @@ Each person's new message replaces their own previous message in that channel. O
 
 The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current.
 
-familyupdates.care is now focused on the Family system: Family Office and Family Hub.
+familyupdates.care is for situations where family coordination is needed because essential information is getting lost in chat.
 
 The earlier Care Home system idea is archived as a possible later product. It is not part of the streamlined at-home Family version.
 
@@ -46,7 +46,7 @@ The earlier Care Home system idea is archived as a possible later product. It is
 | 4     | Option: Mobile additional channel                        | Yes                    | Yes                           | Yes              | Yes                                     |
 | 5     | Optional separate Care Home system                       | -                      | -                             | -                | Optional - care home adopted only       |
 
-The life stage describes who is involved: from managing independently at Stage 1, to help from a family member (Family Organiser) at Stage 2, to having a paid carer at Stage 3, and finally to a care home plus Family Organiser at Stage 4. The communication level describes how much of the system is switched on.
+The current family model is centred on a Family Organiser, wider Family Members, and Mobile Support where a practical support role is involved. The communication level describes how much of the system is switched on.
 
 ## Not for urgent matters
 

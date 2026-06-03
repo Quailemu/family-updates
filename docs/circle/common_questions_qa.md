@@ -1,7 +1,7 @@
 # At-home common questions (Q&A)
 
 Q: What is familyupdates.care for?
-A: It supports simple, non-urgent family coordination when someone needs support and one family member or trusted friend has become the organiser. The organiser can share one current update, use simple current messages, and avoid creating live chat or a communication archive.
+A: It supports simple, non-urgent family coordination when someone needs support and one family member or trusted friend has become the organiser. It keeps essential family coordination separate from chat without creating live chat or a communication archive.
 
 Q: Is this for urgent messages?
 A: No. This is for non-urgent coordination. Use your direct contact routes for urgent or medical matters.

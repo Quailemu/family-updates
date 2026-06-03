@@ -1,6 +1,6 @@
 ﻿![logo](../../assets/logo.png)
 
-![familyupdates.care infographic](../../assets/infographic-v3.png)
+![familyupdates.care infographic](../../assets/infographic-v4.png)
 
 familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
 
@@ -30,9 +30,7 @@ Each person's new message replaces their own previous message in that channel. O
 
 The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current. The general update is not a discussion thread and does not take direct replies.
 
-familyupdates.care is focused on the Family system: Family Office, Family Hub, and Mobile Support.
-
-familyupdates.care is for situations where family coordination is needed. It is not offered as a system for people or couples who are managing communication and support arrangements themselves.
+familyupdates.care is for situations where family coordination is needed because essential information is getting lost in chat.
 
 ## Where the app may be used
 

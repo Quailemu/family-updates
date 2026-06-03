@@ -14,7 +14,7 @@ Q: Who uses Family Office?
 A: The Family Organiser uses Family Office to coordinate updates, practical requests, access, and boundaries. The organiser is usually the person who gets the app and introduces it to Family Members.
 
 Q: Why would the Family Organiser use this instead of a group chat?
-A: It helps the organiser share one current update and reduce repeated calls, texts, and questions without creating a live chat, scrolling thread, or family communication archive.
+A: It keeps essential family coordination separate from chat, so repeated calls, texts, and questions do not become a live chat, scrolling thread, or family communication archive.
 
 Q: Who uses Mobile?
 A: Mobile is for the person providing practical support. This may be a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper.

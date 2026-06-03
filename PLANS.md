@@ -15,7 +15,7 @@ Current active situations:
 1. At home with Family Organiser + Mobile Support.
 2. Care home with Family Organiser + Mobile Support.
 
-There is no active "managing independently" app situation. familyupdates.care is for situations where family coordination is needed because normal direct communication has started to overload one organiser. It is not offered as a general family chat system, shared calendar, or system for people or couples who are managing communication and support arrangements themselves.
+There is no active "managing independently" app situation. familyupdates.care is for situations where family coordination is needed because normal direct communication has started to overload one organiser and essential information is getting lost in chat.
 
 The Family Organiser role is a coordination role, not a default unpaid caring role. If a Family Organiser is needed, the system should also make the practical support role visible through Mobile Support. Mobile Support may be a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper. If a family member uses Mobile, they are acting in a distinct support role, not simply as a Family Member.
 
@@ -56,7 +56,7 @@ Homepage public info copy (before feedback section):
 ## Familiar voices
 A structured, non-urgent family coordination system for when one person becomes the point of contact.
 
-familyupdates.care helps the organiser keep everyone informed without becoming a live chat, message thread, or family communication archive.
+familyupdates.care keeps essential family coordination separate from chat.
 
 There are three roles for the family to fill:
 
@@ -110,7 +110,7 @@ Family noticeboard notes are optional practical notes from Family Members, visib
 For urgent, medical, safeguarding, or other time-sensitive matters, families must use normal direct communication outside familyupdates.care.
 
 Service overview purpose statement:
-familyupdates.care is a simple family coordination system for Family Office, Family Hub, and Mobile Support. It helps a Family Organiser keep one current family update, specific organiser messages, practical requests, and noticeboard notes current without creating live chat, long threads, or a permanent communication archive.
+familyupdates.care is a simple family coordination system for situations where one person has become the family point of contact. It helps a Family Organiser keep one current family update, specific organiser messages, practical requests, and noticeboard notes current without creating live chat, long threads, or a permanent communication archive.
 
 Family Office updates are one-way informational messages.
 
@@ -185,13 +185,13 @@ Each person's new message replaces their own previous message in that channel. O
 Family Organiser role boundary:
 The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current. The general update is not a discussion thread and does not take direct replies.
 
-familyupdates.care is a simple Family system. It has the core tools needed for essential support management: updates, specific organiser messages, practical requests, noticeboard-style information, and Mobile Support.
+familyupdates.care is for situations where family coordination is needed. It has the core tools needed for non-urgent support management: updates, specific organiser messages, practical requests, noticeboard-style information, and Mobile Support.
 
 ### Where the app may be used
 
 There are two settings: at home, and care home.
 
-* **At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary because support, questions, updates, or practical arrangements now need one clear point of coordination. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
+* **At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary because support, questions, updates, or practical arrangements now need one clear point of coordination and can get lost in chat. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
 * **Care home with Family Organiser + Mobile Support** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
 
 ### Notes
@@ -224,7 +224,7 @@ The user should choose the situation, not a separate organisation mode. Preparat
 
 Both situations use the same Family system principles: one current message, no threads, no live chat, and practical structured replies where helpful. Family Office coordinates the family-side work. Mobile Support is the distinct practical support role and may be used by a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper.
 
-- At home with Family Organiser + Mobile Support: this is for when the person is at home and family coordination has become necessary. It is not offered as a system for people or couples who are managing communication and support arrangements themselves. The Family Organiser coordinates communication; Mobile Support is used by the person providing practical support.
+- At home with Family Organiser + Mobile Support: this is for when the person is at home and family coordination has become necessary because essential information is getting lost in chat. The Family Organiser coordinates communication; Mobile Support is used by the person providing practical support.
 - Care home with Family Organiser + Mobile Support: this is for when the person is living in a care home, but family organisation continues. The care home handles care operations, safeguarding, and direct care communication. familyupdates.care handles family-side non-urgent focussed communications where needed.
 
 Care-home separation rule:
