@@ -3413,12 +3413,12 @@ def get_at_home_voicemail_label(access_token: str | None = None) -> str:
 
 def render_how_it_works_diagram_and_notes() -> None:
     if is_current_at_home_lifecycle_stage():
-        voicemail_label = get_at_home_voicemail_label()
+        office_label = get_at_home_voicemail_label()
         st.markdown(
-            f"- The diagram shows the main parts of the Family system: Family Hub, Family Mobile, and {voicemail_label}.\n"
+            f"- The diagram shows the main parts of the Family system: Family Hub, Mobile Support, and {office_label}.\n"
             "- Each Family Member has their own individual communication channel to the person.\n"
             "- Requests collect quick structured family responses to support simple coordination.\n"
-            "- The person, coordinator, or family can use the replies to make the decision.\n"
+            "- The person, organiser, or family can use the replies to make the decision.\n"
             "- Each channel keeps only the latest message, and a new message replaces the previous one in that channel."
         )
     else:
@@ -5310,7 +5310,9 @@ def render_stage_level_capability_tables(access_token: str | None = None) -> Non
 
     st.markdown(
         """
-familyupdates.care helps structure communication when a family member needs support.
+familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
+
+It is for moments when a person becomes temporarily or permanently unable to manage part of their own life, for example elderly parent support, dementia, serious illness, recovery after surgery, stroke, accident or injury, temporary incapacity, long-term disability, mental health crisis, or another situation where family and friends need to coordinate around one person.
 
 There are three roles for the family to fill:
 
@@ -5320,9 +5322,9 @@ There are three roles for the family to fill:
 
 familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
 
-Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser tells the family when and how frequently they will check messages.
+Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser gets the app, introduces it to Family Members, and tells the family when and how frequently they will check messages.
 
-familyupdates.care does not remove the need for care, support, or professional help. But where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded.
+familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded.
 
 #### What the app does
 
@@ -5334,7 +5336,7 @@ familyupdates.care does not remove the need for care, support, or professional h
 
 Each person's new message replaces their own previous message in that channel. One sender does not overwrite another sender's message. There are no threads, no archive, and no live chat.
 
-The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current.
+The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current. The general update is not a discussion thread and does not take direct replies.
 
 familyupdates.care is for situations where family coordination is needed. It is not offered as a system for people or couples who are managing communication and support arrangements themselves.
 
@@ -5342,7 +5344,7 @@ familyupdates.care is for situations where family coordination is needed. It is 
 
 There are two settings: at home, and care home.
 
-**At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
+**At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary because support, questions, updates, or practical arrangements now need one clear point of coordination. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
 
 **Care home with Family Organiser + Mobile Support** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
 
@@ -8218,11 +8220,7 @@ def render_header_menu(menu_key: str) -> None:
             office_label = get_at_home_voicemail_label(access_token)
             st.markdown(f"**{office_label}**")
             clicked_action = None
-            inbox_label = (
-                "Back to voicemail messages"
-                if at_home_lifecycle_stage
-                else "Back to Office messages"
-            )
+            inbox_label = "Back to Family Office messages"
             if st.button(inbox_label, key=f"{menu_key}_inbox"):
                 clicked_action = ("route", get_home_route(app_variant))
             if st.button("How it works", key=f"{menu_key}_office_how_it_works"):
@@ -8250,7 +8248,7 @@ def render_header_menu(menu_key: str) -> None:
                 clicked_action = ("doc", "docs/office/care_home_handover_checklist.md")
             if st.button("Life File Guide", key=f"{menu_key}_office_life_file_guide"):
                 clicked_action = ("route", LIFE_FILE_GUIDE_ROUTE)
-            qa_label = "Voicemail Q&A" if at_home_lifecycle_stage else "Office Q&A"
+            qa_label = "Family Office Q&A" if at_home_lifecycle_stage else "Office Q&A"
             if st.button(qa_label, key=f"{menu_key}_office_doc_qa"):
                 clicked_action = ("route", "/care-hub/office/qa")
 
@@ -9457,7 +9455,9 @@ familyupdates.care is for non-urgent communication only.
         st.markdown("<h2>How it works</h2>", unsafe_allow_html=True)
         st.markdown(
             """
-familyupdates.care helps structure communication when a family member needs support.
+familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
+
+It is for moments when repeated updates, questions, and practical coordination have started to overload one person.
 
 There are three roles for the family to fill:
 
@@ -9465,13 +9465,13 @@ There are three roles for the family to fill:
 2. Person available for urgent/emergency phone contact and emergency protocol.
 3. Care support.
 
-familyupdates.care is for non-urgent communication only.
+familyupdates.care is for non-urgent coordination only.
 """
         )
         st.markdown("### Communication participants")
         st.markdown("- A person or couple being supported")
         st.markdown("- Registered Family Members")
-        st.markdown("- A Family Organiser")
+        st.markdown("- A Family Organiser who introduces the app and keeps the current information clear")
         st.markdown("- A carer, helper, supported person, or trusted family member using Mobile where relevant")
         st.markdown(
             "Each channel keeps only the latest message. A new message replaces the previous message in that channel."
@@ -9487,12 +9487,12 @@ familyupdates.care is for non-urgent communication only.
         st.markdown(
             """
             <div class="public-card">
-              <h3>Start with updates only</h3>
+              <h3>Stop repeating updates</h3>
               <div>Send one calm update to registered Family Members. There are no replies in this update channel, and the next update replaces the previous one.</div>
             </div>
             <div class="public-card">
-              <h3>Add specific organiser messages</h3>
-              <div>The Family Organiser and each Family Member can keep one current specific message, without live chat or message threads.</div>
+              <h3>Not another chat</h3>
+              <div>The Family Organiser and each Family Member can keep one current specific message, without live chat, scrolling, or message threads.</div>
             </div>
             <div class="public-card pink">
               <h3>Add practical requests</h3>
@@ -9515,6 +9515,7 @@ familyupdates.care is for non-urgent communication only.
               <div class="public-step">No message history</div>
               <div class="public-step">No archive</div>
               <div class="public-step">No scrolling threads</div>
+              <div class="public-step">No family communication archive to maintain</div>
               <div class="public-step">This is not live messaging</div>
               <div class="public-step">Urgent and private matters stay outside the app</div>
             </div>
@@ -9552,7 +9553,7 @@ familyupdates.care is for non-urgent communication only.
             <div class="public-card">
               <h3>Roles and important boundaries</h3>
               <div><strong>Family Members:</strong> Family Members receive updates, respond to practical requests, and can pin one current noticeboard note.</div>
-              <div><strong>Family Organiser:</strong> the organiser keeps a small number of non-urgent family communication channels current.</div>
+              <div><strong>Family Organiser:</strong> the organiser introduces the app and keeps a small number of non-urgent family communication channels current.</div>
               <div><strong>Person being supported:</strong> family contact by phone remains outside the app.</div>
               <div style="margin-top:8px;">This service is for non-urgent communication only. It is not for medical updates, safeguarding communication, financial decisions, legal matters, or emergencies. Use normal direct contact routes for those matters.</div>
             </div>
@@ -9596,7 +9597,9 @@ familyupdates.care is for non-urgent communication only.
         st.markdown("Communication participants")
         st.markdown(
             """
-familyupdates.care helps structure communication when a family member needs support.
+familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
+
+It is used when ordinary direct family communication is no longer enough because repeated updates, questions, or practical coordination are creating communication overload.
 
 There are three roles for the family to fill:
 
@@ -9604,7 +9607,7 @@ There are three roles for the family to fill:
 2. Person available for urgent/emergency phone contact and emergency protocol.
 3. Care support.
 
-familyupdates.care is for non-urgent communication only.
+familyupdates.care is for non-urgent coordination only.
 """
         )
         st.markdown(
@@ -9612,7 +9615,7 @@ familyupdates.care is for non-urgent communication only.
             "The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly. "
             "Each Family Member can keep one current noticeboard note. "
             "A new message replaces only the previous message in that channel. "
-            "A care home could run its own completely separate Care Home system using the same model, but it does not connect to the Family Organiser's app."
+            "The general update is not a chat thread and does not take direct replies."
         )
     st.markdown("### Service overview")
     current_variant = resolve_runtime_variant(route_hint=get_route())
@@ -9747,7 +9750,7 @@ def _get_canonical_hosts() -> set[str]:
 def _build_seo_metadata(route: str) -> dict[str, str]:
     normalized_route = normalize_route(route) or PUBLIC_HOME_ROUTE
     route_titles: dict[str, str] = {
-        "/pr-home": "familyupdates.care - Simple updates and practical requests for families",
+        "/pr-home": "familyupdates.care - Current family updates without chat pressure",
         "/public/how-it-works": "How familyupdates.care works",
         "/family/login": "Family Hub | familyupdates.care",
         "/care-hub/mobile/login": "Mobile | familyupdates.care",
@@ -9761,11 +9764,11 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
         LIFE_FILE_GUIDE_ROUTE: "Life File Guide | familyupdates.care",
     }
     route_descriptions: dict[str, str] = {
-        "/pr-home": "familyupdates.care helps structure communication when a family member needs support, without live chat or message history.",
+        "/pr-home": "familyupdates.care helps a Family Organiser share one current update, reduce repeated messages, and coordinate non-urgent support without threads or archives.",
         "/public/how-it-works": "How familyupdates.care works across situations, roles, updates, practical requests, and noticeboard notes.",
-        "/family/login": "Family Hub access for non-urgent family updates, practical requests, and noticeboard notes.",
+        "/family/login": "Family Hub access for current organiser updates, practical requests, and noticeboard notes.",
         "/care-hub/mobile/login": "Mobile access for a carer, helper, supported person, or trusted family member using reduced tools.",
-        "/care-hub/login": "Family Office access for setup, family registration, organiser updates, practical requests, and noticeboard oversight.",
+        "/care-hub/login": "Family Office access for the organiser to keep one current update, family registration, practical requests, and noticeboard oversight.",
         "/public/privacy-notice": "Privacy notice for familyupdates.care, including controller/processor roles and retention boundaries.",
         "/public/family-terms-of-use": "Family Terms of Use for familyupdates.care and non-urgent message boundaries.",
         "/public/complaints-and-concerns": "How to raise platform concerns and keep family, care, safeguarding, and support boundaries clear.",
@@ -9779,7 +9782,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
     title = route_titles.get(normalized_route, "familyupdates.care")
     description = route_descriptions.get(
         normalized_route,
-        "familyupdates.care for calm family updates, specific messages, practical requests, and noticeboard notes.",
+        "familyupdates.care for one current family update, specific messages, practical requests, and noticeboard notes without chat pressure.",
     )
     return {"route": normalized_route, "title": title, "description": description}
 
@@ -11808,7 +11811,7 @@ def render_family_send() -> None:
         with outbound_section_slot.container(border=True):
             render_family_channel_marker("outbound")
             render_family_flow_title(
-                f"Latest message from you ({family_display_name}) to resident ({full_name})",
+                f"Latest message from you ({family_display_name}) to the person being supported ({full_name})",
                 "outbound",
             )
             render_family_channel_note(
@@ -12184,7 +12187,7 @@ def render_docs() -> None:
                 "summary": "Consent, authority, and safeguarding boundaries.",
             },
             {
-                "title": "Voicemail Q&A",
+                "title": "Family Office Q&A",
                 "path": "docs/office/common_questions_qa.md",
                 "summary": "Common questions for at-home coordination.",
             },
@@ -12731,7 +12734,7 @@ def render_public_page(page_title: str, heading: str) -> None:
 
 
 def render_familyupdates_infographic_image() -> None:
-    image_path = Path(__file__).resolve().parent / "assets" / "infographic.jpg"
+    image_path = Path(__file__).resolve().parent / "assets" / "infographic-v3.png"
     if not image_path.exists():
         return
     try:
@@ -12802,7 +12805,7 @@ def render_pr_homepage() -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        "familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.",
+        "For the person who has become the family organiser: share one current update, replace it when things change, and avoid becoming the family message archive.",
     )
     st.markdown('<div class="vm-home-infographic">', unsafe_allow_html=True)
     render_familyupdates_infographic_image()
@@ -16866,7 +16869,7 @@ def render_family_system_setup() -> None:
 
 def main() -> None:
     st.set_page_config(
-        page_title="familyupdates.care - Structured family communication around care",
+        page_title="familyupdates.care - Current family updates without chat pressure",
         page_icon="ðŸ—£ï¸",
         layout="centered",
         initial_sidebar_state="collapsed",
@@ -17227,7 +17230,7 @@ def main() -> None:
     elif route == "/care-hub/office/qa":
         access_token = st.session_state.get("access_token")
         qa_title = (
-            "Voicemail Q&A"
+            "Family Office Q&A"
             if is_current_at_home_lifecycle_stage(access_token)
             else "Office Q&A"
         )

@@ -1,3 +1,3 @@
 # familyupdates.care infographic
 
-![familyupdates.care infographic](../../assets/infographic.jpg)
+![familyupdates.care infographic](../../assets/infographic-v3.png)

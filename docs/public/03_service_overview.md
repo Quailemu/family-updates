@@ -4,7 +4,9 @@
 
 Communication participants: the person being supported, Family Members, the Family Organiser, and Mobile Support.
 
-familyupdates.care helps structure communication when a family member needs support.
+familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
+
+It is for moments when repeated updates, questions, and practical coordination have started to overload one person.
 
 There are three roles for the family to fill:
 
@@ -12,11 +14,11 @@ There are three roles for the family to fill:
 2. Person available for urgent/emergency phone contact and emergency protocol.
 3. Care support.
 
-familyupdates.care is for non-urgent communication only.
+familyupdates.care is for non-urgent coordination only.
 
 ## Purpose
 
-familyupdates.care is a simple system for everyday family updates, specific organiser messages, structured requests, and noticeboard-style information.
+familyupdates.care is a simple system for current family updates, specific organiser messages, structured requests, and noticeboard-style information.
 
 - one current update to family
 - one current specific organiser message
@@ -29,7 +31,7 @@ The same family-side system can continue if the person later moves into a care h
 
 - Each channel keeps only the latest message.
 - A new message replaces the previous message in that channel.
-- No archive, no scrolling thread, no live chat.
+- No archive, no scrolling thread, no live chat, and no family communication archive for the organiser to maintain.
 The Family Organiser tells the family when and how frequently they will check messages. Messages inside the app are treated as non-urgent.
 
 ## Main flows

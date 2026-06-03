@@ -1,8 +1,8 @@
 # Purpose And Scope
 
-familyupdates.care is a family-side coordination system for non-urgent communication around care.
+familyupdates.care is a family-side coordination system for non-urgent support communication around one person.
 
-It is used when ordinary direct family communication is no longer enough.
+It is used when ordinary direct family communication is no longer enough because one Family Organiser or trusted friend has become the main point of contact and repeated updates, questions, or practical coordination are creating communication overload.
 
 The active family interfaces are:
 

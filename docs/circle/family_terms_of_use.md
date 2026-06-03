@@ -1,10 +1,10 @@
 # At-home terms of use
 
-These terms apply when voicemailcare.com is used in an at-home setup.
+These terms apply when familyupdates.care is used in an at-home family coordination setup.
 
 ## Purpose
 
-The service is for non-urgent social voice communication.
+The service is for non-urgent family coordination.
 It is not emergency communication, not a live chat service, and not a medical record system.
 
 ## Access and participation
@@ -16,7 +16,7 @@ The platform does not verify local authority or entitlement.
 
 - One latest message is kept per direction/channel.
 - New messages replace previous messages in that channel.
-- No threads and no response-time guarantees.
+- No threads, no communication archive, and no response-time guarantees.
 
 ## Urgent matters
 

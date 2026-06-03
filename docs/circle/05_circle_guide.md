@@ -1,18 +1,18 @@
 # At-home guide
 
-This guide is for at-home setups where a person, couple, Family Organiser, carer, or supporter uses familyupdates.care for simple family communication.
+This guide is for at-home setups where a person needs support and a Family Organiser, carer, helper, or supporter uses familyupdates.care for simple family coordination.
 
 ## Core model
 
-- Non-urgent social voice messaging only.
+- Non-urgent family coordination only.
 - One latest message is kept per direction/channel.
 - No threads and no real-time response expectation.
 
 ## Interfaces
 
-- Family Hub: send and receive non-urgent messages.
-- Mobile: playback and recording support in day-to-day situations.
-- Household voicemail: updates, contact registration, and settings.
+- Family Hub: receive current updates, respond to practical requests where enabled, and keep one current noticeboard note.
+- Mobile Support: reduced tools for a carer, helper, supported person, or trusted family member.
+- Family Office: organiser updates, contact registration, practical requests, and settings.
 
 ## Practical use
 

@@ -1,11 +1,11 @@
 # At-home onboarding script
 
-This script helps introduce voicemailcare.com in at-home setups.
+This script helps introduce familyupdates.care in at-home family coordination setups.
 
 ## Short introduction
 
-"This service helps us share non-urgent voice messages in one simple place.
-It is not a live chat service and is not for urgent or medical matters."
+"This service helps us keep one current family update and simple coordination messages in one bounded place.
+It is not a live chat service, it does not keep a communication archive, and it is not for urgent or medical matters."
 
 ## What to explain
 

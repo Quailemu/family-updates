@@ -8,7 +8,9 @@ Communication participants: the person being supported, Family Members, the Fami
 
 Family Hub is for registered Family Members.
 
-familyupdates.care helps structure communication when a family member needs support.
+familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
+
+It is for moments when repeated updates, questions, and practical coordination have started to overload one person.
 
 There are three roles for the family to fill:
 
@@ -22,7 +24,7 @@ familyupdates.care keeps communication current, and as in real life conversation
 
 Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact.
 
-The Family Organiser has full access to the family tools. Family Members and Mobile Support can use their own enabled channels directly.
+The Family Organiser usually gets the app, introduces it to Family Members, and has full access to the family tools. Family Members and Mobile Support can use their own enabled channels directly.
 
 It supports:
 - receiving the current Family Organiser update
@@ -54,7 +56,7 @@ Used for non-urgent general information and reassurance.
 
 ### Office practical message
 
-A practical non-urgent Office request linked to a resident (for example visits, attendance, reminders, item requests).
+A practical non-urgent Office request linked to the person being supported (for example visits, attendance, reminders, item requests).
 You can reply with:
 
 - No response / Yes / No / Maybe

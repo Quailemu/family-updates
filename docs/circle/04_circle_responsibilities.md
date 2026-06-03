@@ -8,4 +8,4 @@ The person, Family Organiser, and any supporters involved are responsible for lo
 - Follow your own safeguarding and escalation arrangements.
 - Use normal direct contact routes for urgent or medical matters.
 
-voicemailcare.com provides communication infrastructure only and is not monitored in real time.
+familyupdates.care provides communication infrastructure only and is not monitored in real time.

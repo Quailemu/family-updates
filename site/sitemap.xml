@@ -10,10 +10,10 @@
     <loc>https://familyupdates.care/?route=%2Ffamily%2Flogin</loc>
   </url>
   <url>
-    <loc>https://familyupdates.care/?route=%2Fcare-hub%2Fmobile%2Flogin</loc>
+    <loc>https://familyupdates.care/mobile/login</loc>
   </url>
   <url>
-    <loc>https://familyupdates.care/?route=%2Fcare-hub%2Flogin</loc>
+    <loc>https://familyupdates.care/office/login</loc>
   </url>
   <url>
     <loc>https://familyupdates.care/?route=%2Fpublic%2Ffaq</loc>

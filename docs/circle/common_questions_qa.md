@@ -1,10 +1,10 @@
 # At-home common questions (Q&A)
 
 Q: What is familyupdates.care for?
-A: It supports simple, non-urgent voice messages for a household at home. The household can share one latest voice update with registered Family Members, and each Family Member can send their own latest message back.
+A: It supports simple, non-urgent family coordination when someone needs support and one family member or trusted friend has become the organiser. The organiser can share one current update, use simple current messages, and avoid creating live chat or a communication archive.
 
 Q: Is this for urgent messages?
-A: No. This is for non-urgent social communication. Use your direct contact routes for urgent or medical matters.
+A: No. This is for non-urgent coordination. Use your direct contact routes for urgent or medical matters.
 
 Q: Is this a live chat service?
 A: No. It is not real time and messages are not monitored in real time.

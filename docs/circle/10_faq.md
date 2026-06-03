@@ -1,12 +1,12 @@
 # At-home FAQ
 
-Communication participants: a household/couple at home, registered Family Members, and any Family Organiser or supporter when the stage uses one.
+Communication participants: the person being supported, registered Family Members, the Family Organiser, and any supporter when Mobile Support is used.
 
 Q: What is familyupdates.care for?
-A: It supports simple, non-urgent voice messages for a household at home. The household can share one latest voice update with registered Family Members, and each Family Member can send their own latest message back.
+A: It supports simple, non-urgent family coordination when someone needs support and one family member or trusted friend has become the organiser. The organiser can share one current update and simple current messages without creating live chat or a communication archive.
 
 Q: Is this for urgent messages?
-A: No. This service is for non-urgent social communication only.
+A: No. This service is for non-urgent coordination only.
 
 Q: Is this a live service?
 A: No. Messages are not monitored in real time.

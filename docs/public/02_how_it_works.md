@@ -1,8 +1,10 @@
 ﻿![logo](../../assets/logo.png)
 
-![familyupdates.care infographic](../../assets/infographic.jpg)
+![familyupdates.care infographic](../../assets/infographic-v3.png)
 
-familyupdates.care helps structure communication when a family member needs support.
+familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
+
+It is for moments when a person becomes temporarily or permanently unable to manage part of their own life, for example elderly parent support, dementia, serious illness, recovery after surgery, stroke, accident or injury, temporary incapacity, long-term disability, mental health crisis, or another situation where family and friends need to coordinate around one person.
 
 There are three roles for the family to fill:
 
@@ -12,9 +14,9 @@ There are three roles for the family to fill:
 
 familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
 
-Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser tells the family when and how frequently they will check messages.
+Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser gets the app, introduces it to Family Members, and tells the family when and how frequently they will check messages.
 
-familyupdates.care does not remove the need for care, support, or professional help. But where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded.
+familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded.
 
 ## What the app does
 
@@ -26,7 +28,7 @@ familyupdates.care does not remove the need for care, support, or professional h
 
 Each person's new message replaces their own previous message in that channel. One sender does not overwrite another sender's message. There are no threads, no archive, and no live chat.
 
-The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current.
+The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current. The general update is not a discussion thread and does not take direct replies.
 
 familyupdates.care is focused on the Family system: Family Office, Family Hub, and Mobile Support.
 
@@ -36,13 +38,13 @@ familyupdates.care is for situations where family coordination is needed. It is 
 
 There are two settings: at home, and care home.
 
-**At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
+**At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary because support, questions, updates, or practical arrangements now need one clear point of coordination. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
 
 **Care home with Family Organiser + Mobile Support** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
 
 ## Family Organiser
 
-A Family Organiser is the family member who helps keep communication and practical requests clear. They may send updates, ask simple structured questions, and help reduce repeated calls across the family. The role does not give legal authority by itself.
+A Family Organiser is the family member or trusted friend who introduces the app and helps keep communication and practical requests clear. They may send updates, ask simple structured questions, and help reduce repeated calls, texts, and questions across the family. The role does not give legal authority by itself.
 
 ## Not for urgent matters
 

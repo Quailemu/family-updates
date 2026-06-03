@@ -22,7 +22,7 @@ The Family Organiser decides access, participation, and day-to-day use.
 
 ## Why data is used
 
-Data is used to deliver non-urgent family communication around care.
+Data is used to deliver non-urgent family coordination around the person being supported.
 
 The service is not for medical updates, safeguarding reporting, or urgent enquiries.
 

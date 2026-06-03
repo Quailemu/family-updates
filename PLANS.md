@@ -6,12 +6,16 @@ Reference: `docs/security/SECURITY_MODEL.md` (final security/login model)
 
 familyupdates.care is now focused on the family-side coordination system: Family Office, Family Hub, and Mobile Support.
 
+The trigger is not age, diagnosis, or a care-home move. The trigger is when a person becomes temporarily or permanently unable to manage part of their own life, ordinary direct family communication is no longer enough, and one family member or trusted friend becomes the organiser or primary point of contact.
+
+Examples include elderly parents needing support, dementia, serious illness, recovery after surgery, stroke, accident or injury, temporary incapacity, long-term disability, mental health crisis, and other situations where family or friends need to coordinate support around one person.
+
 Current active situations:
 
 1. At home with Family Organiser + Mobile Support.
 2. Care home with Family Organiser + Mobile Support.
 
-There is no active "managing independently" app situation. familyupdates.care is for situations where family coordination is needed. It is not offered as a system for people or couples who are managing communication and support arrangements themselves.
+There is no active "managing independently" app situation. familyupdates.care is for situations where family coordination is needed because normal direct communication has started to overload one organiser. It is not offered as a general family chat system, shared calendar, or system for people or couples who are managing communication and support arrangements themselves.
 
 The Family Organiser role is a coordination role, not a default unpaid caring role. If a Family Organiser is needed, the system should also make the practical support role visible through Mobile Support. Mobile Support may be a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper. If a family member uses Mobile, they are acting in a distinct support role, not simply as a Family Member.
 
@@ -23,6 +27,7 @@ The live product offer is:
 - one current practical request with structured replies
 - one current noticeboard note per Family Member
 - no threads, no archive, no live chat
+- no family communication archive for the organiser to maintain
 - no family-to-dependent voice messages
 - no dependent-to-family voice messages
 - no care-home mobile/playback workflow
@@ -49,9 +54,9 @@ Use short, plain-language, outcome-led explanations. Do not show system diagrams
 
 Homepage public info copy (before feedback section):
 ## Familiar voices
-A structured, non-urgent family communication system around care.
+A structured, non-urgent family coordination system for when one person becomes the point of contact.
 
-familyupdates.care separates emergency communication from everyday communication.
+familyupdates.care helps the organiser keep everyone informed without becoming a live chat, message thread, or family communication archive.
 
 There are three roles for the family to fill:
 
@@ -59,11 +64,11 @@ There are three roles for the family to fill:
 2. Person available for urgent/emergency phone contact and emergency protocol.
 3. Care support.
 
-familyupdates.care is for non-urgent communication only.
+familyupdates.care is for non-urgent coordination only.
 
-The app provides one current update to family, one current specific organiser message, one current practical request, and noticeboard-style information. The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly. One current item replaces the last, with no threads and no pressure to reply instantly.
+The app provides one current update to family, one current specific organiser message, one current practical request, and noticeboard-style information. The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly. One current item replaces the last, with no threads, no archive, no direct replies to the general update, and no pressure to reply instantly.
 
-Families use the app for everyday communication. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser tells the family when and how frequently they will check messages.
+Families use the app when repeated updates, questions, and practical coordination have started to create communication overload for the organiser. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser tells the family when and how frequently they will check messages.
 
 Emergencies follow the agreed protocol, otherwise all messages are treated as non-urgent.
 
@@ -105,7 +110,7 @@ Family noticeboard notes are optional practical notes from Family Members, visib
 For urgent, medical, safeguarding, or other time-sensitive matters, families must use normal direct communication outside familyupdates.care.
 
 Service overview purpose statement:
-familyupdates.care is a simple family coordination system for Family Office, Family Hub, and Mobile Support. It helps a Family Organiser keep one current family update, specific organiser messages, practical requests, and noticeboard notes current without creating live chat or long threads.
+familyupdates.care is a simple family coordination system for Family Office, Family Hub, and Mobile Support. It helps a Family Organiser keep one current family update, specific organiser messages, practical requests, and noticeboard notes current without creating live chat, long threads, or a permanent communication archive.
 
 Family Office updates are one-way informational messages.
 
@@ -141,7 +146,9 @@ Essential platform data only:
 
 ## How familyupdates.care Works
 
-familyupdates.care helps structure communication when a family member needs support.
+familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
+
+It is for moments when a person becomes temporarily or permanently unable to manage part of their own life, for example elderly parent support, dementia, serious illness, recovery after surgery, stroke, accident or injury, temporary incapacity, long-term disability, mental health crisis, or another situation where family and friends need to coordinate around one person.
 
 There are three roles for the family to fill:
 
@@ -153,9 +160,9 @@ familyupdates.care is for non-urgent communication only.
 
 familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
 
-Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser tells the family when and how frequently they will check messages.
+Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser gets the app, introduces it to Family Members, and tells the family when and how frequently they will check messages.
 
-familyupdates.care does not remove the need for care, support, or professional help. But where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded.
+familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded.
 
 Emergency and everyday communication:
 Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact.
@@ -176,7 +183,7 @@ What the app does:
 Each person's new message replaces their own previous message in that channel. One sender does not overwrite another sender's message. There are no threads, no archive, and no live chat.
 
 Family Organiser role boundary:
-The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current.
+The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current. The general update is not a discussion thread and does not take direct replies.
 
 familyupdates.care is a simple Family system. It has the core tools needed for essential support management: updates, specific organiser messages, practical requests, noticeboard-style information, and Mobile Support.
 
@@ -184,7 +191,7 @@ familyupdates.care is a simple Family system. It has the core tools needed for e
 
 There are two settings: at home, and care home.
 
-* **At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
+* **At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary because support, questions, updates, or practical arrangements now need one clear point of coordination. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
 * **Care home with Family Organiser + Mobile Support** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
 
 ### Notes
@@ -299,7 +306,9 @@ When the at-home situation is active, avoid visible "Care organisation", "Care H
 Prefer "shared update", "shared request", "shared coordination", and "[Surname] Family Office" wording over care-home Office wording where the user is doing routine at-home coordination.
 
 At-home How it works copy:
-familyupdates.care helps structure communication when a family member needs support.
+familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
+
+It is used when ordinary direct family communication is no longer enough because repeated updates, questions, or practical coordination are creating communication overload for one organiser.
 
 There are three roles for the family to fill:
 
@@ -307,11 +316,11 @@ There are three roles for the family to fill:
 2. Person available for urgent/emergency phone contact and emergency protocol.
 3. Care support.
 
-familyupdates.care is for non-urgent communication only.
+familyupdates.care is for non-urgent coordination only.
 
 The external filing system should be organised first, before starting updates. familyupdates.care does not store those files.
 
-Once the external filing system is in place, users can start with one calm voice update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.
+Once the external filing system is in place, users can start with one calm current update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.
 
 Add only the communication tools that are useful: family updates, specific organiser messages, practical requests, noticeboard notes, structured replies, and Mobile Support where a practical support role is involved. One message replaces the last message in that channel.
 

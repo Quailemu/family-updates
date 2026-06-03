@@ -6,9 +6,11 @@ Communication participants: the person being supported, Family Members, the Fami
 
 ## What is familyupdates.care for?
 
-Non-urgent family communication around care: one current update, one current specific organiser message, one current practical request with structured replies, and one current noticeboard note per Family Member.
+Non-urgent family coordination when one person has become the main point of contact: one current update, one current specific organiser message, one current practical request with structured replies, and one current noticeboard note per Family Member.
 
-The app is for when ordinary direct family communication is no longer enough. If a person or couple is managing independently, they may not need familyupdates.care.
+The app is for when ordinary direct family communication is no longer enough because repeated updates, questions, and practical coordination have started to overload one organiser. If a person or couple is managing independently, they may not need familyupdates.care.
+
+Examples include elderly parent support, dementia, serious illness, recovery after surgery, stroke, accident or injury, temporary incapacity, long-term disability, mental health crisis, or another situation where family and friends need to coordinate around one person.
 
 ## Is this a live chat?
 
@@ -18,7 +20,7 @@ No. It is not live messaging.
 
 Three active family interfaces: Family Office, Family Hub, and Mobile.
 
-Family Office is for the Family Organiser. Family Hub is for wider Family Members. Mobile is a reduced-tool interface for a carer, helper, supported person, or trusted family member.
+Family Office is for the Family Organiser, who usually gets the app and introduces it to Family Members. Family Hub is for wider Family Members. Mobile is a reduced-tool interface for a carer, helper, supported person, or trusted family member.
 
 The separation matters: familyupdates.care should reduce pressure on the Family Organiser, not turn them into the default carer.
 
@@ -40,7 +42,7 @@ Family can reply to an Office practical message using a structured response form
 
 ## Is an Office practical message a chat thread?
 
-No. It is a structured reply to one Office message, not open chat.
+No. It is a structured reply to one Office message, not open chat, and it does not create a discussion archive for the organiser to maintain.
 
 ## Why do old messages disappear?
 

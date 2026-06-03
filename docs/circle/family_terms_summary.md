@@ -2,9 +2,10 @@
 
 This is a plain-English summary for at-home setups.
 
-- The service is for non-urgent social voice messages.
+- The service is for non-urgent family coordination.
 - It is not a live service and is not monitored in real time.
 - Only the latest message is kept per direction/channel.
+- There is no thread or communication archive.
 - Access and participation are managed by the person or Family Organiser.
 - For urgent, medical, or safeguarding concerns, use your direct contact routes.
 
