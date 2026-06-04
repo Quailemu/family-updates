@@ -8263,7 +8263,11 @@ def render_header_menu(menu_key: str) -> None:
                 "At-home responsibilities" if at_home_lifecycle_stage else "Care home responsibilities"
             )
             if st.button(responsibilities_label, key=f"{menu_key}_office_doc_responsibilities"):
-                clicked_action = ("doc", "docs/office/04_care_home_responsibilities.md")
+                clicked_action = (
+                    ("doc", "docs/office/04_at_home_responsibilities.md")
+                    if at_home_lifecycle_stage
+                    else ("doc", "docs/office/04_care_home_responsibilities.md")
+                )
             if st.button("Safeguarding & consent", key=f"{menu_key}_office_doc_safeguarding"):
                 clicked_action = ("doc", "docs/office/09_safeguarding_consent.md")
             if st.button("Privacy notice", key=f"{menu_key}_office_privacy"):
@@ -12182,7 +12186,7 @@ def render_docs() -> None:
             },
             {
                 "title": "At-home responsibilities",
-                "path": "docs/office/04_care_home_responsibilities.md",
+                "path": "docs/office/04_at_home_responsibilities.md",
                 "summary": "Responsibilities and boundaries for at-home use.",
             },
             {
