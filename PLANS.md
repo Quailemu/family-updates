@@ -70,7 +70,7 @@ The app provides one current update to family, one current specific organiser me
 
 Families use the app when repeated updates, questions, and practical coordination have started to create communication overload for the organiser. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser may choose to tell the family when and how frequently they will check messages.
 
-Emergencies follow the agreed protocol, otherwise all messages are treated as non-urgent.
+Emergencies follow the family's agreed emergency protocol, usually phoning a named person on their mobile. The exact protocol and how those contact details are shared are decided by the family outside the app. Otherwise, all messages are treated as non-urgent.
 
 ## A simple way to explore the idea
 familyupdates.care can be introduced through a simple one-to-one walkthrough.
@@ -165,9 +165,9 @@ Families use the app for non-urgent support management: structured requests, upd
 familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded.
 
 Emergency and everyday communication:
-Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact.
+Emergencies: follow the family's agreed emergency protocol. This usually means phoning a named person on their mobile.
 
-Emergencies follow the agreed protocol, otherwise all messages are treated as non-urgent.
+The exact protocol and how those contact details are shared are decided by the family outside the app. Otherwise, all messages are treated as non-urgent.
 
 Families use the app for everyday communication. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly.
 

@@ -22,7 +22,7 @@ familyupdates.care is for non-urgent communication only.
 
 familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
 
-Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact.
+Emergencies: follow the family's agreed emergency protocol. This usually means phoning a named person on their mobile.
 
 The Family Organiser usually gets the app, introduces it to Family Members, and has full access to the family tools. Family Members and Mobile Support can use their own enabled channels directly.
 
@@ -79,4 +79,4 @@ Use noticeboard notes for simple practical updates, such as visits or items to b
 ## Boundaries
 
 Do not use this service for urgent, medical, safeguarding, or emergency communication.
-For those matters, follow the agreed emergency protocol and direct contact route.
+For those matters, follow the family's agreed emergency protocol and direct contact route. The exact protocol and how those contact details are shared are decided by the family outside the app.

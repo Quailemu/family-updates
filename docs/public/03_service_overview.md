@@ -64,7 +64,7 @@ Each Family Member can keep one current noticeboard note visible to linked Famil
 
 This service is for social and practical non-urgent communication only.
 
-Emergencies: follow the agreed emergency protocol, then phone the agreed emergency contact.
+Emergencies: follow the family's agreed emergency protocol. This usually means phoning a named person on their mobile.
 
 It is not for:
 
@@ -73,4 +73,4 @@ It is not for:
 - safeguarding communication
 - urgent or emergency enquiries
 
-For those matters, follow the agreed emergency protocol, then phone the agreed emergency contact.
+For those matters, follow the family's agreed emergency protocol, usually by phoning a named person on their mobile. The exact protocol and how those contact details are shared are decided by the family outside the app.

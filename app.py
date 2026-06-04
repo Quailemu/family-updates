@@ -9343,7 +9343,8 @@ familyupdates.care is for non-urgent communication only.
             "The Family Organiser may choose to tell the family when and how frequently they will check messages."
         )
         st.markdown(
-            "Emergencies follow the agreed protocol, otherwise all messages are treated as non-urgent."
+            "Emergencies follow the family's agreed emergency protocol, usually phoning a named person on their mobile. "
+            "The exact protocol and how those contact details are shared are decided by the family outside the app. Otherwise, all messages are treated as non-urgent."
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -10782,7 +10783,7 @@ def render_family_login_hub() -> None:
         "For security, Family sessions sign out after 30 minutes of inactivity.",
         "If you are signed out, request a new secure email link.",
         "Use Family Hub for current updates, practical requests, structured replies, and noticeboard notes.",
-        "familyupdates.care is for non-urgent communication only. Families still need a separate urgent/emergency phone contact and emergency protocol.",
+        "familyupdates.care is for non-urgent communication only. Families still need a separate urgent/emergency protocol, usually phoning a named person on their mobile. The exact protocol and how those contact details are shared are decided by the family outside the app.",
     ]
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
 
