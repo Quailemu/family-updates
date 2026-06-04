@@ -109,6 +109,17 @@ Family noticeboard notes are optional practical notes from Family Members, visib
 
 For urgent, medical, safeguarding, or other time-sensitive matters, families must use normal direct communication outside familyupdates.care.
 
+Family Member involvement principle:
+You're Welcome. Your Involvement Is Valued.
+
+Practical support is always welcome.
+
+Being there is often the most valuable contribution a family member can make.
+
+Updates provide information. First-hand experience provides understanding.
+
+Spending time with the person needing support and the people around them often reveals practical ways to help. Being there helps family members support the organiser by staying engaged and taking practical responsibility.
+
 Service overview purpose statement:
 familyupdates.care is a simple family coordination system for situations where one person has become the family point of contact. It helps a Family Organiser keep one current family update, specific organiser messages, practical requests, and noticeboard notes current without creating live chat, long threads, or a permanent communication archive.
 

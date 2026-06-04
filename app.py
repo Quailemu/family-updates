@@ -12742,7 +12742,7 @@ def render_public_page(page_title: str, heading: str) -> None:
 
 
 def render_familyupdates_infographic_image() -> None:
-    image_path = Path(__file__).resolve().parent / "assets" / "infographic-v6.png"
+    image_path = Path(__file__).resolve().parent / "assets" / "infographic-v7.png"
     if not image_path.exists():
         return
     try:
