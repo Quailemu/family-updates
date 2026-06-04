@@ -10781,11 +10781,10 @@ def render_family_login_hub() -> None:
         unsafe_allow_html=True,
     )
     login_info_boxes = [
-        "Not a live service. Urgent and private matters stay outside the app.",
         "For security, Family sessions sign out after 30 minutes of inactivity.",
         "If you are signed out, request a new secure email link.",
         "Use Family Hub for current updates, practical requests, structured replies, and noticeboard notes.",
-        "familyupdates.care is for non-urgent communication only. Families still need a separate urgent/emergency protocol, usually phoning a named person on their mobile. The exact protocol and how those contact details are shared are decided by the family outside the app.",
+        "Not a live service. familyupdates.care is for non-urgent communication only. Urgent and private matters stay outside the app. Families still need a separate urgent/emergency protocol, usually phoning a named person on their mobile. The exact protocol and how those contact details are shared are decided by the family outside the app.",
     ]
     st.markdown('<div class="vm-login">', unsafe_allow_html=True)
 
