@@ -17,7 +17,7 @@ Current active situations:
 
 There is no active "managing independently" app situation. familyupdates.care is for situations where communication structure is needed to help the Family Organiser provide essential support to a family member or friend.
 
-The Family Organiser role is a coordination and practical support role, not a promise to be constantly available or to absorb all caring work alone. Where another person is also providing practical support, the system can make that additional support role visible through Mobile Support. Mobile Support may be used by a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper. If a family member uses Mobile, they are acting in a distinct support role, not simply as a Family Member.
+The Family Organiser is usually in a hands-on role, as well as handling family communication and the admin of another person's life. This is not a promise to be constantly available or to absorb all caring work alone. Where another person is also providing practical support, the system can make that additional support role visible through Mobile Support. Mobile Support may be used by a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper. If a family member uses Mobile, they are acting in a distinct support role, not simply as a Family Member.
 
 In the care-home situation, familyupdates.care remains family-side. The care home handles direct care, safeguarding, and operational communication. The family still coordinates visits, outside appointments, belongings, questions, birthdays, Christmas, Easter, other occasions, outings, meeting friends, social contact, and family updates.
 
@@ -193,7 +193,7 @@ familyupdates.care is for situations where family coordination is needed. It has
 
 There are two settings: at home, and care home.
 
-* **At home** - The person is at home and a Family Organiser is using the app to help provide essential support and keep family communication structured. The organiser may also be doing practical support themselves. If another person is also providing practical support, paid or unpaid, Mobile Support can be used by that person to share quick updates or practical requests.
+* **At home** - The person is at home and a Family Organiser is using the app to help provide essential support, family communication, and life-admin structure. The organiser is usually hands-on too. If another person is also providing practical support, paid or unpaid, Mobile Support can be used by that person to share quick updates or practical requests.
 * **Care home** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed. If another person is also providing family-side practical support, paid or unpaid, Mobile Support can be used by that person.
 
 ### Notes
@@ -226,7 +226,7 @@ The user should choose the situation, not a separate organisation mode. Preparat
 
 Both situations use the same Family system principles: one current message, no threads, no live chat, and practical structured replies where helpful. Family Office coordinates the family-side work. Mobile Support is the distinct practical support role and may be used by a paid carer, professional support worker, spouse, family member, neighbour, or trusted helper.
 
-- At home: this is for when the person is at home and communication structure is needed to help the Family Organiser provide essential support. The organiser may also be doing practical support themselves. If another person is also providing practical support, paid or unpaid, Mobile Support can be used by that person.
+- At home: this is for when the person is at home and communication structure is needed to help the Family Organiser provide essential support, family communication, and life-admin structure. The organiser is usually hands-on too. If another person is also providing practical support, paid or unpaid, Mobile Support can be used by that person.
 - Care home: this is for when the person is living in a care home, but family organisation continues. The care home handles care operations, safeguarding, and direct care communication. familyupdates.care handles family-side non-urgent focussed communications where needed. If another person is also providing family-side practical support, paid or unpaid, Mobile Support can be used by that person.
 
 Care-home separation rule:

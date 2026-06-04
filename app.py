@@ -5261,9 +5261,9 @@ def get_lifecycle_stage_label(stage_value: object) -> str:
 def get_lifecycle_stage_setup_note(stage_value: object) -> str:
     stage = normalize_lifecycle_stage(stage_value)
     notes = {
-        1: "At home: the person is at home and communication structure is needed to help the Family Organiser provide essential support. Mobile Support can be added if another person also provides practical support.",
-        2: "At home: the person is at home and communication structure is needed to help the Family Organiser provide essential support. Mobile Support can be added if another person also provides practical support.",
-        3: "At home: the person is at home and communication structure is needed to help the Family Organiser provide essential support. Mobile Support can be added if another person also provides practical support.",
+        1: "At home: communication structure is needed to help the Family Organiser provide essential support, family communication, and life-admin structure. Mobile Support can be added if another person also provides practical support.",
+        2: "At home: communication structure is needed to help the Family Organiser provide essential support, family communication, and life-admin structure. Mobile Support can be added if another person also provides practical support.",
+        3: "At home: communication structure is needed to help the Family Organiser provide essential support, family communication, and life-admin structure. Mobile Support can be added if another person also provides practical support.",
         4: "Care home: the person is living in a care home, but family organisation continues. The care home handles care operations; familyupdates.care handles family-side non-urgent focussed communications where needed. Mobile Support can be added if another person also provides family-side practical support.",
     }
     return notes.get(stage, "")
@@ -5346,7 +5346,7 @@ familyupdates.care is for situations where communication structure is needed to 
 
 There are two settings: at home, and care home.
 
-**At home** - The person is at home and a Family Organiser is using the app to help provide essential support and keep family communication structured. The organiser may also be doing practical support themselves. If another person is also providing practical support, paid or unpaid, Mobile Support can be used by that person to share quick updates or practical requests.
+**At home** - The person is at home and a Family Organiser is using the app to help provide essential support, family communication, and life-admin structure. The organiser is usually hands-on too. If another person is also providing practical support, paid or unpaid, Mobile Support can be used by that person to share quick updates or practical requests.
 
 **Care home** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed. If another person is also providing family-side practical support, paid or unpaid, Mobile Support can be used by that person.
 
