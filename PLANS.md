@@ -173,6 +173,8 @@ Families use the app for everyday communication. Carers may use the app directly
 
 All messages shown in the app are current messages.
 
+Where someone else is helping with practical support, Mobile Support gives that person a simpler way to share quick updates or practical requests.
+
 What the app does:
 - One current update from the Family Organiser to the family group.
 - One current specific message each way between the Family Organiser and each Family Member.

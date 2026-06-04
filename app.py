@@ -5326,6 +5326,8 @@ Families use the app for non-urgent support management: structured requests, upd
 
 familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded.
 
+Where someone else is helping with practical support, Mobile Support gives that person a simpler way to share quick updates or practical requests.
+
 #### What the app does
 
 - One current update from the Family Organiser to the family group.
