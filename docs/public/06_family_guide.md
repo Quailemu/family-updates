@@ -32,16 +32,6 @@ It supports:
 - submitting structured replies to a practical request
 - adding one current family noticeboard note where practical coordination is enabled
 
-## You're Welcome. Your Involvement Is Valued.
-
-Practical support is always welcome.
-
-Being there is often the most valuable contribution a family member can make.
-
-Updates provide information. First-hand experience provides understanding.
-
-Spending time with the person needing support and the people around them often reveals practical ways to help. Being there helps family members support the organiser by staying engaged and taking practical responsibility.
-
 ## Communication boundaries
 
 - One current update from the organiser to the family group.
