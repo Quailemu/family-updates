@@ -12,6 +12,7 @@ import re
 import html
 import io
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
 import urllib.request
 from urllib.parse import parse_qsl, quote, urlencode, urlparse, urlunparse, unquote
 
@@ -9742,6 +9743,8 @@ def _route_from_request_path(raw_path: str) -> str:
         return MOBILE_LOGIN_ROUTE
     if path_lower.startswith("/office") or path_lower.startswith("/care-hub"):
         return OFFICE_LOGIN_ROUTE
+    if path_lower.startswith("/public/try-one-message"):
+        return "/public/try-one-message"
     first = path_lower.lstrip("/").split("/", 1)[0].strip()
     mapped = _map_legacy_streamlit_page_to_route(first)
     if mapped:
@@ -9761,6 +9764,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
     route_titles: dict[str, str] = {
         "/pr-home": "familyupdates.care - Essential family coordination, separate from chat",
         "/public/how-it-works": "How familyupdates.care works",
+        ONE_MESSAGE_TEST_ROUTE: "Try the one-message concept | familyupdates.care",
         "/family/login": "Family Hub | familyupdates.care",
         "/care-hub/mobile/login": "Mobile | familyupdates.care",
         "/care-hub/login": "Family Office | familyupdates.care",
@@ -9775,6 +9779,7 @@ def _build_seo_metadata(route: str) -> dict[str, str]:
     route_descriptions: dict[str, str] = {
         "/pr-home": "familyupdates.care helps a Family Organiser coordinate non-urgent family support without chat pressure, threads, or archives.",
         "/public/how-it-works": "How familyupdates.care works across situations, roles, updates, practical requests, and noticeboard notes.",
+        ONE_MESSAGE_TEST_ROUTE: "A temporary two-person tester for experiencing one current message each way, with no thread or history.",
         "/family/login": "Family Hub access for current organiser updates, practical requests, and noticeboard notes.",
         "/care-hub/mobile/login": "Mobile access for a carer, helper, supported person, or trusted family member using reduced tools.",
         "/care-hub/login": "Family Office access for the organiser to keep one current update, family registration, practical requests, and noticeboard oversight.",
@@ -10022,6 +10027,8 @@ MOBILE_LOGIN_ROUTE = "/care-hub/mobile/login"
 MOBILE_HOME_ROUTE = "/care-hub/mobile/inbox"
 PUBLIC_HOME_ROUTE = "/pr-home"
 LIFE_FILE_GUIDE_ROUTE = "/life-file-guide"
+ONE_MESSAGE_TEST_ROUTE = "/public/try-one-message"
+ONE_MESSAGE_TEST_TTL_HOURS = 24
 REMOVED_VIDEO_ROUTES = {
     "/public/help-videos",
     "/public/walkthrough-family",
@@ -10041,6 +10048,7 @@ OFFICE_PUBLIC_ROUTES = {
     "/how-it-works/office",
     "/public/service-overview",
     "/public/how-it-works",
+    ONE_MESSAGE_TEST_ROUTE,
     "/public/resident-participation",
     "/public/family-guide",
     "/public/qa",
@@ -10059,6 +10067,7 @@ MOBILE_PUBLIC_ROUTES = {
     "/how-it-works/mobile",
     "/public/service-overview",
     "/public/how-it-works",
+    ONE_MESSAGE_TEST_ROUTE,
     "/public/resident-participation",
     "/public/family-guide",
     "/public/qa",
@@ -10088,6 +10097,7 @@ VARIANT_CONFIG = {
             "/public-docs",
             "/public/service-overview",
             "/public/how-it-works",
+            ONE_MESSAGE_TEST_ROUTE,
             "/public/infographic",
             "/public/resident-participation",
             "/public/family-guide",
@@ -10119,6 +10129,7 @@ VARIANT_CONFIG = {
             "/public-docs",
             "/public/service-overview",
             "/public/how-it-works",
+            ONE_MESSAGE_TEST_ROUTE,
             "/public/infographic",
             "/public/resident-participation",
             "/public/family-guide",
@@ -10156,6 +10167,7 @@ VARIANT_CONFIG = {
             "/public-docs",
             "/public/service-overview",
             "/public/how-it-works",
+            ONE_MESSAGE_TEST_ROUTE,
             "/public/infographic",
             "/public/resident-participation",
             "/public/family-guide",
@@ -10180,6 +10192,7 @@ VARIANT_CONFIG = {
             "/public-docs",
             "/public/service-overview",
             "/public/how-it-works",
+            ONE_MESSAGE_TEST_ROUTE,
             "/public/infographic",
             "/public/resident-participation",
             "/public/family-guide",
@@ -12549,13 +12562,232 @@ def render_one_message_tester(prefix: str, state_key: str) -> None:
         st.rerun()
 
 
+def get_one_message_test_query_value(name: str) -> str:
+    if not hasattr(st, "query_params"):
+        return ""
+    try:
+        value = st.query_params.get(name, "")
+    except Exception:
+        return ""
+    if isinstance(value, list):
+        value = value[0] if value else ""
+    return str(value or "").strip()
+
+
+def get_current_app_base_url() -> str:
+    try:
+        context = getattr(st, "context", None)
+        current_url = str(getattr(context, "url", "") or "").strip() if context is not None else ""
+        parsed = urlparse(current_url) if current_url else None
+        if parsed and parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}"
+    except Exception:
+        pass
+    return f"https://{CANONICAL_PUBLIC_HOST}"
+
+
+def build_one_message_test_url(test_id: str, participant_key: str) -> str:
+    params = {
+        "route": ONE_MESSAGE_TEST_ROUTE,
+        "test": str(test_id or "").strip(),
+        "join": str(participant_key or "").strip(),
+    }
+    return f"{get_current_app_base_url()}/?{urlencode(params)}"
+
+
+def set_one_message_test_route(test_id: str, participant_key: str) -> None:
+    if hasattr(st, "query_params"):
+        st.query_params["route"] = ONE_MESSAGE_TEST_ROUTE
+        st.query_params["test"] = str(test_id or "").strip()
+        st.query_params["join"] = str(participant_key or "").strip()
+    st.session_state.route = ONE_MESSAGE_TEST_ROUTE
+    st.rerun()
+
+
+def create_one_message_public_test() -> tuple[dict[str, object] | None, str | None]:
+    supabase, error = get_supabase_client()
+    if error or supabase is None:
+        return None, error or "Supabase is not available."
+    now = datetime.now(timezone.utc)
+    payload = {
+        "test_id": secrets.token_urlsafe(12),
+        "a_key": secrets.token_urlsafe(24),
+        "b_key": secrets.token_urlsafe(24),
+        "a_message": "",
+        "b_message": "",
+        "expires_at": (now + timedelta(hours=ONE_MESSAGE_TEST_TTL_HOURS)).isoformat(),
+    }
+    try:
+        response = supabase.table("one_message_public_tests").insert(payload).execute()
+        row = response.data[0] if isinstance(response.data, list) and response.data else payload
+        return row, None
+    except Exception as exc:
+        return None, str(exc)
+
+
+def fetch_one_message_public_test(test_id: str) -> tuple[dict[str, object] | None, str | None]:
+    supabase, error = get_supabase_client()
+    if error or supabase is None:
+        return None, error or "Supabase is not available."
+    try:
+        response = (
+            supabase.table("one_message_public_tests")
+            .select("test_id,a_key,b_key,a_message,b_message,expires_at")
+            .eq("test_id", str(test_id or "").strip())
+            .limit(1)
+            .execute()
+        )
+        row = response.data[0] if isinstance(response.data, list) and response.data else None
+        return row, None
+    except Exception as exc:
+        return None, str(exc)
+
+
+def update_one_message_public_test(
+    test_id: str,
+    participant_key: str,
+    next_message: str,
+) -> tuple[bool, str | None]:
+    row, error = fetch_one_message_public_test(test_id)
+    if error:
+        return False, error
+    if not row:
+        return False, "This temporary test is no longer available."
+    participant_key = str(participant_key or "").strip()
+    column = ""
+    if hmac.compare_digest(participant_key, str(row.get("a_key") or "")):
+        column = "a_message"
+    elif hmac.compare_digest(participant_key, str(row.get("b_key") or "")):
+        column = "b_message"
+    if not column:
+        return False, "This test link is not valid."
+    supabase, client_error = get_supabase_client()
+    if client_error or supabase is None:
+        return False, client_error or "Supabase is not available."
+    try:
+        query = (
+            supabase.table("one_message_public_tests")
+            .update(
+                {
+                    column: str(next_message or "").strip(),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
+            .eq("test_id", str(test_id or "").strip())
+        )
+        query = query.eq("a_key" if column == "a_message" else "b_key", participant_key)
+        query.execute()
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+
+
+def render_live_one_message_test() -> None:
+    render_page_header("Try the one-message concept", show_menu=False, show_variant_subheading=False)
+    render_route_link(
+        "Back to familyupdates.care",
+        PUBLIC_HOME_ROUTE,
+        key="one_message_test_back_top",
+    )
+    st.markdown("Each new message replaces your previous message.")
+    st.caption("There is no message history. Only the current message is visible.")
+    st.warning(
+        "Temporary public test only. Do not enter urgent, private, medical, legal, financial, "
+        "safeguarding, or sensitive information."
+    )
+
+    test_id = get_one_message_test_query_value("test")
+    participant_key = get_one_message_test_query_value("join")
+    if not test_id or not participant_key:
+        st.markdown("Create a temporary test, then share the link with one other person.")
+        if st.button("Create temporary test", key="one_message_create", use_container_width=True):
+            row, error = create_one_message_public_test()
+            if error or not row:
+                st.error("The live tester is not available yet.")
+                if APP_DEBUG and error:
+                    st.caption(error)
+                st.caption("The local browser-only tester is shown below as a fallback.")
+                render_one_message_tester("public_one_message_fallback", "public_one_message_fallback_state")
+                return
+            set_one_message_test_route(str(row.get("test_id") or ""), str(row.get("a_key") or ""))
+        st.caption("No sign-up is needed. The test expires automatically.")
+        return
+
+    row, error = fetch_one_message_public_test(test_id)
+    if error:
+        st.error("The live tester is not available yet.")
+        if APP_DEBUG:
+            st.caption(error)
+        st.caption("The local browser-only tester is shown below as a fallback.")
+        render_one_message_tester("public_one_message_fallback", "public_one_message_fallback_state")
+        return
+    if not row:
+        st.error("This temporary test is no longer available.")
+        if st.button("Create a new test", key="one_message_create_after_missing", use_container_width=True):
+            new_row, create_error = create_one_message_public_test()
+            if create_error or not new_row:
+                st.error("The live tester is not available yet.")
+                return
+            set_one_message_test_route(str(new_row.get("test_id") or ""), str(new_row.get("a_key") or ""))
+        return
+
+    participant = ""
+    if hmac.compare_digest(participant_key, str(row.get("a_key") or "")):
+        participant = "a"
+    elif hmac.compare_digest(participant_key, str(row.get("b_key") or "")):
+        participant = "b"
+    if not participant:
+        st.error("This test link is not valid.")
+        return
+
+    if st_autorefresh is not None:
+        st_autorefresh(interval=7000, key=f"one_message_refresh_{test_id}_{participant}")
+
+    other_label = "Person B" if participant == "a" else "Person A"
+    own_column = "a_message" if participant == "a" else "b_message"
+    other_column = "b_message" if participant == "a" else "a_message"
+    share_key = str(row.get("b_key") or "") if participant == "a" else str(row.get("a_key") or "")
+
+    if participant == "a":
+        st.markdown("Share this link with the second person:")
+        st.code(build_one_message_test_url(str(row.get("test_id") or ""), share_key), language=None)
+    else:
+        st.caption("You have joined the temporary test.")
+
+    st.markdown(f"**Current from {other_label}**")
+    st.info(str(row.get(other_column) or "No current message."))
+    st.markdown("**Your current message**")
+    st.info(str(row.get(own_column) or "No current message."))
+
+    with st.form(f"one_message_form_{test_id}_{participant}", clear_on_submit=True):
+        next_message = st.text_area(
+            "Replace your current message",
+            max_chars=220,
+            key=f"one_message_text_{test_id}_{participant}",
+        )
+        submitted = st.form_submit_button("Send / replace current message", use_container_width=True)
+    if submitted:
+        clean_message = str(next_message or "").strip()
+        if not clean_message:
+            st.warning("Write a short message first.")
+            return
+        ok, update_error = update_one_message_public_test(test_id, participant_key, clean_message)
+        if not ok:
+            st.error(update_error or "Could not update the message.")
+            return
+        st.rerun()
+
+    if st.button("Refresh current messages", key=f"one_message_manual_refresh_{test_id}_{participant}", use_container_width=True):
+        st.rerun()
+    st.caption("Only the latest message from each person remains visible. A new message replaces the previous one.")
+
+
 def render_how_it_works_tester_button(prefix: str) -> None:
-    st.markdown("## Try one-message communication")
-    open_key = f"{prefix}_open"
-    if st.button("Open one-message tester", key=f"{prefix}_button", use_container_width=True):
-        st.session_state[open_key] = not bool(st.session_state.get(open_key, False))
-    if st.session_state.get(open_key, False):
-        render_one_message_tester(prefix, f"{prefix}_state")
+    st.markdown("## Try the one-message concept")
+    st.caption("Use two phones to feel how one current message each way works without a thread or history.")
+    if st.button("Open temporary two-person test", key=f"{prefix}_button", use_container_width=True):
+        set_route(ONE_MESSAGE_TEST_ROUTE)
+        st.stop()
 
 
 def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -> None:
@@ -12820,6 +13052,9 @@ def render_pr_homepage() -> None:
     st.markdown("</div>", unsafe_allow_html=True)
     if st.button("How it works", key="pr_entry_how_it_works", use_container_width=True):
         set_route("/public/how-it-works")
+        st.stop()
+    if st.button("Try the one-message concept", key="pr_entry_one_message_test", use_container_width=True):
+        set_route(ONE_MESSAGE_TEST_ROUTE)
         st.stop()
 
     action_cols = st.columns(3, gap="small")
@@ -16911,6 +17146,8 @@ def main() -> None:
             pre_auth_route = MOBILE_LOGIN_ROUTE
         elif request_path.startswith("/office") or request_path.startswith("/care-hub"):
             pre_auth_route = OFFICE_LOGIN_ROUTE
+        elif request_path.startswith("/public/try-one-message"):
+            pre_auth_route = ONE_MESSAGE_TEST_ROUTE
         elif request_path.startswith("/public"):
             pre_auth_route = "/pr-home"
     route_variant = _resolve_variant_from_route(pre_auth_route)
@@ -17284,6 +17521,8 @@ def main() -> None:
         set_route("/pr-home")
     elif route == "/public/how-it-works":
         render_public_document("docs/public/02_how_it_works.md", back_route="/pr-home")
+    elif route == ONE_MESSAGE_TEST_ROUTE:
+        render_live_one_message_test()
     elif route == "/public/infographic":
         render_public_infographic()
     elif route == "/public/resident-participation":

@@ -79,6 +79,13 @@ The session uses a simple example family update, practical request, and noticebo
 
 There is no obligation to adopt anything, simply an opportunity to see how this might help communication for you.
 
+Public one-message test:
+Try the one-message concept.
+
+Two people can create a temporary public test and use separate phones to experience one current message each way. Each new message replaces that person's previous message. There is no message history. Only the current message is visible.
+
+This is a simple demonstration only, not a family support workspace. It must not be used for urgent, private, medical, legal, financial, safeguarding, or sensitive information.
+
 Non-real-time reinforcement (homepage or family entry page, short):
 This is non-urgent and not live messaging. Messages are checked at agreed intervals.
 
@@ -911,4 +918,3 @@ Version 1.0
 6) Clear Role Boundaries â€” care home responsible for safeguarding, consent, content management, staff supervision, regulatory compliance; platform does not monitor/moderate.
 
 Core principle: presence without performance pressure.
-
