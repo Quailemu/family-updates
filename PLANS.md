@@ -123,11 +123,12 @@ The service is not intended for care updates, health information, safeguarding c
 Data boundary (hard):
 - The platform is for non-urgent communication and coordination only.
 - The platform does not store or manage sensitive records or document repositories.
+- The Family Organiser does not hold essential data or the emergency protocol inside familyupdates.care; those arrangements are managed separately by the family so the organiser can focus on present care, support, and communication.
 - Users must handle sensitive matters outside the platform using their own external arrangements.
 - The platform may provide minimal planning guidance only and does not provide legal, medical, financial, or safeguarding advice.
 
 Short in-app data boundary copy:
-Keep sensitive records outside the app. Use this only for simple communication and coordination.
+Keep emergency protocols and essential records outside the app, managed separately by the family. Use familyupdates.care for present care, support, and communication.
 
 Must not store in-platform:
 - Legal authority documents (including LPA/LPOA forms and extracts).

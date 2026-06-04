@@ -159,7 +159,7 @@ STRUCTURED_RESPONSE_VALUES_BY_LABEL = {
     label: value for value, label in STRUCTURED_RESPONSE_LABELS.items()
 }
 SENSITIVE_DATA_BOUNDARY_WARNING = (
-    "Keep sensitive records outside the app. Use this only for simple communication and coordination."
+    "Keep emergency protocols and essential records outside the app, managed separately by the family. Use familyupdates.care for present care, support, and communication."
 )
 LIFE_FILE_GUIDE_SECTIONS = (
     (
@@ -5359,6 +5359,8 @@ Family requests remain visible to all linked Family Members and may specify that
 Family Members may reply to requests using fixed structured choices, optional fixed tick-boxes, and an optional short context note. There are no private chats, threads, or back-and-forth conversations.
 
 For essential, urgent, sensitive, medical, safeguarding, privacy-related, legal, financial, time-critical, or emergency matters, use normal direct communication outside familyupdates.care, such as phone, text, WhatsApp, email, or existing care-home channels. Seek appropriate professional advice where needed.
+
+The Family Organiser does not hold essential data or the emergency protocol inside familyupdates.care. Those arrangements are managed separately by the family so the organiser can focus on present care, support, and communication.
 
 #### Starting simply
 
@@ -12737,7 +12739,7 @@ def render_public_page(page_title: str, heading: str) -> None:
 
 
 def render_familyupdates_infographic_image() -> None:
-    image_path = Path(__file__).resolve().parent / "assets" / "infographic-v5.png"
+    image_path = Path(__file__).resolve().parent / "assets" / "infographic-v6.png"
     if not image_path.exists():
         return
     try:

@@ -74,3 +74,5 @@ It is not for:
 - urgent or emergency enquiries
 
 For those matters, follow the family's agreed emergency protocol, usually by phoning a named person on their mobile. The exact protocol and how those contact details are shared are decided by the family outside the app.
+
+The Family Organiser does not hold essential data or the emergency protocol inside familyupdates.care. Those arrangements are managed separately by the family so the organiser can focus on present care, support, and communication.

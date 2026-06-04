@@ -1,6 +1,6 @@
 ﻿![logo](../../assets/logo.png)
 
-![familyupdates.care infographic](../../assets/infographic-v5.png)
+![familyupdates.care infographic](../../assets/infographic-v6.png)
 
 familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
 
@@ -58,7 +58,7 @@ Where enabled, Family Members may add one current family noticeboard note for si
 
 For essential, urgent, sensitive, medical, safeguarding, privacy-related, or time-critical matters, use normal direct communication outside familyupdates.care, such as phone, text, WhatsApp, email, or existing care/support routes.
 
-Keep sensitive records outside the app. Use familyupdates.care only for simple communication and coordination.
+The Family Organiser does not hold essential data or the emergency protocol inside familyupdates.care. Those arrangements are managed separately by the family so the organiser can focus on present care, support, and communication.
 
 ## Starting simply
 
