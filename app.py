@@ -5340,7 +5340,7 @@ Each person's new message replaces their own previous message in that channel. O
 
 The Family Organiser is not agreeing to be available all the time, solve everything, or act as everyone's private messenger. The Family Organiser is offering to keep a small number of family communication channels current. The general update is not a discussion thread and does not take direct replies.
 
-familyupdates.care is for situations where family coordination is needed because essential information is getting lost in chat.
+familyupdates.care is for situations where communication structure is needed to help the Family Organiser provide essential support to a family member or friend.
 
 #### Where the app may be used
 
