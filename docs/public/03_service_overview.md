@@ -32,7 +32,7 @@ The same family-side system can continue if the person later moves into a care h
 - Each channel keeps only the latest message.
 - A new message replaces the previous message in that channel.
 - No archive, no scrolling thread, no live chat, and no family communication archive for the organiser to maintain.
-The Family Organiser tells the family when and how frequently they will check messages. Messages inside the app are treated as non-urgent.
+The Family Organiser may choose to tell the family when and how frequently they will check messages. Messages inside the app are treated as non-urgent.
 
 ## Main flows
 

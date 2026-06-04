@@ -5322,7 +5322,7 @@ There are three roles for the family to fill:
 
 familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
 
-Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser gets the app, introduces it to Family Members, and tells the family when and how frequently they will check messages.
+Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser gets the app, introduces it to Family Members, and may choose to tell the family when and how frequently they will check messages.
 
 familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded.
 
@@ -9338,7 +9338,7 @@ familyupdates.care is for non-urgent communication only.
         )
         st.markdown(
             "Families use the app for everyday communication. Carers may use the app directly where enabled, or text the Family Organiser. "
-            "The Family Organiser tells the family when and how frequently they will check messages."
+            "The Family Organiser may choose to tell the family when and how frequently they will check messages."
         )
         st.markdown(
             "Emergencies follow the agreed protocol, otherwise all messages are treated as non-urgent."

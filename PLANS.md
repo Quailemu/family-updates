@@ -68,7 +68,7 @@ familyupdates.care is for non-urgent coordination only.
 
 The app provides one current update to family, one current specific organiser message, one current practical request, and noticeboard-style information. The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly. One current item replaces the last, with no threads, no archive, no direct replies to the general update, and no pressure to reply instantly.
 
-Families use the app when repeated updates, questions, and practical coordination have started to create communication overload for the organiser. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser tells the family when and how frequently they will check messages.
+Families use the app when repeated updates, questions, and practical coordination have started to create communication overload for the organiser. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser may choose to tell the family when and how frequently they will check messages.
 
 Emergencies follow the agreed protocol, otherwise all messages are treated as non-urgent.
 
@@ -160,7 +160,7 @@ familyupdates.care is for non-urgent communication only.
 
 familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
 
-Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser gets the app, introduces it to Family Members, and tells the family when and how frequently they will check messages.
+Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser gets the app, introduces it to Family Members, and may choose to tell the family when and how frequently they will check messages.
 
 familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded.
 
