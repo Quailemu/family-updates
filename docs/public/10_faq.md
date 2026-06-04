@@ -28,9 +28,9 @@ The separation matters: familyupdates.care should reduce pressure on the Family 
 
 There are two active family situations.
 
-At home with Family Organiser + Mobile Support.
+At home.
 
-Care home with Family Organiser + Mobile Support. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
+Care home. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
 
 ## What is an Office general update?
 

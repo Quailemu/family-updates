@@ -38,9 +38,9 @@ familyupdates.care is for situations where communication structure is needed to 
 
 There are two settings: at home, and care home.
 
-**At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary because support, questions, updates, or practical arrangements now need one clear point of coordination. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
+**At home** - The person is at home and a Family Organiser is using the app to help provide essential support and keep family communication structured. The organiser may also be doing practical support themselves. If another person is also providing practical support, paid or unpaid, Mobile Support can be used by that person to share quick updates or practical requests.
 
-**Care home with Family Organiser + Mobile Support** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
+**Care home** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed. If another person is also providing family-side practical support, paid or unpaid, Mobile Support can be used by that person.
 
 ## Family Organiser
 

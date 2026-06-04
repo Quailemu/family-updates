@@ -8,12 +8,12 @@ The active family interfaces are:
 
 - Family Office: used by the Family Organiser.
 - Family Hub: used by wider Family Members.
-- Mobile: used by the person providing practical support, paid or unpaid.
+- Mobile: used where an additional person is providing practical support through the app, paid or unpaid.
 
 The active situations are:
 
-- At home with Family Organiser + Mobile Support.
-- Care home with Family Organiser + Mobile Support.
+- At home.
+- Care home.
 
 In the care-home situation, familyupdates.care remains family-side. It does not replace the care home's direct care, safeguarding, records, operational communication, complaints process, or urgent contact routes.
 

@@ -5250,21 +5250,21 @@ def get_workspace_labels_for_lifecycle_stage(
 def get_lifecycle_stage_label(stage_value: object) -> str:
     stage = normalize_lifecycle_stage(stage_value)
     labels = {
-        1: "At home with Family Organiser + Mobile Support",
-        2: "At home with Family Organiser + Mobile Support",
-        3: "At home with Family Organiser + Mobile Support",
-        4: "Care home with Family Organiser + Mobile Support",
+        1: "At home",
+        2: "At home",
+        3: "At home",
+        4: "Care home",
     }
-    return labels.get(stage, "At home with Family Organiser + Mobile Support")
+    return labels.get(stage, "At home")
 
 
 def get_lifecycle_stage_setup_note(stage_value: object) -> str:
     stage = normalize_lifecycle_stage(stage_value)
     notes = {
-        1: "At home: the person is at home and family coordination has become necessary. The Family Organiser coordinates communication; Mobile Support is used by the practical support role.",
-        2: "At home: the person is at home and family coordination has become necessary. The Family Organiser coordinates communication; Mobile Support is used by the practical support role.",
-        3: "At home: the person is at home and family coordination has become necessary. The Family Organiser coordinates communication; Mobile Support is used by the practical support role.",
-        4: "Care home: the person is living in a care home, but family organisation continues. The care home handles care operations; familyupdates.care handles family-side non-urgent focussed communications where needed.",
+        1: "At home: the person is at home and communication structure is needed to help the Family Organiser provide essential support. Mobile Support can be added if another person also provides practical support.",
+        2: "At home: the person is at home and communication structure is needed to help the Family Organiser provide essential support. Mobile Support can be added if another person also provides practical support.",
+        3: "At home: the person is at home and communication structure is needed to help the Family Organiser provide essential support. Mobile Support can be added if another person also provides practical support.",
+        4: "Care home: the person is living in a care home, but family organisation continues. The care home handles care operations; familyupdates.care handles family-side non-urgent focussed communications where needed. Mobile Support can be added if another person also provides family-side practical support.",
     }
     return notes.get(stage, "")
 
@@ -5346,9 +5346,9 @@ familyupdates.care is for situations where communication structure is needed to 
 
 There are two settings: at home, and care home.
 
-**At home with Family Organiser + Mobile Support** - The person is at home and family coordination has become necessary because support, questions, updates, or practical arrangements now need one clear point of coordination. The Family Organiser coordinates communication. Mobile Support is used by the person providing practical support, paid or unpaid.
+**At home** - The person is at home and a Family Organiser is using the app to help provide essential support and keep family communication structured. The organiser may also be doing practical support themselves. If another person is also providing practical support, paid or unpaid, Mobile Support can be used by that person to share quick updates or practical requests.
 
-**Care home with Family Organiser + Mobile Support** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed.
+**Care home** - The person is living in a care home, but family organisation continues. The care home handles care operations. familyupdates.care handles family-side non-urgent focussed communications where needed. If another person is also providing family-side practical support, paid or unpaid, Mobile Support can be used by that person.
 
 #### Not for urgent matters
 
