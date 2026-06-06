@@ -1,6 +1,6 @@
 ﻿![logo](../../assets/logo.png)
 
-![familyupdates.care infographic](../../assets/infographic-v18.png)
+![familyupdates.care infographic](../../assets/infographic-final.png)
 
 [Editable Markdown version](familyupdates_markdown_infographic.md)
 
