@@ -8,11 +8,15 @@ There are three roles for the family to fill:
 2. Person available for urgent/emergency phone contact and emergency protocol.
 3. Care support.
 
-familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
+The problem is not only disappearing messages or message history. The problem is that a family chat can become the filing cabinet for an entire support situation. Communication, documents, emergency details, medical notes, legal information, financial information, opinions, and family conversation can all become mixed together.
+
+familyupdates.care separates support administration from family chat. Usual family messaging apps can remain available for ordinary family conversation. Emergency protocols, family facts, carer quick references, health documents, care documents, legal documents, financial documents, private documents, and printed backup folders stay in the family's own organised filing system outside the app.
+
+The app handles current support communication only: current situation, current needs, current arrangements, and current offers of help.
 
 Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser tells the family when and how frequently they will check messages.
 
-familyupdates.care keeps essential family coordination separate from chat. It does not remove the need for care, support, or professional help, but where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded.
+familyupdates.care keeps essential family coordination separate from chat. It does not remove the need for care, support, or professional help, but where communication pressure is adding to the strain, it can help by making communication calmer, more current, and more bounded. The communication stream is no longer used as a filing cabinet.
 
 ## Emergency and everyday communication
 
@@ -56,7 +60,7 @@ Family requests remain visible to all linked Family Members and may specify that
 
 Family Members may reply to requests using fixed structured choices, optional fixed tick-boxes, and an optional short context note. There are no private chats, threads, or back-and-forth conversations.
 
-For essential, urgent, sensitive, medical, safeguarding, privacy-related, legal, financial, time-critical, or emergency matters, use normal direct communication outside familyupdates.care, such as phone, text, WhatsApp, email, or existing care-home channels. Seek appropriate professional advice where needed.
+For essential, urgent, sensitive, medical, safeguarding, privacy-related, legal, financial, time-critical, or emergency matters, use normal direct communication outside familyupdates.care, such as phone, text, email, usual messaging apps, or existing care-home channels. Seek appropriate professional advice where needed.
 
 ## Starting simply
 
@@ -78,3 +82,5 @@ Once the external filing system is in place, start small: one calm update to reg
 Then add only the communication tools that are useful: specific organiser messages to individual Family Members, practical requests, family noticeboard notes, and structured replies.
 
 Where enabled, Family Members may add one current family noticeboard note for practical coordination. Noticeboard notes are visible to linked Family Members and the relevant Office workspace. They are not private messages and must not be used for sensitive health, care, legal, financial, safeguarding, or urgent matters.
+
+Dates people are handling belong in Shared Notes, not the one-current Noticeboard. Each date is owned by the person who added it, and their name is shown next to the item. Family Office is not expected to maintain the date list. It is not a full calendar: no reminders, alerts, RSVP tracking, attendance status, read receipts, live status, or response-time pressure.

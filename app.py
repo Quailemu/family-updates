@@ -143,6 +143,26 @@ OFFICE_PRACTICAL_CHECKBOX_OPTIONS = (
     "I will sort this out",
     "I can attend",
     "I cannot attend",
+    "I can visit",
+    "I cannot visit",
+    "I can phone",
+    "I have phoned",
+    "I can arrange transport",
+    "I can take them",
+    "I can collect this",
+    "I can drop this off",
+    "I can do the shopping",
+    "I can prepare food",
+    "I can check the house",
+    "I can handle the paperwork",
+    "I can contact the relevant service",
+    "I can cover the morning",
+    "I can cover the afternoon",
+    "I can cover the evening",
+    "I need more information",
+    "I need someone else to do this",
+    "I have already done this",
+    "I am not available",
 )
 OFFICE_PRACTICAL_CONTEXT_GENERAL = "general"
 OFFICE_PRACTICAL_CONTEXT_VISIT = "visit"
@@ -5321,11 +5341,15 @@ There are three roles for the family to fill:
 2. Person available for urgent/emergency phone contact and emergency protocol.
 3. Care support.
 
-familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
+The problem is not only disappearing messages or message history. The problem is that a family chat can become the filing cabinet for an entire support situation. Communication, documents, emergency details, medical notes, legal information, financial information, opinions, and family conversation can all become mixed together.
+
+familyupdates.care separates support administration from family chat. Usual family messaging apps can remain available for ordinary family conversation. Emergency protocols, family facts, carer quick references, health documents, care documents, legal documents, financial documents, private documents, and printed backup folders stay in the family's own organised filing system outside the app.
+
+The app handles current support communication only: current situation, current needs, current arrangements, and current offers of help.
 
 Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser gets the app, introduces it to Family Members, and may choose to tell the family when and how frequently they will check messages.
 
-familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded.
+familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded. The communication stream is no longer used as a filing cabinet.
 
 Where someone else is helping with practical support, Mobile Support gives that person a simpler way to share quick updates or practical requests.
 
@@ -5359,7 +5383,7 @@ Family requests remain visible to all linked Family Members and may specify that
 
 Family Members may reply to requests using fixed structured choices, optional fixed tick-boxes, and an optional short context note. There are no private chats, threads, or back-and-forth conversations.
 
-For essential, urgent, sensitive, medical, safeguarding, privacy-related, legal, financial, time-critical, or emergency matters, use normal direct communication outside familyupdates.care, such as phone, text, WhatsApp, email, or existing care-home channels. Seek appropriate professional advice where needed.
+For essential, urgent, sensitive, medical, safeguarding, privacy-related, legal, financial, time-critical, or emergency matters, use normal direct communication outside familyupdates.care, such as phone, text, email, usual messaging apps, or existing care-home channels. Seek appropriate professional advice where needed.
 
 The Family Organiser does not hold essential data or the emergency protocol inside familyupdates.care. Those arrangements are managed separately by the family so the organiser can focus on present care, support, and communication.
 
@@ -5381,6 +5405,8 @@ You may also want to consider Lasting Powers of Attorney for property and financ
 Once the external filing system is in place, start small: one calm update to registered Family Members. There are no replies in that update channel, no thread, and the next update replaces the previous one.
 
 Then add only the communication tools that are useful: specific organiser messages to individual Family Members, practical requests, family noticeboard notes, and structured replies.
+
+Dates people are handling belong in Shared Notes, not the one-current Noticeboard. The person who adds a date owns that item and keeps it current. Family Office is not expected to maintain the date list. It is not a full calendar and has no reminders, alerts, RSVP tracking, attendance status, read receipts, live status, or response-time pressure.
 """
     )
 
@@ -9328,7 +9354,11 @@ def render_home(active: str) -> None:
         )
         st.markdown(
             """
-familyupdates.care separates emergency communication from everyday communication.
+Family support often starts inside an ordinary family messaging group. Over time, updates, questions, opinions, arrangements, documents, medical information, emergency information, legal information, financial information, photos, and family chat can all become mixed together.
+
+The organiser then has to navigate the mixture, remember what matters, and work out what belongs where.
+
+familyupdates.care separates support administration from family chat. Families may continue using their usual messaging apps for normal family conversation. The app removes support communication from the chat and keeps it organised by purpose.
 
 There are three roles for the family to fill:
 
@@ -9340,7 +9370,8 @@ familyupdates.care is for non-urgent communication only.
 """
         )
         st.markdown(
-            "The app provides one current update to family, one current specific organiser message, "
+            "The app handles current support communication: updates, needs, arrangements, and offers of help. "
+            "It provides one current update to family, one current specific organiser message, "
             "one current practical request, and noticeboard-style information. The Family Organiser has full access to the family tools; "
             "Family Members and carers can use their own enabled channels directly. One current item replaces the last, "
             "with no threads, no message build-up, and no pressure to reply instantly."
@@ -9476,6 +9507,8 @@ There are three roles for the family to fill:
 3. Care support.
 
 familyupdates.care is for non-urgent coordination only.
+
+It separates support administration from family chat. Usual family messaging apps can stay for normal family conversation; support updates, needs, arrangements, and offers of help move into a calmer structure.
 """
         )
         st.markdown("### Communication participants")
@@ -9497,16 +9530,16 @@ familyupdates.care is for non-urgent coordination only.
         st.markdown(
             """
             <div class="public-card">
-              <h3>Stop repeating updates</h3>
-              <div>Send one calm update to registered Family Members. There are no replies in this update channel, and the next update replaces the previous one.</div>
+              <h3>Separate support from chat</h3>
+              <div>Keep usual messaging apps for normal family conversation while support updates, needs, arrangements, and offers of help move into Family Updates.</div>
             </div>
             <div class="public-card">
-              <h3>Not another chat</h3>
-              <div>The Family Organiser and each Family Member can keep one current specific message, without live chat, scrolling, or message threads.</div>
+              <h3>Stop using chat as a filing cabinet</h3>
+              <div>Emergency protocols, family facts, health, care, legal, financial, and private records stay in the family's own organised filing system.</div>
             </div>
             <div class="public-card pink">
-              <h3>Add practical requests</h3>
-              <div>Use structured questions for non-urgent practical coordination, such as visits, appointments, collecting items, or household tasks.</div>
+              <h3>Keep communication current</h3>
+              <div>Use one calm update, specific organiser messages, practical requests, and noticeboard notes without live chat or scrolling threads.</div>
             </div>
             <div class="public-card">
               <h3>Use Mobile from the start</h3>
@@ -12478,7 +12511,7 @@ def get_public_document_title(doc_path: str) -> str:
     mapping = {
         "03_service_overview.md": "Service overview",
         "02_how_it_works.md": "How it works",
-        "familyupdates_infographic.md": "familyupdates.care infographic",
+        "familyupdates_markdown_infographic.md": "familyupdates.care infographic",
         "07_resident_participation.md": "Resident participation",
         "06_family_guide.md": "Family guide",
         "10_faq.md": "Public Q&A",
@@ -12911,7 +12944,7 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
 
 
 def render_public_infographic() -> None:
-    render_public_document("docs/public/familyupdates_infographic.md", back_route="/public/how-it-works")
+    render_public_document("docs/public/familyupdates_markdown_infographic.md", back_route="/public/how-it-works")
 
 
 def render_public_docs() -> None:
@@ -12971,16 +13004,6 @@ def render_public_page(page_title: str, heading: str) -> None:
         st.error("Content not available.")
         return
     st.markdown(content)
-
-
-def render_familyupdates_infographic_image() -> None:
-    image_path = Path(__file__).resolve().parent / "assets" / "infographic-v9.png"
-    if not image_path.exists():
-        return
-    try:
-        st.image(str(image_path), use_container_width=True)
-    except TypeError:
-        st.image(str(image_path), use_column_width=True)
 
 
 def render_pr_homepage() -> None:
@@ -13047,9 +13070,6 @@ def render_pr_homepage() -> None:
     st.markdown(
         "familyupdates.care keeps essential family coordination separate from chat.",
     )
-    st.markdown('<div class="vm-home-infographic">', unsafe_allow_html=True)
-    render_familyupdates_infographic_image()
-    st.markdown("</div>", unsafe_allow_html=True)
     if st.button("How it works", key="pr_entry_how_it_works", use_container_width=True):
         set_route("/public/how-it-works")
         st.stop()
@@ -13099,6 +13119,20 @@ def render_care_hub_banner_settings() -> None:
     subject_plural_title = str(
         current_workspace_labels.get("subject_plural_title") or "Residents"
     )
+    active_care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
+    if at_home_lifecycle_stage and access_token and active_care_home_id:
+        setup_people_for_header = [
+            person
+            for person in fetch_care_home_residents(access_token or "")
+            if str(person.get("care_home_id") or "") == active_care_home_id
+        ][:2]
+        person_display_name = _resolve_person_display_name_from_residents(
+            setup_people_for_header,
+        )
+        if person_display_name:
+            st.session_state["circle_person_display_name"] = person_display_name
+        else:
+            st.session_state.pop("circle_person_display_name", None)
     render_care_home_identity_banner(access_token)
     current_communication_level = get_communication_level(access_token)
     current_policy = get_lifecycle_policy(
@@ -13264,7 +13298,6 @@ def render_care_hub_banner_settings() -> None:
         care_home_profile.get("lifecycle_stage")
     )
     current_communication_level = DEFAULT_COMMUNICATION_LEVEL
-    active_care_home_id = str(st.session_state.get("active_care_home_id") or "").strip()
     with st.expander("Technical diagnostics", expanded=False):
         st.markdown(f"- Active care home id: `{active_care_home_id or 'missing'}`")
         st.markdown(f"- Profile mode (raw): `{str(care_home_profile.get('operating_mode') or '') or 'missing'}`")

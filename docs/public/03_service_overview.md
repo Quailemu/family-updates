@@ -8,6 +8,10 @@ familyupdates.care helps structure communication when someone needs support and 
 
 It is for moments when repeated updates, questions, and practical coordination have started to overload one person.
 
+Family support often starts inside an ordinary family messaging group. Over time, updates, questions, opinions, arrangements, documents, medical information, emergency information, legal information, financial information, photos, and family chat can all become mixed together.
+
+familyupdates.care separates support administration from family chat. Families may continue using their usual messaging apps for normal family conversation. The app handles current support communication: updates, needs, arrangements, and offers of help.
+
 There are three roles for the family to fill:
 
 1. Family Organiser.
@@ -19,6 +23,8 @@ familyupdates.care is for non-urgent coordination only.
 ## Purpose
 
 familyupdates.care is a simple system for current family updates, specific organiser messages, structured requests, and noticeboard-style information.
+
+The communication stream is no longer used as a filing cabinet. Emergency protocols, family facts, carer quick references, health documents, care documents, legal documents, financial documents, private documents, and printed backup folders stay in the family's own organised filing system outside the app.
 
 - one current update to family
 - one current specific organiser message
@@ -59,6 +65,12 @@ This is not a live conversation and is not monitored for emergencies.
 ### Family noticeboard
 
 Each Family Member can keep one current noticeboard note visible to linked Family Members and the Office workspace.
+
+### Shared Notes: dates people are handling
+
+Date-related items belong in Shared Notes rather than the one-current Noticeboard. Each date is owned by the person who added it, and their name is shown next to the item.
+
+Family Office is not expected to maintain the date list. This is not a full calendar: no reminders, alerts, RSVP tracking, attendance status, read receipts, live status, or response-time pressure.
 
 ## Boundaries
 

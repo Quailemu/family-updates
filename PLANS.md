@@ -36,8 +36,8 @@ The earlier care-home/voice-message system is archived as a possible later produ
 
 ## Homepage banner (public)
 familyupdates.care
-One message in. One message out.
-(Optional small line) No threads. No pressure.
+Support administration, separated from family chat.
+(Optional small line) Family chat can stay for family conversation.
 
 Homepage buttons (only):
 - Family
@@ -56,7 +56,11 @@ Homepage public info copy (before feedback section):
 ## Familiar voices
 A structured, non-urgent family coordination system for when one person becomes the point of contact.
 
-familyupdates.care keeps essential family coordination separate from chat.
+Family support often starts inside an ordinary family messaging group. Over time, updates, questions, opinions, arrangements, documents, medical information, emergency information, legal information, financial information, photos, and family chat can all become mixed together.
+
+The organiser then has to navigate the mixture, remember what matters, and work out what belongs where.
+
+familyupdates.care separates support administration from family chat. Families may continue using their usual messaging apps for normal family conversation. The app removes support communication from the chat and keeps it organised by purpose.
 
 There are three roles for the family to fill:
 
@@ -66,7 +70,7 @@ There are three roles for the family to fill:
 
 familyupdates.care is for non-urgent coordination only.
 
-The app provides one current update to family, one current specific organiser message, one current practical request, and noticeboard-style information. The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly. One current item replaces the last, with no threads, no archive, no direct replies to the general update, and no pressure to reply instantly.
+The app handles current support communication: updates, needs, arrangements, and offers of help. It provides one current update to family, one current specific organiser message, one current practical request, and noticeboard-style information. The Family Organiser has full access to the family tools; Family Members and carers can use their own enabled channels directly. One current item replaces the last, with no threads, no archive, no direct replies to the general update, and no pressure to reply instantly.
 
 Families use the app when repeated updates, questions, and practical coordination have started to create communication overload for the organiser. Carers may use the app directly where enabled, or text the Family Organiser. Care homes may email. The Family Organiser may choose to tell the family when and how frequently they will check messages.
 
@@ -114,16 +118,22 @@ Office practical messages are optional structured requests linked to the person 
 
 Family noticeboard notes are optional practical notes from Family Members, visible to all linked Family Members and to the relevant Office workspace. Each Family Member has one current noticeboard note per person. A new note replaces that Family Member's previous note, and the note may be cleared when no longer useful. Noticeboard notes are for practical coordination only, not private health, care, legal, financial, safeguarding, or urgent matters.
 
+Shared Notes may include a small date-related list called "Dates people are handling." This is not a Family Office calendar and the organiser is not expected to maintain it. Each date belongs to the person who adds it; their name is shown next to the item, and they are responsible for keeping it current or removing it. Dates are visible to the family group as shared reference information, not as reminders, alerts, RSVP tracking, attendance tracking, or a live schedule.
+
 For urgent, medical, safeguarding, or other time-sensitive matters, families must use normal direct communication outside familyupdates.care.
 
 Service overview purpose statement:
-familyupdates.care is a simple family coordination system for situations where one person has become the family point of contact. It helps a Family Organiser keep one current family update, specific organiser messages, practical requests, and noticeboard notes current without creating live chat, long threads, or a permanent communication archive.
+familyupdates.care is a simple family coordination system for situations where one person has become the family point of contact. It separates support administration from family chat, so current updates, needs, arrangements, and offers of help do not get mixed up with ordinary family conversation or important records.
+
+It helps a Family Organiser keep one current family update, specific organiser messages, practical requests, and noticeboard notes current without creating live chat, long threads, or a permanent communication archive.
 
 Family Office updates are one-way informational messages.
 
 Family Office may also publish a practical message that allows each registered Family Member or Mobile Support user, where enabled, to send a structured non-urgent reply (No response / Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
 
 Where enabled, Family Members may also add one current family noticeboard note for practical coordination. Noticeboard notes are visible to linked Family Members and the relevant Family Office workspace, and are not private messages.
+
+Where Shared Notes / Dates are enabled, Family Members may add date-related items they are personally handling. These items accumulate as a small shared list and should therefore sit in Shared Notes, not in the one-current Noticeboard. The owner name is shown beside each date item.
 
 The service is not intended for care updates, health information, safeguarding communication, or urgent enquiries.
 
@@ -166,11 +176,15 @@ There are three roles for the family to fill:
 
 familyupdates.care is for non-urgent communication only.
 
-familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
+The problem is not only disappearing messages or message history. The problem is that a family chat can become the filing cabinet for an entire support situation. Communication, documents, emergency details, medical notes, legal information, financial information, opinions, and family conversation can all become mixed together.
+
+familyupdates.care separates support administration from family chat. Usual family messaging apps can remain available for ordinary family conversation. Emergency protocols, family facts, carer quick references, health documents, care documents, legal documents, financial documents, private documents, and printed backup folders stay in the family's own organised filing system outside the app.
+
+The app handles current support communication only: current situation, current needs, current arrangements, and current offers of help.
 
 Families use the app for non-urgent support management: structured requests, updates, noticeboard-style information, and simple current messages. The Family Organiser gets the app, introduces it to Family Members, and may choose to tell the family when and how frequently they will check messages.
 
-familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded.
+familyupdates.care does not remove the need for care, support, or professional help. But where repeated updates, questions, and practical coordination are adding to the organiser's strain, it can help by making communication calmer, more current, and more bounded. The communication stream is no longer used as a filing cabinet.
 
 Emergency and everyday communication:
 Emergencies: follow the family's agreed emergency protocol. This usually means phoning a named person on their mobile.
@@ -218,13 +232,18 @@ Then add only the communication tools that are useful: specific organiser messag
 
 Where family noticeboard notes are enabled, each Family Member may keep one current practical note visible to the family group. This is for simple coordination, such as visits or items to bring. It is not a private notes area and must not be used for sensitive health, care, legal, financial, safeguarding, or urgent matters.
 
+Dates people are handling belong in Shared Notes, not the Noticeboard. This avoids turning the noticeboard into another job for the Family Organiser. The person who adds a date owns that item and keeps it current.
+
 There are two settings: at home, and care home.
 
 Targeted request boundary:
-Requests and structured replies are for non-urgent, non-essential coordination only. Family requests remain visible to all linked Family Members and may name an intended responder, such as Sarah, Tom, or Coordinator. Office-to-Mobile/carer requests are a separate working channel where enabled. Replies use fixed structured choices, optional fixed tick-boxes, and an optional short context note only: no private chat, no threads, and no back-and-forth conversation. Essential, urgent, sensitive, or time-critical matters should use normal direct communication outside familyupdates.care, such as phone, text, WhatsApp, email, or existing care-home channels.
+Requests and structured replies are for non-urgent, non-essential coordination only. Family requests remain visible to all linked Family Members and may name an intended responder, such as Sarah, Tom, or Coordinator. Office-to-Mobile/carer requests are a separate working channel where enabled. Replies use fixed structured choices, optional fixed tick-boxes, and an optional short context note only: no private chat, no threads, and no back-and-forth conversation. Essential, urgent, sensitive, or time-critical matters should use normal direct communication outside familyupdates.care, such as phone, text, email, usual messaging apps, or existing care-home channels.
 
 Family noticeboard boundary:
 Noticeboard notes are transparent practical notes, visible to linked Family Members and the relevant Office workspace. Each Family Member has one current note per person/resident. Noticeboard notes must not be used for private health, care, legal, financial, safeguarding, or urgent matters.
+
+Shared Notes / Dates boundary:
+Dates people are handling are shared reference items, visible to the family group. They are owner-maintained by the person who added them. Family Office is not expected to maintain the date list. The feature must not become a full calendar: no reminders, alerts, RSVP, attendance status, read receipts, live status, or response-time pressure. Old date items should be easy to remove or expire automatically.
 
 Lifecycle model:
 The app uses two active situations to describe the real-life setting. Situation policy controls visible framing; it must not assign fixed role ownership.

@@ -20,7 +20,7 @@ There are three roles for the family to fill:
 
 familyupdates.care is for non-urgent communication only.
 
-familyupdates.care keeps communication current, and as in real life conversation there are no threads or stored history, just one message at a time.
+familyupdates.care separates support administration from family chat. Usual family messaging apps can remain available for ordinary family conversation; Family Hub is for current support updates, practical requests, noticeboard notes, and simple structured replies.
 
 Emergencies: follow the family's agreed emergency protocol. This usually means phoning a named person on their mobile.
 
@@ -70,6 +70,12 @@ Where enabled, you can add one current practical note visible to linked Family M
 A new noticeboard note from you replaces your previous note. You can clear your note when it is no longer useful.
 
 Use noticeboard notes for simple practical updates, such as visits or items to bring. Do not use them for private health, care, legal, financial, safeguarding, or urgent matters.
+
+### Shared Notes: dates people are handling
+
+If you add a date because you are handling it, your name should appear next to that item and you are responsible for keeping it current.
+
+Dates people are handling are shared reference notes, not a full calendar. There are no reminders, alerts, RSVP tracking, attendance status, read receipts, live status, or response-time expectations.
 
 ## Service style
 

@@ -40,6 +40,10 @@ A one-way Office message broadcast to all Family Members for non-urgent general 
 
 Family can reply to an Office practical message using a structured response form (No response / Yes / No / Maybe, optional fixed tick-boxes, and an optional short context note).
 
+## If I want to help, where do I look?
+
+Use Family Hub for current support communication and practical requests. The aim is to give people who want to help a clear place to look, without turning ordinary family chat into the support coordination system.
+
 ## Is an Office practical message a chat thread?
 
 No. It is a structured reply to one Office message, not open chat, and it does not create a discussion archive for the organiser to maintain.

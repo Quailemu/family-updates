@@ -37,6 +37,9 @@ A: A non-urgent practical question from Family Office, such as visits, belonging
 Q: How do I reply to a practical request?
 A: Choose Yes/No/Maybe, then optionally tick fixed options and add a short context note where offered.
 
+Q: If I want to help, where do I look?
+A: Use Family Hub for current support communication and practical requests. It gives people who want to help a clear place to look, without turning ordinary family chat into the support coordination system.
+
 Q: Is this practical reply a chat conversation?
 A: No. It is a structured response to one request.
 
