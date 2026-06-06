@@ -1,6 +1,8 @@
 # familyupdates.care infographic
 
-![familyupdates.care infographic](../../assets/infographic-v11.png)
+![familyupdates.care infographic](../../assets/infographic-v18.png)
+
+[Editable Markdown version](familyupdates_markdown_infographic.md)
 
 ## Updated infographic direction
 
@@ -15,7 +17,7 @@ Caption: Communication becomes difficult when communication is used as a filing 
 Support-related information is removed from the chat and filed appropriately:
 
 - Emergency protocol
-- Dates people are handling
+- Dates
 - Family facts
 - Carer quick reference
 - Health documents
@@ -48,4 +50,4 @@ Result:
 
 Key message: Family Updates does not remove information. It removes clutter by separating communication from information.
 
-Dates people are handling sit in Shared Notes / Notes & Files as owner-maintained reference items, not as a Family Office calendar.
+Dates sit in Shared Notes / Notes & Files as owner-maintained reference items, not as a Family Office calendar.

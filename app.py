@@ -12511,7 +12511,7 @@ def get_public_document_title(doc_path: str) -> str:
     mapping = {
         "03_service_overview.md": "Service overview",
         "02_how_it_works.md": "How it works",
-        "familyupdates_markdown_infographic.md": "familyupdates.care infographic",
+        "familyupdates_infographic.md": "familyupdates.care infographic",
         "07_resident_participation.md": "Resident participation",
         "06_family_guide.md": "Family guide",
         "10_faq.md": "Public Q&A",
@@ -12944,7 +12944,7 @@ def render_public_document(doc_path: str, back_route: str = PUBLIC_HOME_ROUTE) -
 
 
 def render_public_infographic() -> None:
-    render_public_document("docs/public/familyupdates_markdown_infographic.md", back_route="/public/how-it-works")
+    render_public_document("docs/public/familyupdates_infographic.md", back_route="/public/how-it-works")
 
 
 def render_public_docs() -> None:
@@ -13004,6 +13004,16 @@ def render_public_page(page_title: str, heading: str) -> None:
         st.error("Content not available.")
         return
     st.markdown(content)
+
+
+def render_familyupdates_infographic_image() -> None:
+    image_path = Path(__file__).resolve().parent / "assets" / "infographic-v18.png"
+    if not image_path.exists():
+        return
+    try:
+        st.image(str(image_path), use_container_width=True)
+    except TypeError:
+        st.image(str(image_path), use_column_width=True)
 
 
 def render_pr_homepage() -> None:
@@ -13070,6 +13080,9 @@ def render_pr_homepage() -> None:
     st.markdown(
         "familyupdates.care keeps essential family coordination separate from chat.",
     )
+    st.markdown('<div class="vm-home-infographic">', unsafe_allow_html=True)
+    render_familyupdates_infographic_image()
+    st.markdown("</div>", unsafe_allow_html=True)
     if st.button("How it works", key="pr_entry_how_it_works", use_container_width=True):
         set_route("/public/how-it-works")
         st.stop()

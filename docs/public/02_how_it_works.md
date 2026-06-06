@@ -1,6 +1,8 @@
 ﻿![logo](../../assets/logo.png)
 
-![familyupdates.care infographic](../../assets/infographic-v11.png)
+![familyupdates.care infographic](../../assets/infographic-v18.png)
+
+[Editable Markdown version](familyupdates_markdown_infographic.md)
 
 familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
 
