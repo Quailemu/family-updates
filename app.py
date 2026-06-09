@@ -1920,6 +1920,134 @@ def invite_user(
     return True, auth_user_id, None
 
 
+def create_or_resolve_office_auth_user(
+    admin_client: object,
+    *,
+    email: str,
+    password: str,
+) -> tuple[str, str | None]:
+    normalized_email = str(email or "").strip().lower()
+    password_value = str(password or "").strip()
+    existing_auth_user_id = _resolve_auth_user_id_by_email(admin_client, normalized_email)
+    if existing_auth_user_id:
+        return existing_auth_user_id, None
+    try:
+        create_result = admin_client.auth.admin.create_user(
+            {
+                "email": normalized_email,
+                "password": password_value,
+                "email_confirm": True,
+            }
+        )
+    except TypeError:
+        try:
+            create_result = admin_client.auth.admin.create_user(
+                {
+                    "email": normalized_email,
+                    "password": password_value,
+                    "email_confirm": True,
+                }
+            )
+        except Exception as exc:
+            return "", str(exc)
+    except Exception as exc:
+        resolved_auth_user_id = _resolve_auth_user_id_by_email(admin_client, normalized_email)
+        if resolved_auth_user_id:
+            return resolved_auth_user_id, None
+        return "", str(exc)
+    auth_user_id = _extract_auth_user_id(create_result)
+    if not auth_user_id:
+        auth_user_id = _resolve_auth_user_id_by_email(admin_client, normalized_email)
+    if not auth_user_id:
+        return "", "Office account was created but the auth user ID could not be resolved."
+    return auth_user_id, None
+
+
+def create_initial_family_office_setup(
+    *,
+    email: str,
+    password: str,
+    organiser_name: str,
+    setup_name: str,
+) -> tuple[bool, str]:
+    normalized_email = str(email or "").strip().lower()
+    password_value = str(password or "").strip()
+    organiser_value = str(organiser_name or "").strip()
+    setup_name_value = str(setup_name or "").strip()
+    if not normalized_email:
+        return False, "Enter the Family Office email."
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", normalized_email):
+        return False, "Enter a valid email address."
+    if len(password_value) < 8:
+        return False, "Use an Office password of at least 8 characters."
+    if len(password_value) > 72:
+        return False, "Office password must be 72 characters or fewer."
+    if not organiser_value:
+        return False, "Enter the Family Organiser name."
+    if len(organiser_value) > 120:
+        return False, "Family Organiser name must be 120 characters or fewer."
+    if not setup_name_value:
+        return False, "Enter the Family setup name."
+    if len(setup_name_value) > 160:
+        return False, "Family setup name must be 160 characters or fewer."
+    admin_client, admin_error = get_admin_client()
+    if admin_error:
+        return False, admin_error
+    auth_user_id, auth_error = create_or_resolve_office_auth_user(
+        admin_client,
+        email=normalized_email,
+        password=password_value,
+    )
+    if auth_error:
+        return False, auth_error
+    if not auth_user_id:
+        return False, "Could not create or resolve the Office account."
+    try:
+        existing_mapping = (
+            admin_client.table("care_home_users")
+            .select("care_home_id, active")
+            .eq("auth_user_id", auth_user_id)
+            .limit(1)
+            .execute()
+        )
+        if existing_mapping.data:
+            return True, "This Office account already has a Family Office setup. You can log in now."
+    except Exception as exc:
+        return False, str(exc)
+    care_home_payload = {
+        "name": setup_name_value,
+        "active": True,
+        "operating_mode": OPERATING_MODE_PERSONAL_USE,
+        "lifecycle_stage": DEFAULT_LIFECYCLE_STAGE,
+        "communication_level": DEFAULT_COMMUNICATION_LEVEL,
+        "main_contact_name": organiser_value,
+        "transcript_policy_mode": "assist",
+    }
+    try:
+        setup_response = admin_client.table("care_homes").insert(care_home_payload).execute()
+        setup_rows = setup_response.data or []
+        care_home_id = str((setup_rows[0] if setup_rows else {}).get("id") or "").strip()
+        if not care_home_id:
+            return False, "Family setup was created but its ID was not returned."
+        try:
+            admin_client.table("care_home_settings").insert(
+                {"care_home_id": care_home_id}
+            ).execute()
+        except Exception:
+            pass
+        admin_client.table("care_home_users").insert(
+            {
+                "care_home_id": care_home_id,
+                "auth_user_id": auth_user_id,
+                "care_access_level": CARE_ACCESS_OFFICE,
+                "active": True,
+            }
+        ).execute()
+        return True, "Family Office setup created. Log in with the Office email and password."
+    except Exception as exc:
+        return False, str(exc)
+
+
 CARE_ACCESS_OFFICE = "office"
 CARE_ACCESS_MOBILE = "mobile"
 
@@ -13016,6 +13144,25 @@ def render_familyupdates_infographic_image() -> None:
         st.image(str(image_path), use_column_width=True)
 
 
+def render_familyupdates_cartoon_images() -> None:
+    asset_dir = Path(__file__).resolve().parent / "assets"
+    image_paths = [
+        asset_dir / "cartoon1.PNG",
+        asset_dir / "cartoon2.PNG",
+        asset_dir / "cartoon3.PNG",
+        asset_dir / "cartoon4.PNG",
+    ]
+    for image_path in image_paths:
+        if not image_path.exists():
+            continue
+        st.markdown('<div class="vm-home-infographic">', unsafe_allow_html=True)
+        try:
+            st.image(str(image_path), use_container_width=True)
+        except TypeError:
+            st.image(str(image_path), use_column_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
 def render_pr_homepage() -> None:
     st.markdown(
         """
@@ -13089,6 +13236,8 @@ def render_pr_homepage() -> None:
     if st.button("Try the one-message concept", key="pr_entry_one_message_test", use_container_width=True):
         set_route(ONE_MESSAGE_TEST_ROUTE)
         st.stop()
+
+    render_familyupdates_cartoon_images()
 
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
@@ -14115,6 +14264,43 @@ def render_care_login() -> None:
     normalized_email = email.strip().lower()
     normalized_password = password.strip()
     st.caption("Family Office uses organiser credentials. This is separate from Family Hub and Mobile PIN access.")
+
+    with st.expander("Set up the first Family Office organiser"):
+        st.caption(
+            "Use this once to create the Family Office setup and link the first organiser account. "
+            "After that, add Family Members and any co-organisers from inside Family Office."
+        )
+        with st.form("initial_family_office_setup_form"):
+            setup_email = st.text_input(
+                "Family Office email",
+                key="initial_family_office_email",
+            )
+            setup_password = st.text_input(
+                "Office password",
+                type="password",
+                key="initial_family_office_password",
+            )
+            setup_organiser_name = st.text_input(
+                "Family Organiser name",
+                key="initial_family_office_organiser_name",
+            )
+            setup_family_name = st.text_input(
+                "Family setup name",
+                key="initial_family_office_setup_name",
+                placeholder="Example: Taylor Family Office",
+            )
+            create_family_office = st.form_submit_button("Create Family Office")
+        if create_family_office:
+            ok, message = create_initial_family_office_setup(
+                email=setup_email,
+                password=setup_password,
+                organiser_name=setup_organiser_name,
+                setup_name=setup_family_name,
+            )
+            if ok:
+                st.success(message)
+            else:
+                st.error(message)
 
     st.markdown('<div id="vm-login-actions"></div>', unsafe_allow_html=True)
     show_sign_out = st.session_state.get("auth_uid")

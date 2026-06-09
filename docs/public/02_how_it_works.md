@@ -4,6 +4,14 @@
 
 [Editable Markdown version](familyupdates_markdown_infographic.md)
 
+![Family Updates cartoon 1](../../assets/cartoon1.PNG)
+
+![Family Updates cartoon 2](../../assets/cartoon2.PNG)
+
+![Family Updates cartoon 3](../../assets/cartoon3.PNG)
+
+![Family Updates cartoon 4](../../assets/cartoon4.PNG)
+
 familyupdates.care helps structure communication when someone needs support and one family member or trusted friend has become the organiser.
 
 It is for moments when a person becomes temporarily or permanently unable to manage part of their own life, for example elderly parent support, dementia, serious illness, recovery after surgery, stroke, accident or injury, temporary incapacity, long-term disability, mental health crisis, or another situation where family and friends need to coordinate around one person.

@@ -329,6 +329,7 @@ Mobile Support may send shared updates and structured practical requests where e
 
 At-home setup model:
 For the at-home situation, the visible setup should be a home/person setup, not a care-home setup. Reuse existing backend tables where practical, but label the UI as Setup name, Person 1, Person 2 optional, and Main supporter / organiser.
+The first Family Organiser may create the initial Family Office setup from the Office login path. After the first Office account is linked, additional trusted Office/co-organiser users are invited from inside Family Office.
 
 Situation wording:
 When the at-home situation is active, avoid visible "Care organisation", "Care Home", and "Resident" framing where the context is at-home coordination. Prefer "shared at-home coordination" and "person/people" wording while keeping the existing backend routing intact.
