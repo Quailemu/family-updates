@@ -2078,7 +2078,6 @@ def get_magic_link_redirect_url(app_variant: str) -> str:
         return (
             os.getenv("CARE_MOBILE_MAGIC_LINK_REDIRECT_URL", "").strip()
             or os.getenv("CARE_MOBILE_APP_URL", "").strip()
-            or os.getenv("CARE_OFFICE_APP_URL", "").strip()
         )
     if app_variant == VARIANT_OFFICE:
         return (
@@ -11028,8 +11027,19 @@ def render_family_login() -> None:
             set_route(get_home_route(VARIANT_FAMILY))
         elif care_found:
             st.error("This browser is signed in to Mobile or Family Office.")
-            st.info("Sign out before using Family Hub in this browser.")
-            if st.button("Sign out", key="family_login_wrong_logout"):
+            st.info("Use Mobile if that is what you were trying to open, or sign out before using Family Hub in this browser.")
+            action_cols = st.columns(2, gap="small")
+            with action_cols[0]:
+                if st.button("Go to Mobile", key="family_login_wrong_go_mobile", use_container_width=True):
+                    set_route(get_login_route(VARIANT_MOBILE))
+                    st.stop()
+            with action_cols[1]:
+                sign_out_pressed = st.button(
+                    "Sign out",
+                    key="family_login_wrong_logout",
+                    use_container_width=True,
+                )
+            if sign_out_pressed:
                 sign_out_user("family")
         else:
             if error:
