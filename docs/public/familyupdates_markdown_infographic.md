@@ -11,7 +11,7 @@
 | 🤗 Can I help? 🔔 |  |  |
 | 🏥 Hospital 🔔 |  | **Filed Support Information** |
 | 👶 Grandchildren |  | 📂 Care |
-| 🧑‍⚕️ Carer 🔔 |  | 📂 Medication |
+| 🧑‍⚕️ Carer (if needed) 🔔 |  | 📂 Medication |
 | 📅 Dates 🔔 |  | 📂 Emergencies |
 | 📝 Support communication 🔔 |  | 📂 Contacts |
 | 💷 Finance 🔔 |  | 📂 Hospital appointments |
@@ -22,7 +22,7 @@
 | ☎️ Contacts 🔔 |  | 📂 House management |
 | 🎂 Birthdays |  | 📂 Insurance |
 |  |  | 📂 Utilities |
-|  |  | 📂 Carers |
+|  |  | 📂 Carers (if needed) |
 |  |  | 📂 Visiting arrangements |
 |  |  | 📂 LPA / POA |
 |  |  |  |
