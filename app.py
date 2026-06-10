@@ -17384,6 +17384,17 @@ def main() -> None:
     init_state()
     clear_legacy_streamlit_page_param_once()
     pre_auth_route = get_route()
+    if hasattr(st, "query_params"):
+        try:
+            explicit_mobile = str(st.query_params.get("mobile", "") or "").strip().lower()
+        except Exception:
+            explicit_mobile = ""
+        if explicit_mobile in {"1", "true", "yes", "on"}:
+            pre_auth_route = MOBILE_LOGIN_ROUTE
+            try:
+                st.query_params["route"] = MOBILE_LOGIN_ROUTE
+            except Exception:
+                pass
     request_path = _get_request_path()
     recovered_request_path_auth = _recover_auth_callback_params_from_route_path(request_path)
     if recovered_request_path_auth and hasattr(st, "query_params"):
@@ -17483,6 +17494,9 @@ def main() -> None:
         target_route = FAMILY_LOGIN_ROUTE if app_variant == VARIANT_FAMILY else default_route
         route = target_route
         st.session_state.route = route
+    route_resolved_variant = _resolve_variant_from_route(route)
+    if route_resolved_variant in {VARIANT_FAMILY, VARIANT_MOBILE, VARIANT_OFFICE}:
+        app_variant = route_resolved_variant
     apply_seo_head_tags(route, app_variant)
     route_allowlisted = is_route_allowed(app_variant, route)
     if APP_DEBUG:
