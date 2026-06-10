@@ -11026,6 +11026,18 @@ def render_family_login() -> None:
                 )
             set_route(get_home_route(VARIANT_FAMILY))
         elif care_found:
+            if care_record:
+                st.session_state["active_role"] = "care_hub"
+                st.session_state["active_care_home_id"] = care_record.get("care_home_id")
+                st.session_state["care_access_level"] = normalize_care_access_level(
+                    care_record.get("care_access_level")
+                )
+            if not current_user_can_access_office():
+                st.info("This browser is signed in to Mobile Support.")
+                st.markdown("### Mobile PIN access")
+                if render_mobile_pin_gate(st.session_state.get("access_token")):
+                    set_route(MOBILE_HOME_ROUTE)
+                return
             st.error("This browser is signed in to Mobile or Family Office.")
             st.info("Use Mobile if that is what you were trying to open, or sign out before using Family Hub in this browser.")
             action_cols = st.columns(2, gap="small")
