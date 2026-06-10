@@ -13151,6 +13151,8 @@ def render_familyupdates_cartoon_images() -> None:
         asset_dir / "cartoon2.PNG",
         asset_dir / "cartoon3.PNG",
         asset_dir / "cartoon4.PNG",
+        asset_dir / "cartoon5.png",
+        asset_dir / "cartoon6.png",
     ]
     for image_path in image_paths:
         if not image_path.exists():
@@ -13227,17 +13229,12 @@ def render_pr_homepage() -> None:
     st.markdown(
         "familyupdates.care keeps essential family coordination separate from chat.",
     )
-    st.markdown('<div class="vm-home-infographic">', unsafe_allow_html=True)
-    render_familyupdates_infographic_image()
-    st.markdown("</div>", unsafe_allow_html=True)
     if st.button("How it works", key="pr_entry_how_it_works", use_container_width=True):
         set_route("/public/how-it-works")
         st.stop()
     if st.button("Try the one-message concept", key="pr_entry_one_message_test", use_container_width=True):
         set_route(ONE_MESSAGE_TEST_ROUTE)
         st.stop()
-
-    render_familyupdates_cartoon_images()
 
     action_cols = st.columns(3, gap="small")
     with action_cols[0]:
@@ -13252,6 +13249,17 @@ def render_pr_homepage() -> None:
         if st.button("Mobile", key="pr_entry_mobile", use_container_width=True):
             set_route(MOBILE_LOGIN_ROUTE)
             st.stop()
+
+    st.markdown('<div class="vm-home-infographic">', unsafe_allow_html=True)
+    render_familyupdates_infographic_image()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if st.button("Cartoons", key="pr_entry_cartoons", use_container_width=True):
+        st.session_state["pr_home_show_cartoons"] = not bool(
+            st.session_state.get("pr_home_show_cartoons", False)
+        )
+    if st.session_state.get("pr_home_show_cartoons", False):
+        render_familyupdates_cartoon_images()
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
