@@ -13175,6 +13175,7 @@ def render_familyupdates_cartoon_images() -> None:
         asset_dir / "cartoon4.PNG",
         asset_dir / "cartoon5.png",
         asset_dir / "cartoon6.png",
+        asset_dir / "cartoon7.png",
     ]
     for image_path in image_paths:
         if not image_path.exists():
