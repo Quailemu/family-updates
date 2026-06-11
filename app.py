@@ -647,6 +647,20 @@ def set_route(route: str) -> None:
         if isinstance(current, list):
             current = current[0] if current else ""
         current = normalize_route(current)
+        try:
+            current_mobile_flag = str(st.query_params.get("mobile", "") or "").strip()
+        except Exception:
+            current_mobile_flag = ""
+        target_is_mobile = target in {MOBILE_LOGIN_ROUTE, MOBILE_HOME_ROUTE}
+        if target_is_mobile and current_mobile_flag != "1":
+            st.query_params["mobile"] = "1"
+            route_changed = True
+        elif not target_is_mobile and current_mobile_flag:
+            try:
+                del st.query_params["mobile"]
+                route_changed = True
+            except Exception:
+                pass
         if current != target:
             st.query_params["route"] = target
             route_changed = True
@@ -2644,6 +2658,18 @@ def fetch_care_home_staff_mobile_pin_status(
         return [], error
     try:
         response = supabase.rpc("list_care_home_staff_mobile_pin_status").execute()
+    except Exception as exc:  # pragma: no cover - Supabase runtime error
+        return [], str(exc)
+    rows = response.data if isinstance(response.data, list) else []
+    return rows, None
+
+
+def fetch_mobile_support_users(access_token: str | None) -> tuple[list[dict], str | None]:
+    supabase, error = get_authed_supabase(access_token)
+    if error:
+        return [], error
+    try:
+        response = supabase.rpc("list_mobile_support_users").execute()
     except Exception as exc:  # pragma: no cover - Supabase runtime error
         return [], str(exc)
     rows = response.data if isinstance(response.data, list) else []
@@ -6886,6 +6912,7 @@ def fetch_latest_messages_for_contact_user_ids(
     access_token: str,
     contact_user_ids: list[str],
     *,
+    direction: str = "to_resident",
     channel: str = "resident_family",
     include_audio: bool = False,
 ) -> dict[str, dict]:
@@ -6903,6 +6930,7 @@ def fetch_latest_messages_for_contact_user_ids(
         "fetch_latest_messages_for_contact_user_ids",
         str(st.session_state.get("auth_uid") or ""),
         resident_id,
+        direction,
         channel,
         bool(include_audio),
         tuple(sorted(unique_ids_for_cache)),
@@ -6932,7 +6960,7 @@ def fetch_latest_messages_for_contact_user_ids(
             supabase.table("messages")
             .select(select_fields)
             .eq("resident_id", resident_id)
-            .eq("direction", "to_resident")
+            .eq("direction", direction)
             .eq("channel", channel)
             .in_("contact_user_id", unique_ids)
             .order("recorded_at", desc=True)
@@ -6956,7 +6984,7 @@ def fetch_latest_messages_for_contact_user_ids(
                         )
                     )
                     .eq("resident_id", resident_id)
-                    .eq("direction", "to_resident")
+                    .eq("direction", direction)
                     .eq("channel", channel)
                     .in_("contact_user_id", unique_ids)
                     .order("recorded_at", desc=True)
@@ -16067,6 +16095,7 @@ def render_care_hub() -> None:
             )
             with st.container(border=True, key=mobile_office_container_key):
                 if runtime_variant == VARIANT_MOBILE:
+                    current_mobile_user_id = str(st.session_state.get("auth_uid") or "").strip()
                     render_care_flow_title(
                         f"Message with Family Office ({full_name})",
                         "office",
@@ -16080,13 +16109,24 @@ def render_care_hub() -> None:
                         resident_id,
                         "office_to_mobile",
                         access_token,
+                        contact_user_id=current_mobile_user_id,
                         channel="mobile_office",
                         include_audio=False,
                     )
+                    if not latest_from_office:
+                        latest_from_office = fetch_latest_message(
+                            resident_id,
+                            "office_to_mobile",
+                            access_token,
+                            contact_user_id_is_null=True,
+                            channel="mobile_office",
+                            include_audio=False,
+                        )
                     latest_to_office = fetch_latest_message(
                         resident_id,
                         "mobile_to_office",
                         access_token,
+                        contact_user_id=current_mobile_user_id,
                         channel="mobile_office",
                         include_audio=False,
                     )
@@ -16126,6 +16166,7 @@ def render_care_hub() -> None:
                                 payload = {
                                     "resident_id": resident_id,
                                     "family_id": resident.get("family_id") or resident_id,
+                                    "contact_user_id": current_mobile_user_id,
                                     "channel": "mobile_office",
                                     "direction": "mobile_to_office",
                                     "audio_storage_path": "",
@@ -16139,9 +16180,10 @@ def render_care_hub() -> None:
                                 resp, upsert_error = upsert_latest_message_with_fallback(
                                     supabase,
                                     payload,
-                                    "resident_id,direction,channel",
+                                    "resident_id,contact_user_id,direction,channel",
                                     {
                                         "resident_id": resident_id,
+                                        "contact_user_id": current_mobile_user_id,
                                         "channel": "mobile_office",
                                         "direction": "mobile_to_office",
                                     },
@@ -16172,111 +16214,161 @@ def render_care_hub() -> None:
                                     st.success("Current message to Family Office replaced.")
                                     st.rerun()
                 else:
-                    mobile_support_label = "Mobile Support / carer"
+                    mobile_support_users, mobile_support_error = fetch_mobile_support_users(access_token)
+                    mobile_support_by_id = {
+                        str(row.get("auth_user_id") or "").strip(): row
+                        for row in mobile_support_users
+                        if str(row.get("auth_user_id") or "").strip()
+                    }
+                    mobile_support_ids = list(mobile_support_by_id.keys())
+                    mobile_support_label = "Mobile Support"
                     render_care_flow_title(
                         f"Message with {mobile_support_label} ({full_name})",
                         "office",
                     )
                     render_care_channel_note(
                         "When you send your current message, it replaces your previous one. "
-                        "When Mobile Support sends a new message, it replaces their previous one. "
-                        "So you both see current messages only. This is non-urgent and not live."
+                        "Each Mobile Support user keeps their own current message to Family Office. "
+                        "This is non-urgent and not live."
                     )
-                    latest_from_mobile = fetch_latest_message(
+                    if mobile_support_error:
+                        st.error(mobile_support_error)
+                    elif not mobile_support_ids:
+                        st.info("No Mobile Support users found for this workspace.")
+                    latest_from_mobile_by_user = fetch_latest_messages_for_contact_user_ids(
+                        resident_id,
+                        access_token,
+                        mobile_support_ids,
+                        direction="mobile_to_office",
+                        channel="mobile_office",
+                        include_audio=False,
+                    )
+                    latest_to_mobile_by_user = fetch_latest_messages_for_contact_user_ids(
+                        resident_id,
+                        access_token,
+                        mobile_support_ids,
+                        direction="office_to_mobile",
+                        channel="mobile_office",
+                        include_audio=False,
+                    )
+                    for mobile_user_id in mobile_support_ids:
+                        mobile_row = mobile_support_by_id.get(mobile_user_id, {})
+                        mobile_email = str(mobile_row.get("staff_email") or "").strip()
+                        display_mobile_label = mobile_email or "Mobile Support user"
+                        st.markdown(f"**{html.escape(display_mobile_label)}**")
+                        latest_from_mobile = latest_from_mobile_by_user.get(mobile_user_id)
+                        st.markdown("Current message to Family Office")
+                        if not render_text_update_message(latest_from_mobile):
+                            st.markdown(
+                                '<div class="vm-muted-line">No current message to Family Office.</div>',
+                                unsafe_allow_html=True,
+                            )
+                        latest_to_mobile = latest_to_mobile_by_user.get(mobile_user_id)
+                        st.markdown("Current message from Family Office")
+                        if not render_text_update_message(latest_to_mobile):
+                            st.markdown(
+                                '<div class="vm-muted-line">No current message from Family Office.</div>',
+                                unsafe_allow_html=True,
+                            )
+                    legacy_from_mobile = fetch_latest_message(
                         resident_id,
                         "mobile_to_office",
                         access_token,
+                        contact_user_id_is_null=True,
                         channel="mobile_office",
                         include_audio=False,
                     )
-                    latest_to_mobile = fetch_latest_message(
-                        resident_id,
-                        "office_to_mobile",
-                        access_token,
-                        channel="mobile_office",
-                        include_audio=False,
-                    )
-                    st.markdown(f"**Current message from {mobile_support_label}**")
-                    if not render_text_update_message(latest_from_mobile):
+                    if legacy_from_mobile:
+                        st.markdown("**Previous shared Mobile message**")
+                        render_text_update_message(legacy_from_mobile)
+                    if not mobile_support_ids:
                         st.markdown(
-                            f'<div class="vm-muted-line">No current message from {html.escape(mobile_support_label)}.</div>',
+                            '<div class="vm-muted-line">Add a Mobile Support user before sending a direct Mobile message.</div>',
                             unsafe_allow_html=True,
                         )
-                    st.markdown(f"**Current message to {mobile_support_label}**")
-                    if not render_text_update_message(latest_to_mobile):
-                        st.markdown(
-                            f'<div class="vm-muted-line">No current message to {html.escape(mobile_support_label)}.</div>',
-                            unsafe_allow_html=True,
+                    else:
+                        def _format_mobile_support_user(user_id: str) -> str:
+                            row = mobile_support_by_id.get(str(user_id or "").strip(), {})
+                            return str(row.get("staff_email") or "").strip() or "Mobile Support user"
+
+                        selected_mobile_user_id = st.selectbox(
+                            "Send to Mobile Support user",
+                            options=mobile_support_ids,
+                            format_func=_format_mobile_support_user,
+                            key=f"office_mobile_selected_user_{resident_id}",
                         )
-                    text_nonce = int(state.get("office_mobile_text_nonce", 0))
-                    office_to_mobile_body = st.text_area(
-                        f"Type your message to {mobile_support_label} here:",
-                        key=f"office_to_mobile_text_{resident_id}_{text_nonce}",
-                        height=100,
-                        max_chars=1000,
-                    )
-                    office_to_mobile_can_send = bool(str(office_to_mobile_body or "").strip())
-                    if st.button(
-                        "Click to send and replace your message",
-                        key=f"office_to_mobile_send_{resident_id}_{text_nonce}",
-                        use_container_width=True,
-                    ):
-                        if not office_to_mobile_can_send:
-                            st.info("Please write the current message first.")
-                        else:
-                            supabase, error = get_authed_supabase(access_token)
-                            if error:
-                                st.error(error)
+                        selected_mobile_label = _format_mobile_support_user(selected_mobile_user_id)
+                        text_nonce = int(state.get("office_mobile_text_nonce", 0))
+                        office_to_mobile_body = st.text_area(
+                            f"Type your message to {selected_mobile_label} here:",
+                            key=f"office_to_mobile_text_{resident_id}_{selected_mobile_user_id}_{text_nonce}",
+                            height=100,
+                            max_chars=1000,
+                        )
+                        office_to_mobile_can_send = bool(str(office_to_mobile_body or "").strip())
+                        if st.button(
+                            "Click to send and replace your message",
+                            key=f"office_to_mobile_send_{resident_id}_{selected_mobile_user_id}_{text_nonce}",
+                            use_container_width=True,
+                        ):
+                            if not office_to_mobile_can_send:
+                                st.info("Please write the current message first.")
                             else:
-                                now_iso = __import__("datetime").datetime.utcnow().isoformat()
-                                payload = {
-                                    "resident_id": resident_id,
-                                    "family_id": resident.get("family_id") or resident_id,
-                                    "channel": "mobile_office",
-                                    "direction": "office_to_mobile",
-                                    "audio_storage_path": "",
-                                    "audio_mime_type": "text/plain",
-                                    "audio_bytes": 0,
-                                    "message_kind": "text",
-                                    "text_title": None,
-                                    "text_body": str(office_to_mobile_body or "").strip(),
-                                    "recorded_at": now_iso,
-                                }
-                                resp, upsert_error = upsert_latest_message_with_fallback(
-                                    supabase,
-                                    payload,
-                                    "resident_id,direction,channel",
-                                    {
+                                supabase, error = get_authed_supabase(access_token)
+                                if error:
+                                    st.error(error)
+                                else:
+                                    now_iso = __import__("datetime").datetime.utcnow().isoformat()
+                                    payload = {
                                         "resident_id": resident_id,
+                                        "family_id": resident.get("family_id") or resident_id,
+                                        "contact_user_id": selected_mobile_user_id,
                                         "channel": "mobile_office",
                                         "direction": "office_to_mobile",
-                                    },
-                                )
-                                if upsert_error:
-                                    st.error(upsert_error)
-                                else:
-                                    message_id = (
-                                        (
-                                            resp.data[0].get("id")
-                                            if hasattr(resp, "data")
-                                            and isinstance(resp.data, list)
-                                            and resp.data
+                                        "audio_storage_path": "",
+                                        "audio_mime_type": "text/plain",
+                                        "audio_bytes": 0,
+                                        "message_kind": "text",
+                                        "text_title": None,
+                                        "text_body": str(office_to_mobile_body or "").strip(),
+                                        "recorded_at": now_iso,
+                                    }
+                                    resp, upsert_error = upsert_latest_message_with_fallback(
+                                        supabase,
+                                        payload,
+                                        "resident_id,contact_user_id,direction,channel",
+                                        {
+                                            "resident_id": resident_id,
+                                            "contact_user_id": selected_mobile_user_id,
+                                            "channel": "mobile_office",
+                                            "direction": "office_to_mobile",
+                                        },
+                                    )
+                                    if upsert_error:
+                                        st.error(upsert_error)
+                                    else:
+                                        message_id = (
+                                            (
+                                                resp.data[0].get("id")
+                                                if hasattr(resp, "data")
+                                                and isinstance(resp.data, list)
+                                                and resp.data
+                                                else None
+                                            )
+                                            if resp is not None
                                             else None
                                         )
-                                        if resp is not None
-                                        else None
-                                    )
-                                    log_audit_event(
-                                        "message_sent",
-                                        "care_hub",
-                                        resident["care_home_id"],
-                                        message_id,
-                                        resident_id=resident_id,
-                                    )
-                                    bump_message_cache_epoch()
-                                    state["office_mobile_text_nonce"] = text_nonce + 1
-                                    st.success(f"Current message to {mobile_support_label} replaced.")
-                                    st.rerun()
+                                        log_audit_event(
+                                            "message_sent",
+                                            "care_hub",
+                                            resident["care_home_id"],
+                                            message_id,
+                                            resident_id=resident_id,
+                                        )
+                                        bump_message_cache_epoch()
+                                        state["office_mobile_text_nonce"] = text_nonce + 1
+                                        st.success(f"Current message to {selected_mobile_label} replaced.")
+                                        st.rerun()
 
         if (
             runtime_variant == VARIANT_OFFICE
