@@ -13197,15 +13197,7 @@ def render_familyupdates_infographic_image() -> None:
 def render_familyupdates_cartoon_images() -> None:
     asset_dir = Path(__file__).resolve().parent / "assets"
     image_paths = [
-        asset_dir / "cartoon1.PNG",
-        asset_dir / "cartoon2.PNG",
-        asset_dir / "cartoon3.PNG",
-        asset_dir / "cartoon4.PNG",
-        asset_dir / "cartoon5.png",
-        asset_dir / "cartoon6.png",
-        asset_dir / "cartoon7.png",
-        asset_dir / "Cartoon8.png",
-        asset_dir / "cartoon9.png",
+        asset_dir / "cartoon11.png",
     ]
     for image_path in image_paths:
         if not image_path.exists():
